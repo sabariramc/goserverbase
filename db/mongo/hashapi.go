@@ -4,37 +4,24 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-xray-sdk-go/xray"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"sabariram.com/goserverbase/utils"
 )
 
-func (m *Collection) FindWithHash(filter map[string]interface{}, opts ...*options.FindOptions) (cur *mongo.Cursor, err error) {
-	xray.Capture(m.ctx, "MongoFindWithHash", func(c context.Context) error {
-		cur, err = m.Find(m.newHashFilter(filter), opts...)
-		return err
-	})
-	return
+func (m *Collection) FindWithHash(ctx context.Context, filter map[string]interface{}, opts ...*options.FindOptions) (cur *mongo.Cursor, err error) {
+	return m.Find(ctx, m.newHashFilter(ctx, filter), opts...)
 }
 
-func (m *Collection) FindOneWithHash(filter map[string]interface{}, opts ...*options.FindOneOptions) (s *mongo.SingleResult) {
-	xray.Capture(m.ctx, "MongoFindOneWithHash", func(c context.Context) error {
-		s = m.FindOne(m.newHashFilter(filter), opts...)
-		return nil
-	})
-	return
+func (m *Collection) FindOneWithHash(ctx context.Context, filter map[string]interface{}, opts ...*options.FindOneOptions) (s *mongo.SingleResult) {
+	return m.FindOne(ctx, m.newHashFilter(ctx, filter), opts...)
 }
 
-func (m *Collection) FindFetchWithHash(filter map[string]interface{}, loader NewLoadContainer, opts ...*options.FindOptions) (res []interface{}, err error) {
-	xray.Capture(m.ctx, "MongoFindWithHash", func(c context.Context) error {
-		res, err = m.FindFetch(m.newHashFilter(filter), loader, opts...)
-		return err
-	})
-	return
+func (m *Collection) FindFetchWithHash(ctx context.Context, filter map[string]interface{}, loader NewLoadContainer, opts ...*options.FindOptions) (res []interface{}, err error) {
+	return m.FindFetch(ctx, m.newHashFilter(ctx, filter), loader, opts...)
 }
 
-func (m *Collection) newHashFilter(filter map[string]interface{}) map[string]interface{} {
+func (m *Collection) newHashFilter(ctx context.Context, filter map[string]interface{}) map[string]interface{} {
 	if len(m.hashFieldMap) > 0 {
 		hashFilter := make(map[string]interface{}, len(filter))
 		for key, value := range filter {
@@ -43,7 +30,7 @@ func (m *Collection) newHashFilter(filter map[string]interface{}) map[string]int
 					hashFilter[GetHashKey(key)] = utils.GetHash(strVal)
 					continue
 				}
-				m.log.Warning("Hash filter not gererate for key - "+key, value)
+				m.log.Warning(ctx, "Hash filter not gererate for key - "+key, value)
 			}
 			hashFilter[key] = value
 		}
@@ -52,47 +39,31 @@ func (m *Collection) newHashFilter(filter map[string]interface{}) map[string]int
 	return filter
 }
 
-func (m *Collection) InsertOneWithHash(doc map[string]interface{}, opts ...*options.InsertOneOptions) (ins interface{}, err error) {
-	xray.Capture(m.ctx, "MongoInsertOneWithHash", func(c context.Context) error {
-		ins, err = m.InsertOne(m.newHashData(doc), opts...)
-		return err
-	})
-	return
-}
-
-func (m *Collection) InsertManyWithHash(doc []map[string]interface{}, opts ...*options.InsertManyOptions) (ins interface{}, err error) {
-
-	xray.Capture(m.ctx, "MongoInsertManyWithHash", func(c context.Context) error {
-		hashDoc := make([]interface{}, len(doc))
-		for i, v := range doc {
-			hashDoc[i] = m.newHashData(v)
-		}
-		ins, err = m.InsertMany(hashDoc, opts...)
-		return err
-	})
-	return
-}
-
-func (m *Collection) UpdateByIDWithHash(id interface{}, update map[string]map[string]interface{}, opts ...*options.UpdateOptions) (upd *mongo.UpdateResult, err error) {
-	xray.Capture(m.ctx, "MongoUpdateByIDWithHash", func(c context.Context) error {
-		update["$set"] = m.newHashData(update["$set"])
-		upd, err = m.UpdateByID(id, update, opts...)
-		return err
-	})
-	return
-}
-
-func (m *Collection) UpdateOneWithHash(filter interface{}, update map[string]map[string]interface{}, opts ...*options.UpdateOptions) (upd *mongo.UpdateResult, err error) {
-	xray.Capture(m.ctx, "MongoUpdateByIDWithHash", func(c context.Context) error {
-		update["$set"] = m.newHashData(update["$set"])
-		upd, err = m.UpdateOne(filter, update, opts...)
-		return err
-	})
-	return
+func (m *Collection) InsertOneWithHash(ctx context.Context, doc map[string]interface{}, opts ...*options.InsertOneOptions) (ins interface{}, err error) {
+	return m.InsertOne(ctx, m.newHashData(ctx, doc), opts...)
 
 }
 
-func (m *Collection) newHashData(data map[string]interface{}) map[string]interface{} {
+func (m *Collection) InsertManyWithHash(ctx context.Context, doc []map[string]interface{}, opts ...*options.InsertManyOptions) (ins interface{}, err error) {
+	hashDoc := make([]interface{}, len(doc))
+	for i, v := range doc {
+		hashDoc[i] = m.newHashData(ctx, v)
+	}
+	return m.InsertMany(ctx, hashDoc, opts...)
+}
+
+func (m *Collection) UpdateByIDWithHash(ctx context.Context, id interface{}, update map[string]map[string]interface{}, opts ...*options.UpdateOptions) (upd *mongo.UpdateResult, err error) {
+	update["$set"] = m.newHashData(ctx, update["$set"])
+	return m.UpdateByID(ctx, id, update, opts...)
+}
+
+func (m *Collection) UpdateOneWithHash(ctx context.Context, filter interface{}, update map[string]map[string]interface{}, opts ...*options.UpdateOptions) (upd *mongo.UpdateResult, err error) {
+	update["$set"] = m.newHashData(ctx, update["$set"])
+	return m.UpdateOne(ctx, filter, update, opts...)
+
+}
+
+func (m *Collection) newHashData(ctx context.Context, data map[string]interface{}) map[string]interface{} {
 	if len(m.hashFieldMap) > 0 {
 		hashData := make(map[string]interface{}, len(data))
 		for key, value := range data {
@@ -107,7 +78,7 @@ func (m *Collection) newHashData(data map[string]interface{}) map[string]interfa
 					}
 					hashData[GetHashKey(key)] = hashList
 				default:
-					m.log.Warning("Hash filter not gererate for key - "+key, value)
+					m.log.Warning(ctx, "Hash filter not gererate for key - "+key, value)
 				}
 			}
 			hashData[key] = value

@@ -24,14 +24,14 @@ func GetAWSKMSClient(awsSession *session.Session) *kms.KMS {
 	return client
 }
 
-func GetDefaultKMSClient(keyArn string, logger *log.Logger) *KMS {
+func GetDefaultKMSClient(logger *log.Logger, keyArn string) *KMS {
 	if defaultKMSClient == nil {
 		defaultKMSClient = GetAWSKMSClient(defaultAWSSession)
 	}
-	return GetKMSClient(defaultKMSClient, keyArn, logger)
+	return GetKMSClient(logger, defaultKMSClient, keyArn)
 }
 
-func GetKMSClient(client *kms.KMS, keyArn string, logger *log.Logger) *KMS {
+func GetKMSClient(logger *log.Logger, client *kms.KMS, keyArn string) *KMS {
 	return &KMS{client: client, keyArn: &keyArn, log: logger}
 }
 

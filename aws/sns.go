@@ -3,7 +3,6 @@ package aws
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -34,19 +33,6 @@ func GetAWSSNSClient(awsSession *session.Session) *sns.SNS {
 
 func GetSNSClient(logger *log.Logger, client *sns.SNS) *SNS {
 	return &SNS{client: client, log: logger}
-}
-
-func GetSNSARN(ctx context.Context, logger *log.Logger, topicName string) (*string, error) {
-	prefix := utils.Getenv("stage", "dev")
-	systemPefix := utils.Getenv("snsTopicPrefix", "BEDROCK")
-	if systemPefix != "" {
-		prefix = fmt.Sprintf("%v_%v", prefix, systemPefix)
-	}
-	region := utils.GetenvMust("region")
-	accountId := utils.GetenvMust("account_id")
-	arn := fmt.Sprintf("arn:aws:sns:%v:%v:%v_%v", region, accountId, prefix, topicName)
-	logger.Debug(ctx, "Topic Arn", arn)
-	return &arn, nil
 }
 
 func (s *SNS) Publish(ctx context.Context, topicArn, subject *string, payload *utils.Message, attributes map[string]string) error {

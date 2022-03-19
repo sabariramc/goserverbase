@@ -1,0 +1,44 @@
+{
+    "name": "Demo",
+    "keyAltName": "HelloWorld",
+    "schema": {
+        "bsonType": "object",
+        "properties": {
+            "Insurance": {
+                "bsonType": "object",
+                "properties": {
+                    "PolicyNumber": {
+                        "encrypt": {
+                            "bsonType": "string",
+                            "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
+                        }
+                    }
+                }
+            },
+            "MedicalRecords": {
+                "encrypt": {
+                    "bsonType": "array",
+                    "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random"
+                }
+            },
+            "BloodType": {
+                "encrypt": {
+                    "bsonType": "string",
+                    "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random"
+                }
+            },
+            "aadhaar": {
+                "encrypt": {
+                    "bsonType": "string",
+                    "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
+                }
+            },
+            "FatherName": {
+                "encrypt": {
+                    "bsonType": "string",
+                    "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Deterministic"
+                }
+            }
+        }
+    }
+}

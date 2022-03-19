@@ -1,0 +1,21 @@
+{
+    "Records":[
+       {
+          "EventSource":"aws:sns",
+          "EventVersion":"1.0",
+          "EventSubscriptionArn":"arn:aws:sns:ap-south-1:490302598154:dev_MFCORE_RTA_REVERSE_FEED:6371a8a6-2ca9-448d-a801-93e63f44c2ed",
+          "Sns":{
+             "Type":"Notification",
+             "MessageID":"a6334e8b-2894-5747-bf85-16f7e9362aac",
+             "TopicArn":"arn:aws:sns:ap-south-1:490302598154:dev_MFCORE_RTA_REVERSE_FEED",
+             "Subject":"RTA",
+             "Message":"{\"contains\":[\"transaction\"],\"payload\":{\"transaction\":{\"entity\":{\"unit\":30,\"nav\":3,\"stampDuty\":1,\"securityTransactionTax\":1,\"tds\":1,\"exitLoadAmount\":1,\"transactionDate\":\"2022-2-2\",\"amcReferenceNo\":\"ss\",\"transactionId\":\"txn_dbpOO1GqvLVX4KeuuwnjdHXxm2\",\"transactionType\":\"sell\"}}},\"event\":\"transaction.confirmed\",\"entity\":\"event\"}",
+             "SignatureVersion":"1",
+             "Signature":"bsUVH6PdK9AwSB1Q/gl9h6Aqrvb7HoeIayN1J17LW2AqKwftl9mGzkJRoEVrFa6etjVBRCDoJ0Nqj6BoRcxxw52JqgsnFRDRYMQykU7rvzD4dna8wE3n92M/K/5DL8l+WjYHmE4EvmXbEhWuAOO3YXrPTy54/67DjcWLx099W4lSufjBL0pDVPGQg14EMErAsZHtcUlAMvnd68l9p7wobiT0l/257PVQx+etGqsptdqr4UyZ10W//DzYAVT06Db1gc2RS6B4SOK2LQeElxm31XbEtTnNtkCf+P/d0K2GsgyP5dfuzDhTRkR2YMOmeN06HqF+nJ30Yi3SCMELgO/VZg==",
+             "SigningCertURL":"https://sns.ap-south-1.amazonaws.com/SimpleNotificationService-010a507c1833636cd94bdb98bd93083a.pem",
+             "UnsubscribeURL":"https://sns.ap-south-1.amazonaws.com/?Action=Unsubscribe&SubscriptionArn=arn:aws:sns:ap-south-1:490302598154:dev_MFCORE_RTA_REVERSE_FEED:6371a8a6-2ca9-448d-a801-93e63f44c2ed",
+             "MessageAttributes":null
+          }
+       }
+    ]
+ }

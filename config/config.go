@@ -2,9 +2,6 @@ package config
 
 import (
 	"log"
-	"os"
-	"strconv"
-	"strings"
 
 	"github.com/joho/godotenv"
 )
@@ -17,6 +14,20 @@ type MySqlConnectionConfig struct {
 	Password     string
 	Timezone     string
 	Charset      string
+}
+
+type AWSConfig struct {
+	Arn string
+}
+type AWSSQSConfig struct {
+	QueueURL string
+}
+type AWSS3Config struct {
+	BucketName string
+}
+
+type MongoConfig struct {
+	ConnectionString string
 }
 
 type ServerConfig struct {
@@ -39,39 +50,6 @@ type LoggerConfig struct {
 	BufferSize        int
 	GrayLog           *GraylogConfig
 	AuthHeaderKeyList []string
-}
-
-type Config interface {
-	GetLoggerConfig() *LoggerConfig
-	GetAppConfig() *ServerConfig
-}
-
-func GetEnv(key string, defaultVal string) string {
-	if value, exists := os.LookupEnv(key); exists {
-		return value
-	}
-	return defaultVal
-}
-
-func GetEnvInt(key string, defaultVal int) int {
-	if value, exists := os.LookupEnv(key); exists {
-		if iVal, err := strconv.Atoi(value); err == nil {
-			return iVal
-		}
-	}
-	return defaultVal
-}
-
-func GetEnvAsSlice(name string, defaultVal []string, sep string) []string {
-	valStr := GetEnv(name, "")
-
-	if valStr == "" {
-		return defaultVal
-	}
-
-	val := strings.Split(valStr, sep)
-
-	return val
 }
 
 func init() {

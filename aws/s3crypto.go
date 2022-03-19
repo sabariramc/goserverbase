@@ -152,7 +152,7 @@ func (s *S3PII) GetFileCache(ctx context.Context, s3Bucket, s3Key, tempPathPart 
 			return nil, err
 		}
 		filePath := strings.Split(s3Key, "/")
-		stage := utils.GetenvMust("stage")
+		stage := utils.GetEnvMust("stage")
 		tempS3Key := fmt.Sprintf("/%v/temp/%v/%v-%v", stage, tempPathPart, uuid.NewString(), filePath[len(filePath)-1])
 		mime := mimetype.Detect(blob)
 		err = s.s3Client.PutObject(ctx, s3Bucket, tempS3Key, bytes.NewReader(blob), mime.String())

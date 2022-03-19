@@ -2,52 +2,45 @@ package utils
 
 import (
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"os"
-	"os/exec"
+	"strconv"
+	"strings"
 
 	"sabariram.com/goserverbase/errors"
 )
 
-func GetenvMust(key string) string {
+func GetEnv(key string, defaultVal string) string {
+	if value, exists := os.LookupEnv(key); exists {
+		return value
+	}
+	return defaultVal
+}
+
+func GetEnvInt(key string, defaultVal int) int {
+	if value, exists := os.LookupEnv(key); exists {
+		if iVal, err := strconv.Atoi(value); err == nil {
+			return iVal
+		}
+	}
+	return defaultVal
+}
+
+func GetEnvAsSlice(name string, defaultVal []string, sep string) []string {
+	valStr := GetEnv(name, "")
+
+	if valStr == "" {
+		return defaultVal
+	}
+
+	val := strings.Split(valStr, sep)
+
+	return val
+}
+
+func GetEnvMust(key string) string {
 	value := os.Getenv(key)
 	if value == "" {
-		panic(errors.NewCustomError(http.StatusFailedDependency, fmt.Sprintf("mandatory environment variable is not set %v", key), nil))
+		panic(errors.NewCustomError("MANDATORY_KEY_MISSING", fmt.Sprintf("mandatory environment variable is not set %v", key), nil))
 	}
 	return value
-}
-
-func Getenv(key string, defaultValue string) string {
-	value := os.Getenv(key)
-	if value == "" {
-		value = defaultValue
-	}
-	return value
-}
-
-func ExecuteCommand(command string, arg ...string) {
-	cmd := exec.Command(command, arg...)
-	stdout, err := cmd.Output()
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
-
-	// Print the output
-	fmt.Println(string(stdout))
-}
-
-func PrintDir(path string) {
-
-	files, err := ioutil.ReadDir(path)
-	if err != nil {
-		fmt.Printf("Error in searcing dir %v : %v\n", path, err)
-		return
-	}
-	fmt.Printf("Contents of dir %v:\n", path)
-	for _, f := range files {
-		fmt.Println(f.Name())
-	}
 }

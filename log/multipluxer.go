@@ -65,13 +65,13 @@ type SequenctialLogMultipluxer struct {
 	writer []LogWriter
 }
 
-func NewSequenctialLogMultipluxer(bufferSize uint8, logWriterList ...LogWriter) *SequenctialLogMultipluxer {
+func NewSequenctialLogMultipluxer(logWriterList ...LogWriter) *SequenctialLogMultipluxer {
 	ls := &SequenctialLogMultipluxer{writer: logWriterList}
 	return ls
 }
 
 func (ls *SequenctialLogMultipluxer) Print(ctx context.Context, msg *LogMessage) {
 	for _, w := range ls.writer {
-		w.WriteMessage(ctx, msg)
+		_ = w.WriteMessage(ctx, msg)
 	}
 }

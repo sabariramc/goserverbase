@@ -1,6 +1,8 @@
 package mongo
 
 import (
+	"context"
+
 	"sabariram.com/goserverbase/aws"
 	"sabariram.com/goserverbase/log"
 
@@ -19,19 +21,19 @@ type AWSKMSProvider struct {
 	name        string
 }
 
-func GetDefaultAWSProvider() (*AWSKMSProvider, error) {
+func GetDefaultAWSProvider(ctx context.Context, logger *log.Logger) (*AWSKMSProvider, error) {
 	session := aws.GetDefaultAWSSession()
-	return GetAWSProvider(session, log.GetDefaultLogger())
+	return GetAWSProvider(ctx, logger, session)
 }
 
-func GetAWSProvider(session *session.Session, log *log.Log) (provider *AWSKMSProvider, err error) {
+func GetAWSProvider(ctx context.Context, logger *log.Logger, session *session.Session) (provider *AWSKMSProvider, err error) {
 	cred, err := session.Config.Credentials.Get()
 	if err != nil {
-		log.Error("AWS credential fetch", err)
+		logger.Error(ctx, "AWS credential fetch", err)
 		return
 	}
 	provider = CreateAWSProvider(cred.AccessKeyID, cred.SecretAccessKey, cred.SessionToken, *session.Config.Region)
-	log.Debug("Mongo AWS KMS provider", provider)
+	logger.Debug(ctx, "Mongo AWS KMS provider", provider)
 	return provider, nil
 }
 
@@ -52,8 +54,8 @@ func CreateAWSProvider(awsAccessKeyID, awsSecretAccessKey, sessionToken, awsKeyR
 	}
 }
 
-func GetDefaultAWSKMSProvider(awsKeyARN string) (MasterKeyProvider, error) {
-	provider, err := GetDefaultAWSProvider()
+func GetDefaultAWSKMSProvider(ctx context.Context, logger *log.Logger, awsKeyARN string) (MasterKeyProvider, error) {
+	provider, err := GetDefaultAWSProvider(ctx, logger)
 	if err != nil {
 		return nil, err
 	}

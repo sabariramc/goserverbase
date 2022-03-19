@@ -6,6 +6,7 @@ import (
 	"reflect"
 
 	"github.com/shopspring/decimal"
+
 	"sabariram.com/goserverbase/log"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,8 +21,7 @@ type Collection struct {
 	databaseName   string
 	collectionName string
 	collection     *mongo.Collection
-	ctx            context.Context
-	log            *log.Log
+	log            *log.Logger
 	hashFieldMap   map[string]interface{}
 }
 
@@ -54,19 +54,18 @@ var newRegistory = bson.NewRegistryBuilder().RegisterTypeEncoder(decimalType, bs
 	return nil
 }))
 
-func NewDefaultCollection(ctx context.Context, mongoURI, databaseName, collectionName string) (*Collection, error) {
-	logger := log.GetDefaultLogger()
-	client, err := GetClient(ctx, mongoURI, logger)
+func NewDefaultCollection(ctx context.Context, logger *log.Logger, mongoURI, databaseName, collectionName string) (*Collection, error) {
+	client, err := GetClient(ctx, logger, mongoURI)
 	if err != nil {
 		return nil, err
 	}
-	return NewCollection(ctx, client.client, databaseName, collectionName, logger), nil
+	return NewCollection(logger, client.client, databaseName, collectionName), nil
 }
 
-func NewCollection(ctx context.Context, client *mongo.Client, databaseName, collectionName string, log *log.Log) *Collection {
+func NewCollection(logger *log.Logger, client *mongo.Client, databaseName, collectionName string) *Collection {
 	collectionOptions := options.Collection()
 	collectionOptions.SetRegistry(newCustomBsonRegistory().Build())
-	return &Collection{databaseName: databaseName, collectionName: collectionName, collection: client.Database(databaseName).Collection(collectionName, collectionOptions), ctx: ctx, log: log}
+	return &Collection{databaseName: databaseName, collectionName: collectionName, collection: client.Database(databaseName).Collection(collectionName, collectionOptions), log: logger}
 }
 
 func newCustomBsonRegistory() *bsoncodec.RegistryBuilder {

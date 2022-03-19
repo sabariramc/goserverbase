@@ -10,17 +10,15 @@ import (
 
 	"sabariram.com/goserverbase/constant"
 	"sabariram.com/goserverbase/log"
-
-	"github.com/google/uuid"
 )
 
 func (b *BaseApp) GetHttpCorrelationParams(r *http.Request) *log.CorrelationParmas {
 	correlationId := r.Header.Get("x-correlation-id")
 	if correlationId == "" {
-		return b.GetDefaultCorrelationParams()
+		return log.GetDefaultCorrelationParams(b.c.AppConfig.ServiceName)
 	}
 	return &log.CorrelationParmas{
-		ServiceName:   b.config.GetAppConfig().ServiceName,
+		ServiceName:   b.c.AppConfig.ServiceName,
 		CorrelationId: correlationId,
 		ScenarioId:    r.Header.Get("x-scenario-id"),
 		ScenarioName:  r.Header.Get("x-scenario-name"),
@@ -28,16 +26,9 @@ func (b *BaseApp) GetHttpCorrelationParams(r *http.Request) *log.CorrelationParm
 	}
 }
 
-func (b *BaseApp) GetDefaultCorrelationParams() *log.CorrelationParmas {
-	return &log.CorrelationParmas{
-		ServiceName:   b.config.GetAppConfig().ServiceName,
-		CorrelationId: fmt.Sprintf("%v-%v", b.config.GetAppConfig().ServiceName, uuid.New().String()),
-	}
-}
-
 func (b *BaseApp) PrintHeader(ctx context.Context, h http.Header) {
 	popList := make(map[string][]string)
-	for _, key := range b.config.GetLoggerConfig().AuthHeaderKeyList {
+	for _, key := range b.c.LoggerConfig.AuthHeaderKeyList {
 		val := h.Values(key)
 		if len(val) != 0 {
 			popList[key] = val
@@ -75,5 +66,5 @@ func (b *BaseApp) GetCorrelationContext(ctx context.Context, c *log.CorrelationP
 }
 
 func (b *BaseApp) GetPort() string {
-	return fmt.Sprintf("%v:%v", b.config.GetAppConfig().Host, b.config.GetAppConfig().Port)
+	return fmt.Sprintf("%v:%v", b.c.AppConfig.Host, b.c.AppConfig.Port)
 }

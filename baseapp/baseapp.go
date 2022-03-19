@@ -11,22 +11,27 @@ import (
 	"github.com/gorilla/mux"
 )
 
+type ServerConfig struct {
+	LoggerConfig *config.LoggerConfig
+	AppConfig    *config.ServerConfig
+}
+
 type BaseApp struct {
 	router         *mux.Router
-	config         config.Config
+	c              *ServerConfig
 	logMultipluxer log.LogMultipluxer
 	log            *log.Logger
 	HostParams     *log.HostParams
 }
 
-func NewBaseApp(c config.Config, lMux log.LogMultipluxer, auditLogger log.AuditLogWriter, timeZone *time.Location) *BaseApp {
+func NewBaseApp(c ServerConfig, lMux log.LogMultipluxer, auditLogger log.AuditLogWriter, timeZone *time.Location) *BaseApp {
 	b := &BaseApp{
-		config:         c,
+		c:              &c,
 		logMultipluxer: lMux,
 		router:         mux.NewRouter().StrictSlash(true),
 	}
-	ctx := b.GetCorrelationContext(context.Background(), b.GetDefaultCorrelationParams())
-	b.log = log.NewLogger(ctx, c.GetLoggerConfig(), lMux, auditLogger, timeZone)
+	ctx := b.GetCorrelationContext(context.Background(), log.GetDefaultCorrelationParams(c.AppConfig.ServiceName))
+	b.log = log.NewLogger(ctx, c.LoggerConfig, lMux, auditLogger, timeZone)
 	return b
 }
 
@@ -45,12 +50,12 @@ func (b *BaseApp) SetRouter(router *mux.Router) {
 	b.router = router
 }
 
-func (b *BaseApp) GetConfig() config.Config {
-	return b.config
+func (b *BaseApp) GetConfig() ServerConfig {
+	return *b.c
 }
 
-func (b *BaseApp) SetConfig(c config.Config) {
-	b.config = c
+func (b *BaseApp) SetConfig(c ServerConfig) {
+	b.c = &c
 }
 
 func (b *BaseApp) GetLogMultipluxer() log.LogMultipluxer {

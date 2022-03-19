@@ -44,12 +44,6 @@ func (s *SQS) IsFIFO() bool {
 }
 
 func GetQueueURL(ctx context.Context, logger *log.Logger, queueName string, sqsClient *sqs.SQS) (*string, error) {
-	prefix := utils.Getenv("stage", "dev")
-	systemPefix := utils.Getenv("queuePrefix", "")
-	if systemPefix != "" {
-		prefix = fmt.Sprintf("%v_%v", prefix, systemPefix)
-	}
-	queueName = fmt.Sprintf("%v_%v", prefix, queueName)
 	req := &sqs.GetQueueUrlInput{
 		QueueName: &queueName}
 	logger.Debug(ctx, "SQS get queue url request", req)

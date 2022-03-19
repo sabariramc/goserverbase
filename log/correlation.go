@@ -1,5 +1,11 @@
 package log
 
+import (
+	"fmt"
+
+	"github.com/google/uuid"
+)
+
 type CorrelationParmas struct {
 	CorrelationId string `json:"x-correlation-id"`
 	ScenarioId    string `json:"x-scenario-id,omitempty"`
@@ -12,4 +18,11 @@ type HostParams struct {
 	Version     string `json:"version"`
 	Host        string `json:"host"`
 	ServiceName string `json:"service-name,omitempty"`
+}
+
+func GetDefaultCorrelationParams(serviceName string) *CorrelationParmas {
+	return &CorrelationParmas{
+		ServiceName:   serviceName,
+		CorrelationId: fmt.Sprintf("%v-%v", serviceName, uuid.New().String()),
+	}
 }
