@@ -11,17 +11,16 @@ import (
 
 type StepFunction struct {
 	client *sfn.SFN
-	log    *log.Log
-	ctx    context.Context
+	log    *log.Logger
 }
 
 var defaultSFNClient *sfn.SFN
 
-func GetDefaultSFNClient(ctx context.Context) *StepFunction {
+func GetDefaultSFNClient(logger *log.Logger) *StepFunction {
 	if defaultSFNClient == nil {
 		defaultSFNClient = GetAWSSFNClient(defaultAWSSession)
 	}
-	return GetSFNClient(ctx, defaultSFNClient)
+	return GetSFNClient(logger, defaultSFNClient)
 }
 
 func GetAWSSFNClient(awsSession *session.Session) *sfn.SFN {
@@ -29,31 +28,31 @@ func GetAWSSFNClient(awsSession *session.Session) *sfn.SFN {
 	return client
 }
 
-func GetSFNClient(ctx context.Context, sfnClient *sfn.SFN) *StepFunction {
-	return &StepFunction{client: sfnClient, log: log.GetDefaultLogger(), ctx: ctx}
+func GetSFNClient(logger *log.Logger, sfnClient *sfn.SFN) *StepFunction {
+	return &StepFunction{client: sfnClient, log: logger}
 }
 
-func (s *StepFunction) StartExecution(stateMachineArn, executionName string, payload interface{}) (err error) {
+func (s *StepFunction) StartExecution(ctx context.Context, stateMachineArn, executionName string, payload interface{}) (err error) {
 	marshalledPayload, err := json.Marshal(payload)
 	if err != nil {
-		s.log.Error("State machine payload marshal error", err)
+		s.log.Error(ctx, "State machine payload marshal error", err)
 		return
 	}
 	stringifiedMarshalledPayload := string(marshalledPayload)
-	s.log.Info("Starting execution of state machine", map[string]string{
+	s.log.Info(ctx, "Starting execution of state machine", map[string]string{
 		"arn":     stateMachineArn,
 		"payload": stringifiedMarshalledPayload,
 		"name":    executionName,
 	})
-	res, err := s.client.StartExecutionWithContext(s.ctx, &sfn.StartExecutionInput{
+	res, err := s.client.StartExecutionWithContext(ctx, &sfn.StartExecutionInput{
 		Input:           &stringifiedMarshalledPayload,
 		Name:            &executionName,
 		StateMachineArn: &stateMachineArn,
 	})
 	if err != nil {
-		s.log.Error("State machine start execution error", err)
+		s.log.Error(ctx, "State machine start execution error", err)
 		return
 	}
-	s.log.Debug("State machine start execution response", res)
+	s.log.Debug(ctx, "State machine start execution response", res)
 	return
 }

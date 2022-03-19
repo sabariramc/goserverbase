@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -16,28 +15,16 @@ import (
 type SNS struct {
 	_      struct{}
 	client *sns.SNS
-	log    *log.Log
-	ctx    context.Context
-}
-
-type SNSPayload struct {
-	Entity map[string]interface{} `json:"entity"`
-}
-
-type SNSMessage struct {
-	Entity   string                 `json:"entity"`
-	Event    string                 `json:"event"`
-	Contains []string               `json:"contains"`
-	Payload  map[string]*SNSPayload `json:"payload"`
+	log    *log.Logger
 }
 
 var defaultSNSClient *sns.SNS
 
-func GetDefaultSNSClient(ctx context.Context) *SNS {
+func GetDefaultSNSClient(logger *log.Logger) *SNS {
 	if defaultSecretManagerClient == nil {
 		defaultSNSClient = GetAWSSNSClient(defaultAWSSession)
 	}
-	return GetSNSClient(ctx, defaultSNSClient)
+	return GetSNSClient(logger, defaultSNSClient)
 }
 
 func GetAWSSNSClient(awsSession *session.Session) *sns.SNS {
@@ -45,40 +32,11 @@ func GetAWSSNSClient(awsSession *session.Session) *sns.SNS {
 	return client
 }
 
-func GetSNSClient(ctx context.Context, client *sns.SNS) *SNS {
-	return &SNS{client: client, log: log.GetDefaultLogger(), ctx: ctx}
+func GetSNSClient(logger *log.Logger, client *sns.SNS) *SNS {
+	return &SNS{client: client, log: logger}
 }
 
-func (s *SNS) GetSNSDataTemplate(event string, eventData map[string]map[string]interface{}, attachment ...string) *SNSMessage {
-	entity := strings.Split(event, ".")
-	attachment = append(attachment, entity[0])
-	message := &SNSMessage{
-		Entity:   "event",
-		Event:    event,
-		Contains: attachment,
-	}
-	message.Payload = make(map[string]*SNSPayload)
-	for _, v := range attachment {
-		data, ok := eventData[v]
-		if ok {
-			data["entity"] = v
-			message.Payload[v] = &SNSPayload{
-				Entity: data,
-			}
-		} else {
-			message.Payload[v] = &SNSPayload{
-				Entity: map[string]interface{}{
-					"entity": v,
-				},
-			}
-		}
-	}
-	s.log.Debug("SNS message generated", message)
-	return message
-}
-
-func GetSNSARN(topicName string) (*string, error) {
-	log := log.GetDefaultLogger()
+func GetSNSARN(ctx context.Context, logger *log.Logger, topicName string) (*string, error) {
 	prefix := utils.Getenv("stage", "dev")
 	systemPefix := utils.Getenv("snsTopicPrefix", "BEDROCK")
 	if systemPefix != "" {
@@ -87,11 +45,11 @@ func GetSNSARN(topicName string) (*string, error) {
 	region := utils.GetenvMust("region")
 	accountId := utils.GetenvMust("account_id")
 	arn := fmt.Sprintf("arn:aws:sns:%v:%v:%v_%v", region, accountId, prefix, topicName)
-	log.Debug("Topic Arn", arn)
+	logger.Debug(ctx, "Topic Arn", arn)
 	return &arn, nil
 }
 
-func (s *SNS) Publish(topicArn, subject *string, payload *SNSMessage, attributes map[string]string) error {
+func (s *SNS) Publish(ctx context.Context, topicArn, subject *string, payload *utils.Message, attributes map[string]string) error {
 	blob, _ := json.Marshal(payload)
 	message := string(blob)
 	req := &sns.PublishInput{
@@ -100,13 +58,13 @@ func (s *SNS) Publish(topicArn, subject *string, payload *SNSMessage, attributes
 		Message:           &message,
 		MessageAttributes: s.GetAttribure(attributes),
 	}
-	s.log.Debug("SNS publish request", req)
-	res, err := s.client.PublishWithContext(s.ctx, req)
+	s.log.Debug(ctx, "SNS publish request", req)
+	res, err := s.client.PublishWithContext(ctx, req)
 	if err != nil {
-		s.log.Error("SNS publish error", err)
+		s.log.Error(ctx, "SNS publish error", err)
 		return err
 	}
-	s.log.Debug("SNS publish response", res)
+	s.log.Debug(ctx, "SNS publish response", res)
 	return nil
 }
 

@@ -50,20 +50,13 @@ func NewGraylogUDP(hostParam log.HostParams, backuplog log.LogWriter, e Endpoint
 	return &GraylogWriter{writer: gelfWriter, backuplog: backuplog, BaseLogWriter: BaseLogWriter{hostParam: &hostParam}}, nil
 }
 
+func (g *GraylogWriter) GetBufferSize() int {
+	return -1
+}
+
 func (g *GraylogWriter) Start(logChannel chan log.MultipluxerLogMessage) {
 	for mxMsg := range logChannel {
-		msg := mxMsg.LogMessage
-		errorMessage := log.LogMessage{
-			LogLevelMap:  log.GetLogLevelMap(log.ERROR),
-			ShortMessage: msg.ShortMessage,
-			Timestamp:    time.Now()}
-		err := g.WriteMessage(mxMsg.Ctx, &msg)
-		if err != nil {
-			_ = g.backuplog.WriteMessage(mxMsg.Ctx, &msg)
-			errorMessage.ShortMessage = "Error sending to graylog"
-			errorMessage.FullMessage = err
-			_ = g.backuplog.WriteMessage(mxMsg.Ctx, &errorMessage)
-		}
+		_ = g.WriteMessage(mxMsg.Ctx, &mxMsg.LogMessage)
 	}
 }
 
@@ -71,7 +64,11 @@ func (g *GraylogWriter) WriteMessage(ctx context.Context, msg *log.LogMessage) (
 	cr := GetCorrelationParam(ctx)
 	blob, _ := json.Marshal(msg.FullMessage)
 	fullMessage := string(blob)
-	return g.writer.WriteMessage(&gelf.Message{
+	errorMessage := log.LogMessage{
+		LogLevelMap:  log.GetLogLevelMap(log.ERROR),
+		ShortMessage: msg.ShortMessage,
+		Timestamp:    time.Now()}
+	err = g.writer.WriteMessage(&gelf.Message{
 		Version:  g.hostParam.Version,
 		Host:     g.hostParam.Host,
 		Short:    msg.ShortMessage,
@@ -86,4 +83,11 @@ func (g *GraylogWriter) WriteMessage(ctx context.Context, msg *log.LogMessage) (
 			"service-name":     cr.ServiceName,
 		},
 	})
+	if err != nil {
+		_ = g.backuplog.WriteMessage(ctx, msg)
+		errorMessage.ShortMessage = "Error sending to graylog"
+		errorMessage.FullMessage = err
+		_ = g.backuplog.WriteMessage(ctx, &errorMessage)
+	}
+	return err
 }

@@ -68,9 +68,7 @@ func (b *BaseApp) JSONResponderWithHeader(inputBody interface{}, f HandlerFuncti
 		w.Header().Set(HeaderContentType, ContentTypeJSON)
 		w.WriteHeader(statusCode)
 		if err != nil {
-			body = map[string]interface{}{
-				"error": err,
-			}
+			body = err.Error()
 			b.PrintBody(ctx, bodyByte)
 			b.log.Error(ctx, "Response-Body", body)
 		}

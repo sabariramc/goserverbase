@@ -25,6 +25,10 @@ func NewSyslogWriterWriter(hostParam log.HostParams, syslogTag, prefix string) *
 	return syslog
 }
 
+func (s *SyslogWriter) GetBufferSize() int {
+	return 1
+}
+
 func (c *SyslogWriter) Start(logChannel chan log.MultipluxerLogMessage) {
 	for log := range logChannel {
 		_ = c.WriteMessage(log.Ctx, &log.LogMessage)
@@ -36,7 +40,7 @@ func (c *SyslogWriter) WriteMessage(ctx context.Context, l *log.LogMessage) erro
 	b, err := json.Marshal(l.FullMessage)
 	var fullMessage string
 	if err != nil {
-		fullMessage = parseErrorMsg
+		fullMessage = ParseErrorMsg
 	} else {
 		fullMessage = string(b)
 	}

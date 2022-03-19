@@ -41,52 +41,19 @@ type LoggerConfig struct {
 	AuthHeaderKeyList []string
 }
 
-type Config struct {
-	Mysql  *MySqlConnectionConfig
-	Logger *LoggerConfig
-	App    *ServerConfig
+type Config interface {
+	GetLoggerConfig() *LoggerConfig
+	GetAppConfig() *ServerConfig
 }
 
-func NewConfig() *Config {
-	return &Config{
-		Mysql: &MySqlConnectionConfig{
-			Host:         getEnv("MYSQL_HOST", "localhost"),
-			Port:         getEnv("MYSQL_PORT", "3306"),
-			DatabaseName: getEnv("MYSQL_DATABASE", ""),
-			Username:     getEnv("MYSQL_USERNAME", "root"),
-			Password:     getEnv("MYSQL_PASSWORD", ""),
-			Timezone:     getEnv("MYSQL_TIMEZONE", "Local"),
-			Charset:      getEnv("MYSQL_CHARSET", "utf8"),
-		},
-		Logger: &LoggerConfig{
-			Version:     getEnv("LOG_VERSION", "1.1"),
-			Host:        getEnv("HOST", "localhost"),
-			ServiceName: getEnv("SERVICE_NAME", "API"),
-			LogLevel:    getEnvInt("LOG_LEVEL", 6),
-			BufferSize:  getEnvInt("LOG_BUFFER_SIZE", 1),
-			GrayLog: &GraylogConfig{
-				URL:     getEnv("GRAYLOG_URL", "http://localhost:12201/gelf"),
-				Address: getEnv("GRAYLOG_ADD", "localhost"),
-				Port:    uint(getEnvInt("GRAYLOG_PORT", 12201)),
-			},
-			AuthHeaderKeyList: getEnvAsSlice("AUTH_HEADER_LIST", []string{}, ";"),
-		},
-		App: &ServerConfig{
-			Host:        getEnv("HOST", "localhost"),
-			Port:        getEnv("APP_PORT", "8080"),
-			ServiceName: getEnv("APP_SERVICE_NAME", "API"),
-		},
-	}
-}
-
-func getEnv(key string, defaultVal string) string {
+func GetEnv(key string, defaultVal string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
 	}
 	return defaultVal
 }
 
-func getEnvInt(key string, defaultVal int) int {
+func GetEnvInt(key string, defaultVal int) int {
 	if value, exists := os.LookupEnv(key); exists {
 		if iVal, err := strconv.Atoi(value); err == nil {
 			return iVal
@@ -95,8 +62,8 @@ func getEnvInt(key string, defaultVal int) int {
 	return defaultVal
 }
 
-func getEnvAsSlice(name string, defaultVal []string, sep string) []string {
-	valStr := getEnv(name, "")
+func GetEnvAsSlice(name string, defaultVal []string, sep string) []string {
+	valStr := GetEnv(name, "")
 
 	if valStr == "" {
 		return defaultVal

@@ -51,28 +51,56 @@ type LogMessage struct {
 	Timestamp    time.Time   `json:"timestamp"`
 }
 
-type Logger struct {
-	logLevel         LogLevel
-	multipluxChannel chan MultipluxerLogMessage
-	hostParams       *HostParams
+type AuditLogMessage struct {
+	Application    string                 `json:"application"`
+	Actor          string                 `json:"actor"`
+	Action         string                 `json:"action"`
+	Target         string                 `json:"target"`
+	Description    string                 `json:"description"`
+	Timestamp      time.Time              `json:"timestamp"`
+	Correlation    CorrelationParmas      `json:"correlation"`
+	AdditionalData map[string]interface{} `json:"additonalData"`
 }
 
-func NewLogger(ctx context.Context, config *config.Config, multipluxChannel chan MultipluxerLogMessage) *Logger {
+type Logger struct {
+	logLevel    LogLevel
+	lMux        LogMultipluxer
+	hostParams  *HostParams
+	auditLogger AuditLogWriter
+	timeZone    *time.Location
+}
+
+func NewLogger(ctx context.Context, lc *config.LoggerConfig, lMux LogMultipluxer, auditLogger AuditLogWriter, timeZone *time.Location) *Logger {
 	l := &Logger{
-		logLevel:         INFO,
-		multipluxChannel: multipluxChannel,
+		logLevel:    INFO,
+		lMux:        lMux,
+		auditLogger: auditLogger,
+		timeZone:    timeZone,
 		hostParams: &HostParams{
-			Version: config.Logger.Version,
-			Host:    config.Logger.Host,
+			Version:     lc.Version,
+			Host:        lc.Host,
+			ServiceName: lc.ServiceName,
 		},
 	}
-	logLevel := config.Logger.LogLevel
+	logLevel := lc.LogLevel
 	if logLevel > int(DEBUG) || logLevel < int(EMERGENCY) {
 		l.Warning(ctx, "Erronous log level - log set to INFO", nil)
 		logLevel = int(INFO)
 	}
 	l.logLevel = LogLevel(logLevel)
 	return l
+}
+
+func (l *Logger) Audit(ctx context.Context, actor, action, target, desciption string, additionalData map[string]interface{}) {
+	_ = l.auditLogger.WriteAuditMessage(ctx, &AuditLogMessage{
+		Application:    l.hostParams.ServiceName,
+		Actor:          actor,
+		Action:         action,
+		Description:    desciption,
+		Target:         target,
+		Timestamp:      time.Now().In(l.timeZone),
+		AdditionalData: additionalData,
+	})
 }
 
 func (l *Logger) Debug(ctx context.Context, shortMessage string, fullMessage interface{}) {
@@ -119,9 +147,6 @@ func (l *Logger) print(ctx context.Context, level *LogLevelMap, shortMessage str
 		LogLevelMap:  *level,
 		ShortMessage: shortMessage,
 		FullMessage:  fullMessage,
-		Timestamp:    time.Now()}
-	l.multipluxChannel <- MultipluxerLogMessage{
-		LogMessage: *message,
-		Ctx:        ctx,
-	}
+		Timestamp:    time.Now().In(l.timeZone)}
+	l.lMux.Print(ctx, message)
 }

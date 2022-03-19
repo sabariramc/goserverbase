@@ -14,8 +14,7 @@ import (
 type SecretManager struct {
 	_      struct{}
 	client *secretsmanager.SecretsManager
-	log    *log.Log
-	ctx    context.Context
+	log    *log.Logger
 }
 
 type secretManagerCache struct {
@@ -34,48 +33,48 @@ func GetAWSSecretManagerClient(awsSession *session.Session) *secretsmanager.Secr
 	return client
 }
 
-func GetDefaultSecretManagerClient(ctx context.Context) *SecretManager {
+func GetDefaultSecretManagerClient(logger *log.Logger) *SecretManager {
 	if defaultSecretManagerClient == nil {
 		defaultSecretManagerClient = GetAWSSecretManagerClient(defaultAWSSession)
 	}
-	return GetSecretManagerClient(ctx, defaultSecretManagerClient)
+	return GetSecretManagerClient(logger, defaultSecretManagerClient)
 }
 
-func GetSecretManagerClient(ctx context.Context, client *secretsmanager.SecretsManager) *SecretManager {
-	return &SecretManager{client: client, log: log.GetDefaultLogger(), ctx: ctx}
+func GetSecretManagerClient(logger *log.Logger, client *secretsmanager.SecretsManager) *SecretManager {
+	return &SecretManager{client: client, log: logger}
 }
 
-func (s *SecretManager) GetSecret(secretArn string) (map[string]interface{}, error) {
+func (s *SecretManager) GetSecret(ctx context.Context, secretArn string) (map[string]interface{}, error) {
 	secretCacheData, ok := secretCache[secretArn]
 	if ok && time.Now().Before(secretCacheData.expireTime) {
-		s.log.Info("Secret fetched from cache", nil)
+		s.log.Info(ctx, "Secret fetched from cache", nil)
 	} else {
-		res, err := s.GetSecretNonCache(secretArn)
+		res, err := s.GetSecretNonCache(ctx, secretArn)
 		if err != nil {
 			return nil, err
 		}
 		secretCacheData = secretManagerCache{expireTime: time.Now().Add(time.Minute * 15), data: *res}
 		secretCache[secretArn] = secretCacheData
 	}
-	s.log.Debug("Secret data", fmt.Sprint(secretCacheData))
+	s.log.Debug(ctx, "Secret data", fmt.Sprint(secretCacheData))
 	data := make(map[string]interface{})
 	err := json.Unmarshal([]byte(*secretCacheData.data.SecretString), &data)
 	if err != nil {
-		s.log.Error("Secret unmarshall error", err)
-		s.log.Debug("Secret data", secretCacheData.data.SecretString)
+		s.log.Error(ctx, "Secret unmarshall error", err)
+		s.log.Debug(ctx, "Secret data", secretCacheData.data.SecretString)
 		return nil, err
 	}
 	return data, nil
 }
 
-func (s *SecretManager) GetSecretNonCache(secretArn string) (*secretsmanager.GetSecretValueOutput, error) {
+func (s *SecretManager) GetSecretNonCache(ctx context.Context, secretArn string) (*secretsmanager.GetSecretValueOutput, error) {
 	req := &secretsmanager.GetSecretValueInput{SecretId: &secretArn}
-	s.log.Debug("Secret fetch request", req)
-	res, err := s.client.GetSecretValueWithContext(s.ctx, req)
+	s.log.Debug(ctx, "Secret fetch request", req)
+	res, err := s.client.GetSecretValueWithContext(ctx, req)
 	if err != nil {
-		s.log.Error("Error in secret fetch", err)
+		s.log.Error(ctx, "Error in secret fetch", err)
 		return nil, err
 	}
-	s.log.Debug("Secret fetch response", fmt.Sprint(res))
+	s.log.Debug(ctx, "Secret fetch response", fmt.Sprint(res))
 	return res, nil
 }

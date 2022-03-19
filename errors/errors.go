@@ -2,23 +2,23 @@ package errors
 
 import (
 	"encoding/json"
-	"net/http"
 )
 
-type ErrorData map[string]string
-
-type Error struct {
-	StatusCode   int               `json:"-"`
-	ErrorData    map[string]string `json:"errorData"`
-	ErrorMessage string            `json:"errorMessage"`
-	ErrorCode    string            `json:"errorCode"`
+type CustomError struct {
+	ErrorData    interface{} `json:"errorData"`
+	ErrorMessage string      `json:"errorMessage"`
+	ErrorCode    string      `json:"errorCode"`
 }
 
-func (e *Error) Error() string {
-	blob, _ := json.Marshal(e)
+func (e *CustomError) Error() string {
+	blob, err := json.Marshal(e)
+	if err != nil {
+		e.ErrorData = ParseErrorMsg
+		blob, _ = json.Marshal(e)
+	}
 	return string(blob)
 }
 
-func NewHTTPError(statusCode int, errorMessage string, errorData ErrorData) *Error {
-	return &Error{StatusCode: statusCode, ErrorMessage: errorMessage, ErrorData: errorData, ErrorCode: http.StatusText(statusCode)}
+func NewCustomError(errorCode, errorMessage string, errorData interface{}) *CustomError {
+	return &CustomError{ErrorCode: errorCode, ErrorMessage: errorMessage, ErrorData: errorData}
 }

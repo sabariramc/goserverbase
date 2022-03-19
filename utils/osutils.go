@@ -6,12 +6,14 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+
+	"sabariram.com/goserverbase/errors"
 )
 
 func GetenvMust(key string) string {
 	value := os.Getenv(key)
 	if value == "" {
-		panic(NewHTTPError(http.StatusFailedDependency, fmt.Sprintf("mandatory environment variable is not set %v", key), "MISSING_MANDATORY_ENV_VARIABLE", nil))
+		panic(errors.NewCustomError(http.StatusFailedDependency, fmt.Sprintf("mandatory environment variable is not set %v", key), nil))
 	}
 	return value
 }

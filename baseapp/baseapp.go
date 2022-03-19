@@ -13,23 +13,20 @@ import (
 
 type BaseApp struct {
 	router         *mux.Router
-	config         *config.Config
-	logMultipluxer *log.LogMultipluxer
+	config         config.Config
+	logMultipluxer log.LogMultipluxer
 	log            *log.Logger
 	HostParams     *log.HostParams
 }
 
-func NewBaseApp(c *config.Config, logWriter ...log.LogWriter) *BaseApp {
+func NewBaseApp(c config.Config, lMux log.LogMultipluxer, auditLogger log.AuditLogWriter, timeZone *time.Location) *BaseApp {
 	b := &BaseApp{
-		config: c,
-		logMultipluxer: log.NewLogMultipluxer(
-			uint8(c.Logger.BufferSize),
-			logWriter...,
-		),
-		router: mux.NewRouter().StrictSlash(true),
+		config:         c,
+		logMultipluxer: lMux,
+		router:         mux.NewRouter().StrictSlash(true),
 	}
 	ctx := b.GetCorrelationContext(context.Background(), b.GetDefaultCorrelationParams())
-	b.log = log.NewLogger(ctx, c, b.GetLogMultipluxer().GetChannel())
+	b.log = log.NewLogger(ctx, c.GetLoggerConfig(), lMux, auditLogger, timeZone)
 	return b
 }
 
@@ -48,19 +45,19 @@ func (b *BaseApp) SetRouter(router *mux.Router) {
 	b.router = router
 }
 
-func (b *BaseApp) GetConfig() *config.Config {
+func (b *BaseApp) GetConfig() config.Config {
 	return b.config
 }
 
-func (b *BaseApp) SetConfig(c *config.Config) {
+func (b *BaseApp) SetConfig(c config.Config) {
 	b.config = c
 }
 
-func (b *BaseApp) GetLogMultipluxer() *log.LogMultipluxer {
+func (b *BaseApp) GetLogMultipluxer() log.LogMultipluxer {
 	return b.logMultipluxer
 }
 
-func (b *BaseApp) SetLogMultipluxer(logMux *log.LogMultipluxer) {
+func (b *BaseApp) SetLogMultipluxer(logMux log.LogMultipluxer) {
 	b.logMultipluxer = logMux
 }
 
