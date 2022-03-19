@@ -14,8 +14,6 @@ import (
 	"sabariram.com/goserverbase/utils/testutils"
 )
 
-var mongoURI = os.Getenv("MONGO_URL")
-
 type TestVal struct {
 	ID      primitive.ObjectID `json:"_id" bson:"_id"`
 	IntVal  int64              `bson:"intVal"`
@@ -26,6 +24,7 @@ type TestVal struct {
 }
 
 func TestMongocollection(t *testing.T) {
+	mongoURI := MongoTestConfig.Mongo.ConnectionString
 	ctx := GetCorrelationContext()
 	coll, err := mongo.NewDefaultCollection(ctx, MongoTestLogger, mongoURI, "GOLANGTEST", "Plain")
 	if err != nil {
@@ -67,6 +66,7 @@ func TestMongocollection(t *testing.T) {
 }
 
 func TestMongocollctionFindOne(t *testing.T) {
+	mongoURI := MongoTestConfig.Mongo.ConnectionString
 	ctx := GetCorrelationContext()
 	coll, err := mongo.NewDefaultCollection(ctx, MongoTestLogger, mongoURI, "GOLANGTEST", "Plain")
 	if err != nil {
@@ -82,6 +82,7 @@ func TestMongocollctionFindOne(t *testing.T) {
 }
 
 func TestMongocollctionFindFetch(t *testing.T) {
+	mongoURI := MongoTestConfig.Mongo.ConnectionString
 	ctx := GetCorrelationContext()
 	coll, err := mongo.NewDefaultCollection(ctx, MongoTestLogger, mongoURI, "GOLANGTEST", "Plain")
 	if err != nil {

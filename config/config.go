@@ -1,11 +1,5 @@
 package config
 
-import (
-	"log"
-
-	"github.com/joho/godotenv"
-)
-
 type MySqlConnectionConfig struct {
 	Host         string
 	Port         string
@@ -50,10 +44,4 @@ type LoggerConfig struct {
 	BufferSize        int
 	GrayLog           *GraylogConfig
 	AuthHeaderKeyList []string
-}
-
-func init() {
-	if err := godotenv.Load(); err != nil {
-		log.Print("No .env file found")
-	}
 }

@@ -11,8 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 )
 
-
-
 func getSTSToken() map[string]string {
 	dirname, err := os.UserHomeDir()
 	if err != nil {
@@ -49,4 +47,5 @@ func setAWSSession() {
 func Initialize() {
 	// getSTSToken()
 	setAWSSession()
+
 }

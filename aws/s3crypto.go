@@ -16,7 +16,6 @@ import (
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/google/uuid"
 	"sabariram.com/goserverbase/log"
-	"sabariram.com/goserverbase/utils"
 )
 
 type S3PII struct {
@@ -141,7 +140,7 @@ type PIITempFile struct {
 	ContentType *string   `json:"contentType"`
 }
 
-func (s *S3PII) GetFileCache(ctx context.Context, s3Bucket, s3Key, tempPathPart string) (*PIITempFile, error) {
+func (s *S3PII) GetFileCache(ctx context.Context, s3Bucket, s3Key, stage, tempPathPart string) (*PIITempFile, error) {
 	fullPath := s3Bucket + "/" + s3Key
 	fileCache, ok := piiFileCache[fullPath]
 	if ok && time.Now().Before(fileCache.expireTime) {
@@ -152,7 +151,6 @@ func (s *S3PII) GetFileCache(ctx context.Context, s3Bucket, s3Key, tempPathPart 
 			return nil, err
 		}
 		filePath := strings.Split(s3Key, "/")
-		stage := utils.GetEnvMust("stage")
 		tempS3Key := fmt.Sprintf("/%v/temp/%v/%v-%v", stage, tempPathPart, uuid.NewString(), filePath[len(filePath)-1])
 		mime := mimetype.Detect(blob)
 		err = s.s3Client.PutObject(ctx, s3Bucket, tempS3Key, bytes.NewReader(blob), mime.String())

@@ -3,19 +3,21 @@ services:
   golang:
     image: "sabariram/golanglambdatest:latest"
     volumes:
-      - .:/gobase
+      - .:/goserverbase
     networks:
       - mysqlnet
       - mongonet
+      - graylog_graylog
     environment:
-      SERVICE_NAME: ${APP_SERVICE_NAME}
-      LOG_LEVEL: ${LOG_LEVEL}
       MYSQL_HOST: localmysql
       MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_USERNAME: ${MYSQL_ROOT_USERNAME}
       MYSQL_PORT: 60002
       MYSQL_DATABASE: ${MYSQL_DATABASE}
+      GRAYLOG_ADD: graylog
       MONGO_URL: mongodb://localmongo:60001
+      SERVICE_NAME: ${APP_SERVICE_NAME}
+      LOG_LEVEL: ${LOG_LEVEL}
       AWS_REGION: ${AWS_REGION}
       AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
       AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
@@ -25,7 +27,8 @@ services:
       FIFO_SQS_URL: ${FIFO_SQS_URL}
       SNS_ARN: ${SNS_ARN}
       GRAYLOG_PORT: ${GRAYLOG_PORT}
-
+      LOG_BUFFER_SIZE: ${LOG_BUFFER_SIZE}
+      S3_BUCKET: ${S3_BUCKET}
     command: tail -f /dev/null
     depends_on:
       - localmysql
@@ -52,3 +55,5 @@ services:
 networks:
   mysqlnet: {}
   mongonet: {}
+  graylog_graylog:
+    external: true

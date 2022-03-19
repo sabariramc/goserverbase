@@ -1,14 +1,18 @@
 package tests
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"gopkg.in/Graylog2/go-gelf.v2/gelf"
+	"sabariram.com/goserverbase/utils/testutils"
 )
 
 func TestGraylog(t *testing.T) {
-	graylogAddr := "localhost:12202"
+	config := testutils.NewConfig()
+	graylogAddr := fmt.Sprintf("%v:%v", config.Logger.GrayLog.Address, config.Logger.GrayLog.Port)
 
 	if graylogAddr != "" {
 		// If using UDP
@@ -18,18 +22,31 @@ func TestGraylog(t *testing.T) {
 		if err != nil {
 			t.Fatalf(err.Error())
 		}
-		_ = gelfWriter.WriteMessage(&gelf.Message{
+		err = gelfWriter.WriteMessage(&gelf.Message{
 			Version:  "1.1",
 			Host:     "localhost",
-			Short:    "Hello world",
-			Full:     "Whats my name",
-			TimeUnix: float64(time.Now().Unix()),
+			Short:    "FROM container" + uuid.NewString(),
+			Full:     "Whats my name" + uuid.NewString(),
+			TimeUnix: float64(time.Now().UnixMilli()) / 1000,
 			Level:    6,
 			Extra: map[string]interface{}{
 				"x-correlation-id": "fafasfsadf",
 			},
 		})
-
+		err = gelfWriter.WriteMessage(&gelf.Message{
+			Version:  "1.1",
+			Host:     "localhost",
+			Short:    "FROM container" + uuid.NewString(),
+			Full:     "Whats my name" + uuid.NewString(),
+			TimeUnix: float64(time.Now().UnixMilli()) / 1000,
+			Level:    6,
+			Extra: map[string]interface{}{
+				"x-correlation-id": "fafasfsadf",
+			},
+		})
+		if err != nil {
+			t.Fatalf(err.Error())
+		}
 	}
 
 	// From here on out, any calls to log.Print* functions
