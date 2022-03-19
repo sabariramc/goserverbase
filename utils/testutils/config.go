@@ -52,7 +52,10 @@ func NewConfig() *TestConfig {
 		App: &config.ServerConfig{
 			Host:        utils.GetEnv("HOST", "localhost"),
 			Port:        utils.GetEnv("APP_PORT", "8080"),
-			ServiceName: utils.GetEnv("APP_SERVICE_NAME", "API"),
+			ServiceName: utils.GetEnv("SERVICE_NAME", "API"),
+		},
+		Mongo: &config.MongoConfig{
+			ConnectionString: utils.GetEnv("MONGO_URL", ""),
 		},
 		S3: &config.AWSS3Config{
 			BucketName: utils.GetEnv("S3_BUCKET", ""),
