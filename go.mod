@@ -7,6 +7,7 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.0
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0
+	github.com/joho/godotenv v1.4.0
 	github.com/shopspring/decimal v1.3.1
 	go.mongodb.org/mongo-driver v1.8.4
 	gopkg.in/Graylog2/go-gelf.v2 v2.0.0-20191017102106-1550ee647df0

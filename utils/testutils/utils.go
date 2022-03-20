@@ -9,6 +9,7 @@ import (
 	base "sabariram.com/goserverbase/aws"
 
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/joho/godotenv"
 )
 
 func getSTSToken() map[string]string {
@@ -42,6 +43,12 @@ func setAWSSession() {
 	// 	Credentials: credentials.NewStaticCredentials(stsToken["AccessKeyId"], stsToken["SecretAccessKey"], stsToken["SessionToken"]),
 	// }))
 	base.SetDefaultAWSSession(awsSession)
+}
+
+func LoadEnv(path string) {
+	if err := godotenv.Load(path); err != nil {
+		fmt.Printf("Env file not found - %v", path)
+	}
 }
 
 func Initialize() {
