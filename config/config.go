@@ -45,3 +45,7 @@ type LoggerConfig struct {
 	GrayLog           *GraylogConfig
 	AuthHeaderKeyList []string
 }
+
+type RuntimeConfig struct {
+	GoMaxProcs int
+}
