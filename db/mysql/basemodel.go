@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type CustomGormModel struct {
+type BaseMysqlModel struct {
 	ID        uint           `json:"-" gorm:"primarykey"`
 	CreatedAt time.Time      `json:"createdAt" gorm:"not null"`
 	UpdatedAt time.Time      `json:"updatedAt" gorm:"not null"`
