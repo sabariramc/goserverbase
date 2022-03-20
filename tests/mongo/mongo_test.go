@@ -72,7 +72,7 @@ func TestMongocollctionFindOne(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cur := coll.FindOne(ctx, map[string]string{"strVal": "value1"})
+	cur := coll.FindOne(ctx, map[string]string{"strVal": "val2"})
 	val := &TestVal{}
 	err = cur.Decode(val)
 	if err != nil {

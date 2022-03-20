@@ -15,16 +15,16 @@ type DB struct {
 	conn *gorm.DB
 }
 
-func Connect(config *config.MySqlConnectionConfig) *DB {
+func NewConnection(config *config.MySqlConnectionConfig) *DB {
 	dsn := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=%v&parseTime=True&loc=%v", config.Username, config.Password, config.Host, config.Port, config.DatabaseName, config.Charset, url.QueryEscape(config.Timezone))
 	conn, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
-	return CreateDatabase(conn)
+	return NewDatabase(conn)
 }
 
-func CreateDatabase(conn *gorm.DB) *DB {
+func NewDatabase(conn *gorm.DB) *DB {
 	return &DB{conn: conn}
 }
 

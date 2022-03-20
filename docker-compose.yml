@@ -12,10 +12,10 @@ services:
       MYSQL_HOST: localmysql
       MYSQL_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_USERNAME: ${MYSQL_ROOT_USERNAME}
-      MYSQL_PORT: 60002
+      MYSQL_PORT: 3306
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       GRAYLOG_ADD: graylog
-      MONGO_URL: mongodb://localmongo:60001
+      MONGO_URL: mongodb://localmongo:27017
       SERVICE_NAME: ${APP_SERVICE_NAME}
       LOG_LEVEL: ${LOG_LEVEL}
       AWS_REGION: ${AWS_REGION}
