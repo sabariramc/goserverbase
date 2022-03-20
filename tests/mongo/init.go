@@ -1,4 +1,4 @@
-package tests
+package mongo
 
 import (
 	"context"
@@ -15,13 +15,23 @@ var MongoTestLogger *log.Logger
 
 func init() {
 	testutils.Initialize()
+	testutils.LoadEnv("../../.env")
 	MongoTestConfig = testutils.NewConfig()
-	consoleLogWriter := logwriter.NewConsoleWriter(log.HostParams{
+	hostParams := log.HostParams{
 		Version:     MongoTestConfig.Logger.Version,
 		Host:        MongoTestConfig.App.Host,
 		ServiceName: MongoTestConfig.App.ServiceName,
+	}
+	consoleLogWriter := logwriter.NewConsoleWriter(hostParams)
+	graylog, err := logwriter.NewGraylogUDP(hostParams, consoleLogWriter, logwriter.Endpoint{
+		Transport: logwriter.UDP,
+		Address:   MongoTestConfig.Logger.GrayLog.Address,
+		Port:      MongoTestConfig.Logger.GrayLog.Port,
 	})
-	lmux := log.NewSequenctialLogMultipluxer(consoleLogWriter)
+	if err != nil {
+		panic(err)
+	}
+	lmux := log.NewSequenctialLogMultipluxer(consoleLogWriter, graylog)
 	MongoTestLogger = log.NewLogger(context.TODO(), MongoTestConfig.Logger, lmux, consoleLogWriter, utils.IST)
 }
 

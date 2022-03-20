@@ -10,6 +10,7 @@ type TestConfig struct {
 	Logger        *config.LoggerConfig
 	App           *config.ServerConfig
 	Mongo         *config.MongoConfig
+	MongoCSFLE    *config.MongoCFLEConfig
 	S3            *config.AWSS3Config
 	KMS           *config.AWSConfig
 	SecretManager *config.AWSConfig
@@ -45,17 +46,26 @@ func NewConfig() *TestConfig {
 			GrayLog: &config.GraylogConfig{
 				URL:     utils.GetEnv("GRAYLOG_URL", "http://localhost:12201/gelf"),
 				Address: utils.GetEnv("GRAYLOG_ADD", "localhost"),
-				Port:    uint(utils.GetEnvInt("GRAYLOG_PORT", 12201)),
+				Port:    uint(utils.GetEnvInt("GRAYLOG_PORT", 12202)),
 			},
 			AuthHeaderKeyList: utils.GetEnvAsSlice("AUTH_HEADER_LIST", []string{}, ";"),
 		},
 		App: &config.ServerConfig{
-			Host:        utils.GetEnv("HOST", "localhost"),
+			Host:        utils.GetHostName(),
 			Port:        utils.GetEnv("APP_PORT", "8080"),
 			ServiceName: utils.GetEnv("SERVICE_NAME", "API"),
 		},
 		Mongo: &config.MongoConfig{
-			ConnectionString: utils.GetEnv("MONGO_URL", ""),
+			ConnectionString:  utils.GetEnv("MONGO_URL", "mongodb://localhost:60001"),
+			DatabaseName:      utils.GetEnv("MONGO_DATABASE", "GOLANGTEST"),
+			MinConnectionPool: uint64(utils.GetEnvInt("MONGO_MIN_CONNECTION_POOL", 10)),
+			MaxConnectionPool: uint64(utils.GetEnvInt("MONGO_MAX_CONNECTION_POOL", 50)),
+		},
+		MongoCSFLE: &config.MongoCFLEConfig{
+			KeyVaultNamespace: utils.GetEnv("MONGO_KEY_VAULT", "encryption.__keyVault"),
+			MasterKeyARN: &config.AWSConfig{
+				Arn: utils.GetEnv("KMS_ARN", ""),
+			},
 		},
 		S3: &config.AWSS3Config{
 			BucketName: utils.GetEnv("S3_BUCKET", ""),

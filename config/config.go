@@ -21,8 +21,15 @@ type AWSS3Config struct {
 }
 
 type MongoConfig struct {
-	ConnectionString string
-	DatabaseName     string
+	ConnectionString  string
+	DatabaseName      string
+	MinConnectionPool uint64
+	MaxConnectionPool uint64
+}
+
+type MongoCFLEConfig struct {
+	KeyVaultNamespace string
+	MasterKeyARN      *AWSConfig
 }
 
 type ServerConfig struct {

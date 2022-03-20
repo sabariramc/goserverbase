@@ -18,7 +18,6 @@ import (
 )
 
 type Collection struct {
-	databaseName   string
 	collectionName string
 	collection     *mongo.Collection
 	log            *log.Logger
@@ -54,18 +53,20 @@ var newRegistory = bson.NewRegistryBuilder().RegisterTypeEncoder(decimalType, bs
 	return nil
 }))
 
-func NewDefaultCollection(ctx context.Context, logger *log.Logger, mongoURI, databaseName, collectionName string) (*Collection, error) {
-	client, err := GetClient(ctx, logger, mongoURI)
-	if err != nil {
-		return nil, err
+var collectionOptions = options.Collection().SetRegistry(newCustomBsonRegistory().Build())
+
+func (m *Mongo) NewCSFLECollection(ctx context.Context, collectionName string, hashFieldList []string) *Collection {
+	if !m.isCSFLEEnabled {
+		m.log.Emergency(ctx, "Non CSFLE Client", "Client passed is not a CSFLE Client", fmt.Errorf("CFLE COLLECTION ON NON CSFLE CLIENT"))
 	}
-	return NewCollection(logger, client.client, databaseName, collectionName), nil
+	coll := &Collection{collectionName: collectionName, collection: m.database.Collection(collectionName, collectionOptions), log: m.log}
+	coll.SetHashList(hashFieldList)
+	return coll
+
 }
 
-func NewCollection(logger *log.Logger, client *mongo.Client, databaseName, collectionName string) *Collection {
-	collectionOptions := options.Collection()
-	collectionOptions.SetRegistry(newCustomBsonRegistory().Build())
-	return &Collection{databaseName: databaseName, collectionName: collectionName, collection: client.Database(databaseName).Collection(collectionName, collectionOptions), log: logger}
+func (m *Mongo) NewCollection(collectionName string) *Collection {
+	return &Collection{collectionName: collectionName, collection: m.database.Collection(collectionName, collectionOptions), log: m.log}
 }
 
 func newCustomBsonRegistory() *bsoncodec.RegistryBuilder {

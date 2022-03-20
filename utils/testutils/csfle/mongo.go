@@ -1,26 +1,28 @@
-package testutils
+package csfle
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
 
+	"sabariram.com/goserverbase/config"
 	"sabariram.com/goserverbase/db/mongo"
+	"sabariram.com/goserverbase/db/mongo/csfle"
 	"sabariram.com/goserverbase/log"
 )
 
-func SetEncryptionKey(ctx context.Context, logger *log.Logger, encryptionSchema *string, mongoURI, keyVaultNamespace, keyAltName string, kmsProvider mongo.MasterKeyProvider) error {
+func SetEncryptionKey(ctx context.Context, logger *log.Logger, encryptionSchema *string, c config.MongoConfig, csfleC config.MongoCFLEConfig, keyAltName string, kmsProvider mongo.MasterKeyProvider) error {
 	schema := make(map[string]interface{})
 	err := json.Unmarshal([]byte(*encryptionSchema), &schema)
 	if err != nil {
 		logger.Error(ctx, "CSFL Schema unmarshal error", err)
 		return err
 	}
-	client, err := mongo.GetDefaultClient(ctx, logger, mongoURI)
+	client, err := mongo.NewMongo(ctx, logger, c)
 	if err != nil {
 		return err
 	}
-	keyID, err := client.GetDataKey(ctx, keyVaultNamespace, keyAltName, kmsProvider)
+	keyID, err := csfle.GetDataKey(ctx, client, csfleC.KeyVaultNamespace, keyAltName, kmsProvider)
 	if err != nil {
 		return err
 	}
