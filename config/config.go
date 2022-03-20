@@ -22,6 +22,7 @@ type AWSS3Config struct {
 
 type MongoConfig struct {
 	ConnectionString string
+	DatabaseName     string
 }
 
 type ServerConfig struct {
