@@ -16,6 +16,14 @@ func GetEnv(key string, defaultVal string) string {
 	return defaultVal
 }
 
+func GetHostName() string {
+	nodeName, err := os.Hostname()
+	if err != nil {
+		return "localhost"
+	}
+	return nodeName
+}
+
 func GetEnvInt(key string, defaultVal int) int {
 	if value, exists := os.LookupEnv(key); exists {
 		if iVal, err := strconv.Atoi(value); err == nil {
