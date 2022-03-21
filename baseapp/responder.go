@@ -5,12 +5,8 @@ import (
 	"net/http"
 	"runtime/debug"
 
+	"sabariram.com/goserverbase/constant"
 	"sabariram.com/goserverbase/errors"
-)
-
-const (
-	ContentTypeJSON   = "application/json"
-	HeaderContentType = "Content-Type"
 )
 
 type HandlerFunction func(*http.Request) (statusCode int, response interface{}, err error)
@@ -21,7 +17,7 @@ func (b *BaseApp) JSONResponder(body interface{}, f HandlerFunction) http.Handle
 	return b.JSONResponderWithHeader(body, func(r *http.Request) (statusCode int, response interface{}, header http.Header, err error) {
 		statusCode, response, err = f(r)
 		header = make(http.Header)
-		header.Add(HeaderContentType, ContentTypeJSON)
+		header.Add(constant.HeaderContentType, constant.ContentTypeJSON)
 		return
 	})
 }
@@ -39,7 +35,7 @@ func (b *BaseApp) JSONResponderWithHeader(inputBody interface{}, f HandlerFuncti
 				body := map[string]interface{}{
 					"error": "Internal error occcured, if persist contact technical team",
 				}
-				w.Header().Set(HeaderContentType, ContentTypeJSON)
+				w.Header().Set(constant.HeaderContentType, constant.ContentTypeJSON)
 				w.WriteHeader(http.StatusInternalServerError)
 				_ = json.NewEncoder(w).Encode(body)
 				b.PrintBody(ctx, bodyByte)
@@ -68,7 +64,7 @@ func (b *BaseApp) JSONResponderWithHeader(inputBody interface{}, f HandlerFuncti
 				}
 			}
 		}
-		w.Header().Set(HeaderContentType, ContentTypeJSON)
+		w.Header().Set(constant.HeaderContentType, constant.ContentTypeJSON)
 		w.WriteHeader(statusCode)
 		if err != nil {
 			body = err.Error()
