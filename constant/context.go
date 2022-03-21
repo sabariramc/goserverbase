@@ -5,4 +5,5 @@ type ContextVariable string
 const (
 	CorrelationContextKey ContextVariable = "correlationParam"
 	ActorIdKey            ContextVariable = "actorId"
+	ClaimsKey             ContextVariable = "claims"
 )
