@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"runtime/debug"
+
+	"sabariram.com/goserverbase/errors"
 )
 
 const (
@@ -53,6 +55,7 @@ func (b *BaseApp) JSONResponderWithHeader(inputBody interface{}, f HandlerFuncti
 			err = json.NewDecoder(r.Body).Decode(inputBody)
 			if err != nil {
 				statusCode = http.StatusBadRequest
+				err = errors.NewCustomError("INVALID_REQUEST_PAYLOAD", "invalid payload", err)
 			}
 			bodyByte, _ = json.Marshal(body)
 			b.log.Debug(ctx, "Request-Body", body)
@@ -74,10 +77,19 @@ func (b *BaseApp) JSONResponderWithHeader(inputBody interface{}, f HandlerFuncti
 		}
 		if body != nil {
 			b.log.Debug(ctx, "Response-Body", body)
-			err = json.NewEncoder(w).Encode(body)
-			if err != nil {
-				panic(err)
+			b, ok := body.(string)
+			if ok {
+				_, err = w.Write([]byte(b))
+				if err != nil {
+					panic(err)
+				}
+			} else {
+				err = json.NewEncoder(w).Encode(body)
+				if err != nil {
+					panic(err)
+				}
 			}
+
 		}
 	}
 }
