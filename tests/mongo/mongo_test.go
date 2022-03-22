@@ -8,7 +8,6 @@ import (
 	"github.com/shopspring/decimal"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"sabariram.com/goserverbase/db/mongo"
-	"sabariram.com/goserverbase/utils"
 )
 
 type TestVal struct {
@@ -32,12 +31,15 @@ func TestMongocollection(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	coll.InsertOne(ctx, map[string]interface{}{
-		"strVal":  "value1",
-		"intVal":  123,
-		"deciVal": val1.Add(val2),
-		"timeVal": time.Now().In(utils.IST),
-	})
+	data := map[string]interface{}{
+		"strVal":       "value1",
+		"intVal":       123,
+		"deciVal":      val1.Add(val2),
+		"timeValUTC":   time.Now().UTC(),
+		"timeValLocal": time.Now(),
+	}
+	fmt.Printf("%+v\n", data)
+	coll.InsertOne(ctx, data)
 	cur := coll.FindOne(ctx, map[string]string{"strVal": "value1"})
 	val := &TestVal{}
 	err = cur.Decode(val)
@@ -52,13 +54,13 @@ func TestMongocollection(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Printf("%+v\n", val)
-	coll.DeleteOne(ctx, map[string]string{"_id": val.ID.String()})
-	cur = coll.FindOne(ctx, map[string]string{"_id": val.ID.String()})
-	err = cur.Decode(val)
-	if err != nil {
-		fmt.Println(err)
-	}
+	// fmt.Printf("%+v\n", val)
+	// coll.DeleteOne(ctx, map[string]string{"_id": val.ID.String()})
+	// cur = coll.FindOne(ctx, map[string]string{"_id": val.ID.String()})
+	// err = cur.Decode(val)
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
 
 }
 

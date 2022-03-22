@@ -67,15 +67,13 @@ type Logger struct {
 	lMux        LogMultipluxer
 	hostParams  *HostParams
 	auditLogger AuditLogWriter
-	timeZone    *time.Location
 }
 
-func NewLogger(ctx context.Context, lc *config.LoggerConfig, lMux LogMultipluxer, auditLogger AuditLogWriter, timeZone *time.Location) *Logger {
+func NewLogger(ctx context.Context, lc *config.LoggerConfig, lMux LogMultipluxer, auditLogger AuditLogWriter) *Logger {
 	l := &Logger{
 		logLevel:    INFO,
 		lMux:        lMux,
 		auditLogger: auditLogger,
-		timeZone:    timeZone,
 		hostParams: &HostParams{
 			Version:     lc.Version,
 			Host:        lc.Host,
@@ -98,7 +96,7 @@ func (l *Logger) Audit(ctx context.Context, actor, action, target, desciption st
 		Action:         action,
 		Description:    desciption,
 		Target:         target,
-		Timestamp:      time.Now().In(l.timeZone),
+		Timestamp:      time.Now(),
 		AdditionalData: additionalData,
 	})
 }
@@ -147,6 +145,6 @@ func (l *Logger) print(ctx context.Context, level *LogLevelMap, shortMessage str
 		LogLevelMap:  *level,
 		ShortMessage: shortMessage,
 		FullMessage:  fullMessage,
-		Timestamp:    time.Now().In(l.timeZone)}
+		Timestamp:    time.Now()}
 	l.lMux.Print(ctx, message)
 }

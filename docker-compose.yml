@@ -29,6 +29,7 @@ services:
       GRAYLOG_PORT: ${GRAYLOG_PORT}
       LOG_BUFFER_SIZE: ${LOG_BUFFER_SIZE}
       S3_BUCKET: ${S3_BUCKET}
+      TZ: Asia/Kolkata
     command: tail -f /dev/null
     depends_on:
       - localmysql

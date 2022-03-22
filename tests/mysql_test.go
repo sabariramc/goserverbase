@@ -8,7 +8,6 @@ import (
 	"sabariram.com/goserverbase/db/mysql"
 	"sabariram.com/goserverbase/log"
 	"sabariram.com/goserverbase/log/logwriter"
-	"sabariram.com/goserverbase/utils"
 	"sabariram.com/goserverbase/utils/testutils"
 )
 
@@ -24,7 +23,7 @@ func init() {
 		ServiceName: MysqlTestConfig.App.ServiceName,
 	})
 	lmux := log.NewSequenctialLogMultipluxer(consoleLogWriter)
-	MysqlTestLogger = log.NewLogger(context.TODO(), MysqlTestConfig.Logger, lmux, consoleLogWriter, utils.IST)
+	MysqlTestLogger = log.NewLogger(context.TODO(), MysqlTestConfig.Logger, lmux, consoleLogWriter)
 }
 
 func GetCorrelationContext() context.Context {

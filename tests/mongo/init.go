@@ -6,7 +6,6 @@ import (
 	"sabariram.com/goserverbase/constant"
 	"sabariram.com/goserverbase/log"
 	"sabariram.com/goserverbase/log/logwriter"
-	"sabariram.com/goserverbase/utils"
 	"sabariram.com/goserverbase/utils/testutils"
 )
 
@@ -32,7 +31,7 @@ func init() {
 		panic(err)
 	}
 	lmux := log.NewSequenctialLogMultipluxer(consoleLogWriter, graylog)
-	MongoTestLogger = log.NewLogger(context.TODO(), MongoTestConfig.Logger, lmux, consoleLogWriter, utils.IST)
+	MongoTestLogger = log.NewLogger(context.TODO(), MongoTestConfig.Logger, lmux, consoleLogWriter)
 }
 
 func GetCorrelationContext() context.Context {

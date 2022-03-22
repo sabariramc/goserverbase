@@ -24,14 +24,15 @@ type BaseApp struct {
 	HostParams     *log.HostParams
 }
 
-func NewBaseApp(c ServerConfig, lMux log.LogMultipluxer, auditLogger log.AuditLogWriter, timeZone *time.Location) *BaseApp {
+func NewBaseApp(c ServerConfig, lMux log.LogMultipluxer, auditLogger log.AuditLogWriter) *BaseApp {
 	b := &BaseApp{
 		c:              &c,
 		logMultipluxer: lMux,
 		router:         mux.NewRouter().StrictSlash(true),
 	}
 	ctx := b.GetCorrelationContext(context.Background(), log.GetDefaultCorrelationParams(c.AppConfig.ServiceName))
-	b.log = log.NewLogger(ctx, c.LoggerConfig, lMux, auditLogger, timeZone)
+	b.log = log.NewLogger(ctx, c.LoggerConfig, lMux, auditLogger)
+	b.log.Notice(ctx, "Server Timezone", time.Local)
 	return b
 }
 

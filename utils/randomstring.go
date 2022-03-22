@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"math/rand"
 	"time"
 	"unsafe"
@@ -15,7 +16,7 @@ const (
 
 var src = rand.NewSource(time.Now().UnixNano())
 
-func GetRandomString(n int) string {
+func GetRandomString(n int, prefix string) string {
 	b := make([]byte, n)
 	// A src.Int63() generates 63 random bits, enough for letterIdxMax characters!
 	for i, cache, remain := n-1, src.Int63(), letterIdxMax; i >= 0; {
@@ -29,6 +30,9 @@ func GetRandomString(n int) string {
 		cache >>= letterIdxBits
 		remain--
 	}
-
-	return *(*string)(unsafe.Pointer(&b))
+	randStr := *(*string)(unsafe.Pointer(&b))
+	if prefix != "" {
+		randStr = fmt.Sprintf("%v_%v", prefix, randStr)
+	}
+	return randStr
 }

@@ -4,10 +4,7 @@ import (
 	"crypto/sha256"
 	b64 "encoding/base64"
 	"encoding/json"
-	"time"
 )
-
-var IST, _ = time.LoadLocation("Asia/Kolkata")
 
 func GetString(val interface{}) (*string, error) {
 	blob, err := json.Marshal(val)

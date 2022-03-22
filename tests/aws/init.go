@@ -6,7 +6,6 @@ import (
 	"sabariram.com/goserverbase/constant"
 	"sabariram.com/goserverbase/log"
 	"sabariram.com/goserverbase/log/logwriter"
-	"sabariram.com/goserverbase/utils"
 	"sabariram.com/goserverbase/utils/testutils"
 )
 
@@ -22,7 +21,7 @@ func init() {
 		ServiceName: AWSTestConfig.App.ServiceName,
 	})
 	lmux := log.NewSequenctialLogMultipluxer(consoleLogWriter)
-	AWSTestLogger = log.NewLogger(context.TODO(), AWSTestConfig.Logger, lmux, consoleLogWriter, utils.IST)
+	AWSTestLogger = log.NewLogger(context.TODO(), AWSTestConfig.Logger, lmux, consoleLogWriter)
 }
 
 func GetCorrelationContext() context.Context {
