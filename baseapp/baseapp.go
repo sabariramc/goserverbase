@@ -32,7 +32,8 @@ func NewBaseApp(c ServerConfig, lMux log.LogMultipluxer, auditLogger log.AuditLo
 	}
 	ctx := b.GetCorrelationContext(context.Background(), log.GetDefaultCorrelationParams(c.AppConfig.ServiceName))
 	b.log = log.NewLogger(ctx, c.LoggerConfig, lMux, auditLogger)
-	b.log.Notice(ctx, "Server Timezone", time.Local)
+	zone, _ := time.Now().Zone()
+	b.log.Notice(ctx, "Server Timezone", zone)
 	return b
 }
 

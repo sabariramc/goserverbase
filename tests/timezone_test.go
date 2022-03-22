@@ -8,6 +8,7 @@ import (
 )
 
 func TestTimeZone(t *testing.T) {
+	fmt.Println(time.Now().Zone())
 	fmt.Println(os.Environ())
 	fmt.Println(os.Getenv("TZ"))
 	fmt.Println(time.Now().UTC())
