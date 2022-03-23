@@ -41,9 +41,10 @@ func (b *BaseApp) JSONResponderWithHeader(inputBody interface{}, f HandlerFuncti
 				w.WriteHeader(http.StatusInternalServerError)
 				_ = json.NewEncoder(w).Encode(body)
 				b.PrintBody(ctx, bodyByte)
-				b.log.Error(ctx, "Response-Body", body)
-				b.log.Error(ctx, "Recovered in Responder - Error", r)
+				statusCode = http.StatusInternalServerError
+				b.log.Error(ctx, "Recovered in Responder - Error", r.(error).Error())
 				b.log.Error(ctx, "Recovered in Responder - StackTrace", string(debug.Stack()))
+				b.log.Error(ctx, "Response-Body", body)
 			}
 			b.log.Info(ctx, "Response-StatusCode", statusCode)
 			b.log.Info(ctx, "Response-Headers", w.Header())

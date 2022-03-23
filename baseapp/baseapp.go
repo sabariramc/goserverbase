@@ -17,18 +17,15 @@ type ServerConfig struct {
 }
 
 type BaseApp struct {
-	router         *mux.Router
-	c              *ServerConfig
-	logMultipluxer log.LogMultipluxer
-	log            *log.Logger
-	HostParams     *log.HostParams
+	router *mux.Router
+	c      *ServerConfig
+	log    *log.Logger
 }
 
 func NewBaseApp(c ServerConfig, lMux log.LogMultipluxer, auditLogger log.AuditLogWriter) *BaseApp {
 	b := &BaseApp{
-		c:              &c,
-		logMultipluxer: lMux,
-		router:         mux.NewRouter().StrictSlash(true),
+		c:      &c,
+		router: mux.NewRouter().StrictSlash(true),
 	}
 	ctx := b.GetCorrelationContext(context.Background(), log.GetDefaultCorrelationParams(c.AppConfig.ServiceName))
 	b.log = log.NewLogger(ctx, c.LoggerConfig, lMux, auditLogger)
@@ -58,14 +55,6 @@ func (b *BaseApp) GetConfig() ServerConfig {
 
 func (b *BaseApp) SetConfig(c ServerConfig) {
 	b.c = &c
-}
-
-func (b *BaseApp) GetLogMultipluxer() log.LogMultipluxer {
-	return b.logMultipluxer
-}
-
-func (b *BaseApp) SetLogMultipluxer(logMux log.LogMultipluxer) {
-	b.logMultipluxer = logMux
 }
 
 func (b *BaseApp) GetLogger() *log.Logger {
