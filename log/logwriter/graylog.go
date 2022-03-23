@@ -2,7 +2,6 @@ package logwriter
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"time"
 
@@ -62,31 +61,32 @@ func (g *GraylogWriter) Start(logChannel chan log.MultipluxerLogMessage) {
 
 func (g *GraylogWriter) WriteMessage(ctx context.Context, msg *log.LogMessage) (err error) {
 	cr := GetCorrelationParam(ctx)
-	blob, _ := json.Marshal(msg.FullMessage)
-	fullMessage := string(blob)
+
 	errorMessage := log.LogMessage{
 		LogLevelMap:  log.GetLogLevelMap(log.ERROR),
 		ShortMessage: msg.ShortMessage,
+		FullMessage:  msg.FullMessage,
 		Timestamp:    time.Now()}
 	err = g.writer.WriteMessage(&gelf.Message{
 		Version:  g.hostParam.Version,
 		Host:     g.hostParam.Host,
 		Short:    msg.ShortMessage,
-		Full:     fullMessage,
+		Full:     msg.FullMessage,
 		TimeUnix: float64(msg.Timestamp.UnixMilli()) / 1000,
 		Level:    int32(msg.Level),
 		Extra: map[string]interface{}{
-			"x-correlation-id": cr.CorrelationId,
-			"x-scenario-id":    cr.ScenarioId,
-			"x-session-id":     cr.SessionId,
-			"x-scenario-name":  cr.ScenarioName,
-			"service-name":     cr.ServiceName,
+			"x-correlation-id":    cr.CorrelationId,
+			"x-scenario-id":       cr.ScenarioId,
+			"x-session-id":        cr.SessionId,
+			"x-scenario-name":     cr.ScenarioName,
+			"service-name":        cr.ServiceName,
+			"x-full-message-type": msg.FullMessageType,
 		},
 	})
 	if err != nil {
 		_ = g.backuplog.WriteMessage(ctx, msg)
 		errorMessage.ShortMessage = "Error sending to graylog"
-		errorMessage.FullMessage = err
+		errorMessage.FullMessage = err.Error()
 		_ = g.backuplog.WriteMessage(ctx, &errorMessage)
 	}
 	return fmt.Errorf("GraylogWriter.WriteMessage : %w", err)

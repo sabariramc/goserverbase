@@ -2,10 +2,14 @@ package log
 
 import (
 	"context"
+	"encoding/json"
+	"reflect"
 	"time"
 
 	"sabariram.com/goserverbase/config"
 )
+
+const ParseErrorMsg = "******************ERROR DURING MARSHAL OF FULLMESSAGE*******************"
 
 type LogLevelMap struct {
 	Level        LogLevel `json:"level"`
@@ -46,9 +50,10 @@ func GetLogLevelMap(level LogLevel) LogLevelMap {
 
 type LogMessage struct {
 	LogLevelMap
-	ShortMessage string      `json:"short_message"`
-	FullMessage  interface{} `json:"full_message"`
-	Timestamp    time.Time   `json:"timestamp"`
+	ShortMessage    string `json:"short_message"`
+	FullMessage     string `json:"full_message"`
+	FullMessageType string
+	Timestamp       time.Time `json:"timestamp"`
 }
 
 type AuditLogMessage struct {
@@ -138,17 +143,29 @@ func (l *Logger) print(ctx context.Context, level *LogLevelMap, shortMessage str
 	if level.Level > l.logLevel {
 		return
 	}
-	e, ok := fullMessage.(error)
-	if ok {
-		fullMessage = e.Error()
-	}
+	var msg string
 	if fullMessage == nil {
-		fullMessage = shortMessage
+		msg = shortMessage
+	} else {
+		switch v := fullMessage.(type) {
+		case string:
+			msg = v
+		case error:
+			msg = v.Error()
+		default:
+			blob, err := json.Marshal(v)
+			if err != nil {
+				msg = ParseErrorMsg
+			} else {
+				msg = string(blob)
+			}
+		}
 	}
 	message := &LogMessage{
-		LogLevelMap:  *level,
-		ShortMessage: shortMessage,
-		FullMessage:  fullMessage,
-		Timestamp:    time.Now()}
+		LogLevelMap:     *level,
+		ShortMessage:    shortMessage,
+		FullMessage:     msg,
+		FullMessageType: reflect.TypeOf(fullMessage).Name(),
+		Timestamp:       time.Now()}
 	l.lMux.Print(ctx, message)
 }

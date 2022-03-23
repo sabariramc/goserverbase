@@ -7,7 +7,7 @@ import (
 	"sabariram.com/goserverbase/log"
 )
 
-const ParseErrorMsg = "******************ERROR DURING MARSHAL OF FULLMESSAGE*******************"
+
 
 func GetCorrelationParam(ctx context.Context) *log.CorrelationParmas {
 	val, ok := ctx.Value(constant.CorrelationContextKey).(*log.CorrelationParmas)

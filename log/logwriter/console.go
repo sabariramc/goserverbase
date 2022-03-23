@@ -2,9 +2,7 @@ package logwriter
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"reflect"
 
 	"sabariram.com/goserverbase/log"
 )
@@ -31,14 +29,7 @@ func (c *ConsoleWriter) GetBufferSize() int {
 
 func (c *ConsoleWriter) WriteMessage(ctx context.Context, l *log.LogMessage) error {
 	cr := GetCorrelationParam(ctx)
-	b, err := json.Marshal(l.FullMessage)
-	var fullMessage string
-	if err != nil {
-		fullMessage = ParseErrorMsg
-	} else {
-		fullMessage = string(b)
-	}
-	fmt.Printf("[%v] [%v] [%v] [%v] [%v] [%v] [%v]\n", l.Timestamp, l.LogLevelName, cr.CorrelationId, cr.ServiceName, l.ShortMessage, reflect.TypeOf(l.FullMessage), fullMessage)
+	fmt.Printf("[%v] [%v] [%v] [%v] [%v] [%v] [%v]\n", l.Timestamp, l.LogLevelName, cr.CorrelationId, cr.ServiceName, l.ShortMessage, l.FullMessageType, l.FullMessage)
 	return nil
 }
 
