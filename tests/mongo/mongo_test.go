@@ -6,17 +6,17 @@ import (
 	"time"
 
 	"github.com/shopspring/decimal"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"sabariram.com/goserverbase/db/mongo"
 )
 
 type TestVal struct {
-	ID      primitive.ObjectID `json:"_id" bson:"_id"`
-	IntVal  int64              `bson:"intVal"`
-	DeciVal decimal.Decimal    `bson:"deciVal"`
-	StrVal  string             `bson:"strVal"`
-	BoolVal bool               `bson:"boolVal"`
-	TimeVal time.Time          `bson:"timeVal"`
+	mongo.BaseMongoModel `bson:",inline"`
+	IntVal               int64           `bson:"intVal"`
+	DeciVal              decimal.Decimal `bson:"deciVal"`
+	StrVal               string          `bson:"strVal"`
+	BoolVal              bool            `bson:"boolVal"`
+	TimeValUTC           time.Time       `bson:"timeValUTC"`
+	TimeValLocal         time.Time       `bson:"timeValLocal"`
 }
 
 func TestMongocollection(t *testing.T) {
@@ -31,13 +31,14 @@ func TestMongocollection(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	data := map[string]interface{}{
-		"strVal":       "value1",
-		"intVal":       123,
-		"deciVal":      val1.Add(val2),
-		"timeValUTC":   time.Now().UTC(),
-		"timeValLocal": time.Now(),
-	}
+	data := &TestVal{}
+	data.CreatedAt = time.Now()
+	data.UpdatedAt = time.Now()
+	data.StrVal = "value1"
+	data.IntVal = 123
+	data.DeciVal = val1.Add(val2)
+	data.TimeValUTC = time.Now().UTC()
+	data.TimeValLocal = time.Now()
 	fmt.Printf("%+v\n", data)
 	coll.InsertOne(ctx, data)
 	cur := coll.FindOne(ctx, map[string]string{"strVal": "value1"})

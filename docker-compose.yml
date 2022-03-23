@@ -39,8 +39,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     ports:
-      - 60002:3306/tcp
-      - 60003:33060/tcp
+      - 60102:3306/tcp
+      - 60103:33060/tcp
     networks:
       - mysqlnet
     volumes:
