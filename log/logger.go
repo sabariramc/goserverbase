@@ -138,6 +138,10 @@ func (l *Logger) print(ctx context.Context, level *LogLevelMap, shortMessage str
 	if level.Level > l.logLevel {
 		return
 	}
+	e, ok := fullMessage.(error)
+	if ok {
+		fullMessage = e.Error()
+	}
 	if fullMessage == nil {
 		fullMessage = shortMessage
 	}
