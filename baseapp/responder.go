@@ -51,7 +51,9 @@ func (b *BaseApp) JSONResponderWithHeader(inputBody interface{}, f HandlerFuncti
 		}()
 		b.PrintHeader(ctx, r.Header)
 		if r.Method == http.MethodPost || r.Method == http.MethodPut || r.Method == http.MethodPatch {
-			err = json.NewDecoder(r.Body).Decode(inputBody)
+			decoder := json.NewDecoder(r.Body)
+			decoder.DisallowUnknownFields()
+			err = decoder.Decode(inputBody)
 			if err != nil {
 				statusCode = http.StatusBadRequest
 				err = errors.NewCustomError("INVALID_REQUEST_PAYLOAD", "invalid payload", err)
