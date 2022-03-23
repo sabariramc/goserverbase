@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"context"
+	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -32,7 +33,10 @@ func (m *Collection) FindFetch(ctx context.Context, loader NewLoadContainer, fil
 	valList := loader(count)
 	i := 0
 	for cur.Next(ctx) {
-		cur.Decode(valList[i])
+		err := cur.Decode(valList[i])
+		if err != nil {
+			return nil, fmt.Errorf("Collection.FindFetch : %w", err)
+		}
 		i++
 	}
 	res = valList
@@ -62,12 +66,14 @@ func (m *Collection) UpdateByID(ctx context.Context, id interface{}, update inte
 		id, err = primitive.ObjectIDFromHex(val)
 		if err != nil {
 			m.log.Error(ctx, "Mongo update by id, id creation error", err)
+			err = fmt.Errorf("Collection.UpdateById : %w", err)
 			return
 		}
 	}
 	res, err = m.collection.UpdateByID(ctx, id, update, opts...)
 	if err != nil {
 		m.log.Error(ctx, "Mongo update by id error", err)
+		err = fmt.Errorf("Collection.UpdateById : %w", err)
 		return
 	}
 	m.log.Debug(ctx, "Mongo update by id response", res)
@@ -78,6 +84,7 @@ func (m *Collection) UpdateMany(ctx context.Context, filter interface{}, update 
 	res, err = m.collection.UpdateMany(ctx, filter, update, opts...)
 	if err != nil {
 		m.log.Error(ctx, "Mongo update many error", err)
+		err = fmt.Errorf("Collection.UpdateMany : %w", err)
 		return
 	}
 	m.log.Debug(ctx, "Mongo update many response", res)
@@ -88,6 +95,7 @@ func (m *Collection) UpdateOne(ctx context.Context, filter interface{}, update i
 	res, err = m.collection.UpdateOne(ctx, filter, update, opts...)
 	if err != nil {
 		m.log.Error(ctx, "Mongo update one error", err)
+		err = fmt.Errorf("Collection.UpdateOne : %w", err)
 		return
 	}
 	m.log.Debug(ctx, "Mongo update one response", res)
@@ -98,6 +106,7 @@ func (m *Collection) DeleteOne(ctx context.Context, filter interface{}, opts ...
 	res, err = m.collection.DeleteOne(ctx, filter, opts...)
 	if err != nil {
 		m.log.Error(ctx, "Mongo delete one error", err)
+		err = fmt.Errorf("Collection.DeleteOne : %w", err)
 		return
 	}
 	m.log.Debug(ctx, "Mongo delete one response", res)
@@ -108,6 +117,7 @@ func (m *Collection) DeleteMany(ctx context.Context, filter interface{}, opts ..
 	res, err = m.collection.DeleteMany(ctx, filter, opts...)
 	if err != nil {
 		m.log.Error(ctx, "Mongo delete one error", err)
+		err = fmt.Errorf("Collection.DeleteMany : %w", err)
 		return
 	}
 	m.log.Debug(ctx, "Mongo delete many response", res)

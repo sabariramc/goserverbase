@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"sabariram.com/goserverbase/config"
@@ -27,7 +28,7 @@ func NewMongo(ctx context.Context, logger *log.Logger, c config.MongoConfig) (*M
 	var err error
 	client, err = NewMongoClient(ctx, logger, &c)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("mongo.NewMongo : %w", err)
 	}
 	return &Mongo{client: client, log: logger, c: &c, database: client.Database(c.DatabaseName), isCSFLEEnabled: false}, nil
 }
@@ -46,12 +47,12 @@ func NewMongoClient(ctx context.Context, logger *log.Logger, c *config.MongoConf
 	client, err := mongo.Connect(ctx, connectionOptions)
 	if err != nil {
 		logger.Error(ctx, "Error creating mongo connection", err)
-		return nil, err
+		return nil, fmt.Errorf("mongo.NewMongoClient : %w", err)
 	}
 	err = client.Ping(ctx, nil)
 	if err != nil {
 		logger.Error(ctx, "Error pinging mongo server", err)
-		return nil, err
+		return nil, fmt.Errorf("mongo.NewMongoClient : %w", err)
 	}
 	return client, nil
 }

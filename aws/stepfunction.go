@@ -3,6 +3,7 @@ package aws
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sfn"
@@ -51,6 +52,7 @@ func (s *StepFunction) StartExecution(ctx context.Context, stateMachineArn, exec
 	})
 	if err != nil {
 		s.log.Error(ctx, "State machine start execution error", err)
+		err = fmt.Errorf("StepFunction.StartExecution: %w", err)
 		return
 	}
 	s.log.Debug(ctx, "State machine start execution response", res)

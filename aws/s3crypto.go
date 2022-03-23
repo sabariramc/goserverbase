@@ -72,7 +72,7 @@ func (s *S3PII) PutObject(ctx context.Context, s3Bucket, s3Key string, body io.R
 	res, err := s.encryptionClient.PutObjectWithContext(ctx, req)
 	if err != nil {
 		s.log.Error(ctx, "S3crypto put object error", err)
-		return err
+		return fmt.Errorf("S3PII.PutObject: %w", err)
 	}
 	s.log.Debug(ctx, "S3crypto put object response", res)
 	return nil
@@ -82,11 +82,11 @@ func (s *S3PII) PutFile(ctx context.Context, s3Bucket, s3Key, localFilPath strin
 	fp, err := os.Open(localFilPath)
 	if err != nil {
 		s.log.Error(ctx, "Error opening file", localFilPath)
-		return err
+		return fmt.Errorf("S3PII.PutFile: %w", err)
 	}
 	mime, err := mimetype.DetectFile(localFilPath)
 	if err != nil {
-		s.log.Error(ctx, "Error detecting mime type", err)
+		s.log.Notice(ctx, "Failed detecting mime type", err)
 	}
 	s.log.Debug(ctx, "File mimetype", mime)
 	defer fp.Close()
@@ -99,13 +99,13 @@ func (s *S3PII) GetObject(ctx context.Context, s3Bucket, s3Key string) ([]byte, 
 	res, err := s.decryptionClient.GetObjectWithContext(ctx, req)
 	if err != nil {
 		s.log.Error(ctx, "S3crypto get object error", err)
-		return nil, err
+		return nil, fmt.Errorf("S3PII.GetObject: %w", err)
 	}
 	s.log.Debug(ctx, "S3crypto get object response", res)
 	blob, err := io.ReadAll(res.Body)
 	if err != nil {
 		s.log.Error(ctx, "S3crypto get object read error", err)
-		return nil, err
+		return nil, fmt.Errorf("S3PII.GetObject: %w", err)
 	}
 	return blob, nil
 }
@@ -118,18 +118,18 @@ func (s *S3PII) GetFile(ctx context.Context, s3Bucket, s3Key, localFilePath stri
 	fp, err := os.Create(localFilePath)
 	if err != nil {
 		s.log.Error(ctx, "S3crypto get file - file creation error", err)
-		return err
+		return fmt.Errorf("S3PII.GetFile: %w", err)
 	}
 	defer fp.Close()
 	n, err := fp.Write(blob)
 	if err != nil {
 		s.log.Error(ctx, "S3crypto get file - file writing error", err)
-		return err
+		return fmt.Errorf("S3PII.GetFile: %w", err)
 	}
 	if n != len(blob) {
 		err := fmt.Errorf("total bytes %v, written bytes %v", len(blob), n)
 		s.log.Error(ctx, "S3crypto get file - file writing error", err)
-		return err
+		return fmt.Errorf("S3PII.GetFile: %w", err)
 	}
 	return nil
 }
@@ -148,21 +148,21 @@ func (s *S3PII) GetFileCache(ctx context.Context, s3Bucket, s3Key, stage, tempPa
 	} else {
 		blob, err := s.GetObject(ctx, s3Bucket, s3Key)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("S3PII.GetFileCache: %w", err)
 		}
 		filePath := strings.Split(s3Key, "/")
 		tempS3Key := fmt.Sprintf("/%v/temp/%v/%v-%v", stage, tempPathPart, uuid.NewString(), filePath[len(filePath)-1])
 		mime := mimetype.Detect(blob)
 		err = s.s3Client.PutObject(ctx, s3Bucket, tempS3Key, bytes.NewReader(blob), mime.String())
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("S3PII.GetFileCache: %w", err)
 		}
 		fileCache = &urlCache{expireTime: time.Now().Add(time.Hour * 20), key: tempS3Key, contentType: mime.String()}
 		piiFileCache[fullPath] = fileCache
 	}
 	url, err := s.s3Client.CreatePresignedURLGET(ctx, s3Bucket, fileCache.key, 30*60)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("S3PII.GetFileCache: %w", err)
 	}
 	return &PIITempFile{URL: url, ContentType: &fileCache.contentType, ExpiresAt: time.Now().Add(time.Minute * 30)}, nil
 }

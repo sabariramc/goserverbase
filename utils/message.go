@@ -1,5 +1,11 @@
 package utils
 
+import (
+	"fmt"
+
+	"sabariram.com/goserverbase/errors"
+)
+
 type Entity string
 
 const (
@@ -27,7 +33,13 @@ func NewMessage(entity Entity, event string) *Message {
 	}
 }
 
-func (m *Message) AddPayload(name string, payload *Payload) {
+func (m *Message) AddPayload(name string, payload *Payload) error {
+	for _, v := range m.Contains {
+		if v == name {
+			return fmt.Errorf("Message.AddPayload : %w", errors.NewCustomError("DUPLICATE_PAYLOAD", fmt.Sprintf("Payload `%v` already exist", name), nil))
+		}
+	}
 	m.Contains = append(m.Contains, name)
 	m.Payload[name] = payload
+	return nil
 }

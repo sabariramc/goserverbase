@@ -23,7 +23,7 @@ var tmp = "/tmp/mongocryptd"
 func NewPIIMongo(ctx context.Context, logger *log.Logger, c config.MongoConfig, csfle config.MongoCFLEConfig, schema map[string]interface{}, kmsProvider m.MasterKeyProvider) (*m.Mongo, error) {
 	client, err := NewCSFLEClient(ctx, logger, csfle.KeyVaultNamespace, c.ConnectionString, schema, kmsProvider)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("csfle.NewPIIMongo : %w", err)
 	}
 	return m.NewCSFLEMongo(client, logger, c, csfle), nil
 }
@@ -51,12 +51,12 @@ func NewCSFLEClient(ctx context.Context, logger *log.Logger, keyVaultNamespace, 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI).SetAutoEncryptionOptions(autoEncryptionOpts))
 	if err != nil {
 		logger.Error(ctx, "connect error for Mongo CSLFE client", err)
-		return nil, err
+		return nil, fmt.Errorf("csfle.NewCSFLEClient : %w", err)
 	}
 	err = client.Ping(ctx, nil)
 	if err != nil {
 		logger.Error(ctx, "Error pinging mongo server", err)
-		return nil, err
+		return nil, fmt.Errorf("csfle.NewCSFLEClient : %w", err)
 	}
 	return client, nil
 }
@@ -104,7 +104,7 @@ func CreateDataKey(ctx context.Context, m *m.Mongo, keyVaultNamespace, keyAltNam
 	clientEnc, err := mongo.NewClientEncryption(m.GetClient(), clientEncryptionOpts)
 	if err != nil {
 		m.GetLogger().Error(ctx, "Error creating encryption client", err)
-		return nil, err
+		return nil, fmt.Errorf("csfle.CreateDataKey : %w", err)
 	}
 	dataKeyOpts := options.DataKey().
 		SetMasterKey(provider.DataKeyOpts()).
@@ -112,7 +112,7 @@ func CreateDataKey(ctx context.Context, m *m.Mongo, keyVaultNamespace, keyAltNam
 	dataKeyID, err := clientEnc.CreateDataKey(ctx, provider.Name(), dataKeyOpts)
 	if err != nil {
 		m.GetLogger().Error(ctx, "Error creating data key", err)
-		return nil, err
+		return nil, fmt.Errorf("csfle.CreateDataKey : %w", err)
 	}
 	res := base64.StdEncoding.EncodeToString(dataKeyID.Data)
 	return &res, nil

@@ -89,5 +89,5 @@ func (g *GraylogWriter) WriteMessage(ctx context.Context, msg *log.LogMessage) (
 		errorMessage.FullMessage = err
 		_ = g.backuplog.WriteMessage(ctx, &errorMessage)
 	}
-	return err
+	return fmt.Errorf("GraylogWriter.WriteMessage : %w", err)
 }

@@ -55,7 +55,7 @@ func GetBytes(key interface{}) ([]byte, error) {
 	enc := gob.NewEncoder(&buf)
 	err := enc.Encode(key)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("baseapp.GetBytes: %w", err)
 	}
 	return buf.Bytes(), nil
 }

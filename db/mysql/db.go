@@ -19,7 +19,7 @@ func NewConnection(config *config.MySqlConnectionConfig) *DB {
 	dsn := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=%v&parseTime=True&loc=%v", config.Username, config.Password, config.Host, config.Port, config.DatabaseName, config.Charset, url.QueryEscape(config.Timezone))
 	conn, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		panic(err)
+		panic(fmt.Errorf("mysql.NewConnection: %w", err))
 	}
 	return NewDatabase(conn)
 }

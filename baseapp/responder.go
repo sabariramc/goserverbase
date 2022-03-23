@@ -2,6 +2,8 @@ package baseapp
 
 import (
 	"encoding/json"
+	e "errors"
+	"fmt"
 	"net/http"
 	"runtime/debug"
 
@@ -67,6 +69,10 @@ func (b *BaseApp) JSONResponderWithHeader(inputBody interface{}, f HandlerFuncti
 		w.Header().Set(constant.HeaderContentType, constant.ContentTypeJSON)
 		w.WriteHeader(statusCode)
 		if err != nil {
+			var custErr *errors.CustomError
+			if !e.As(err, &custErr) {
+				err = errors.NewCustomError("UNKNOWN", "Unknown error", err)
+			}
 			body = err.Error()
 			b.PrintBody(ctx, bodyByte)
 			b.log.Error(ctx, "Response-Body", body)
@@ -77,12 +83,12 @@ func (b *BaseApp) JSONResponderWithHeader(inputBody interface{}, f HandlerFuncti
 			if ok {
 				_, err = w.Write([]byte(b))
 				if err != nil {
-					panic(err)
+					panic(fmt.Errorf("BaseApp.JSONResponderWithHeader: %w", err))
 				}
 			} else {
 				err = json.NewEncoder(w).Encode(body)
 				if err != nil {
-					panic(err)
+					panic(fmt.Errorf("BaseApp.JSONResponderWithHeader: %w", err))
 				}
 			}
 

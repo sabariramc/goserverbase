@@ -44,6 +44,7 @@ func (k *KMS) Encrypt(ctx context.Context, plainText *string) (cipherTextBlob []
 	res, err := k.client.EncryptWithContext(ctx, req)
 	if err != nil {
 		k.log.Error(ctx, "KMS encryption error", err)
+		err = fmt.Errorf("KMS.Encrypt: %w", err)
 		return
 	}
 	k.log.Debug(ctx, "KMS encryption response", res)
@@ -65,6 +66,7 @@ func (k *KMS) Decrypt(ctx context.Context, b64EncodedText *string) (plainText st
 	res, err := k.client.DecryptWithContext(ctx, req)
 	if err != nil {
 		k.log.Error(ctx, "KMS decryption error", err)
+		err = fmt.Errorf("KMS.Decrypt: %w", err)
 		return
 	}
 	k.log.Debug(ctx, "KMS decryption response", fmt.Sprint(res))

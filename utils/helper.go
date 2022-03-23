@@ -4,12 +4,13 @@ import (
 	"crypto/sha256"
 	b64 "encoding/base64"
 	"encoding/json"
+	"fmt"
 )
 
 func GetString(val interface{}) (*string, error) {
 	blob, err := json.Marshal(val)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("utils.GetString : %w", err)
 	}
 	str := string(blob)
 	return &str, nil

@@ -54,13 +54,13 @@ func TestMongocollection(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// fmt.Printf("%+v\n", val)
-	// coll.DeleteOne(ctx, map[string]string{"_id": val.ID.String()})
-	// cur = coll.FindOne(ctx, map[string]string{"_id": val.ID.String()})
-	// err = cur.Decode(val)
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
+	fmt.Printf("%+v\n", val)
+	coll.DeleteOne(ctx, map[string]string{"_id": val.ID.String()})
+	cur = coll.FindOne(ctx, map[string]string{"_id": val.ID.String()})
+	err = cur.Decode(val)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 }
 

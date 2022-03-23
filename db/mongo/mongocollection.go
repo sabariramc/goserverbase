@@ -33,21 +33,21 @@ var newRegistory = bson.NewRegistryBuilder().RegisterTypeEncoder(decimalType, bs
 	}
 	dec, err := primitive.ParseDecimal128(custDec.String())
 	if err != nil {
-		return err
+		return fmt.Errorf("mongo.DecimalRegistoryBuilder : %w", err)
 	}
 	err = vr.WriteDecimal128(dec)
 	if err != nil {
-		return err
+		return fmt.Errorf("mongo.DecimalRegistoryBuilder : %w", err)
 	}
 	return nil
 })).RegisterTypeDecoder(decimalType, bsoncodec.ValueDecoderFunc(func(_ bsoncodec.DecodeContext, vr bsonrw.ValueReader, val reflect.Value) error {
 	read, err := vr.ReadDecimal128()
 	if err != nil {
-		return err
+		return fmt.Errorf("mongo.DecimalRegistoryBuilder : %w", err)
 	}
 	dec, err := decimal.NewFromString(read.String())
 	if err != nil {
-		return err
+		return fmt.Errorf("mongo.DecimalRegistoryBuilder : %w", err)
 	}
 	val.Set(reflect.ValueOf(dec))
 	return nil

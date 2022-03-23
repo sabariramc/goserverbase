@@ -2,6 +2,7 @@ package mongo
 
 import (
 	"context"
+	"fmt"
 
 	"sabariram.com/goserverbase/aws"
 	"sabariram.com/goserverbase/log"
@@ -57,7 +58,7 @@ func CreateAWSProvider(awsAccessKeyID, awsSecretAccessKey, sessionToken, awsKeyR
 func GetDefaultAWSKMSProvider(ctx context.Context, logger *log.Logger, awsKeyARN string) (MasterKeyProvider, error) {
 	provider, err := GetDefaultAWSProvider(ctx, logger)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("mongo.GetDefaultAWSKMSProvider : %w", err)
 	}
 	provider.updateKMSARN(awsKeyARN)
 	return provider, nil

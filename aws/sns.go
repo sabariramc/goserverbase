@@ -3,6 +3,7 @@ package aws
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -48,7 +49,7 @@ func (s *SNS) Publish(ctx context.Context, topicArn, subject *string, payload *u
 	res, err := s.client.PublishWithContext(ctx, req)
 	if err != nil {
 		s.log.Error(ctx, "SNS publish error", err)
-		return err
+		return fmt.Errorf("SNS.Publish: %w", err)
 	}
 	s.log.Debug(ctx, "SNS publish response", res)
 	return nil
