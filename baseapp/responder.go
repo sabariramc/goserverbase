@@ -56,7 +56,7 @@ func (b *BaseApp) JSONResponderWithHeader(inputBody interface{}, f HandlerFuncti
 			err = decoder.Decode(inputBody)
 			if err != nil {
 				statusCode = http.StatusBadRequest
-				err = errors.NewCustomError("INVALID_REQUEST_PAYLOAD", "invalid payload", err)
+				err = errors.NewCustomError("INVALID_REQUEST_PAYLOAD", "invalid payload", err.Error())
 			}
 			bodyByte, _ = json.Marshal(body)
 			b.log.Debug(ctx, "Request-Body", body)
