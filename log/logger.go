@@ -144,9 +144,12 @@ func (l *Logger) print(ctx context.Context, level *LogLevelMap, shortMessage str
 		return
 	}
 	var msg string
+	var msgType string
 	if fullMessage == nil {
 		msg = shortMessage
+		msgType = "nil"
 	} else {
+		msgType = reflect.TypeOf(fullMessage).Name()
 		switch v := fullMessage.(type) {
 		case string:
 			msg = v
@@ -165,7 +168,7 @@ func (l *Logger) print(ctx context.Context, level *LogLevelMap, shortMessage str
 		LogLevelMap:     *level,
 		ShortMessage:    shortMessage,
 		FullMessage:     msg,
-		FullMessageType: reflect.TypeOf(fullMessage).Name(),
+		FullMessageType: ,
 		Timestamp:       time.Now()}
 	l.lMux.Print(ctx, message)
 }
