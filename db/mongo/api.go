@@ -20,7 +20,7 @@ func (m *Collection) FindOne(ctx context.Context, filter interface{}, opts ...*o
 
 type NewLoadContainer func(count int) []interface{}
 
-func (m *Collection) FindFetch(ctx context.Context, filter interface{}, loader NewLoadContainer, opts ...*options.FindOptions) (res []interface{}, err error) {
+func (m *Collection) FindFetch(ctx context.Context, loader NewLoadContainer, filter interface{}, opts ...*options.FindOptions) (res []interface{}, err error) {
 	if filter == nil {
 		filter = bson.D{}
 	}

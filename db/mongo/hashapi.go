@@ -17,8 +17,8 @@ func (m *Collection) FindOneWithHash(ctx context.Context, filter map[string]inte
 	return m.FindOne(ctx, m.newHashFilter(ctx, filter), opts...)
 }
 
-func (m *Collection) FindFetchWithHash(ctx context.Context, filter map[string]interface{}, loader NewLoadContainer, opts ...*options.FindOptions) (res []interface{}, err error) {
-	return m.FindFetch(ctx, m.newHashFilter(ctx, filter), loader, opts...)
+func (m *Collection) FindFetchWithHash(ctx context.Context, loader NewLoadContainer, filter map[string]interface{}, opts ...*options.FindOptions) (res []interface{}, err error) {
+	return m.FindFetch(ctx, loader, m.newHashFilter(ctx, filter), opts...)
 }
 
 func (m *Collection) newHashFilter(ctx context.Context, filter map[string]interface{}) map[string]interface{} {
