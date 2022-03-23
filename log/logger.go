@@ -168,7 +168,7 @@ func (l *Logger) print(ctx context.Context, level *LogLevelMap, shortMessage str
 		LogLevelMap:     *level,
 		ShortMessage:    shortMessage,
 		FullMessage:     msg,
-		FullMessageType: ,
+		FullMessageType: msgType,
 		Timestamp:       time.Now()}
 	l.lMux.Print(ctx, message)
 }
