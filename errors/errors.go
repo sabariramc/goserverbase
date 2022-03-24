@@ -20,5 +20,8 @@ func (e *CustomError) Error() string {
 }
 
 func NewCustomError(errorCode, errorMessage string, errorData interface{}) *CustomError {
+	if v, ok := errorData.(error); ok {
+		errorData = v.Error()
+	}
 	return &CustomError{ErrorCode: errorCode, ErrorMessage: errorMessage, ErrorData: errorData}
 }
