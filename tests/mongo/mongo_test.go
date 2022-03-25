@@ -19,18 +19,9 @@ type TestVal struct {
 	TimeValLocal         time.Time       `bson:"timeValLocal"`
 }
 
-func TestMongocollection(t *testing.T) {
-	ctx := GetCorrelationContext()
-	client, err := mongo.NewMongo(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
-	if err != nil {
-		t.Fatal(err)
-	}
-	coll := client.NewCollection("Plain")
+func GetSampleData() *TestVal {
 	val1, _ := decimal.NewFromString("123.1232")
 	val2, _ := decimal.NewFromString("123.1232")
-	if err != nil {
-		t.Fatal(err)
-	}
 	data := &TestVal{}
 	data.CreatedAt = time.Now()
 	data.UpdatedAt = time.Now()
@@ -39,6 +30,34 @@ func TestMongocollection(t *testing.T) {
 	data.DeciVal = val1.Add(val2)
 	data.TimeValUTC = time.Now().UTC()
 	data.TimeValLocal = time.Now()
+	return data
+}
+
+func TestMongocollectionInsertOne(t *testing.T) {
+	ctx := GetCorrelationContext()
+	client, err := mongo.NewMongo(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	coll := client.NewCollection("Plain")
+	data := GetSampleData()
+	fmt.Printf("%+v\n", data)
+	_, err = coll.InsertOne(ctx, data)
+	if err != nil {
+		t.Fatal(err)
+	}
+	data = GetSampleData()
+	_, err = coll.InsertOne(ctx, data)
+}
+
+func TestMongocollection(t *testing.T) {
+	ctx := GetCorrelationContext()
+	client, err := mongo.NewMongo(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	coll := client.NewCollection("Plain")
+	data := GetSampleData()
 	fmt.Printf("%+v\n", data)
 	coll.InsertOne(ctx, data)
 	cur := coll.FindOne(ctx, map[string]string{"strVal": "value1"})

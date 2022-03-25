@@ -14,6 +14,6 @@ type BaseMongoDocument struct {
 }
 
 type BaseMongoModel struct {
-	ID                *primitive.ObjectID `json:"-" bson:"_id"`
+	ID                *primitive.ObjectID `json:"-" bson:"_id,omitempty"`
 	BaseMongoDocument `bson:",inline"`
 }
