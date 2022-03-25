@@ -2,6 +2,8 @@ package mongo
 
 import (
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type BaseMongoDocument struct {
@@ -12,5 +14,6 @@ type BaseMongoDocument struct {
 }
 
 type BaseMongoModel struct {
+	ID                *primitive.ObjectID `json:"-" bson:"_id"`
 	BaseMongoDocument `bson:",inline"`
 }
