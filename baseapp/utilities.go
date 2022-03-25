@@ -10,6 +10,7 @@ import (
 
 	"sabariram.com/goserverbase/constant"
 	"sabariram.com/goserverbase/log"
+	"sabariram.com/goserverbase/utils"
 )
 
 func (b *BaseApp) GetHttpCorrelationParams(r *http.Request) *log.CorrelationParmas {
@@ -67,4 +68,37 @@ func (b *BaseApp) GetCorrelationContext(ctx context.Context, c *log.CorrelationP
 
 func (b *BaseApp) GetPort() string {
 	return fmt.Sprintf("%v:%v", b.c.AppConfig.Host, b.c.AppConfig.Port)
+}
+
+type Filter struct {
+	PageNo int64  `json:"pageNo" schema:"pageNo"`
+	Limit  int64  `json:"limit" schema:"limit"`
+	SortBy string `json:"sortby" schema:"sortby"`
+	Asc    *bool  `json:"asc" schema:"asc"`
+}
+
+func SetDefaultPagination(filter interface{}, deafultSortBy string) error {
+	var defaultFilter Filter
+	err := utils.JsonTransformer(filter, &defaultFilter)
+	if err != nil {
+		return fmt.Errorf("app.SetDefault : %w", err)
+	}
+	if defaultFilter.PageNo <= 0 {
+		defaultFilter.PageNo = 1
+	}
+	if defaultFilter.Limit <= 0 {
+		defaultFilter.Limit = 10
+	}
+	if defaultFilter.SortBy == "" {
+		defaultFilter.SortBy = deafultSortBy
+	}
+	if defaultFilter.Asc == nil {
+		v := true
+		defaultFilter.Asc = &v
+	}
+	err = utils.JsonTransformer(&defaultFilter, filter)
+	if err != nil {
+		return fmt.Errorf("app.SetDefault : %w", err)
+	}
+	return nil
 }
