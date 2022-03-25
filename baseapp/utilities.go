@@ -81,7 +81,7 @@ func SetDefaultPagination(filter interface{}, deafultSortBy string) error {
 	var defaultFilter Filter
 	err := utils.JsonTransformer(filter, &defaultFilter)
 	if err != nil {
-		return fmt.Errorf("app.SetDefault : %w", err)
+		return fmt.Errorf("baseapp.SetDefault : %w", err)
 	}
 	if defaultFilter.PageNo <= 0 {
 		defaultFilter.PageNo = 1
