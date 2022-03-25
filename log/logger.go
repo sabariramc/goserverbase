@@ -156,7 +156,7 @@ func (l *Logger) print(ctx context.Context, level *LogLevelMap, shortMessage str
 		case error:
 			msg = v.Error()
 		default:
-			blob, err := json.Marshal(v)
+			blob, err := json.MarshalIndent(v, "", "    ")
 			if err != nil {
 				msg = ParseErrorMsg
 			} else {
