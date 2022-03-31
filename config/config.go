@@ -39,9 +39,11 @@ type ServerConfig struct {
 }
 
 type GraylogConfig struct {
-	URL     string
-	Address string
-	Port    uint
+	URL               string
+	Address           string
+	Port              uint
+	ShortMessageLimit uint
+	LongMessageLimit  uint
 }
 
 type LoggerConfig struct {

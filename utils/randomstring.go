@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
-	"unsafe"
 )
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -30,7 +29,7 @@ func GetRandomString(n int, prefix string) string {
 		cache >>= letterIdxBits
 		remain--
 	}
-	randStr := *(*string)(unsafe.Pointer(&b))
+	randStr := string(b)
 	if prefix != "" {
 		randStr = fmt.Sprintf("%v_%v", prefix, randStr)
 	}

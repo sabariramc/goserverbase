@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"sabariram.com/goserverbase/config"
 	"sabariram.com/goserverbase/log"
 
 	"gopkg.in/Graylog2/go-gelf.v2/gelf"
@@ -30,23 +31,24 @@ type GraylogWriter struct {
 	BaseLogWriter
 	writer    gelf.Writer
 	backuplog log.LogWriter
+	c         config.GraylogConfig
 }
 
-func NewGraylogTCP(hostParam log.HostParams, backuplog log.LogWriter, e Endpoint) (*GraylogWriter, error) {
-	gelfWriter, err := gelf.NewTCPWriter(fmt.Sprintf("%s:%d", e.Address, e.Port))
+func NewGraylogTCP(hostParam log.HostParams, backuplog log.LogWriter, c config.GraylogConfig) (*GraylogWriter, error) {
+	gelfWriter, err := gelf.NewTCPWriter(fmt.Sprintf("%s:%d", c.Address, c.Port))
 	if err != nil {
 		return nil, err
 	}
 
-	return &GraylogWriter{writer: gelfWriter, backuplog: backuplog, BaseLogWriter: BaseLogWriter{hostParam: &hostParam}}, nil
+	return &GraylogWriter{writer: gelfWriter, backuplog: backuplog, c: c, BaseLogWriter: BaseLogWriter{hostParam: &hostParam}}, nil
 }
 
-func NewGraylogUDP(hostParam log.HostParams, backuplog log.LogWriter, e Endpoint) (*GraylogWriter, error) {
-	gelfWriter, err := gelf.NewUDPWriter(fmt.Sprintf("%s:%d", e.Address, e.Port))
+func NewGraylogUDP(hostParam log.HostParams, backuplog log.LogWriter, c config.GraylogConfig) (*GraylogWriter, error) {
+	gelfWriter, err := gelf.NewUDPWriter(fmt.Sprintf("%s:%d", c.Address, c.Port))
 	if err != nil {
 		return nil, err
 	}
-	return &GraylogWriter{writer: gelfWriter, backuplog: backuplog, BaseLogWriter: BaseLogWriter{hostParam: &hostParam}}, nil
+	return &GraylogWriter{writer: gelfWriter, backuplog: backuplog, c: c, BaseLogWriter: BaseLogWriter{hostParam: &hostParam}}, nil
 }
 
 func (g *GraylogWriter) GetBufferSize() int {
@@ -57,6 +59,13 @@ func (g *GraylogWriter) Start(logChannel chan log.MultipluxerLogMessage) {
 	for mxMsg := range logChannel {
 		_ = g.WriteMessage(mxMsg.Ctx, &mxMsg.LogMessage)
 	}
+}
+
+func truncate(s *string, l uint) string {
+	if uint(len(*s)) <= l {
+		return *s
+	}
+	return (*s)[:l]
 }
 
 func (g *GraylogWriter) WriteMessage(ctx context.Context, msg *log.LogMessage) (err error) {
@@ -70,8 +79,8 @@ func (g *GraylogWriter) WriteMessage(ctx context.Context, msg *log.LogMessage) (
 	err = g.writer.WriteMessage(&gelf.Message{
 		Version:  g.hostParam.Version,
 		Host:     g.hostParam.Host,
-		Short:    msg.ShortMessage,
-		Full:     msg.FullMessage,
+		Short:    truncate(&msg.ShortMessage, g.c.ShortMessageLimit),
+		Full:     truncate(&msg.FullMessage, g.c.LongMessageLimit),
 		TimeUnix: float64(msg.Timestamp.UnixMilli()) / 1000,
 		Level:    int32(msg.Level),
 		Extra: map[string]interface{}{

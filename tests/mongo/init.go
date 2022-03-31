@@ -22,11 +22,7 @@ func init() {
 		ServiceName: MongoTestConfig.App.ServiceName,
 	}
 	consoleLogWriter := logwriter.NewConsoleWriter(hostParams)
-	graylog, err := logwriter.NewGraylogUDP(hostParams, consoleLogWriter, logwriter.Endpoint{
-		Transport: logwriter.UDP,
-		Address:   MongoTestConfig.Logger.GrayLog.Address,
-		Port:      MongoTestConfig.Logger.GrayLog.Port,
-	})
+	graylog, err := logwriter.NewGraylogUDP(hostParams, consoleLogWriter, *MongoTestConfig.Logger.GrayLog)
 	if err != nil {
 		panic(err)
 	}
