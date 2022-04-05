@@ -27,16 +27,26 @@ func (b *BaseApp) GetHttpCorrelationParams(r *http.Request) *log.CorrelationParm
 	}
 }
 
-func (b *BaseApp) PrintHeader(ctx context.Context, h http.Header) {
+func (b *BaseApp) PrintRequest(ctx context.Context, r *http.Request) {
+	h := r.Header
 	popList := make(map[string][]string)
 	for _, key := range b.c.LoggerConfig.AuthHeaderKeyList {
 		val := h.Values(key)
 		if len(val) != 0 {
 			popList[key] = val
-			h.Set(key, "<<reducted>>")
+			h.Set(key, "---reducted---")
 		}
 	}
-	b.log.Info(ctx, "Request-Header", h)
+	b.log.Info(ctx, "Request", map[string]interface{}{
+		"Method":        r.Method,
+		"Header":        h,
+		"URL":           r.URL,
+		"Proto":         r.Proto,
+		"ContentLength": r.ContentLength,
+		"Host":          r.Host,
+		"RemoteAddr":    r.RemoteAddr,
+		"RequestURI":    r.RequestURI,
+	})
 	for key, value := range popList {
 		h.Del(key)
 		for _, v := range value {

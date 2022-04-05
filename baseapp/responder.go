@@ -49,7 +49,7 @@ func (b *BaseApp) JSONResponderWithHeader(inputBody interface{}, f HandlerFuncti
 			b.log.Info(ctx, "Response-StatusCode", statusCode)
 			b.log.Info(ctx, "Response-Headers", w.Header())
 		}()
-		b.PrintHeader(ctx, r.Header)
+		b.PrintRequest(ctx, r)
 		if inputBody != nil && (r.Method == http.MethodPost || r.Method == http.MethodPut || r.Method == http.MethodPatch) {
 			decoder := json.NewDecoder(r.Body)
 			decoder.DisallowUnknownFields()

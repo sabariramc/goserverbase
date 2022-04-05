@@ -1,6 +1,8 @@
 package tests
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -27,10 +29,12 @@ func TestJsonResponder(t *testing.T) {
 	})
 	srv.SetLogger(ServerTestLogger)
 	ip := make(map[string]string)
-	req := httptest.NewRequest(http.MethodGet, "/tenant", nil)
+	var buf bytes.Buffer
+	json.NewEncoder(&buf).Encode(map[string]string{"FASDFs": "fasdf"})
+	req := httptest.NewRequest(http.MethodPost, "/tenant", &buf)
 	req.Header.Set("x-api-key", utils.GetEnv("TEST_API_KEY", ""))
 	w := httptest.NewRecorder()
-	srv.JSONResponderWithHeader(ip, HTTPTestFunction)(w, req)
+	srv.JSONResponderWithHeader(&ip, HTTPTestFunction)(w, req)
 	blob, _ := ioutil.ReadAll(w.Body)
 	fmt.Println(string(blob))
 	assert.Equal(t, w.Result().StatusCode, http.StatusInternalServerError)

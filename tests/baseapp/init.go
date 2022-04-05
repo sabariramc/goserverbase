@@ -13,6 +13,7 @@ var ServerTestConfig *testutils.TestConfig
 var ServerTestLogger *log.Logger
 
 func init() {
+	testutils.LoadEnv("../../.env")
 	testutils.Initialize()
 	ServerTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter(log.HostParams{
