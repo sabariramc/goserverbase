@@ -30,7 +30,7 @@ var route = &baseapp.APIRoute{
 			},
 		},
 		SubResource: map[string]*baseapp.APIResource{
-			"/search": {
+			"/{tenantId:tenant_[0-9a-zA-Z]{13}}": {
 				Handlers: map[string]*baseapp.APIHandler{
 					http.MethodGet: {
 						Func: Func2,
@@ -60,6 +60,14 @@ func TestRouter(t *testing.T) {
 	w = httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
 	blob, _ = ioutil.ReadAll(w.Body)
-	assert.Equal(t, string(blob), "World")
+	assert.Equal(t, w.Result().StatusCode, http.StatusNotFound)
+	res := string(blob)
+	assert.Equal(t, res, "{\"error\":\"Invalid path\",\"path\":\"/tenant/search\"}\n")
+	req = httptest.NewRequest(http.MethodGet, "/tenant/tenant_ABC4567890abc", nil)
+	w = httptest.NewRecorder()
+	srv.ServeHTTP(w, req)
+	blob, _ = ioutil.ReadAll(w.Body)
 	assert.Equal(t, w.Result().StatusCode, http.StatusOK)
+	assert.Equal(t, string(blob), "World")
+
 }

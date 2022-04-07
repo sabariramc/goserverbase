@@ -33,6 +33,15 @@ func GetEnvInt(key string, defaultVal int) int {
 	return defaultVal
 }
 
+func GetEnvBool(key string, defaultVal bool) bool {
+	if value, exists := os.LookupEnv(key); exists {
+		if value == "1" || strings.ToLower(value) == "true" {
+			return true
+		}
+	}
+	return defaultVal
+}
+
 func GetEnvAsSlice(name string, defaultVal []string, sep string) []string {
 	valStr := GetEnv(name, "")
 

@@ -56,6 +56,7 @@ func NewConfig() *TestConfig {
 			Host:        utils.GetHostName(),
 			Port:        utils.GetEnv("APP_PORT", "8080"),
 			ServiceName: utils.GetEnv("SERVICE_NAME", "API"),
+			Debug:       utils.GetEnvBool("DEBUG", false),
 		},
 		Mongo: &config.MongoConfig{
 			ConnectionString:  utils.GetEnv("MONGO_URL", "mongodb://localhost:60001"),

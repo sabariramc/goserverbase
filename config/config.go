@@ -36,6 +36,7 @@ type ServerConfig struct {
 	Host        string
 	Port        string
 	ServiceName string
+	Debug       bool
 }
 
 type GraylogConfig struct {
