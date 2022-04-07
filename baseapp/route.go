@@ -65,8 +65,13 @@ func (b *BaseApp) RegisterRoutes(ctx context.Context, route *APIRoute) {
 	b.router.MethodNotAllowed = MethodNotAllowed()
 }
 
-func (b *BaseApp) GetPathParams(r *http.Request) httprouter.Params {
+func GetPathParams(r *http.Request) httprouter.Params {
 	pp := r.Context().Value(httprouter.ParamsKey)
-	pathParmas := pp.(httprouter.Params)
+	pathParmas, ok := pp.(httprouter.Params)
+	if !ok {
+		panic(errors.NewCustomError("INVALID_PATH_PARAM", "Invalid path params processing", map[string]interface{}{
+			"pathParams": pp,
+		}))
+	}
 	return pathParmas
 }
