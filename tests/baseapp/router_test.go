@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gorilla/mux"
+	"github.com/julienschmidt/httprouter"
 	"gotest.tools/assert"
 	"sabariram.com/goserverbase/baseapp"
 )
@@ -30,7 +30,7 @@ var route = &baseapp.APIRoute{
 			},
 		},
 		SubResource: map[string]*baseapp.APIResource{
-			"/{tenantId:tenant_[0-9a-zA-Z]{13}}": {
+			"/:tenantId": {
 				Handlers: map[string]*baseapp.APIHandler{
 					http.MethodGet: {
 						Func: Func2,
@@ -48,7 +48,7 @@ func TestRouter(t *testing.T) {
 		AppConfig:    ServerTestConfig.App,
 	})
 	srv.SetLogger(ServerTestLogger)
-	srv.SetRouter(mux.NewRouter().StrictSlash(true))
+	srv.SetRouter(httprouter.New())
 	srv.RegisterRoutes(context.TODO(), route)
 	req := httptest.NewRequest(http.MethodGet, "/tenant", nil)
 	w := httptest.NewRecorder()
@@ -56,18 +56,24 @@ func TestRouter(t *testing.T) {
 	blob, _ := ioutil.ReadAll(w.Body)
 	assert.Equal(t, string(blob), "Hello")
 	assert.Equal(t, w.Result().StatusCode, http.StatusOK)
-	req = httptest.NewRequest(http.MethodGet, "/tenant/search", nil)
+	req = httptest.NewRequest(http.MethodGet, "/tenants/search", nil)
 	w = httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
 	blob, _ = ioutil.ReadAll(w.Body)
 	assert.Equal(t, w.Result().StatusCode, http.StatusNotFound)
 	res := string(blob)
-	assert.Equal(t, res, "{\"errorData\":{\"path\":\"/tenant/search\"},\"errorMessage\":\"Invalid path\",\"errorCode\":\"NOT_FOUND\"}")
+	assert.Equal(t, res, "{\"errorData\":{\"path\":\"/tenants/search\"},\"errorMessage\":\"Invalid path\",\"errorCode\":\"NOT_FOUND\"}")
 	req = httptest.NewRequest(http.MethodGet, "/tenant/tenant_ABC4567890abc", nil)
 	w = httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
 	blob, _ = ioutil.ReadAll(w.Body)
 	assert.Equal(t, w.Result().StatusCode, http.StatusOK)
 	assert.Equal(t, string(blob), "World")
-
+	req = httptest.NewRequest(http.MethodPost, "/tenant/tenant_ABC4567890abc", nil)
+	w = httptest.NewRecorder()
+	srv.ServeHTTP(w, req)
+	blob, _ = ioutil.ReadAll(w.Body)
+	res = string(blob)
+	assert.Equal(t, w.Result().StatusCode, http.StatusMethodNotAllowed)
+	assert.Equal(t, res, "{\"errorData\":{\"method\":\"POST\",\"path\":\"/tenant/tenant_ABC4567890abc\"},\"errorMessage\":\"Invalid method\",\"errorCode\":\"INVALID_METHOD\"}")
 }

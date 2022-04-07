@@ -8,7 +8,7 @@ import (
 	"sabariram.com/goserverbase/config"
 	"sabariram.com/goserverbase/log"
 
-	"github.com/gorilla/mux"
+	"github.com/julienschmidt/httprouter"
 )
 
 type ServerConfig struct {
@@ -17,7 +17,7 @@ type ServerConfig struct {
 }
 
 type BaseApp struct {
-	router *mux.Router
+	router *httprouter.Router
 	c      *ServerConfig
 	log    *log.Logger
 }
@@ -25,7 +25,7 @@ type BaseApp struct {
 func NewBaseApp(c ServerConfig, lMux log.LogMultipluxer, auditLogger log.AuditLogWriter) *BaseApp {
 	b := &BaseApp{
 		c:      &c,
-		router: mux.NewRouter().StrictSlash(true),
+		router: httprouter.New(),
 	}
 	ctx := b.GetCorrelationContext(context.Background(), log.GetDefaultCorrelationParams(c.AppConfig.ServiceName))
 	b.log = log.NewLogger(ctx, c.LoggerConfig, lMux, auditLogger)
@@ -41,11 +41,11 @@ func (b *BaseApp) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	b.log.Info(r.Context(), "Request processing time in ms", time.Since(st).Milliseconds())
 }
 
-func (b *BaseApp) GetRouter() *mux.Router {
+func (b *BaseApp) GetRouter() *httprouter.Router {
 	return b.router
 }
 
-func (b *BaseApp) SetRouter(router *mux.Router) {
+func (b *BaseApp) SetRouter(router *httprouter.Router) {
 	b.router = router
 }
 
