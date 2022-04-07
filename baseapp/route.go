@@ -2,12 +2,12 @@ package baseapp
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"sabariram.com/goserverbase/constant"
+	"sabariram.com/goserverbase/errors"
 )
 
 type APIRoute map[string]*APIResource
@@ -38,11 +38,10 @@ func NotFound() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add(constant.HeaderContentType, constant.ContentTypeJSON)
 		w.WriteHeader(http.StatusNotFound)
-		json.NewEncoder(w).Encode(
-			map[string]interface{}{
-				"path":  r.URL.Path,
-				"error": "Invalid path",
-			})
+		body := errors.NewCustomError("NOT_FOUND", "Invalid path", map[string]string{
+			"path": r.URL.Path,
+		}).Error()
+		w.Write([]byte(body))
 	}
 }
 
@@ -50,12 +49,11 @@ func MethodNotAllowed() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add(constant.HeaderContentType, constant.ContentTypeJSON)
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		json.NewEncoder(w).Encode(
-			map[string]interface{}{
-				"path":   r.URL.Path,
-				"error":  "Invalid method",
-				"method": r.Method,
-			})
+		body := errors.NewCustomError("INVALID_METHOD", "Invalid method", map[string]string{
+			"path":   r.URL.Path,
+			"method": r.Method,
+		}).Error()
+		w.Write([]byte(body))
 	}
 }
 

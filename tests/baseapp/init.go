@@ -11,6 +11,8 @@ import (
 
 var ServerTestConfig *testutils.TestConfig
 var ServerTestLogger *log.Logger
+var ServerTestLMux log.LogMultipluxer
+var ServerTestAuditLogger log.AuditLogWriter
 
 func init() {
 	testutils.LoadEnv("../../.env")
@@ -21,8 +23,10 @@ func init() {
 		Host:        ServerTestConfig.App.Host,
 		ServiceName: ServerTestConfig.App.ServiceName,
 	})
+	ServerTestAuditLogger = consoleLogWriter
 	lmux := log.NewSequenctialLogMultipluxer(consoleLogWriter)
 	ServerTestLogger = log.NewLogger(context.TODO(), ServerTestConfig.Logger, lmux, consoleLogWriter)
+	ServerTestLMux = lmux
 }
 
 func GetCorrelationContext() context.Context {

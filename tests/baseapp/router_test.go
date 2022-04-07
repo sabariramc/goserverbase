@@ -62,7 +62,7 @@ func TestRouter(t *testing.T) {
 	blob, _ = ioutil.ReadAll(w.Body)
 	assert.Equal(t, w.Result().StatusCode, http.StatusNotFound)
 	res := string(blob)
-	assert.Equal(t, res, "{\"error\":\"Invalid path\",\"path\":\"/tenant/search\"}\n")
+	assert.Equal(t, res, "{\"errorData\":{\"path\":\"/tenant/search\"},\"errorMessage\":\"Invalid path\",\"errorCode\":\"NOT_FOUND\"}")
 	req = httptest.NewRequest(http.MethodGet, "/tenant/tenant_ABC4567890abc", nil)
 	w = httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
