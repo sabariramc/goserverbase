@@ -64,3 +64,9 @@ func (b *BaseApp) RegisterRoutes(ctx context.Context, route *APIRoute) {
 	b.router.NotFound = NotFound()
 	b.router.MethodNotAllowed = MethodNotAllowed()
 }
+
+func (b *BaseApp) GetPathParams(r *http.Request) httprouter.Params {
+	pp := r.Context().Value(httprouter.ParamsKey)
+	pathParmas := pp.(httprouter.Params)
+	return pathParmas
+}

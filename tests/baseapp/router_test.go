@@ -2,6 +2,7 @@ package tests
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
@@ -18,6 +19,8 @@ func Func1(w http.ResponseWriter, r *http.Request) {
 }
 
 func Func2(w http.ResponseWriter, r *http.Request) {
+	srv := &baseapp.BaseApp{}
+	fmt.Println(srv.GetPathParams(r))
 	w.Write([]byte("World"))
 	w.WriteHeader(200)
 }
