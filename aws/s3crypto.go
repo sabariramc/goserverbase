@@ -15,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3/s3crypto"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/google/uuid"
-	"sabariram.com/goserverbase/log"
+	"github.com/sabariramc/goserverbase/log"
 )
 
 type S3PII struct {

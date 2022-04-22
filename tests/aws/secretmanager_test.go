@@ -3,7 +3,7 @@ package tests
 import (
 	"testing"
 
-	"sabariram.com/goserverbase/aws"
+	"github.com/sabariramc/goserverbase/aws"
 )
 
 func TestSecretManager(t *testing.T) {

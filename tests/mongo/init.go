@@ -3,10 +3,10 @@ package mongo
 import (
 	"context"
 
-	"sabariram.com/goserverbase/constant"
-	"sabariram.com/goserverbase/log"
-	"sabariram.com/goserverbase/log/logwriter"
-	"sabariram.com/goserverbase/utils/testutils"
+	"github.com/sabariramc/goserverbase/constant"
+	"github.com/sabariramc/goserverbase/log"
+	"github.com/sabariramc/goserverbase/log/logwriter"
+	"github.com/sabariramc/goserverbase/utils/testutils"
 )
 
 var MongoTestConfig *testutils.TestConfig

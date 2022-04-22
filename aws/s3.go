@@ -10,7 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/gabriel-vasile/mimetype"
-	"sabariram.com/goserverbase/log"
+	"github.com/sabariramc/goserverbase/log"
 )
 
 type S3 struct {

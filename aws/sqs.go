@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"sabariram.com/goserverbase/errors"
-	"sabariram.com/goserverbase/log"
-	"sabariram.com/goserverbase/utils"
+	"github.com/sabariramc/goserverbase/errors"
+	"github.com/sabariramc/goserverbase/log"
+	"github.com/sabariramc/goserverbase/utils"
 )
 
 type SQS struct {

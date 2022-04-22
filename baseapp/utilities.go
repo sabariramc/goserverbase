@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"sabariram.com/goserverbase/constant"
-	"sabariram.com/goserverbase/log"
-	"sabariram.com/goserverbase/utils"
+	"github.com/sabariramc/goserverbase/constant"
+	"github.com/sabariramc/goserverbase/log"
+	"github.com/sabariramc/goserverbase/utils"
 )
 
 func (b *BaseApp) GetHttpCorrelationParams(r *http.Request) *log.CorrelationParmas {

@@ -3,7 +3,7 @@ package utils
 import (
 	"fmt"
 
-	"sabariram.com/goserverbase/errors"
+	"github.com/sabariramc/goserverbase/errors"
 )
 
 type Entity string

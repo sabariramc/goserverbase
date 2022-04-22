@@ -7,7 +7,7 @@ import (
 
 	"github.com/shopspring/decimal"
 
-	"sabariram.com/goserverbase/log"
+	"github.com/sabariramc/goserverbase/log"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsoncodec"

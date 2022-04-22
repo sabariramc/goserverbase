@@ -8,13 +8,13 @@
  ```
  - Set the global config of git
  ```
- url.git@bitbucket.org:SabariramC/goserverbase.insteadof=https://sabariram.com/goserverbase
+ url.git@bitbucket.org:SabariramC/goserverbase.insteadof=https://github.com/sabariramc/goserverbase
  ```
  - In the module that is going to use this package add the following in the go.mod file
  ```
- replace sabariram.com/goserverbase => sabariram.com/goserverbase.git <<tag>>
+ replace github.com/sabariramc/goserverbase => github.com/sabariramc/goserverbase.git <<tag>>
  ```
  eg:
  ```
- replace sabariram.com/goserverbase => sabariram.com/goserverbase.git v0.1.1
+ replace github.com/sabariramc/goserverbase => github.com/sabariramc/goserverbase.git v0.1.1
  ```

@@ -3,11 +3,9 @@ package logwriter
 import (
 	"context"
 
-	"sabariram.com/goserverbase/constant"
-	"sabariram.com/goserverbase/log"
+	"github.com/sabariramc/goserverbase/constant"
+	"github.com/sabariramc/goserverbase/log"
 )
-
-
 
 func GetCorrelationParam(ctx context.Context) *log.CorrelationParmas {
 	val, ok := ctx.Value(constant.CorrelationContextKey).(*log.CorrelationParmas)

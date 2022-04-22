@@ -6,11 +6,11 @@ import (
 	"os"
 	"testing"
 
+	"github.com/sabariramc/goserverbase/db/mongo"
+	"github.com/sabariramc/goserverbase/db/mongo/csfle"
+	tmongo "github.com/sabariramc/goserverbase/tests/mongo"
+	tcsfle "github.com/sabariramc/goserverbase/utils/testutils/csfle"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"sabariram.com/goserverbase/db/mongo"
-	"sabariram.com/goserverbase/db/mongo/csfle"
-	tmongo "sabariram.com/goserverbase/tests/mongo"
-	tcsfle "sabariram.com/goserverbase/utils/testutils/csfle"
 )
 
 type Address struct {

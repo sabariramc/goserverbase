@@ -6,8 +6,9 @@ import (
 	"net/http"
 
 	"github.com/julienschmidt/httprouter"
-	"sabariram.com/goserverbase/constant"
-	"sabariram.com/goserverbase/errors"
+	"github.com/sabariramc/goserverbase/constant"
+	"github.com/sabariramc/goserverbase/errors"
+	"github.com/sabariramc/goserverbase/log"
 )
 
 type APIRoute map[string]*APIResource
@@ -65,13 +66,14 @@ func (b *BaseApp) RegisterRoutes(ctx context.Context, route *APIRoute) {
 	b.router.MethodNotAllowed = MethodNotAllowed()
 }
 
-func GetPathParams(r *http.Request) httprouter.Params {
+func GetPathParams(ctx context.Context, log *log.Logger, r *http.Request) httprouter.Params {
 	pp := r.Context().Value(httprouter.ParamsKey)
 	pathParmas, ok := pp.(httprouter.Params)
 	if !ok {
-		panic(errors.NewCustomError("INVALID_PATH_PARAM", "Invalid path params processing", map[string]interface{}{
+		err := errors.NewCustomError("INVALID_PATH_PARAM", "Invalid path params processing", map[string]interface{}{
 			"pathParams": pp,
-		}))
+		})
+		log.Emergency(ctx, "Invalid path params processing", err, err)
 	}
 	return pathParmas
 }

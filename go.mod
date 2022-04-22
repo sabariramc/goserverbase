@@ -1,4 +1,4 @@
-module sabariram.com/goserverbase
+module github.com/sabariramc/goserverbase
 
 go 1.18
 

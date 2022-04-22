@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	base "sabariram.com/goserverbase/aws"
+	base "github.com/sabariramc/goserverbase/aws"
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/joho/godotenv"

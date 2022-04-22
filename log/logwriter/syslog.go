@@ -6,7 +6,7 @@ import (
 	dlog "log"
 	"log/syslog"
 
-	"sabariram.com/goserverbase/log"
+	"github.com/sabariramc/goserverbase/log"
 )
 
 type SyslogWriter struct {

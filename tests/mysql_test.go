@@ -4,11 +4,11 @@ import (
 	"context"
 	"testing"
 
-	"sabariram.com/goserverbase/constant"
-	"sabariram.com/goserverbase/db/mysql"
-	"sabariram.com/goserverbase/log"
-	"sabariram.com/goserverbase/log/logwriter"
-	"sabariram.com/goserverbase/utils/testutils"
+	"github.com/sabariramc/goserverbase/constant"
+	"github.com/sabariramc/goserverbase/db/mysql"
+	"github.com/sabariramc/goserverbase/log"
+	"github.com/sabariramc/goserverbase/log/logwriter"
+	"github.com/sabariramc/goserverbase/utils/testutils"
 )
 
 var MysqlTestConfig *testutils.TestConfig

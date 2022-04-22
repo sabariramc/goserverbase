@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sabariramc/goserverbase/utils/testutils"
 	"gopkg.in/Graylog2/go-gelf.v2/gelf"
-	"sabariram.com/goserverbase/utils/testutils"
 )
 
 func TestGraylog(t *testing.T) {

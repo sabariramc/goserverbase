@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/sabariramc/goserverbase/baseapp"
 	"gotest.tools/assert"
-	"sabariram.com/goserverbase/baseapp"
 )
 
 func Func1(w http.ResponseWriter, r *http.Request) {

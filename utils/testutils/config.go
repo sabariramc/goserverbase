@@ -1,8 +1,8 @@
 package testutils
 
 import (
-	"sabariram.com/goserverbase/config"
-	"sabariram.com/goserverbase/utils"
+	"github.com/sabariramc/goserverbase/config"
+	"github.com/sabariramc/goserverbase/utils"
 )
 
 type TestConfig struct {

@@ -3,12 +3,11 @@ package baseapp
 import (
 	"encoding/json"
 	e "errors"
-	"fmt"
 	"net/http"
 	"runtime/debug"
 
-	"sabariram.com/goserverbase/constant"
-	"sabariram.com/goserverbase/errors"
+	"github.com/sabariramc/goserverbase/constant"
+	"github.com/sabariramc/goserverbase/errors"
 )
 
 type HandlerFunction func(*http.Request) (statusCode int, response interface{}, err error)
@@ -82,16 +81,16 @@ func (b *BaseApp) JSONResponderWithHeader(inputBody interface{}, f HandlerFuncti
 		}
 		if body != nil {
 			b.log.Debug(ctx, "Response-Body", body)
-			b, ok := body.(string)
+			bodyData, ok := body.(string)
 			if ok {
-				_, err = w.Write([]byte(b))
+				_, err = w.Write([]byte(bodyData))
 				if err != nil {
-					panic(fmt.Errorf("BaseApp.JSONResponderWithHeader: %w", err))
+					b.log.Emergency(ctx, "BaseApp.JSONResponderWithHeader", err, err)
 				}
 			} else {
 				err = json.NewEncoder(w).Encode(body)
 				if err != nil {
-					panic(fmt.Errorf("BaseApp.JSONResponderWithHeader: %w", err))
+					b.log.Emergency(ctx, "BaseApp.JSONResponderWithHeader", err, err)
 				}
 			}
 

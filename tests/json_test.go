@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sabariramc/goserverbase/utils"
 	"github.com/shopspring/decimal"
-	"sabariram.com/goserverbase/utils"
 )
 
 type TestVal struct {

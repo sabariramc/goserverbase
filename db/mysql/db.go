@@ -1,41 +1,50 @@
 package mysql
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"net/url"
+	"time"
 
-	"sabariram.com/goserverbase/config"
+	"github.com/sabariramc/goserverbase/config"
+	"github.com/sabariramc/goserverbase/log"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+	glog "gorm.io/gorm/logger"
 )
 
 type DB struct {
-	conn *gorm.DB
+	*gorm.DB
+	log *log.Logger
 }
 
-func NewConnection(config *config.MySqlConnectionConfig) *DB {
-	dsn := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=%v&parseTime=True&loc=%v", config.Username, config.Password, config.Host, config.Port, config.DatabaseName, config.Charset, url.QueryEscape(config.Timezone))
-	conn, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	if err != nil {
-		panic(fmt.Errorf("mysql.NewConnection: %w", err))
+func NewConnection(ctx context.Context, mysqlConfig *config.MySqlConnectionConfig, log *log.Logger, sqlLogConfig *glog.Config) *DB {
+	dsn := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=%v&parseTime=True&loc=%v", mysqlConfig.Username, mysqlConfig.Password, mysqlConfig.Host, mysqlConfig.Port, mysqlConfig.DatabaseName, mysqlConfig.Charset, url.QueryEscape(mysqlConfig.Timezone))
+	if sqlLogConfig == nil {
+		sqlLogConfig = &glog.Config{
+			SlowThreshold:             time.Minute,
+			IgnoreRecordNotFoundError: true,
+			LogLevel:                  glog.Warn,
+		}
 	}
-	return NewDatabase(conn)
+	conn, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+		Logger: NewLogger(log, sqlLogConfig),
+	})
+	if err != nil {
+		log.Emergency(ctx, "mysql.NewConnection", err, err)
+	}
+	return NewDatabase(conn, log)
 }
 
-func NewDatabase(conn *gorm.DB) *DB {
-	return &DB{conn: conn}
-}
-
-func (d *DB) GetDB() *gorm.DB {
-	return d.conn
+func NewDatabase(conn *gorm.DB, log *log.Logger) *DB {
+	return &DB{DB: conn, log: log}
 }
 
 func (d *DB) Close() {
-	sqlDB, err := d.conn.DB()
+	sqlDB, err := d.DB.DB()
 	if err != nil {
-		log.Fatalln(err)
+		d.log.Emergency(context.Background(), "mysql.DB.Close", err, err)
 	}
 	sqlDB.Close()
 }

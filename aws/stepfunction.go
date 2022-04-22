@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sfn"
-	"sabariram.com/goserverbase/log"
+	"github.com/sabariramc/goserverbase/log"
 )
 
 type StepFunction struct {

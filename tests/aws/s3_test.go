@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"sabariram.com/goserverbase/aws"
+	"github.com/sabariramc/goserverbase/aws"
 )
 
 func TestS3(t *testing.T) {
@@ -49,7 +49,7 @@ func TestS3PII(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = s3Client.GetFileCache(ctx, s3Bucker, path,"dev", "testCache")
+	_, err = s3Client.GetFileCache(ctx, s3Bucker, path, "dev", "testCache")
 	if err != nil {
 		t.Fatal(err)
 	}

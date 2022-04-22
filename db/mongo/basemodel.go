@@ -7,10 +7,24 @@ import (
 )
 
 type BaseMongoDocument struct {
-	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
-	UpdatedAt time.Time `json:"updatedAt" bson:"updatedAt"`
-	CreatedBy string    `json:"createdBy" bson:"createdBy"`
-	UpdatedBy string    `json:"updatedBy" bson:"updatedBy"`
+	CreatedAt *time.Time `json:"createdAt,omitempty" bson:"createdAt,omitempty"`
+	UpdatedAt *time.Time `json:"updatedAt,omitempty" bson:"updatedAt,omitempty"`
+	CreatedBy *string    `json:"createdBy,omitempty" bson:"createdBy,omitempty"`
+	UpdatedBy *string    `json:"updatedBy,omitempty" bson:"updatedBy,omitempty"`
+}
+
+func (b *BaseMongoDocument) SetCreateParam(actionBy string) {
+	actionAt := time.Now()
+	b.CreatedAt = &actionAt
+	b.UpdatedAt = &actionAt
+	b.CreatedBy = &actionBy
+	b.UpdatedBy = &actionBy
+}
+
+func (b *BaseMongoDocument) SetUpdateParam(actionBy string) {
+	actionAt := time.Now()
+	b.UpdatedAt = &actionAt
+	b.UpdatedBy = &actionBy
 }
 
 type BaseMongoModel struct {

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"sabariram.com/goserverbase/aws"
-	"sabariram.com/goserverbase/log"
+	"github.com/sabariramc/goserverbase/aws"
+	"github.com/sabariramc/goserverbase/log"
 
 	"github.com/aws/aws-sdk-go/aws/session"
 )

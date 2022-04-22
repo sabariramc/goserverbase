@@ -3,8 +3,8 @@ package tests
 import (
 	"testing"
 
-	"sabariram.com/goserverbase/aws"
-	"sabariram.com/goserverbase/utils"
+	"github.com/sabariramc/goserverbase/aws"
+	"github.com/sabariramc/goserverbase/utils"
 )
 
 func TestSNSClient(t *testing.T) {

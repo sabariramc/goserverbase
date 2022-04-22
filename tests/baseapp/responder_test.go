@@ -9,9 +9,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/sabariramc/goserverbase/baseapp"
+	"github.com/sabariramc/goserverbase/utils"
 	"gotest.tools/assert"
-	"sabariram.com/goserverbase/baseapp"
-	"sabariram.com/goserverbase/utils"
 )
 
 func HTTPTestFunction(r *http.Request) (statusCode int, response interface{}, err error) {

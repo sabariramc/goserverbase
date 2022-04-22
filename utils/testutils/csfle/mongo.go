@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"sabariram.com/goserverbase/config"
-	"sabariram.com/goserverbase/db/mongo"
-	"sabariram.com/goserverbase/db/mongo/csfle"
-	"sabariram.com/goserverbase/log"
+	"github.com/sabariramc/goserverbase/config"
+	"github.com/sabariramc/goserverbase/db/mongo"
+	"github.com/sabariramc/goserverbase/db/mongo/csfle"
+	"github.com/sabariramc/goserverbase/log"
 )
 
 func SetEncryptionKey(ctx context.Context, logger *log.Logger, encryptionSchema *string, c config.MongoConfig, csfleC config.MongoCFLEConfig, keyAltName string, kmsProvider mongo.MasterKeyProvider) error {

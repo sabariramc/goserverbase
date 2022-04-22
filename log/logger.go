@@ -3,10 +3,11 @@ package log
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"reflect"
 	"time"
 
-	"sabariram.com/goserverbase/config"
+	"github.com/sabariramc/goserverbase/config"
 )
 
 const ParseErrorMsg = "******************ERROR DURING MARSHAL OF FULLMESSAGE*******************"
@@ -136,7 +137,7 @@ func (l *Logger) Alert(ctx context.Context, shortMessage string, fullMessage int
 
 func (l *Logger) Emergency(ctx context.Context, shortMessage string, fullMessage interface{}, err error) {
 	l.print(ctx, logLevelMap[EMERGENCY], shortMessage, fullMessage)
-	panic(err)
+	panic(fmt.Errorf("%v : %w", shortMessage, err))
 }
 
 func (l *Logger) print(ctx context.Context, level *LogLevelMap, shortMessage string, fullMessage interface{}) {
