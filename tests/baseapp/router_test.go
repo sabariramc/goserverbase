@@ -19,7 +19,7 @@ func Func1(w http.ResponseWriter, r *http.Request) {
 }
 
 func Func2(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(baseapp.GetPathParams(r))
+	fmt.Println(baseapp.GetPathParams(r.Context(), ServerTestLogger, r))
 	w.Write([]byte("World"))
 	w.WriteHeader(200)
 }

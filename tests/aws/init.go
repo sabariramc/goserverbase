@@ -21,7 +21,7 @@ func init() {
 		ServiceName: AWSTestConfig.App.ServiceName,
 	})
 	lmux := log.NewSequenctialLogMultipluxer(consoleLogWriter)
-	AWSTestLogger = log.NewLogger(context.TODO(), AWSTestConfig.Logger, lmux, consoleLogWriter)
+	AWSTestLogger = log.NewLogger(context.TODO(), AWSTestConfig.Logger, lmux, consoleLogWriter, "AWSTest", "Test")
 }
 
 func GetCorrelationContext() context.Context {

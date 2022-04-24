@@ -19,7 +19,6 @@ func (b *BaseApp) GetHttpCorrelationParams(r *http.Request) *log.CorrelationParm
 		return log.GetDefaultCorrelationParams(b.c.AppConfig.ServiceName)
 	}
 	return &log.CorrelationParmas{
-		ServiceName:   b.c.AppConfig.ServiceName,
 		CorrelationId: correlationId,
 		ScenarioId:    r.Header.Get("x-scenario-id"),
 		ScenarioName:  r.Header.Get("x-scenario-name"),

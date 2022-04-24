@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"time"
 
 	"github.com/sabariramc/goserverbase/config"
 	"github.com/sabariramc/goserverbase/log"
@@ -19,22 +18,19 @@ type DB struct {
 	log *log.Logger
 }
 
-func NewConnection(ctx context.Context, mysqlConfig *config.MySqlConnectionConfig, log *log.Logger, sqlLogConfig *glog.Config) *DB {
-	dsn := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=%v&parseTime=True&loc=%v", mysqlConfig.Username, mysqlConfig.Password, mysqlConfig.Host, mysqlConfig.Port, mysqlConfig.DatabaseName, mysqlConfig.Charset, url.QueryEscape(mysqlConfig.Timezone))
+func NewConnection(ctx context.Context, mysqlConfig *config.MySqlConnectionConfig, log log.Logger, sqlLogConfig *glog.Config) *DB {
+	connectionString := fmt.Sprintf("%v:%v@tcp(%v:%v)/%v?charset=%v&parseTime=True&loc=%v", mysqlConfig.Username, mysqlConfig.Password, mysqlConfig.Host, mysqlConfig.Port, mysqlConfig.DatabaseName, mysqlConfig.Charset, url.QueryEscape(mysqlConfig.Timezone))
 	if sqlLogConfig == nil {
-		sqlLogConfig = &glog.Config{
-			SlowThreshold:             time.Minute,
-			IgnoreRecordNotFoundError: true,
-			LogLevel:                  glog.Warn,
-		}
+		sqlLogConfig = defaultConfig
 	}
-	conn, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
-		Logger: NewLogger(log, sqlLogConfig),
+	log.Debug(ctx, "NewConnection.connectionString", connectionString)
+	conn, err := gorm.Open(mysql.Open(connectionString), &gorm.Config{
+		Logger: NewLogger(&log, sqlLogConfig),
 	})
 	if err != nil {
 		log.Emergency(ctx, "mysql.NewConnection", err, err)
 	}
-	return NewDatabase(conn, log)
+	return NewDatabase(conn, &log)
 }
 
 func NewDatabase(conn *gorm.DB, log *log.Logger) *DB {

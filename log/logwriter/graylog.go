@@ -88,7 +88,8 @@ func (g *GraylogWriter) WriteMessage(ctx context.Context, msg *log.LogMessage) (
 			"x-scenario-id":       cr.ScenarioId,
 			"x-session-id":        cr.SessionId,
 			"x-scenario-name":     cr.ScenarioName,
-			"service-name":        cr.ServiceName,
+			"service-name":        msg.ServiceName,
+			"module-name":         msg.ModuleName,
 			"x-full-message-type": msg.FullMessageType,
 		},
 	})

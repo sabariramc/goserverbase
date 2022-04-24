@@ -27,7 +27,7 @@ func init() {
 		panic(err)
 	}
 	lmux := log.NewSequenctialLogMultipluxer(consoleLogWriter, graylog)
-	MongoTestLogger = log.NewLogger(context.TODO(), MongoTestConfig.Logger, lmux, consoleLogWriter)
+	MongoTestLogger = log.NewLogger(context.TODO(), MongoTestConfig.Logger, lmux, consoleLogWriter, "MongoTest", "test")
 }
 
 func GetCorrelationContext() context.Context {

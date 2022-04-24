@@ -28,7 +28,7 @@ func NewBaseApp(c ServerConfig, lMux log.LogMultipluxer, auditLogger log.AuditLo
 		router: httprouter.New(),
 	}
 	ctx := b.GetCorrelationContext(context.Background(), log.GetDefaultCorrelationParams(c.AppConfig.ServiceName))
-	b.log = log.NewLogger(ctx, c.LoggerConfig, lMux, auditLogger)
+	b.log = log.NewLogger(ctx, c.LoggerConfig, lMux, auditLogger, c.LoggerConfig.ServiceName, c.LoggerConfig.ServiceName)
 	zone, _ := time.Now().Zone()
 	b.log.Notice(ctx, "Server Timezone", zone)
 	return b

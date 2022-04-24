@@ -23,8 +23,7 @@ func GetSampleData() *TestVal {
 	val1, _ := decimal.NewFromString("123.1232")
 	val2, _ := decimal.NewFromString("123.1232")
 	data := &TestVal{}
-	data.CreatedAt = time.Now()
-	data.UpdatedAt = time.Now()
+	data.SetCreateParam("fadsfa")
 	data.StrVal = "value1"
 	data.IntVal = 123
 	data.DeciVal = val1.Add(val2)
@@ -114,7 +113,7 @@ func TestMongocollctionFindFetch(t *testing.T) {
 		}
 		return val
 	}
-	data, err := coll.FindFetch(ctx, nil, loader)
+	data, err := coll.FindFetch(ctx, loader, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

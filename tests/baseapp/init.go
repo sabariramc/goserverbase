@@ -25,7 +25,7 @@ func init() {
 	})
 	ServerTestAuditLogger = consoleLogWriter
 	lmux := log.NewSequenctialLogMultipluxer(consoleLogWriter)
-	ServerTestLogger = log.NewLogger(context.TODO(), ServerTestConfig.Logger, lmux, consoleLogWriter)
+	ServerTestLogger = log.NewLogger(context.TODO(), ServerTestConfig.Logger, lmux, consoleLogWriter, "BASEAPP", "test")
 	ServerTestLMux = lmux
 }
 

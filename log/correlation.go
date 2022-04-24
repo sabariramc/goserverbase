@@ -11,7 +11,6 @@ type CorrelationParmas struct {
 	ScenarioId    string `json:"x-scenario-id,omitempty"`
 	SessionId     string `json:"x-session-id,omitempty"`
 	ScenarioName  string `json:"x-scenario-name,omitempty"`
-	ServiceName   string `json:"service-name,omitempty"`
 }
 
 type HostParams struct {
@@ -22,7 +21,6 @@ type HostParams struct {
 
 func GetDefaultCorrelationParams(serviceName string) *CorrelationParmas {
 	return &CorrelationParmas{
-		ServiceName:   serviceName,
 		CorrelationId: fmt.Sprintf("%v-%v", serviceName, uuid.New().String()),
 	}
 }

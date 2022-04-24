@@ -55,6 +55,8 @@ type LogMessage struct {
 	FullMessage     string `json:"full_message"`
 	FullMessageType string
 	Timestamp       time.Time `json:"timestamp"`
+	ModuleName      string
+	ServiceName     string
 }
 
 type AuditLogMessage struct {
@@ -73,13 +75,17 @@ type Logger struct {
 	lMux        LogMultipluxer
 	hostParams  *HostParams
 	auditLogger AuditLogWriter
+	moduleName  string
+	serviceName string
 }
 
-func NewLogger(ctx context.Context, lc *config.LoggerConfig, lMux LogMultipluxer, auditLogger AuditLogWriter) *Logger {
+func NewLogger(ctx context.Context, lc *config.LoggerConfig, lMux LogMultipluxer, auditLogger AuditLogWriter, serviceName, moduleName string) *Logger {
 	l := &Logger{
 		logLevel:    INFO,
 		lMux:        lMux,
 		auditLogger: auditLogger,
+		moduleName:  moduleName,
+		serviceName: serviceName,
 		hostParams: &HostParams{
 			Version:     lc.Version,
 			Host:        lc.Host,
@@ -93,6 +99,10 @@ func NewLogger(ctx context.Context, lc *config.LoggerConfig, lMux LogMultipluxer
 	}
 	l.logLevel = LogLevel(logLevel)
 	return l
+}
+
+func (l *Logger) SetModuleName(moduleName string) {
+	l.moduleName = moduleName
 }
 
 func (l *Logger) Audit(ctx context.Context, actor, action, target, desciption string, additionalData map[string]interface{}) {
@@ -170,6 +180,8 @@ func (l *Logger) print(ctx context.Context, level *LogLevelMap, shortMessage str
 		ShortMessage:    shortMessage,
 		FullMessage:     msg,
 		FullMessageType: msgType,
-		Timestamp:       time.Now()}
+		Timestamp:       time.Now(),
+		ModuleName:      l.moduleName,
+	}
 	l.lMux.Print(ctx, message)
 }

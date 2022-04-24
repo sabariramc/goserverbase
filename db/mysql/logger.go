@@ -10,6 +10,22 @@ import (
 	"gorm.io/gorm/utils"
 )
 
+var defaultConfig = &glog.Config{
+	SlowThreshold:             time.Second,
+	IgnoreRecordNotFoundError: true,
+	LogLevel:                  glog.Warn,
+}
+
+var debugConfig = &glog.Config{
+	SlowThreshold:             time.Second,
+	IgnoreRecordNotFoundError: true,
+	LogLevel:                  glog.Info,
+}
+
+var DefaultConfig = *defaultConfig
+
+var DebugConfig = *debugConfig
+
 type gormLogger struct {
 	config   *glog.Config
 	l        *log.Logger
@@ -17,7 +33,8 @@ type gormLogger struct {
 }
 
 func NewLogger(log *log.Logger, config *glog.Config) *gormLogger {
-	l := &gormLogger{l: log, config: config}
+	log.SetModuleName("MySQL")
+	l := &gormLogger{l: log, config: config, LogLevel: config.LogLevel}
 	return l
 }
 
