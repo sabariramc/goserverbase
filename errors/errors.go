@@ -14,7 +14,7 @@ func (e *CustomError) Error() string {
 	blob, err := json.Marshal(e)
 	if err != nil {
 		e.ErrorData = ParseErrorMsg
-		blob, _ = json.Marshal(e)
+		blob, _ = json.MarshalIndent(e, "", "    ")
 	}
 	return string(blob)
 }
