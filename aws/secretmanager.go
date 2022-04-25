@@ -56,7 +56,7 @@ func (s *SecretManager) GetSecret(ctx context.Context, secretArn string) (map[st
 		secretCacheData = secretManagerCache{expireTime: time.Now().Add(time.Minute * 15), data: *res}
 		secretCache[secretArn] = secretCacheData
 	}
-	s.log.Debug(ctx, "Secret data", fmt.Sprint(secretCacheData))
+	s.log.Debug(ctx, "Secret data", secretCacheData)
 	data := make(map[string]interface{})
 	err := json.Unmarshal([]byte(*secretCacheData.data.SecretString), &data)
 	if err != nil {
@@ -75,6 +75,6 @@ func (s *SecretManager) GetSecretNonCache(ctx context.Context, secretArn string)
 		s.log.Error(ctx, "Error in secret fetch", err)
 		return nil, fmt.Errorf("SecretManager.GetSecretNonCache: %w", err)
 	}
-	s.log.Debug(ctx, "Secret fetch response", fmt.Sprint(res))
+	s.log.Debug(ctx, "Secret fetch response", res)
 	return res, nil
 }
