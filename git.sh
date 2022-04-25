@@ -1,5 +1,5 @@
-export message="Updated get path param"
-export version="v0.4.8"
+export message="Added generate id"
+export version="v1.1.2"
 git add .
 git commit -m "$message"
 git tag $version

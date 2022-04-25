@@ -35,3 +35,8 @@ func GetRandomString(n int, prefix string) string {
 	}
 	return randStr
 }
+
+func GenerateId(totalLength int, prefix string) string {
+	n := totalLength - len(prefix) - 1
+	return GetRandomString(n, prefix)
+}
