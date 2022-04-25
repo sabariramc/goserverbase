@@ -15,11 +15,11 @@ func GetDefaultAWSSession() *session.Session {
 	return defaultAWSSession
 }
 
-func GetRegionalDefaultAWSSession(region string) *session.Session {
-	return GetRegionalAWSSession(defaultAWSSession, region)
+func NewRegionalDefaultAWSSession(region string) *session.Session {
+	return NewRegionalAWSSession(defaultAWSSession, region)
 }
 
-func GetRegionalAWSSession(awsSession *session.Session, region string) *session.Session {
+func NewRegionalAWSSession(awsSession *session.Session, region string) *session.Session {
 	sess := session.Must(session.NewSession(&aws.Config{
 		Region:      &region,
 		Credentials: awsSession.Config.Credentials,

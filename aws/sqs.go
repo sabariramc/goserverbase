@@ -26,17 +26,17 @@ var DefaultMaxMessages int64 = 10
 
 func GetDefaultSQSClient(logger *log.Logger, queueURL string) *SQS {
 	if defaultSecretManagerClient == nil {
-		defaultSQSClient = GetAWSSQSClient(defaultAWSSession)
+		defaultSQSClient = NewAWSSQSClient(defaultAWSSession)
 	}
-	return GetSQSClient(logger, defaultSQSClient, queueURL)
+	return NewSQSClient(logger, defaultSQSClient, queueURL)
 }
 
-func GetAWSSQSClient(awsSession *session.Session) *sqs.SQS {
+func NewAWSSQSClient(awsSession *session.Session) *sqs.SQS {
 	client := sqs.New(awsSession)
 	return client
 }
 
-func GetSQSClient(logger *log.Logger, client *sqs.SQS, queueURL string) *SQS {
+func NewSQSClient(logger *log.Logger, client *sqs.SQS, queueURL string) *SQS {
 	return &SQS{client: client, queueURL: &queueURL, log: logger}
 }
 

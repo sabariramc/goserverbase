@@ -22,17 +22,17 @@ var defaultSNSClient *sns.SNS
 
 func GetDefaultSNSClient(logger *log.Logger) *SNS {
 	if defaultSecretManagerClient == nil {
-		defaultSNSClient = GetAWSSNSClient(defaultAWSSession)
+		defaultSNSClient = NewAWSSNSClient(defaultAWSSession)
 	}
-	return GetSNSClient(logger, defaultSNSClient)
+	return NewSNSClient(logger, defaultSNSClient)
 }
 
-func GetAWSSNSClient(awsSession *session.Session) *sns.SNS {
+func NewAWSSNSClient(awsSession *session.Session) *sns.SNS {
 	client := sns.New(awsSession)
 	return client
 }
 
-func GetSNSClient(logger *log.Logger, client *sns.SNS) *SNS {
+func NewSNSClient(logger *log.Logger, client *sns.SNS) *SNS {
 	return &SNS{client: client, log: logger}
 }
 

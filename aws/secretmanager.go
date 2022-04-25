@@ -28,19 +28,19 @@ var secretCache = make(map[string]secretManagerCache)
 
 var defaultSecretManagerClient *secretsmanager.SecretsManager
 
-func GetAWSSecretManagerClient(awsSession *session.Session) *secretsmanager.SecretsManager {
+func NewAWSSecretManagerClient(awsSession *session.Session) *secretsmanager.SecretsManager {
 	client := secretsmanager.New(awsSession)
 	return client
 }
 
 func GetDefaultSecretManagerClient(logger *log.Logger) *SecretManager {
 	if defaultSecretManagerClient == nil {
-		defaultSecretManagerClient = GetAWSSecretManagerClient(defaultAWSSession)
+		defaultSecretManagerClient = NewAWSSecretManagerClient(defaultAWSSession)
 	}
-	return GetSecretManagerClient(logger, defaultSecretManagerClient)
+	return NewSecretManagerClient(logger, defaultSecretManagerClient)
 }
 
-func GetSecretManagerClient(logger *log.Logger, client *secretsmanager.SecretsManager) *SecretManager {
+func NewSecretManagerClient(logger *log.Logger, client *secretsmanager.SecretsManager) *SecretManager {
 	return &SecretManager{client: client, log: logger}
 }
 

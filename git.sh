@@ -1,5 +1,5 @@
-export message="Added generate id"
-export version="v1.1.2"
+export message="Renamed aws factory functions"
+export version="v1.2.0"
 git add .
 git commit -m "$message"
 git tag $version

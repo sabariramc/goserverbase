@@ -37,32 +37,32 @@ var piiFileCache = make(map[string]*urlCache)
 var defaultS3EncryptionClient *s3crypto.EncryptionClientV2
 var defaultS3DecryptionClient *s3crypto.DecryptionClient
 
-func GetAWSS3EncryptionClient(awsSession *session.Session, keyArn string) (*s3crypto.EncryptionClientV2, error) {
+func NewAWSS3EncryptionClient(awsSession *session.Session, keyArn string) (*s3crypto.EncryptionClientV2, error) {
 	var matdesc s3crypto.MaterialDescription
 	keywrap := s3crypto.NewKMSContextKeyGenerator(kms.New(awsSession), keyArn, matdesc)
 	builder := s3crypto.AESGCMContentCipherBuilderV2(keywrap)
 	return s3crypto.NewEncryptionClientV2(awsSession, builder)
 }
 
-func GetAWSS3DecryptionClient(awsSession *session.Session) *s3crypto.DecryptionClient {
+func NewAWSS3DecryptionClient(awsSession *session.Session) *s3crypto.DecryptionClient {
 	return s3crypto.NewDecryptionClient(awsSession)
 }
 
 func GetDefaultS3PIIClient(logger *log.Logger, keyArn string) (*S3PII, error) {
 	if defaultS3EncryptionClient == nil {
-		client, err := GetAWSS3EncryptionClient(defaultAWSSession, keyArn)
+		client, err := NewAWSS3EncryptionClient(defaultAWSSession, keyArn)
 		if err != nil {
 			return nil, err
 		}
 		defaultS3EncryptionClient = client
 	}
 	if defaultS3DecryptionClient == nil {
-		defaultS3DecryptionClient = GetAWSS3DecryptionClient(defaultAWSSession)
+		defaultS3DecryptionClient = NewAWSS3DecryptionClient(defaultAWSSession)
 	}
-	return GetS3PIIClient(defaultS3EncryptionClient, defaultS3DecryptionClient, GetDefaultS3Client(logger), logger), nil
+	return NewS3PIIClient(defaultS3EncryptionClient, defaultS3DecryptionClient, GetDefaultS3Client(logger), logger), nil
 }
 
-func GetS3PIIClient(encryptionClient *s3crypto.EncryptionClientV2, decryptionClient *s3crypto.DecryptionClient, s3Client *S3, logger *log.Logger) *S3PII {
+func NewS3PIIClient(encryptionClient *s3crypto.EncryptionClientV2, decryptionClient *s3crypto.DecryptionClient, s3Client *S3, logger *log.Logger) *S3PII {
 	return &S3PII{encryptionClient: encryptionClient, decryptionClient: decryptionClient, log: logger, s3Client: s3Client}
 }
 

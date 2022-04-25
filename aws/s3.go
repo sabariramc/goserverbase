@@ -21,18 +21,18 @@ type S3 struct {
 
 var defaultS3Client *s3.S3
 
-func GetAWSS3Client(awsSession *session.Session) *s3.S3 {
+func NewAWSS3Client(awsSession *session.Session) *s3.S3 {
 	return s3.New(awsSession)
 }
 
 func GetDefaultS3Client(logger *log.Logger) *S3 {
 	if defaultS3Client == nil {
-		defaultS3Client = GetAWSS3Client(defaultAWSSession)
+		defaultS3Client = NewAWSS3Client(defaultAWSSession)
 	}
-	return GetS3Client(defaultS3Client, logger)
+	return NewS3Client(defaultS3Client, logger)
 }
 
-func GetS3Client(client *s3.S3, logger *log.Logger) *S3 {
+func NewS3Client(client *s3.S3, logger *log.Logger) *S3 {
 	return &S3{client: client, log: logger}
 }
 
