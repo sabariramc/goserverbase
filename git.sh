@@ -1,5 +1,5 @@
-export message="Looging update for aws services"
-export version="v1.2.1"
+export message="Added AES CBC"
+export version="v1.3.0"
 git add .
 git commit -m "$message"
 git tag $version
