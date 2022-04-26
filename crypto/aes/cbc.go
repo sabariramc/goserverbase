@@ -14,6 +14,9 @@ import (
 	"github.com/sabariramc/goserverbase/log"
 )
 
+var ErrBlockError = fmt.Errorf("ciphertext is not a multiple of the block size")
+var ErrInvalidKeyLength = fmt.Errorf("Invalid key length")
+
 type AESCBC struct {
 	padder crypto.Padder
 	key    []byte
@@ -45,7 +48,7 @@ func NewAESCBC(ctx context.Context, log *log.Logger, key string, padder crypto.P
 func getKey(key string) ([]byte, error) {
 	keyLen := len(key)
 	if keyLen < 16 {
-		return nil, fmt.Errorf("Invalid key length")
+		return nil, ErrInvalidKeyLength
 	}
 	arrKey := []byte(key)
 	if keyLen >= 32 {
@@ -87,7 +90,7 @@ func (a *AESCBC) Decrypt(encryptedData []byte) (plainData []byte, err error) {
 	iv := encryptedData[:blockSize]
 	encryptedData = encryptedData[blockSize:]
 	if len(encryptedData)%blockSize != 0 {
-		panic("ciphertext is not a multiple of the block size")
+		return nil, fmt.Errorf("AESCBC.EncryptString: %w", ErrBlockError)
 	}
 	blockModel := cipher.NewCBCDecrypter(block, iv)
 	plainData = make([]byte, len(encryptedData))
