@@ -1,8 +1,10 @@
 package crypto
 
+import "context"
+
 type Chiper interface {
-	Encrypt(plainBlob []byte) ([]byte, error)
-	Decrypt(encryptedBlob []byte) ([]byte, error)
-	EncryptString(plaintext string) (string, error)
-	DecryptString(encryptedSting string) (string, error)
+	Encrypt(ctx context.Context, plainBlob []byte) ([]byte, error)
+	Decrypt(ctx context.Context, encryptedBlob []byte) ([]byte, error)
+	EncryptString(ctx context.Context, plaintext string) (string, error)
+	DecryptString(ctx context.Context, encryptedSting string) (string, error)
 }

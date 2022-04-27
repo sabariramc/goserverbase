@@ -46,14 +46,17 @@ func NewAESCBC(ctx context.Context, log *log.Logger, key string, padder crypto.P
 }
 
 func getKey(key string) ([]byte, error) {
-	keyLen := len(key)
-	if keyLen != 16 || keyLen != 24 || keyLen != 32 {
+	keyByte := []byte(key)
+	keyLen := len(keyByte)
+	switch keyLen {
+	default:
 		return nil, ErrInvalidKeyLength
+	case 16, 24, 32:
+		return keyByte, nil
 	}
-	return []byte(key), nil
 }
 
-func (a *AESCBC) Encrypt(plainBlob []byte) ([]byte, error) {
+func (a *AESCBC) Encrypt(ctx context.Context, plainBlob []byte) ([]byte, error) {
 	block, err := aes.NewCipher(a.key)
 	if err != nil {
 		return nil, fmt.Errorf("AESCBC.Encrypt: %w", err)
@@ -66,15 +69,18 @@ func (a *AESCBC) Encrypt(plainBlob []byte) ([]byte, error) {
 	return append(iv[:block.BlockSize()], cipherBlob...), nil
 }
 
-func (a *AESCBC) EncryptString(plainText string) (string, error) {
-	res, err := a.Encrypt([]byte(plainText))
+func (a *AESCBC) EncryptString(ctx context.Context, plainText string) (string, error) {
+	a.log.Debug(ctx, "Plain Text", plainText)
+	res, err := a.Encrypt(ctx, []byte(plainText))
 	if err != nil {
 		return "", fmt.Errorf("AESCBC.EncryptString: %w", err)
 	}
-	return base64.StdEncoding.EncodeToString(res), nil
+	strres := base64.StdEncoding.EncodeToString(res)
+	a.log.Debug(ctx, "EncryptedString", strres)
+	return strres, nil
 }
 
-func (a *AESCBC) Decrypt(encryptedData []byte) (plainData []byte, err error) {
+func (a *AESCBC) Decrypt(ctx context.Context, encryptedData []byte) (plainData []byte, err error) {
 	block, err := aes.NewCipher(a.key)
 	if err != nil {
 		return nil, fmt.Errorf("AESCBC.Decrypt: %w", err)
@@ -83,7 +89,7 @@ func (a *AESCBC) Decrypt(encryptedData []byte) (plainData []byte, err error) {
 	iv := encryptedData[:blockSize]
 	encryptedData = encryptedData[blockSize:]
 	if len(encryptedData)%blockSize != 0 {
-		return nil, fmt.Errorf("AESCBC.EncryptString: %w", ErrBlockError)
+		return nil, fmt.Errorf("AESCBC.Decrypt.Block: %w", ErrBlockError)
 	}
 	blockModel := cipher.NewCBCDecrypter(block, iv)
 	plainData = make([]byte, len(encryptedData))
@@ -92,14 +98,17 @@ func (a *AESCBC) Decrypt(encryptedData []byte) (plainData []byte, err error) {
 	return plainData, nil
 }
 
-func (a *AESCBC) DecryptString(plainText string) (string, error) {
-	decoded, err := base64.StdEncoding.DecodeString(plainText)
+func (a *AESCBC) DecryptString(ctx context.Context, encryptedText string) (string, error) {
+	a.log.Debug(ctx, "EncryptedString", encryptedText)
+	decoded, err := base64.StdEncoding.DecodeString(encryptedText)
 	if err != nil {
 		return "", fmt.Errorf("AESCBC.DecryptString.B64Decode: %w", err)
 	}
-	res, err := a.Decrypt([]byte(decoded))
+	res, err := a.Decrypt(ctx, []byte(decoded))
 	if err != nil {
-		return "", fmt.Errorf("AESCBC.EncryptString: %w", err)
+		return "", fmt.Errorf("AESCBC.DecryptString: %w", err)
 	}
-	return string(res), nil
+	strres := string(res)
+	a.log.Debug(ctx, "DecryptedString", strres)
+	return strres, nil
 }

@@ -1,5 +1,5 @@
-export message="Updated error handling of AES CBC"
-export version="v1.3.1"
+export message="Refactored AES"
+export version="v1.3.4"
 git add .
 git commit -m "$message"
 git tag $version
