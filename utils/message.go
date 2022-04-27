@@ -28,8 +28,8 @@ func NewMessage(entity Entity, event string) *Message {
 	return &Message{
 		Entity:   entity,
 		Event:    event,
-		Contains: make([]string, 1),
-		Payload:  make(map[string]*Payload, 1),
+		Contains: make([]string, 0),
+		Payload:  make(map[string]*Payload, 0),
 	}
 }
 

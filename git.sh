@@ -1,5 +1,5 @@
-export message="Refactored AES"
-export version="v1.3.4"
+export message="Fixed extra string empty string in the message template"
+export version="v1.3.5"
 git add .
 git commit -m "$message"
 git tag $version
