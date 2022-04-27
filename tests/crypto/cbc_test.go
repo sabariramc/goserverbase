@@ -20,3 +20,13 @@ func TestCBC(t *testing.T) {
 	assert.NilError(t, err)
 	assert.Equal(t, data, deres)
 }
+
+func TestCBCWithPython(t *testing.T) {
+	data := "DUMMY NAME FOR TEST"
+	key := "f52a79201f314543aa731e82e87177e4"
+	chiper, err := aes.NewAESCBCPKCS7(context.TODO(), ServerTestLogger, key)
+	assert.NilError(t, err)
+	deres, err := chiper.DecryptString("IxxYDxKa5u8Ddy3sE27YCQNZwCBEKc8n7KlSOAU1eGttfYKmp7zeMlTuNaJgCUSO")
+	assert.NilError(t, err)
+	assert.Equal(t, data, deres)
+}

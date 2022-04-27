@@ -1,7 +1,6 @@
 package aes
 
 import (
-	"bytes"
 	"context"
 	"crypto/aes"
 	"crypto/cipher"
@@ -11,6 +10,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/sabariramc/goserverbase/crypto"
+	"github.com/sabariramc/goserverbase/crypto/padding"
 	"github.com/sabariramc/goserverbase/log"
 )
 
@@ -31,9 +31,9 @@ func NewAESCBCPKCS7(ctx context.Context, log *log.Logger, key string) (*AESCBC, 
 	}
 	block, err := aes.NewCipher(keyByte)
 	if err != nil {
-		return nil, fmt.Errorf("AESCBC.Encrypt: %w", err)
+		return nil, fmt.Errorf("crypto.aes.Chiper: %w", err)
 	}
-	return NewAESCBC(ctx, log, key, &PKCS7{blockSize: block.BlockSize()})
+	return NewAESCBC(ctx, log, key, padding.NewPKCS7(block.BlockSize()))
 }
 
 func NewAESCBC(ctx context.Context, log *log.Logger, key string, padder crypto.Padder) (*AESCBC, error) {
@@ -47,17 +47,10 @@ func NewAESCBC(ctx context.Context, log *log.Logger, key string, padder crypto.P
 
 func getKey(key string) ([]byte, error) {
 	keyLen := len(key)
-	if keyLen < 16 {
+	if keyLen != 16 || keyLen != 24 || keyLen != 32 {
 		return nil, ErrInvalidKeyLength
 	}
-	arrKey := []byte(key)
-	if keyLen >= 32 {
-		return arrKey[:32], nil
-	}
-	if keyLen >= 24 {
-		return arrKey[:24], nil
-	}
-	return arrKey[:16], nil
+	return []byte(key), nil
 }
 
 func (a *AESCBC) Encrypt(plainBlob []byte) ([]byte, error) {
@@ -109,20 +102,4 @@ func (a *AESCBC) DecryptString(plainText string) (string, error) {
 		return "", fmt.Errorf("AESCBC.EncryptString: %w", err)
 	}
 	return string(res), nil
-}
-
-type PKCS7 struct {
-	blockSize int
-}
-
-func (p *PKCS7) UnPad(encryptedData []byte) []byte {
-	length := len(encryptedData)
-	unpadding := int(encryptedData[length-1])
-	return encryptedData[:(length - unpadding)]
-}
-
-func (p *PKCS7) Pad(plainData []byte) []byte {
-	padding := p.blockSize - len(plainData)%p.blockSize
-	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
-	return append(plainData, padtext...)
 }
