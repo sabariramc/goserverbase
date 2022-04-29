@@ -43,3 +43,19 @@ func (m *Message) AddPayload(name string, payload *Payload) error {
 	m.Payload[name] = payload
 	return nil
 }
+
+func (m *Message) GetPayload(name string) (p *Payload, err error) {
+	for _, v := range m.Contains {
+		if v == name {
+			var ok bool
+			p, ok = m.Payload[name]
+			if !ok {
+				p = nil
+				err = fmt.Errorf("Payload %v not found", name)
+			}
+			return
+		}
+	}
+	err = fmt.Errorf("Payload %v not found in contains param", name)
+	return
+}

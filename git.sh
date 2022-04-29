@@ -1,5 +1,5 @@
-export message="Fixed logger service name"
-export version="v1.3.6"
+export message="Added get payload"
+export version="v1.4.0"
 git add .
 git commit -m "$message"
 git tag $version
