@@ -79,13 +79,13 @@ type Logger struct {
 	serviceName string
 }
 
-func NewLogger(ctx context.Context, lc *config.LoggerConfig, lMux LogMultipluxer, auditLogger AuditLogWriter, serviceName, moduleName string) *Logger {
+func NewLogger(ctx context.Context, lc *config.LoggerConfig, lMux LogMultipluxer, auditLogger AuditLogWriter, moduleName string) *Logger {
 	l := &Logger{
 		logLevel:    INFO,
 		lMux:        lMux,
 		auditLogger: auditLogger,
 		moduleName:  moduleName,
-		serviceName: serviceName,
+		serviceName: lc.ServiceName,
 		hostParams: &HostParams{
 			Version:     lc.Version,
 			Host:        lc.Host,
@@ -182,6 +182,7 @@ func (l *Logger) print(ctx context.Context, level *LogLevelMap, shortMessage str
 		FullMessageType: msgType,
 		Timestamp:       time.Now(),
 		ModuleName:      l.moduleName,
+		ServiceName:     l.serviceName,
 	}
 	l.lMux.Print(ctx, message)
 }
