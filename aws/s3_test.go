@@ -1,4 +1,4 @@
-package tests
+package aws_test
 
 import (
 	"fmt"
@@ -13,11 +13,11 @@ func TestS3(t *testing.T) {
 	s3Client := aws.GetDefaultS3Client(AWSTestLogger)
 	path := fmt.Sprintf("dev/temp/goserverbasetest/%v.pdf", uuid.NewString())
 	s3Bucket := AWSTestConfig.S3.BucketName
-	err := s3Client.PutFile(ctx, s3Bucket, path, "../testfile/sample_aadhaar.pdf")
+	err := s3Client.PutFile(ctx, s3Bucket, path, "./testdata/sample_aadhaar.pdf")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = s3Client.GetFile(ctx, s3Bucket, path, "../testfile/test.pdf")
+	err = s3Client.GetFile(ctx, s3Bucket, path, "./testdata/test.pdf")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -41,11 +41,11 @@ func TestS3PII(t *testing.T) {
 	}
 	path := fmt.Sprintf("dev/temp/goserverbasetest/%v.pdf", uuid.NewString())
 	s3Bucker := AWSTestConfig.S3.BucketName
-	err = s3Client.PutFile(ctx, s3Bucker, path, "../testfile/sample_aadhaar.pdf")
+	err = s3Client.PutFile(ctx, s3Bucker, path, "./testdata/sample_aadhaar.pdf")
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = s3Client.GetFile(ctx, s3Bucker, path, "../testfile/testpii.pdf")
+	err = s3Client.GetFile(ctx, s3Bucker, path, "./testdata/testpii.pdf")
 	if err != nil {
 		t.Fatal(err)
 	}

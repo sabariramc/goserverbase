@@ -1,5 +1,5 @@
-export message="Added get payload"
-export version="v1.4.0"
+export message="Test Update"
+export version="v1.4.1"
 git add .
 git commit -m "$message"
 git tag $version

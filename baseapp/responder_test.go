@@ -1,4 +1,4 @@
-package tests
+package baseapp_test
 
 import (
 	"bytes"

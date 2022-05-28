@@ -1,36 +1,13 @@
 package testutils
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"os"
 
 	base "github.com/sabariramc/goserverbase/aws"
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/joho/godotenv"
 )
-
-func getSTSToken() map[string]string {
-	dirname, err := os.UserHomeDir()
-	if err != nil {
-		panic(err)
-	}
-	filename := fmt.Sprintf("%v/.aws/sts.json", dirname)
-	rawData, _ := ioutil.ReadFile(filename)
-	var envData map[string]interface{}
-	err = json.Unmarshal(rawData, &envData)
-	if err != nil {
-		panic(err)
-	}
-	rawCredentials := envData["Credentials"].(map[string]interface{})
-	credentials := make(map[string]string)
-	for key, value := range rawCredentials {
-		credentials[key] = value.(string)
-	}
-	return credentials
-}
 
 func setAWSSession() {
 	// stsToken := getSTSToken()
@@ -52,7 +29,5 @@ func LoadEnv(path string) {
 }
 
 func Initialize() {
-	// getSTSToken()
 	setAWSSession()
-
 }

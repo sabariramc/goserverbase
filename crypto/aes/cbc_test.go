@@ -1,4 +1,4 @@
-package tests
+package aes_test
 
 import (
 	"context"

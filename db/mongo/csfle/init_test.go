@@ -1,4 +1,4 @@
-package mongo
+package csfle_test
 
 import (
 	"context"
@@ -27,7 +27,7 @@ func init() {
 		panic(err)
 	}
 	lmux := log.NewSequenctialLogMultipluxer(consoleLogWriter, graylog)
-	MongoTestLogger = log.NewLogger(context.TODO(), MongoTestConfig.Logger, lmux, consoleLogWriter, "MongoTest", "test")
+	MongoTestLogger = log.NewLogger(context.TODO(), MongoTestConfig.Logger, lmux, consoleLogWriter, "MongoTest")
 }
 
 func GetCorrelationContext() context.Context {

@@ -1,4 +1,4 @@
-package tests
+package logwriter_test
 
 import (
 	"fmt"

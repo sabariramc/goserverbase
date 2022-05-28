@@ -1,4 +1,4 @@
-package tests
+package csfle_test
 
 import (
 	"fmt"
@@ -8,7 +8,6 @@ import (
 
 	"github.com/sabariramc/goserverbase/db/mongo"
 	"github.com/sabariramc/goserverbase/db/mongo/csfle"
-	tmongo "github.com/sabariramc/goserverbase/tests/mongo"
 	tcsfle "github.com/sabariramc/goserverbase/utils/testutils/csfle"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -31,9 +30,9 @@ type PIITestVal struct {
 	Address Address            `bson:"address"`
 }
 
-func TestMongocollectionPII(t *testing.T) {
-	ctx := tmongo.GetCorrelationContext()
-	file, err := os.Open("piischeme.json")
+func TestCollectionPII(t *testing.T) {
+	ctx := GetCorrelationContext()
+	file, err := os.Open("./sample/piischeme.json")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -47,17 +46,17 @@ func TestMongocollectionPII(t *testing.T) {
 		t.Fatal(err)
 	}
 	scheme := string(schemeByte)
-	kmsArn := tmongo.MongoTestConfig.KMS.Arn
+	kmsArn := MongoTestConfig.KMS.Arn
 	keyAltName := "MongoPIITestKey"
-	kmsProvider, err := mongo.GetDefaultAWSKMSProvider(ctx, tmongo.MongoTestLogger, kmsArn)
+	kmsProvider, err := mongo.GetDefaultAWSKMSProvider(ctx, MongoTestLogger, kmsArn)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = tcsfle.SetEncryptionKey(ctx, tmongo.MongoTestLogger, &scheme, *tmongo.MongoTestConfig.Mongo, *tmongo.MongoTestConfig.MongoCSFLE, keyAltName, kmsProvider)
+	err = tcsfle.SetEncryptionKey(ctx, MongoTestLogger, &scheme, *MongoTestConfig.Mongo, *MongoTestConfig.MongoCSFLE, keyAltName, kmsProvider)
 	if err != nil {
 		t.Fatal(err)
 	}
-	client, err := mongo.NewMongo(ctx, tmongo.MongoTestLogger, *tmongo.MongoTestConfig.Mongo)
+	client, err := mongo.NewMongo(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -66,7 +65,7 @@ func TestMongocollectionPII(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	csfleClient, err := csfle.NewPIIMongo(ctx, tmongo.MongoTestLogger, *tmongo.MongoTestConfig.Mongo, *tmongo.MongoTestConfig.MongoCSFLE, mongoScheme, kmsProvider)
+	csfleClient, err := csfle.NewPIIMongo(ctx, MongoTestLogger, *MongoTestConfig.Mongo, *MongoTestConfig.MongoCSFLE, mongoScheme, kmsProvider)
 	piicoll := csfleClient.NewCSFLECollection(ctx, "PII", []string{"pan", "email"})
 	if err != nil {
 		t.Fatal(err)
@@ -75,7 +74,7 @@ func TestMongocollectionPII(t *testing.T) {
 		"dob":   "1991-08-02",
 		"name":  "Vamshi Krishna",
 		"pan":   "ABCDE1234F",
-		"email": "vamshi@gosabariram.com",
+		"email": "sab@sabariram.com",
 		"address": map[string]string{
 			"addressLine1": "door no with street name",
 			"addressLine2": "taluk and postal office",
@@ -89,7 +88,7 @@ func TestMongocollectionPII(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cur := piicoll.FindOneWithHash(ctx, map[string]interface{}{"email": "vamshi@gosabariram.com"})
+	cur := piicoll.FindOneWithHash(ctx, map[string]interface{}{"email": "sab@sabariram.com"})
 	val := &PIITestVal{}
 	err = cur.Decode(val)
 	if err != nil {
@@ -138,7 +137,7 @@ func TestMongocollectionPII(t *testing.T) {
 		"dob":   "1991-08-02",
 		"name":  "Vamshi Krishna",
 		"pan":   "ABCDE1234F",
-		"email": "vamshi@gosabariram.com",
+		"email": "sab@sabariram.com",
 		"address": map[string]string{
 			"addressLine1": "door no with street name",
 			"addressLine2": "taluk and postal office",

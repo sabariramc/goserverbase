@@ -1,4 +1,4 @@
-package tests
+package aws_test
 
 import (
 	"context"
@@ -13,7 +13,9 @@ var AWSTestConfig *testutils.TestConfig
 var AWSTestLogger *log.Logger
 
 func init() {
+	testutils.LoadEnv("../.env")
 	testutils.Initialize()
+
 	AWSTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter(log.HostParams{
 		Version:     AWSTestConfig.Logger.Version,
@@ -21,7 +23,7 @@ func init() {
 		ServiceName: AWSTestConfig.App.ServiceName,
 	})
 	lmux := log.NewSequenctialLogMultipluxer(consoleLogWriter)
-	AWSTestLogger = log.NewLogger(context.TODO(), AWSTestConfig.Logger, lmux, consoleLogWriter, "AWSTest", "Test")
+	AWSTestLogger = log.NewLogger(context.TODO(), AWSTestConfig.Logger, lmux, consoleLogWriter, "AWSTest")
 }
 
 func GetCorrelationContext() context.Context {

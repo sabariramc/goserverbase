@@ -31,7 +31,7 @@ func init() {
 		panic(err)
 	}
 	lmux := log.NewSequenctialLogMultipluxer(consoleLogWriter, graylog)
-	MysqlTestLogger = log.NewLogger(context.TODO(), MysqlTestConfig.Logger, lmux, consoleLogWriter, "Mysql Test", "test")
+	MysqlTestLogger = log.NewLogger(context.TODO(), MysqlTestConfig.Logger, lmux, consoleLogWriter, "Mysql Test")
 }
 
 func GetCorrelationContext() context.Context {
