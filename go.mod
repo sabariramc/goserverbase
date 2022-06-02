@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/aws/aws-sdk-go v1.43.20
+	github.com/confluentinc/confluent-kafka-go v1.8.2
 	github.com/gabriel-vasile/mimetype v1.4.0
 	github.com/google/uuid v1.3.0
 	github.com/joho/godotenv v1.4.0

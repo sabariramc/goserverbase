@@ -1,5 +1,5 @@
-export message="Test Update"
-export version="v1.4.1"
+export message="Added kafka"
+export version="v1.5.0"
 git add .
 git commit -m "$message"
 git tag $version

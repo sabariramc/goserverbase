@@ -1,3 +1,4 @@
 {
-    "go.buildTags": "cse"
+    // "go.buildTags": "cse"
+    "go.testTimeout": "60s"
 }

@@ -1,22 +1,26 @@
 package testutils
 
 import (
+	"github.com/google/uuid"
 	"github.com/sabariramc/goserverbase/config"
 	"github.com/sabariramc/goserverbase/utils"
 )
 
 type TestConfig struct {
-	Mysql         *config.MySqlConnectionConfig
-	Logger        *config.LoggerConfig
-	App           *config.ServerConfig
-	Mongo         *config.MongoConfig
-	MongoCSFLE    *config.MongoCFLEConfig
-	S3            *config.AWSS3Config
-	KMS           *config.AWSConfig
-	SecretManager *config.AWSConfig
-	SNS           *config.AWSConfig
-	SQS           *config.AWSSQSConfig
-	FIFOSQS       *config.AWSSQSConfig
+	Mysql               *config.MySqlConnectionConfig
+	Logger              *config.LoggerConfig
+	App                 *config.ServerConfig
+	Mongo               *config.MongoConfig
+	MongoCSFLE          *config.MongoCFLEConfig
+	S3                  *config.AWSS3Config
+	KMS                 *config.AWSConfig
+	SecretManager       *config.AWSConfig
+	SNS                 *config.AWSConfig
+	SQS                 *config.AWSSQSConfig
+	FIFOSQS             *config.AWSSQSConfig
+	KafkaConsumerConfig *config.KafkaConsumerConfig
+	KafkaProducerConfig *config.KafkaProducerConfig
+	KafkaTestTopic      string
 }
 
 func (t *TestConfig) GetLoggerConfig() *config.LoggerConfig {
@@ -27,6 +31,19 @@ func (t *TestConfig) GetAppConfig() *config.ServerConfig {
 }
 
 func NewConfig() *TestConfig {
+	serviceName := utils.GetEnv("SERVICE_NAME", "lending-errornotifier")
+	kafkaBaseConfig := config.KafkaConfig{Brokers: utils.GetEnv("KAFKA_BROKER", ""),
+		ClientID: serviceName + "-" + uuid.NewString(),
+	}
+	if utils.GetEnv("KAFKA_USERNAME", "") != "" {
+		kafkaBaseConfig = config.KafkaConfig{Brokers: utils.GetEnv("KAFKA_BROKER", ""),
+			Username:      utils.GetEnv("KAFKA_USERNAME", ""),
+			Password:      utils.GetEnv("KAFKA_PASSWORD", ""),
+			SASLMechanism: "PLAIN",
+			SASLProtocol:  "SASL_SSL",
+			ClientID:      serviceName + "-" + uuid.NewString(),
+		}
+	}
 	return &TestConfig{
 		Mysql: &config.MySqlConnectionConfig{
 			Host:         utils.GetEnv("MYSQL_HOST", "localhost"),
@@ -39,7 +56,7 @@ func NewConfig() *TestConfig {
 		},
 		Logger: &config.LoggerConfig{
 			Version:     utils.GetEnv("LOG_VERSION", "1.1"),
-			Host:        utils.GetEnv("HOST", "localhost"),
+			Host:        utils.GetEnv("HOST", utils.GetHostName()),
 			ServiceName: utils.GetEnv("SERVICE_NAME", "API"),
 			LogLevel:    utils.GetEnvInt("LOG_LEVEL", 6),
 			BufferSize:  utils.GetEnvInt("LOG_BUFFER_SIZE", 1),
@@ -53,7 +70,7 @@ func NewConfig() *TestConfig {
 			AuthHeaderKeyList: utils.GetEnvAsSlice("AUTH_HEADER_LIST", []string{}, ";"),
 		},
 		App: &config.ServerConfig{
-			Host:        utils.GetHostName(),
+			Host:        "0.0.0.0",
 			Port:        utils.GetEnv("APP_PORT", "8080"),
 			ServiceName: utils.GetEnv("SERVICE_NAME", "API"),
 			Debug:       utils.GetEnvBool("DEBUG", false),
@@ -88,5 +105,16 @@ func NewConfig() *TestConfig {
 		SNS: &config.AWSConfig{
 			Arn: utils.GetEnv("SNS_ARN", ""),
 		},
+		KafkaProducerConfig: &config.KafkaProducerConfig{
+			KafkaConfig: kafkaBaseConfig,
+			Acknowledge: "all",
+		},
+		KafkaConsumerConfig: &config.KafkaConsumerConfig{
+			KafkaConfig:    kafkaBaseConfig,
+			GoEventChannel: false,
+			GroupID:        serviceName,
+			OffsetReset:    "latest",
+		},
+		KafkaTestTopic: "com.sabariram.test",
 	}
 }

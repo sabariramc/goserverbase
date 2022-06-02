@@ -15,3 +15,7 @@ func TestGenerateId(t *testing.T) {
 		fmt.Println(x)
 	}
 }
+
+func TestGetHash(t *testing.T) {
+	fmt.Println(utils.GetHash("3edcRFV5tgb"))
+}
