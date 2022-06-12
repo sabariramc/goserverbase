@@ -1,13 +1,18 @@
 package logwriter_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/sabariramc/goserverbase/log"
+	"github.com/sabariramc/goserverbase/log/logwriter"
+	"github.com/sabariramc/goserverbase/utils"
 	"github.com/sabariramc/goserverbase/utils/testutils"
 	"gopkg.in/Graylog2/go-gelf.v2/gelf"
+	"gotest.tools/assert"
 )
 
 func TestGraylog(t *testing.T) {
@@ -54,4 +59,17 @@ func TestGraylog(t *testing.T) {
 	// specified Graylog2 server.
 
 	// ...
+}
+
+func TestGraylogWrapper(t *testing.T) {
+	hostParams := log.HostParams{
+		Version:     LoggerTestConfig.Logger.Version,
+		Host:        utils.GetHostName(),
+		ServiceName: LoggerTestConfig.Logger.ServiceName,
+	}
+	grey, err := logwriter.NewGraylogUDP(hostParams, logwriter.NewConsoleWriter(hostParams), *LoggerTestConfig.Logger.GrayLog)
+	assert.NilError(t, err)
+	grey.WriteMessage(context.Background(), &log.LogMessage{
+		ShortMessage: "Test Wrapper" + uuid.NewString(),
+	})
 }

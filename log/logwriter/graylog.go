@@ -70,7 +70,6 @@ func truncate(s *string, l uint) string {
 
 func (g *GraylogWriter) WriteMessage(ctx context.Context, msg *log.LogMessage) (err error) {
 	cr := GetCorrelationParam(ctx)
-
 	errorMessage := log.LogMessage{
 		LogLevelMap:  log.GetLogLevelMap(log.ERROR),
 		ShortMessage: msg.ShortMessage,
@@ -98,6 +97,7 @@ func (g *GraylogWriter) WriteMessage(ctx context.Context, msg *log.LogMessage) (
 		errorMessage.ShortMessage = "Error sending to graylog"
 		errorMessage.FullMessage = err.Error()
 		_ = g.backuplog.WriteMessage(ctx, &errorMessage)
+		return fmt.Errorf("GraylogWriter.WriteMessage : %w", err)
 	}
-	return fmt.Errorf("GraylogWriter.WriteMessage : %w", err)
+	return nil
 }

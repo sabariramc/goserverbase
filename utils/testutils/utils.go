@@ -24,7 +24,7 @@ func setAWSSession() {
 
 func LoadEnv(path string) {
 	if err := godotenv.Load(path); err != nil {
-		fmt.Printf("Env file not found - %v", path)
+		fmt.Printf("Env file not found - %v\n", path)
 	}
 }
 

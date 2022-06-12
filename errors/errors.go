@@ -11,7 +11,7 @@ type CustomError struct {
 }
 
 func (e *CustomError) Error() string {
-	blob, err := json.Marshal(e)
+	blob, err := json.MarshalIndent(e, "", "    ")
 	if err != nil {
 		e.ErrorData = ParseErrorMsg
 		blob, _ = json.MarshalIndent(e, "", "    ")
