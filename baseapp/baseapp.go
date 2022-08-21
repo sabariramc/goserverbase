@@ -17,15 +17,17 @@ type ServerConfig struct {
 }
 
 type BaseApp struct {
-	router *httprouter.Router
-	c      *ServerConfig
-	log    *log.Logger
+	router        *httprouter.Router
+	c             *ServerConfig
+	log           *log.Logger
+	errorNotifier ErrorNotifier
 }
 
-func NewBaseApp(c ServerConfig, lMux log.LogMultipluxer, auditLogger log.AuditLogWriter) *BaseApp {
+func NewBaseApp(c ServerConfig, lMux log.LogMultipluxer, auditLogger log.AuditLogWriter, errorNotifier ErrorNotifier) *BaseApp {
 	b := &BaseApp{
-		c:      &c,
-		router: httprouter.New(),
+		c:             &c,
+		router:        httprouter.New(),
+		errorNotifier: errorNotifier,
 	}
 	ctx := b.GetCorrelationContext(context.Background(), log.GetDefaultCorrelationParams(c.AppConfig.ServiceName))
 	b.log = log.NewLogger(ctx, c.LoggerConfig, lMux, auditLogger, c.LoggerConfig.ServiceName)
