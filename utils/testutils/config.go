@@ -106,11 +106,11 @@ func NewConfig() *TestConfig {
 			Arn: utils.GetEnv("SNS_ARN", ""),
 		},
 		KafkaProducerConfig: &config.KafkaProducerConfig{
-			KafkaConfig: kafkaBaseConfig,
+			KafkaConfig: &kafkaBaseConfig,
 			Acknowledge: "all",
 		},
 		KafkaConsumerConfig: &config.KafkaConsumerConfig{
-			KafkaConfig:    kafkaBaseConfig,
+			KafkaConfig:    &kafkaBaseConfig,
 			GoEventChannel: false,
 			GroupID:        serviceName,
 			OffsetReset:    "latest",

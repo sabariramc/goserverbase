@@ -71,13 +71,13 @@ type KafkaConfig struct {
 }
 
 type KafkaConsumerConfig struct {
-	KafkaConfig
+	*KafkaConfig
 	GroupID        interface{} `json:"group.id,omitempty"`
 	GoEventChannel bool        `json:"go.events.channel.enable,omitempty"`
 	OffsetReset    interface{} `json:"auto.offset.reset,omitempty"`
 }
 
 type KafkaProducerConfig struct {
-	KafkaConfig
+	*KafkaConfig
 	Acknowledge interface{} `json:"acks,omitempty"`
 }

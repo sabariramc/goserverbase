@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/sabariramc/goserverbase/config"
+	"github.com/sabariramc/goserverbase/errors"
 	"github.com/sabariramc/goserverbase/log"
 
 	"github.com/julienschmidt/httprouter"
@@ -17,12 +18,13 @@ type ServerConfig struct {
 }
 
 type BaseApp struct {
-	router *httprouter.Router
-	c      *ServerConfig
-	log    *log.Logger
+	router        *httprouter.Router
+	c             *ServerConfig
+	log           *log.Logger
+	errorNotifier errors.ErrorNotifier
 }
 
-func NewBaseApp(c ServerConfig, lMux log.LogMultipluxer, auditLogger log.AuditLogWriter) *BaseApp {
+func NewBaseApp(c ServerConfig, lMux log.LogMultipluxer, auditLogger log.AuditLogWriter, errorNotifier errors.ErrorNotifier) *BaseApp {
 	b := &BaseApp{
 		c:      &c,
 		router: httprouter.New(),
