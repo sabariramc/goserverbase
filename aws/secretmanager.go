@@ -12,9 +12,9 @@ import (
 )
 
 type SecretManager struct {
-	_      struct{}
-	client *secretsmanager.SecretsManager
-	log    *log.Logger
+	_ struct{}
+	*secretsmanager.SecretsManager
+	log *log.Logger
 }
 
 type secretManagerCache struct {
@@ -41,7 +41,7 @@ func GetDefaultSecretManagerClient(logger *log.Logger) *SecretManager {
 }
 
 func NewSecretManagerClient(logger *log.Logger, client *secretsmanager.SecretsManager) *SecretManager {
-	return &SecretManager{client: client, log: logger}
+	return &SecretManager{SecretsManager: client, log: logger}
 }
 
 func (s *SecretManager) GetSecret(ctx context.Context, secretArn string) (map[string]interface{}, error) {
@@ -49,7 +49,7 @@ func (s *SecretManager) GetSecret(ctx context.Context, secretArn string) (map[st
 	if ok && time.Now().Before(secretCacheData.expireTime) {
 		s.log.Info(ctx, "Secret fetched from cache", nil)
 	} else {
-		res, err := s.GetSecretNonCache(ctx, secretArn)
+		res, err := s.GetSecretValueWithContext(ctx, secretArn)
 		if err != nil {
 			return nil, fmt.Errorf("SecretManager.GetSecret: %w", err)
 		}
@@ -67,10 +67,10 @@ func (s *SecretManager) GetSecret(ctx context.Context, secretArn string) (map[st
 	return data, nil
 }
 
-func (s *SecretManager) GetSecretNonCache(ctx context.Context, secretArn string) (*secretsmanager.GetSecretValueOutput, error) {
+func (s *SecretManager) GetSecretValueWithContext(ctx context.Context, secretArn string) (*secretsmanager.GetSecretValueOutput, error) {
 	req := &secretsmanager.GetSecretValueInput{SecretId: &secretArn}
 	s.log.Debug(ctx, "Secret fetch request", req)
-	res, err := s.client.GetSecretValueWithContext(ctx, req)
+	res, err := s.SecretsManager.GetSecretValueWithContext(ctx, req)
 	if err != nil {
 		s.log.Error(ctx, "Error in secret fetch", err)
 		return nil, fmt.Errorf("SecretManager.GetSecretNonCache: %w", err)

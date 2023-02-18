@@ -19,11 +19,11 @@ import (
 )
 
 type S3PII struct {
-	_                struct{}
-	encryptionClient *s3crypto.EncryptionClientV2
-	decryptionClient *s3crypto.DecryptionClient
-	log              *log.Logger
-	s3Client         *S3
+	_ struct{}
+	*s3crypto.EncryptionClientV2
+	*s3crypto.DecryptionClient
+	*S3
+	log *log.Logger
 }
 
 type urlCache struct {
@@ -63,13 +63,13 @@ func GetDefaultS3PIIClient(logger *log.Logger, keyArn string) (*S3PII, error) {
 }
 
 func NewS3PIIClient(encryptionClient *s3crypto.EncryptionClientV2, decryptionClient *s3crypto.DecryptionClient, s3Client *S3, logger *log.Logger) *S3PII {
-	return &S3PII{encryptionClient: encryptionClient, decryptionClient: decryptionClient, log: logger, s3Client: s3Client}
+	return &S3PII{EncryptionClientV2: encryptionClient, DecryptionClient: decryptionClient, log: logger, S3: s3Client}
 }
 
-func (s *S3PII) PutObject(ctx context.Context, s3Bucket, s3Key string, body io.ReadSeeker, mimeType string) error {
+func (s *S3PII) PutObjectWithContext(ctx context.Context, s3Bucket, s3Key string, body io.ReadSeeker, mimeType string) error {
 	req := &s3.PutObjectInput{Bucket: &s3Bucket, Key: &s3Key, Body: body, ContentType: &mimeType}
 	s.log.Debug(ctx, "S3crypto put object request", req)
-	res, err := s.encryptionClient.PutObjectWithContext(ctx, req)
+	res, err := s.EncryptionClientV2.PutObjectWithContext(ctx, req)
 	if err != nil {
 		s.log.Error(ctx, "S3crypto put object error", err)
 		return fmt.Errorf("S3PII.PutObject: %w", err)
@@ -90,13 +90,13 @@ func (s *S3PII) PutFile(ctx context.Context, s3Bucket, s3Key, localFilPath strin
 	}
 	s.log.Debug(ctx, "File mimetype", mime)
 	defer fp.Close()
-	return s.PutObject(ctx, s3Bucket, s3Key, fp, mime.String())
+	return s.PutObjectWithContext(ctx, s3Bucket, s3Key, fp, mime.String())
 }
 
-func (s *S3PII) GetObject(ctx context.Context, s3Bucket, s3Key string) ([]byte, error) {
+func (s *S3PII) GetObjectWithContext(ctx context.Context, s3Bucket, s3Key string) ([]byte, error) {
 	req := &s3.GetObjectInput{Bucket: &s3Bucket, Key: &s3Key}
 	s.log.Debug(ctx, "S3crypto get object request", req)
-	res, err := s.decryptionClient.GetObjectWithContext(ctx, req)
+	res, err := s.DecryptionClient.GetObjectWithContext(ctx, req)
 	if err != nil {
 		s.log.Error(ctx, "S3crypto get object error", err)
 		return nil, fmt.Errorf("S3PII.GetObject: %w", err)
@@ -111,7 +111,7 @@ func (s *S3PII) GetObject(ctx context.Context, s3Bucket, s3Key string) ([]byte, 
 }
 
 func (s *S3PII) GetFile(ctx context.Context, s3Bucket, s3Key, localFilePath string) error {
-	blob, err := s.GetObject(ctx, s3Bucket, s3Key)
+	blob, err := s.GetObjectWithContext(ctx, s3Bucket, s3Key)
 	if err != nil {
 		return err
 	}
@@ -146,21 +146,21 @@ func (s *S3PII) GetFileCache(ctx context.Context, s3Bucket, s3Key, stage, tempPa
 	if ok && time.Now().Before(fileCache.expireTime) {
 		s.log.Info(ctx, "File fetched from cache", nil)
 	} else {
-		blob, err := s.GetObject(ctx, s3Bucket, s3Key)
+		blob, err := s.GetObjectWithContext(ctx, s3Bucket, s3Key)
 		if err != nil {
 			return nil, fmt.Errorf("S3PII.GetFileCache: %w", err)
 		}
 		filePath := strings.Split(s3Key, "/")
 		tempS3Key := fmt.Sprintf("/%v/temp/%v/%v-%v", stage, tempPathPart, uuid.NewString(), filePath[len(filePath)-1])
 		mime := mimetype.Detect(blob)
-		err = s.s3Client.PutObject(ctx, s3Bucket, tempS3Key, bytes.NewReader(blob), mime.String())
+		err = s.PutObjectWithContext(ctx, s3Bucket, tempS3Key, bytes.NewReader(blob), mime.String())
 		if err != nil {
 			return nil, fmt.Errorf("S3PII.GetFileCache: %w", err)
 		}
 		fileCache = &urlCache{expireTime: time.Now().Add(time.Hour * 20), key: tempS3Key, contentType: mime.String()}
 		piiFileCache[fullPath] = fileCache
 	}
-	url, err := s.s3Client.CreatePresignedURLGET(ctx, s3Bucket, fileCache.key, 30*60)
+	url, err := s.CreatePresignedURLGET(ctx, s3Bucket, fileCache.key, 30*60)
 	if err != nil {
 		return nil, fmt.Errorf("S3PII.GetFileCache: %w", err)
 	}

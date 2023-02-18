@@ -17,7 +17,7 @@ func TestSecretManager(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = client.GetSecretNonCache(ctx, AWSTestConfig.SecretManager.Arn)
+	_, err = client.GetSecretValueWithContext(ctx, AWSTestConfig.SecretManager.Arn)
 	if err != nil {
 		t.Fatal(err)
 	}

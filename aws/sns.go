@@ -13,9 +13,9 @@ import (
 )
 
 type SNS struct {
-	_      struct{}
-	client *sns.SNS
-	log    *log.Logger
+	_ struct{}
+	*sns.SNS
+	log *log.Logger
 }
 
 var defaultSNSClient *sns.SNS
@@ -33,10 +33,10 @@ func NewAWSSNSClient(awsSession *session.Session) *sns.SNS {
 }
 
 func NewSNSClient(logger *log.Logger, client *sns.SNS) *SNS {
-	return &SNS{client: client, log: logger}
+	return &SNS{SNS: client, log: logger}
 }
 
-func (s *SNS) Publish(ctx context.Context, topicArn, subject *string, payload *utils.Message, attributes map[string]string) error {
+func (s *SNS) PublishWithContext(ctx context.Context, topicArn, subject *string, payload *utils.Message, attributes map[string]string) error {
 	blob, _ := json.Marshal(payload)
 	message := string(blob)
 	req := &sns.PublishInput{
@@ -46,7 +46,7 @@ func (s *SNS) Publish(ctx context.Context, topicArn, subject *string, payload *u
 		MessageAttributes: s.GetAttribure(attributes),
 	}
 	s.log.Debug(ctx, "SNS publish request", req)
-	res, err := s.client.PublishWithContext(ctx, req)
+	res, err := s.SNS.PublishWithContext(ctx, req)
 	if err != nil {
 		s.log.Error(ctx, "SNS publish error", err)
 		return fmt.Errorf("SNS.Publish: %w", err)

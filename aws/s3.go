@@ -14,9 +14,9 @@ import (
 )
 
 type S3 struct {
-	_      struct{}
-	client *s3.S3
-	log    *log.Logger
+	_ struct{}
+	*s3.S3
+	log *log.Logger
 }
 
 var defaultS3Client *s3.S3
@@ -33,13 +33,13 @@ func GetDefaultS3Client(logger *log.Logger) *S3 {
 }
 
 func NewS3Client(client *s3.S3, logger *log.Logger) *S3 {
-	return &S3{client: client, log: logger}
+	return &S3{S3: client, log: logger}
 }
 
-func (s *S3) PutObject(ctx context.Context, s3Bucket, s3Key string, body io.ReadSeeker, mimeType string) error {
+func (s *S3) PutObjectWithContext(ctx context.Context, s3Bucket, s3Key string, body io.ReadSeeker, mimeType string) error {
 	req := &s3.PutObjectInput{Bucket: &s3Bucket, Key: &s3Key, Body: body, ContentType: &mimeType}
 	s.log.Debug(ctx, "S3 put object request", req)
-	res, err := s.client.PutObjectWithContext(ctx, req)
+	res, err := s.S3.PutObjectWithContext(ctx, req)
 	if err != nil {
 		s.log.Error(ctx, "S3 put object error", err)
 		return fmt.Errorf("S3.PutObject: %w", err)
@@ -60,13 +60,13 @@ func (s *S3) PutFile(ctx context.Context, s3Bucket, s3Key, localFilPath string) 
 	}
 	s.log.Debug(ctx, "File mimetype", mime)
 	defer fp.Close()
-	return s.PutObject(ctx, s3Bucket, s3Key, fp, mime.String())
+	return s.PutObjectWithContext(ctx, s3Bucket, s3Key, fp, mime.String())
 }
 
-func (s *S3) GetObject(ctx context.Context, s3Bucket, s3Key string) ([]byte, error) {
+func (s *S3) GetObjectWithContext(ctx context.Context, s3Bucket, s3Key string) ([]byte, error) {
 	req := &s3.GetObjectInput{Bucket: &s3Bucket, Key: &s3Key}
 	s.log.Debug(ctx, "S3 get object request", req)
-	res, err := s.client.GetObjectWithContext(ctx, req)
+	res, err := s.S3.GetObjectWithContext(ctx, req)
 	if err != nil {
 		s.log.Error(ctx, "S3 get object error", err)
 		return nil, fmt.Errorf("S3.GetObject: %w", err)
@@ -81,7 +81,7 @@ func (s *S3) GetObject(ctx context.Context, s3Bucket, s3Key string) ([]byte, err
 }
 
 func (s *S3) GetFile(ctx context.Context, s3Bucket, s3Key, localFilePath string) error {
-	blob, err := s.GetObject(ctx, s3Bucket, s3Key)
+	blob, err := s.GetObjectWithContext(ctx, s3Bucket, s3Key)
 	if err != nil {
 		return fmt.Errorf("S3.GetFile: %w", err)
 	}
@@ -105,7 +105,7 @@ func (s *S3) GetFile(ctx context.Context, s3Bucket, s3Key, localFilePath string)
 }
 
 func (s *S3) CreatePresignedURLGET(ctx context.Context, s3Bucket, s3Key string, expireTimeInSeconds int) (*string, error) {
-	req, _ := s.client.GetObjectRequest(&s3.GetObjectInput{
+	req, _ := s.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: &s3Bucket,
 		Key:    &s3Key,
 	})
@@ -119,7 +119,7 @@ func (s *S3) CreatePresignedURLGET(ctx context.Context, s3Bucket, s3Key string, 
 }
 
 func (s *S3) CreatePresignedURLPUT(ctx context.Context, s3Bucket, s3Key string, expireTimeInSeconds int) (*string, error) {
-	req, _ := s.client.PutObjectRequest(&s3.PutObjectInput{
+	req, _ := s.PutObjectRequest(&s3.PutObjectInput{
 		Bucket: &s3Bucket,
 		Key:    &s3Key,
 	})

@@ -11,8 +11,8 @@ import (
 )
 
 type StepFunction struct {
-	client *sfn.SFN
-	log    *log.Logger
+	*sfn.SFN
+	log *log.Logger
 }
 
 var defaultSFNClient *sfn.SFN
@@ -30,10 +30,10 @@ func NewAWSSFNClient(awsSession *session.Session) *sfn.SFN {
 }
 
 func NewSFNClient(logger *log.Logger, sfnClient *sfn.SFN) *StepFunction {
-	return &StepFunction{client: sfnClient, log: logger}
+	return &StepFunction{SFN: sfnClient, log: logger}
 }
 
-func (s *StepFunction) StartExecution(ctx context.Context, stateMachineArn, executionName string, payload interface{}) (err error) {
+func (s *StepFunction) StartExecutionWithContext(ctx context.Context, stateMachineArn, executionName string, payload interface{}) (err error) {
 	marshalledPayload, err := json.Marshal(payload)
 	if err != nil {
 		s.log.Error(ctx, "State machine payload marshal error", err)
@@ -45,7 +45,7 @@ func (s *StepFunction) StartExecution(ctx context.Context, stateMachineArn, exec
 		"payload": stringifiedMarshalledPayload,
 		"name":    executionName,
 	})
-	res, err := s.client.StartExecutionWithContext(ctx, &sfn.StartExecutionInput{
+	res, err := s.SFN.StartExecutionWithContext(ctx, &sfn.StartExecutionInput{
 		Input:           &stringifiedMarshalledPayload,
 		Name:            &executionName,
 		StateMachineArn: &stateMachineArn,

@@ -10,11 +10,11 @@ func TestAWSKMS(t *testing.T) {
 	ctx := GetCorrelationContext()
 	kms := aws.GetDefaultKMSClient(AWSTestLogger, AWSTestConfig.KMS.Arn)
 	text := "asfasdfsaf"
-	_, encryptedText, err := kms.Encrypt(ctx, &text)
+	_, encryptedText, err := kms.EncryptWithContext(ctx, &text)
 	if err != nil {
 		t.Fatal(err)
 	}
-	plainText, err := kms.Decrypt(ctx, &encryptedText)
+	plainText, err := kms.DecryptWithContext(ctx, &encryptedText)
 	if err != nil {
 		t.Fatal(err)
 	}
