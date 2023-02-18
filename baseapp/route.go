@@ -39,7 +39,7 @@ func NotFound() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add(constant.HeaderContentType, constant.ContentTypeJSON)
 		w.WriteHeader(http.StatusNotFound)
-		body := errors.NewCustomError("NOT_FOUND", "Invalid path", map[string]string{
+		body := errors.NewHTTPClientError(http.StatusNotFound, "Invalid path", map[string]string{
 			"path": r.URL.Path,
 		}).Error()
 		w.Write([]byte(body))
@@ -50,7 +50,7 @@ func MethodNotAllowed() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add(constant.HeaderContentType, constant.ContentTypeJSON)
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		body := errors.NewCustomError("INVALID_METHOD", "Invalid method", map[string]string{
+		body := errors.NewHTTPClientError(http.StatusMethodNotAllowed, "Invalid method", map[string]string{
 			"path":   r.URL.Path,
 			"method": r.Method,
 		}).Error()
@@ -70,7 +70,7 @@ func GetPathParams(ctx context.Context, log *log.Logger, r *http.Request) httpro
 	pp := r.Context().Value(httprouter.ParamsKey)
 	pathParmas, ok := pp.(httprouter.Params)
 	if !ok {
-		err := errors.NewCustomError("INVALID_PATH_PARAM", "Invalid path params processing", map[string]interface{}{
+		err := errors.NewHTTPServerError(http.StatusInternalServerError, "Invalid path params processing", map[string]interface{}{
 			"pathParams": pp,
 		})
 		log.Emergency(ctx, "Invalid path params processing", err, err)

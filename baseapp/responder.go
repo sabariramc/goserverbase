@@ -32,16 +32,18 @@ func (b *BaseApp) JSONResponderWithHeader(inputBody interface{}, f HandlerFuncti
 		var headers http.Header
 		ctx := r.Context()
 		defer func() {
-			if r := recover(); r != nil {
-				body := map[string]interface{}{
-					"error": "Internal error occcured, if persist contact technical team",
-				}
+			if rec := recover(); rec != nil {
+				body := map[string]string{"error": "Internal error occcured, if persist contact technical team"}
 				w.Header().Set(constant.HeaderContentType, constant.ContentTypeJSON)
 				w.WriteHeader(http.StatusInternalServerError)
-				_ = json.NewEncoder(w).Encode(body)
+				res, _ := json.Marshal(body)
+				w.Write([]byte(res))
 				b.PrintBody(ctx, bodyByte)
 				statusCode = http.StatusInternalServerError
-				b.log.Error(ctx, "Recovered in Responder - Error", r)
+				if b.errorNotifier != nil {
+					b.errorNotifier.Send(ctx, r, rec.(error))
+				}
+				b.log.Error(ctx, "Recovered in Responder - Error", rec)
 				b.log.Error(ctx, "Recovered in Responder - StackTrace", string(debug.Stack()))
 				b.log.Error(ctx, "Response-Body", body)
 			}
@@ -54,8 +56,7 @@ func (b *BaseApp) JSONResponderWithHeader(inputBody interface{}, f HandlerFuncti
 			decoder.DisallowUnknownFields()
 			err = decoder.Decode(inputBody)
 			if err != nil {
-				statusCode = http.StatusBadRequest
-				err = errors.NewCustomError("INVALID_REQUEST_PAYLOAD", "invalid payload", err)
+				err = errors.NewHTTPClientError(http.StatusBadRequest, "INVALID_REQUEST_PAYLOAD", "invalid payload")
 			}
 			bodyByte, _ = json.Marshal(inputBody)
 			b.log.Debug(ctx, "Request-Body", inputBody)
@@ -68,17 +69,33 @@ func (b *BaseApp) JSONResponderWithHeader(inputBody interface{}, f HandlerFuncti
 				}
 			}
 		}
-		w.Header().Set(constant.HeaderContentType, constant.ContentTypeJSON)
-		w.WriteHeader(statusCode)
 		if err != nil {
+			notify := false
 			var custErr *errors.CustomError
-			if !e.As(err, &custErr) {
-				err = errors.NewCustomError("UNKNOWN", "Unknown error", err)
+			var httpErr *errors.HTTPError
+			if e.As(err, &httpErr) {
+				statusCode = httpErr.ErrorStatusCode
+				notify = httpErr.Notify
+				body = httpErr.GetErrorResponse()
+
+			} else if e.As(err, &custErr) {
+				statusCode = http.StatusInternalServerError
+				notify = custErr.Notify
+				body = custErr.GetErrorResponse()
+			} else {
+				statusCode = http.StatusInternalServerError
+				custErr = errors.NewCustomError("UNKNOWN", "Unknown error", err, true)
+				body = custErr.GetErrorResponse()
+				err = custErr
 			}
-			body = err.Error()
+			if notify && b.errorNotifier != nil {
+				b.errorNotifier.Send(ctx, r, err)
+			}
 			b.PrintBody(ctx, bodyByte)
 			b.log.Error(ctx, "Response-Body", body)
 		}
+		w.Header().Set(constant.HeaderContentType, constant.ContentTypeJSON)
+		w.WriteHeader(statusCode)
 		if body != nil {
 			b.log.Debug(ctx, "Response-Body", body)
 			bodyData, ok := body.(string)

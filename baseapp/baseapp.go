@@ -26,8 +26,9 @@ type BaseApp struct {
 
 func NewBaseApp(c ServerConfig, lMux log.LogMultipluxer, auditLogger log.AuditLogWriter, errorNotifier errors.ErrorNotifier) *BaseApp {
 	b := &BaseApp{
-		c:      &c,
-		router: httprouter.New(),
+		c:             &c,
+		router:        httprouter.New(),
+		errorNotifier: errorNotifier,
 	}
 	ctx := b.GetCorrelationContext(context.Background(), log.GetDefaultCorrelationParams(c.AppConfig.ServiceName))
 	b.log = log.NewLogger(ctx, c.LoggerConfig, lMux, auditLogger, c.LoggerConfig.ServiceName)

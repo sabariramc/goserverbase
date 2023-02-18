@@ -2,12 +2,14 @@ package errors
 
 import (
 	"encoding/json"
+	"net/http"
 )
 
 type CustomError struct {
 	ErrorData    interface{} `json:"errorData"`
 	ErrorMessage string      `json:"errorMessage"`
 	ErrorCode    string      `json:"errorCode"`
+	Notify       bool        `json:"-"`
 }
 
 func (e *CustomError) Error() string {
@@ -19,9 +21,46 @@ func (e *CustomError) Error() string {
 	return string(blob)
 }
 
-func NewCustomError(errorCode, errorMessage string, errorData interface{}) *CustomError {
+func (e *CustomError) GetErrorResponse() string {
+	blob, err := json.Marshal(e)
+	if err != nil {
+		e.ErrorData = ParseErrorMsg
+		blob, _ = json.Marshal(e)
+	}
+	return string(blob)
+}
+
+func NewCustomError(errorCode, errorMessage string, errorData interface{}, notify bool) *CustomError {
 	if v, ok := errorData.(error); ok {
 		errorData = v.Error()
 	}
-	return &CustomError{ErrorCode: errorCode, ErrorMessage: errorMessage, ErrorData: errorData}
+	return &CustomError{ErrorCode: errorCode, ErrorMessage: errorMessage, ErrorData: errorData, Notify: notify}
+}
+
+type HTTPError struct {
+	CustomError
+	ErrorStatusCode int `json:""`
+}
+
+func (e *HTTPError) Error() string {
+	blob, err := json.MarshalIndent(e, "", "    ")
+	if err != nil {
+		e.ErrorData = ParseErrorMsg
+		blob, _ = json.MarshalIndent(e, "", "    ")
+	}
+	return string(blob)
+}
+
+func NewHTTPError(statusCode int, errorMessage string, errorData interface{}, notify bool) *HTTPError {
+	errorCode := http.StatusText(statusCode)
+	custError := NewCustomError(errorCode, errorMessage, errorData, notify)
+	return &HTTPError{CustomError: *custError, ErrorStatusCode: statusCode}
+}
+
+func NewHTTPClientError(statusCode int, errorMessage string, errorData interface{}) *HTTPError {
+	return NewHTTPError(statusCode, errorMessage, errorData, false)
+}
+
+func NewHTTPServerError(statusCode int, errorMessage string, errorData interface{}) *HTTPError {
+	return NewHTTPError(statusCode, errorMessage, errorData, true)
 }
