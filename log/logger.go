@@ -12,25 +12,25 @@ import (
 
 const ParseErrorMsg = "******************ERROR DURING MARSHAL OF FULLMESSAGE*******************"
 
-type LogLevelMap struct {
-	Level        LogLevel `json:"level"`
-	LogLevelName string   `json:"_x_level_name"`
+type LogLevel struct {
+	Level        LogLevelCode
+	LogLevelName string
 }
 
-type LogLevel uint8
+type LogLevelCode uint8
 
 const (
-	DEBUG     LogLevel = 7
-	INFO      LogLevel = 6
-	NOTICE    LogLevel = 5
-	WARNING   LogLevel = 4
-	ERROR     LogLevel = 3
-	CRITICAL  LogLevel = 2
-	ALERT     LogLevel = 1
-	EMERGENCY LogLevel = 0
+	DEBUG     LogLevelCode = 7
+	INFO      LogLevelCode = 6
+	NOTICE    LogLevelCode = 5
+	WARNING   LogLevelCode = 4
+	ERROR     LogLevelCode = 3
+	CRITICAL  LogLevelCode = 2
+	ALERT     LogLevelCode = 1
+	EMERGENCY LogLevelCode = 0
 )
 
-var logLevelMap = map[LogLevel]*LogLevelMap{
+var logLevelMap = map[LogLevelCode]*LogLevel{
 	DEBUG:     {Level: DEBUG, LogLevelName: "DEBUG"},
 	INFO:      {Level: INFO, LogLevelName: "INFO"},
 	NOTICE:    {Level: NOTICE, LogLevelName: "NOTICE"},
@@ -41,49 +41,36 @@ var logLevelMap = map[LogLevel]*LogLevelMap{
 	EMERGENCY: {Level: EMERGENCY, LogLevelName: "EMERGENCY"},
 }
 
-func GetLogLevelMap(level LogLevel) LogLevelMap {
+func GetLogLevelMap(level LogLevelCode) LogLevel {
 	l, ok := logLevelMap[level]
 	if !ok {
 		l = logLevelMap[INFO]
 	}
-	return LogLevelMap{l.Level, l.LogLevelName}
+	return LogLevel{l.Level, l.LogLevelName}
 }
 
 type LogMessage struct {
-	LogLevelMap
-	ShortMessage    string `json:"short_message"`
-	FullMessage     string `json:"full_message"`
+	LogLevel
+	ShortMessage    string
+	FullMessage     string
 	FullMessageType string
-	Timestamp       time.Time `json:"timestamp"`
+	Timestamp       time.Time
 	ModuleName      string
 	ServiceName     string
 }
 
-type AuditLogMessage struct {
-	Application    string                 `json:"application"`
-	Actor          string                 `json:"actor"`
-	Action         string                 `json:"action"`
-	Target         string                 `json:"target"`
-	Description    string                 `json:"description"`
-	Timestamp      time.Time              `json:"timestamp"`
-	Correlation    CorrelationParmas      `json:"correlation"`
-	AdditionalData map[string]interface{} `json:"additonalData"`
-}
-
 type Logger struct {
-	logLevel    LogLevel
-	lMux        LogMultipluxer
+	logLevel    LogLevelCode
+	lMux        LogMux
 	hostParams  *HostParams
-	auditLogger AuditLogWriter
 	moduleName  string
 	serviceName string
 }
 
-func NewLogger(ctx context.Context, lc *config.LoggerConfig, lMux LogMultipluxer, auditLogger AuditLogWriter, moduleName string) *Logger {
+func NewLogger(ctx context.Context, lc *config.LoggerConfig, lMux LogMux, moduleName string) *Logger {
 	l := &Logger{
 		logLevel:    INFO,
 		lMux:        lMux,
-		auditLogger: auditLogger,
 		moduleName:  moduleName,
 		serviceName: lc.ServiceName,
 		hostParams: &HostParams{
@@ -97,24 +84,12 @@ func NewLogger(ctx context.Context, lc *config.LoggerConfig, lMux LogMultipluxer
 		l.Warning(ctx, "Erronous log level - log set to INFO", nil)
 		logLevel = int(INFO)
 	}
-	l.logLevel = LogLevel(logLevel)
+	l.logLevel = LogLevelCode(logLevel)
 	return l
 }
 
 func (l *Logger) SetModuleName(moduleName string) {
 	l.moduleName = moduleName
-}
-
-func (l *Logger) Audit(ctx context.Context, actor, action, target, desciption string, additionalData map[string]interface{}) {
-	_ = l.auditLogger.WriteAuditMessage(ctx, &AuditLogMessage{
-		Application:    l.hostParams.ServiceName,
-		Actor:          actor,
-		Action:         action,
-		Description:    desciption,
-		Target:         target,
-		Timestamp:      time.Now(),
-		AdditionalData: additionalData,
-	})
 }
 
 func (l *Logger) Debug(ctx context.Context, shortMessage string, fullMessage interface{}) {
@@ -150,7 +125,7 @@ func (l *Logger) Emergency(ctx context.Context, shortMessage string, fullMessage
 	panic(fmt.Errorf("%v : %w", shortMessage, err))
 }
 
-func (l *Logger) print(ctx context.Context, level *LogLevelMap, shortMessage string, fullMessage interface{}) {
+func (l *Logger) print(ctx context.Context, level *LogLevel, shortMessage string, fullMessage interface{}) {
 	if level.Level > l.logLevel {
 		return
 	}
@@ -176,7 +151,7 @@ func (l *Logger) print(ctx context.Context, level *LogLevelMap, shortMessage str
 		}
 	}
 	message := &LogMessage{
-		LogLevelMap:     *level,
+		LogLevel:        *level,
 		ShortMessage:    shortMessage,
 		FullMessage:     msg,
 		FullMessageType: msgType,

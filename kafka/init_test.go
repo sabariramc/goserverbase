@@ -22,8 +22,8 @@ func init() {
 		Host:        KafkaTestConfig.App.Host,
 		ServiceName: KafkaTestConfig.App.ServiceName,
 	})
-	lmux := log.NewSequenctialLogMultipluxer(consoleLogWriter)
-	KafkaTestLogger = log.NewLogger(context.TODO(), KafkaTestConfig.Logger, lmux, consoleLogWriter, "AWSTest")
+	lmux := log.NewDefaultLogMux(consoleLogWriter)
+	KafkaTestLogger = log.NewLogger(context.TODO(), KafkaTestConfig.Logger, lmux, "AWSTest")
 }
 
 func GetCorrelationContext() context.Context {

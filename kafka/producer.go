@@ -23,7 +23,7 @@ type KafkaProducer struct {
 
 func NewKafkaProducer(ctx context.Context, log *log.Logger, config *config.KafkaProducerConfig, topic string) (*KafkaProducer, error) {
 	parsedConfig := &kafka.ConfigMap{}
-	utils.JsonTransformer(config, parsedConfig)
+	utils.StrictJsonTransformer(config, parsedConfig)
 	p, err := kafka.NewProducer(parsedConfig)
 
 	if err != nil {
@@ -51,7 +51,7 @@ func (k *KafkaProducer) Produce(ctx context.Context, key string, message *utils.
 	}
 	correlationParam := logwriter.GetCorrelationParam(ctx)
 	headers := make(map[string]string, 0)
-	utils.JsonTransformer(correlationParam, &headers)
+	utils.StrictJsonTransformer(correlationParam, &headers)
 	messageHeader := make([]kafka.Header, 0)
 	for i, v := range headers {
 		messageHeader = append(messageHeader, kafka.Header{

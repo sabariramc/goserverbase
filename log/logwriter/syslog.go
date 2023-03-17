@@ -27,7 +27,7 @@ func (s *SyslogWriter) GetBufferSize() int {
 	return 1
 }
 
-func (c *SyslogWriter) Start(logChannel chan log.MultipluxerLogMessage) {
+func (c *SyslogWriter) Start(logChannel chan log.MuxLogMessage) {
 	for log := range logChannel {
 		_ = c.WriteMessage(log.Ctx, &log.LogMessage)
 	}

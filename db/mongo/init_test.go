@@ -26,7 +26,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	lmux := log.NewSequenctialLogMultipluxer(consoleLogWriter, graylog)
+	lmux := log.NewDefaultLogMux(consoleLogWriter, graylog)
 	MongoTestLogger = log.NewLogger(context.TODO(), MongoTestConfig.Logger, lmux, consoleLogWriter, "MongoTest")
 }
 

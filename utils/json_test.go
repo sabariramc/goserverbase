@@ -25,12 +25,12 @@ func TestJsonDecoding(t *testing.T) {
 		"deciVal": val,
 	}
 	toData := &TestVal{}
-	err := utils.JsonTransformer(data, toData)
+	err := utils.StrictJsonTransformer(data, toData)
 	if err != nil {
 		t.Fatal(err)
 	}
 	data["newField"] = "fadfa"
-	err = utils.JsonTransformer(data, toData)
+	err = utils.StrictJsonTransformer(data, toData)
 	if err == nil {
 		t.Fatal(fmt.Errorf("Json should throw an error"))
 	}

@@ -22,7 +22,7 @@ func init() {
 		Host:        AWSTestConfig.App.Host,
 		ServiceName: AWSTestConfig.App.ServiceName,
 	})
-	lmux := log.NewSequenctialLogMultipluxer(consoleLogWriter)
+	lmux := log.NewDefaultLogMux(consoleLogWriter)
 	AWSTestLogger = log.NewLogger(context.TODO(), AWSTestConfig.Logger, lmux, consoleLogWriter, "AWSTest")
 }
 

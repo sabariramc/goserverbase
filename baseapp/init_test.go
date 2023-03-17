@@ -11,7 +11,7 @@ import (
 
 var ServerTestConfig *testutils.TestConfig
 var ServerTestLogger *log.Logger
-var ServerTestLMux log.LogMultipluxer
+var ServerTestLMux log.LogMux
 var ServerTestAuditLogger log.AuditLogWriter
 
 func init() {
@@ -23,7 +23,7 @@ func init() {
 		ServiceName: ServerTestConfig.App.ServiceName,
 	})
 	ServerTestAuditLogger = consoleLogWriter
-	ServerTestLMux = log.NewSequenctialLogMultipluxer(consoleLogWriter)
+	ServerTestLMux = log.NewDefaultLogMux(consoleLogWriter)
 	ServerTestLogger = log.NewLogger(context.TODO(), ServerTestConfig.Logger, ServerTestLMux, consoleLogWriter, "BaseTest")
 }
 

@@ -1,6 +1,6 @@
 module github.com/sabariramc/goserverbase
 
-go 1.18
+go 1.20
 
 require (
 	github.com/aws/aws-sdk-go v1.43.20
@@ -11,7 +11,6 @@ require (
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/shopspring/decimal v1.3.1
 	go.mongodb.org/mongo-driver v1.8.4
-	gopkg.in/Graylog2/go-gelf.v2 v2.0.0-20191017102106-1550ee647df0
 	gorm.io/driver/mysql v1.3.2
 	gorm.io/gorm v1.23.3
 	gotest.tools v2.2.0+incompatible

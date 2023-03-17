@@ -24,7 +24,7 @@ type BaseApp struct {
 	errorNotifier errors.ErrorNotifier
 }
 
-func NewBaseApp(c ServerConfig, lMux log.LogMultipluxer, auditLogger log.AuditLogWriter, errorNotifier errors.ErrorNotifier) *BaseApp {
+func NewBaseApp(c ServerConfig, lMux log.LogMux, auditLogger log.AuditLogWriter, errorNotifier errors.ErrorNotifier) *BaseApp {
 	b := &BaseApp{
 		c:             &c,
 		router:        httprouter.New(),

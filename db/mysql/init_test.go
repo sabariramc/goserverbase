@@ -30,7 +30,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	lmux := log.NewSequenctialLogMultipluxer(consoleLogWriter, graylog)
+	lmux := log.NewDefaultLogMux(consoleLogWriter, graylog)
 	MysqlTestLogger = log.NewLogger(context.TODO(), MysqlTestConfig.Logger, lmux, consoleLogWriter, "Mysql Test")
 }
 

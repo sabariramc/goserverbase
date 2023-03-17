@@ -24,7 +24,7 @@ type KafkaConsumer struct {
 
 func NewKafkaConsumer(ctx context.Context, log *log.Logger, config *config.KafkaConsumerConfig, topic string) (*KafkaConsumer, error) {
 	parsedConfig := &kafka.ConfigMap{}
-	utils.JsonTransformer(config, parsedConfig)
+	utils.StrictJsonTransformer(config, parsedConfig)
 	c, err := kafka.NewConsumer(parsedConfig)
 
 	if err != nil {

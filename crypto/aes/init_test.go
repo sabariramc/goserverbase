@@ -11,7 +11,7 @@ import (
 
 var ServerTestConfig *testutils.TestConfig
 var ServerTestLogger *log.Logger
-var ServerTestLMux log.LogMultipluxer
+var ServerTestLMux log.LogMux
 var ServerTestAuditLogger log.AuditLogWriter
 
 func init() {
@@ -24,7 +24,7 @@ func init() {
 		ServiceName: ServerTestConfig.App.ServiceName,
 	})
 	ServerTestAuditLogger = consoleLogWriter
-	lmux := log.NewSequenctialLogMultipluxer(consoleLogWriter)
+	lmux := log.NewDefaultLogMux(consoleLogWriter)
 	ServerTestLogger = log.NewLogger(context.TODO(), ServerTestConfig.Logger, lmux, consoleLogWriter, "CRYPTOTEST")
 	ServerTestLMux = lmux
 }

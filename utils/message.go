@@ -6,25 +6,18 @@ import (
 	"github.com/sabariramc/goserverbase/errors"
 )
 
-type Entity string
-
-const (
-	StateEntity = "state"
-	EventEntity = "event"
-)
-
 type Payload struct {
 	Entity map[string]interface{} `json:"entity"`
 }
 
 type Message struct {
-	Entity   Entity              `json:"entity"`
+	Entity   string              `json:"entity"`
 	Event    string              `json:"event"`
 	Contains []string            `json:"contains"`
 	Payload  map[string]*Payload `json:"payload"`
 }
 
-func NewMessage(entity Entity, event string) *Message {
+func NewMessage(entity string, event string) *Message {
 	return &Message{
 		Entity:   entity,
 		Event:    event,
@@ -36,7 +29,7 @@ func NewMessage(entity Entity, event string) *Message {
 func (m *Message) AddPayload(name string, payload *Payload) error {
 	for _, v := range m.Contains {
 		if v == name {
-			return fmt.Errorf("Message.AddPayload : %w", errors.NewCustomError("DUPLICATE_PAYLOAD", fmt.Sprintf("Payload `%v` already exist", name), nil, false))
+			return fmt.Errorf("Message.AddPayload : %w", errors.NewCustomError("DUPLICATE_PAYLOAD", fmt.Sprintf("Payload `%v` already exist", name), nil, nil, false))
 		}
 	}
 	m.Contains = append(m.Contains, name)

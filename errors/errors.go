@@ -6,10 +6,11 @@ import (
 )
 
 type CustomError struct {
-	ErrorData    interface{} `json:"errorData"`
-	ErrorMessage string      `json:"errorMessage"`
-	ErrorCode    string      `json:"errorCode"`
-	Notify       bool        `json:"-"`
+	ErrorData        interface{} `json:"errorData"`
+	ErrorMessage     string      `json:"errorMessage"`
+	ErrorDescription interface{} `json:"errorDescription"`
+	ErrorCode        string      `json:"errorCode"`
+	Notify           bool        `json:"-"`
 }
 
 func (e *CustomError) Error() string {
@@ -30,11 +31,11 @@ func (e *CustomError) GetErrorResponse() string {
 	return string(blob)
 }
 
-func NewCustomError(errorCode, errorMessage string, errorData interface{}, notify bool) *CustomError {
+func NewCustomError(errorCode, errorMessage string, errorData interface{}, errorDescription interface{}, notify bool) *CustomError {
 	if v, ok := errorData.(error); ok {
 		errorData = v.Error()
 	}
-	return &CustomError{ErrorCode: errorCode, ErrorMessage: errorMessage, ErrorData: errorData, Notify: notify}
+	return &CustomError{ErrorCode: errorCode, ErrorMessage: errorMessage, ErrorData: errorData, Notify: notify, ErrorDescription: errorDescription}
 }
 
 type HTTPError struct {
@@ -51,16 +52,16 @@ func (e *HTTPError) Error() string {
 	return string(blob)
 }
 
-func NewHTTPError(statusCode int, errorMessage string, errorData interface{}, notify bool) *HTTPError {
+func NewHTTPError(statusCode int, errorMessage string, errorData interface{}, errorDescription interface{}, notify bool) *HTTPError {
 	errorCode := http.StatusText(statusCode)
-	custError := NewCustomError(errorCode, errorMessage, errorData, notify)
+	custError := NewCustomError(errorCode, errorMessage, errorData, errorDescription, notify)
 	return &HTTPError{CustomError: *custError, ErrorStatusCode: statusCode}
 }
 
-func NewHTTPClientError(statusCode int, errorMessage string, errorData interface{}) *HTTPError {
-	return NewHTTPError(statusCode, errorMessage, errorData, false)
+func NewHTTPClientError(statusCode int, errorMessage string, errorData interface{}, errorDescription interface{}) *HTTPError {
+	return NewHTTPError(statusCode, errorMessage, errorData, errorDescription, false)
 }
 
-func NewHTTPServerError(statusCode int, errorMessage string, errorData interface{}) *HTTPError {
-	return NewHTTPError(statusCode, errorMessage, errorData, true)
+func NewHTTPServerError(statusCode int, errorMessage string, errorData interface{}, errorDescription interface{}) *HTTPError {
+	return NewHTTPError(statusCode, errorMessage, errorData, errorDescription, true)
 }

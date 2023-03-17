@@ -88,7 +88,7 @@ type Filter struct {
 
 func SetDefaultPagination(filter interface{}, deafultSortBy string) error {
 	var defaultFilter Filter
-	err := utils.JsonTransformer(filter, &defaultFilter)
+	err := utils.StrictJsonTransformer(filter, &defaultFilter)
 	if err != nil {
 		return fmt.Errorf("baseapp.SetDefault : %w", err)
 	}
@@ -105,7 +105,7 @@ func SetDefaultPagination(filter interface{}, deafultSortBy string) error {
 		v := true
 		defaultFilter.Asc = &v
 	}
-	err = utils.JsonTransformer(&defaultFilter, filter)
+	err = utils.StrictJsonTransformer(&defaultFilter, filter)
 	if err != nil {
 		return fmt.Errorf("app.SetDefault : %w", err)
 	}

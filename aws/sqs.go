@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/sabariramc/goserverbase/errors"
 	"github.com/sabariramc/goserverbase/log"
 	"github.com/sabariramc/goserverbase/utils"
 )
@@ -21,7 +20,7 @@ type SQS struct {
 }
 
 var defaultSQSClient *sqs.SQS
-
+var ErrTooManyMessageToDelete = fmt.Errorf("too many message in receiptHandlerMap(should be less that 10)")
 var DefaultMaxMessages int64 = 10
 
 func GetDefaultSQSClient(logger *log.Logger, queueURL string) *SQS {
@@ -59,7 +58,7 @@ func GetQueueUrlWithContext(ctx context.Context, logger *log.Logger, queueName s
 }
 
 func (s *SQS) SendMessageWithContext(ctx context.Context, message *utils.Message, attribute map[string]string, delayInSeconds int64, messageDeduplicationId, messageGroupId *string) error {
-	body, err := utils.GetString(message)
+	body, err := utils.Searialize(message)
 	if err != nil {
 		return fmt.Errorf("SQS.SendMessage: %w", err)
 	}
@@ -97,7 +96,7 @@ func (s *SQS) SendMessageBatchWithContext(ctx context.Context, messageList []*Ba
 	messageReq := make([]*sqs.SendMessageBatchRequestEntry, len(messageList))
 	i := 0
 	for _, message := range messageList {
-		body, err := utils.GetString(message.Message)
+		body, err := utils.Searialize(message.Message)
 		if err != nil {
 			return nil, fmt.Errorf("SQS.SendMessageBatch: %w", err)
 		}
@@ -181,7 +180,7 @@ func (s *SQS) DeleteMessageWithContext(ctx context.Context, receiptHandler *stri
 
 func (s *SQS) DeleteMessageBatchWithContext(ctx context.Context, receiptHandlerMap map[string]*string) (*sqs.DeleteMessageBatchOutput, error) {
 	if len(receiptHandlerMap) > 10 {
-		return nil, fmt.Errorf("SQS.DeleteMessage: %w", errors.ErrTooManyMessageToDelete)
+		return nil, fmt.Errorf("SQS.DeleteMessage: %w", ErrTooManyMessageToDelete)
 	}
 	entries := make([]*sqs.DeleteMessageBatchRequestEntry, len(receiptHandlerMap))
 	i := 0
