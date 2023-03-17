@@ -22,8 +22,7 @@ func TestKafkaMessage(t *testing.T) {
 	var s sync.WaitGroup
 	s.Add(1)
 	go func() {
-		kmsg, msg, err := co.ReadMessage(ctx, time.Second*10)
-		KafkaTestLogger.Info(ctx, "message", msg)
+		kmsg, err := co.ReadMessage(ctx, time.Second*10)
 		KafkaTestLogger.Info(ctx, "Kafka message", kmsg)
 		assert.NilError(t, err)
 		s.Done()

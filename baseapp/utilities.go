@@ -13,12 +13,12 @@ import (
 	"github.com/sabariramc/goserverbase/utils"
 )
 
-func (b *BaseApp) GetHttpCorrelationParams(r *http.Request) *log.CorrelationParmas {
+func (b *BaseApp) GetHttpCorrelationParams(r *http.Request) *log.CorrelationParam {
 	correlationId := r.Header.Get("x-correlation-id")
 	if correlationId == "" {
 		return log.GetDefaultCorrelationParams(b.c.AppConfig.ServiceName)
 	}
-	return &log.CorrelationParmas{
+	return &log.CorrelationParam{
 		CorrelationId: correlationId,
 		ScenarioId:    r.Header.Get("x-scenario-id"),
 		ScenarioName:  r.Header.Get("x-scenario-name"),
@@ -70,7 +70,7 @@ func GetBytes(key interface{}) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func (b *BaseApp) GetCorrelationContext(ctx context.Context, c *log.CorrelationParmas) context.Context {
+func (b *BaseApp) GetCorrelationContext(ctx context.Context, c *log.CorrelationParam) context.Context {
 	ctx = context.WithValue(ctx, constant.CorrelationContextKey, c)
 	return ctx
 }

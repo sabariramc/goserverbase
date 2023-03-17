@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type CorrelationParmas struct {
+type CorrelationParam struct {
 	CorrelationId string `json:"x-correlation-id"`
 	ScenarioId    string `json:"x-scenario-id,omitempty"`
 	SessionId     string `json:"x-session-id,omitempty"`
@@ -19,8 +19,8 @@ type HostParams struct {
 	ServiceName string `json:"service-name,omitempty"`
 }
 
-func GetDefaultCorrelationParams(serviceName string) *CorrelationParmas {
-	return &CorrelationParmas{
+func GetDefaultCorrelationParams(serviceName string) *CorrelationParam {
+	return &CorrelationParam{
 		CorrelationId: fmt.Sprintf("%v-%v", serviceName, uuid.New().String()),
 	}
 }

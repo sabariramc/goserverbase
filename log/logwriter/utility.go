@@ -7,10 +7,10 @@ import (
 	"github.com/sabariramc/goserverbase/log"
 )
 
-func GetCorrelationParam(ctx context.Context) *log.CorrelationParmas {
-	val, ok := ctx.Value(constant.CorrelationContextKey).(*log.CorrelationParmas)
+func GetCorrelationParam(ctx context.Context) *log.CorrelationParam {
+	val, ok := ctx.Value(constant.CorrelationContextKey).(*log.CorrelationParam)
 	if !ok {
-		val = &log.CorrelationParmas{}
+		val = &log.CorrelationParam{}
 	}
 	return val
 }

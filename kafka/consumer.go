@@ -82,20 +82,13 @@ outer:
 	return err
 }
 
-func (k *KafkaConsumer) ReadMessage(ctx context.Context, timeout time.Duration) (*kafka.Message, *utils.Message, error) {
+func (k *KafkaConsumer) ReadMessage(ctx context.Context, timeout time.Duration) (*kafka.Message, error) {
 	ev, err := k.Consumer.ReadMessage(timeout)
 	if err != nil {
 		k.log.Error(ctx, "Error reading message from topic: "+k.topic, err)
-		return nil, nil, fmt.Errorf("KafkaConsumer.ReadMessage: %w", err)
+		return nil, fmt.Errorf("KafkaConsumer.ReadMessage: %w", err)
 	}
-	k.log.Debug(ctx, "Message read from topic: "+k.topic, ev)
-	msg, err := LoadMessage(ev)
-	if err != nil {
-		k.log.Error(ctx, "Error decoding message from topic: "+k.topic, err)
-		k.log.Error(ctx, "Message Content from topic: "+k.topic, string(ev.Value))
-		return nil, nil, fmt.Errorf("KafkaConsumer.ReadMessage.Decode: %w", err)
-	}
-	return ev, msg, nil
+	return ev, err
 }
 
 func (k *KafkaConsumer) Close(ctx context.Context) error {
