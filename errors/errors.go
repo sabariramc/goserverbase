@@ -43,15 +43,6 @@ type HTTPError struct {
 	ErrorStatusCode int `json:""`
 }
 
-func (e *HTTPError) Error() string {
-	blob, err := json.MarshalIndent(e, "", "    ")
-	if err != nil {
-		e.ErrorData = ParseErrorMsg
-		blob, _ = json.MarshalIndent(e, "", "    ")
-	}
-	return string(blob)
-}
-
 func NewHTTPError(statusCode int, errorMessage string, errorData interface{}, errorDescription interface{}, notify bool) *HTTPError {
 	errorCode := http.StatusText(statusCode)
 	custError := NewCustomError(errorCode, errorMessage, errorData, errorDescription, notify)

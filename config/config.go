@@ -39,45 +39,15 @@ type ServerConfig struct {
 	Debug       bool
 }
 
-type GraylogConfig struct {
-	URL               string
-	Address           string
-	Port              uint
-	ShortMessageLimit uint
-	LongMessageLimit  uint
-}
-
 type LoggerConfig struct {
 	Version           string
 	Host              string
 	ServiceName       string
 	LogLevel          int
 	BufferSize        int
-	GrayLog           *GraylogConfig
 	AuthHeaderKeyList []string
 }
 
 type RuntimeConfig struct {
 	GoMaxProcs int
-}
-
-type KafkaConfig struct {
-	Brokers       interface{} `json:"bootstrap.servers,omitempty"`
-	Username      interface{} `json:"sasl.username,omitempty"`
-	Password      interface{} `json:"sasl.password,omitempty"`
-	SASLMechanism interface{} `json:"sasl.mechanisms,omitempty"`
-	SASLProtocol  interface{} `json:"security.protocol,omitempty"`
-	ClientID      interface{} `json:"client.id,omitempty"`
-}
-
-type KafkaConsumerConfig struct {
-	*KafkaConfig
-	GroupID        interface{} `json:"group.id,omitempty"`
-	GoEventChannel bool        `json:"go.events.channel.enable,omitempty"`
-	OffsetReset    interface{} `json:"auto.offset.reset,omitempty"`
-}
-
-type KafkaProducerConfig struct {
-	*KafkaConfig
-	Acknowledge interface{} `json:"acks,omitempty"`
 }

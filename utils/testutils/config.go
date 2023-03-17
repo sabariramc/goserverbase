@@ -3,6 +3,7 @@ package testutils
 import (
 	"github.com/google/uuid"
 	"github.com/sabariramc/goserverbase/config"
+	"github.com/sabariramc/goserverbase/kafka"
 	"github.com/sabariramc/goserverbase/utils"
 )
 
@@ -18,8 +19,8 @@ type TestConfig struct {
 	SNS                 *config.AWSConfig
 	SQS                 *config.AWSSQSConfig
 	FIFOSQS             *config.AWSSQSConfig
-	KafkaConsumerConfig *config.KafkaConsumerConfig
-	KafkaProducerConfig *config.KafkaProducerConfig
+	KafkaConsumerConfig *kafka.KafkaConsumerConfig
+	KafkaProducerConfig *kafka.KafkaProducerConfig
 	KafkaTestTopic      string
 }
 
@@ -32,11 +33,11 @@ func (t *TestConfig) GetAppConfig() *config.ServerConfig {
 
 func NewConfig() *TestConfig {
 	serviceName := utils.GetEnv("SERVICE_NAME", "lending-errornotifier")
-	kafkaBaseConfig := config.KafkaConfig{Brokers: utils.GetEnv("KAFKA_BROKER", ""),
+	kafkaBaseConfig := kafka.KafkaCred{Brokers: utils.GetEnv("KAFKA_BROKER", ""),
 		ClientID: serviceName + "-" + uuid.NewString(),
 	}
 	if utils.GetEnv("KAFKA_USERNAME", "") != "" {
-		kafkaBaseConfig = config.KafkaConfig{Brokers: utils.GetEnv("KAFKA_BROKER", ""),
+		kafkaBaseConfig = kafka.KafkaCred{Brokers: utils.GetEnv("KAFKA_BROKER", ""),
 			Username:      utils.GetEnv("KAFKA_USERNAME", ""),
 			Password:      utils.GetEnv("KAFKA_PASSWORD", ""),
 			SASLMechanism: "PLAIN",
@@ -55,18 +56,11 @@ func NewConfig() *TestConfig {
 			Charset:      utils.GetEnv("MYSQL_CHARSET", "utf8"),
 		},
 		Logger: &config.LoggerConfig{
-			Version:     utils.GetEnv("LOG_VERSION", "1.1"),
-			Host:        utils.GetEnv("HOST", utils.GetHostName()),
-			ServiceName: utils.GetEnv("SERVICE_NAME", "API"),
-			LogLevel:    utils.GetEnvInt("LOG_LEVEL", 6),
-			BufferSize:  utils.GetEnvInt("LOG_BUFFER_SIZE", 1),
-			GrayLog: &config.GraylogConfig{
-				URL:               utils.GetEnv("GRAYLOG_URL", "http://localhost:12201/gelf"),
-				Address:           utils.GetEnv("GRAYLOG_ADD", "localhost"),
-				Port:              uint(utils.GetEnvInt("GRAYLOG_PORT", 12202)),
-				ShortMessageLimit: uint(utils.GetEnvInt("GRAYLOG_SM_LIMIT", 1000)),
-				LongMessageLimit:  uint(utils.GetEnvInt("GRAYLOG_LM_LIMIT", 10000)),
-			},
+			Version:           utils.GetEnv("LOG_VERSION", "1.1"),
+			Host:              utils.GetEnv("HOST", utils.GetHostName()),
+			ServiceName:       utils.GetEnv("SERVICE_NAME", "API"),
+			LogLevel:          utils.GetEnvInt("LOG_LEVEL", 6),
+			BufferSize:        utils.GetEnvInt("LOG_BUFFER_SIZE", 1),
 			AuthHeaderKeyList: utils.GetEnvAsSlice("AUTH_HEADER_LIST", []string{}, ";"),
 		},
 		App: &config.ServerConfig{
@@ -105,12 +99,12 @@ func NewConfig() *TestConfig {
 		SNS: &config.AWSConfig{
 			Arn: utils.GetEnv("SNS_ARN", ""),
 		},
-		KafkaProducerConfig: &config.KafkaProducerConfig{
-			KafkaConfig: &kafkaBaseConfig,
+		KafkaProducerConfig: &kafka.KafkaProducerConfig{
+			KafkaCred:   &kafkaBaseConfig,
 			Acknowledge: "all",
 		},
-		KafkaConsumerConfig: &config.KafkaConsumerConfig{
-			KafkaConfig:    &kafkaBaseConfig,
+		KafkaConsumerConfig: &kafka.KafkaConsumerConfig{
+			KafkaCred:      &kafkaBaseConfig,
 			GoEventChannel: false,
 			GroupID:        serviceName,
 			OffsetReset:    "latest",

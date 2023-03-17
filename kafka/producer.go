@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/sabariramc/goserverbase/config"
 	"github.com/sabariramc/goserverbase/log"
 	"github.com/sabariramc/goserverbase/log/logwriter"
 	"github.com/sabariramc/goserverbase/utils"
@@ -16,12 +15,12 @@ import (
 
 type KafkaProducer struct {
 	*kafka.Producer
-	config *config.KafkaProducerConfig
+	config *KafkaProducerConfig
 	log    *log.Logger
 	topic  string
 }
 
-func NewKafkaProducer(ctx context.Context, log *log.Logger, config *config.KafkaProducerConfig, topic string) (*KafkaProducer, error) {
+func NewKafkaProducer(ctx context.Context, log *log.Logger, config *KafkaProducerConfig, topic string) (*KafkaProducer, error) {
 	parsedConfig := &kafka.ConfigMap{}
 	utils.StrictJsonTransformer(config, parsedConfig)
 	p, err := kafka.NewProducer(parsedConfig)

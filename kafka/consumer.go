@@ -10,19 +10,17 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/sabariramc/goserverbase/log"
 	"github.com/sabariramc/goserverbase/utils"
-
-	"github.com/sabariramc/goserverbase/config"
 )
 
 type KafkaConsumer struct {
 	*kafka.Consumer
-	config *config.KafkaConsumerConfig
+	config *KafkaConsumerConfig
 	log    *log.Logger
 	topic  string
 	ready  bool
 }
 
-func NewKafkaConsumer(ctx context.Context, log *log.Logger, config *config.KafkaConsumerConfig, topic string) (*KafkaConsumer, error) {
+func NewKafkaConsumer(ctx context.Context, log *log.Logger, config *KafkaConsumerConfig, topic string) (*KafkaConsumer, error) {
 	parsedConfig := &kafka.ConfigMap{}
 	utils.StrictJsonTransformer(config, parsedConfig)
 	c, err := kafka.NewConsumer(parsedConfig)
