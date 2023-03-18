@@ -3,7 +3,6 @@ package kafka_test
 import (
 	"context"
 
-	"github.com/sabariramc/goserverbase/constant"
 	"github.com/sabariramc/goserverbase/log"
 	"github.com/sabariramc/goserverbase/log/logwriter"
 	"github.com/sabariramc/goserverbase/utils/testutils"
@@ -27,6 +26,6 @@ func init() {
 }
 
 func GetCorrelationContext() context.Context {
-	ctx := context.WithValue(context.Background(), constant.CorrelationContextKey, log.GetDefaultCorrelationParams(KafkaTestConfig.App.ServiceName))
+	ctx := context.WithValue(context.Background(), log.CorrelationContextKey, log.GetDefaultCorrelationParams(KafkaTestConfig.App.ServiceName))
 	return ctx
 }

@@ -1,6 +1,7 @@
 package log
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/google/uuid"
@@ -23,4 +24,12 @@ func GetDefaultCorrelationParams(serviceName string) *CorrelationParam {
 	return &CorrelationParam{
 		CorrelationId: fmt.Sprintf("%v-%v", serviceName, uuid.New().String()),
 	}
+}
+
+func GetCorrelationParam(ctx context.Context) *CorrelationParam {
+	val, ok := ctx.Value(CorrelationContextKey).(*CorrelationParam)
+	if !ok {
+		return &CorrelationParam{}
+	}
+	return val
 }

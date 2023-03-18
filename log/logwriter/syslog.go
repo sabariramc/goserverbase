@@ -34,7 +34,7 @@ func (c *SyslogWriter) Start(logChannel chan log.MuxLogMessage) {
 }
 
 func (c *SyslogWriter) WriteMessage(ctx context.Context, l *log.LogMessage) error {
-	cr := GetCorrelationParam(ctx)
+	cr := log.GetCorrelationParam(ctx)
 	c.logger.Printf("[%v] [%v] [%v] [%v] [%v] [%v] [%v]\n", l.Timestamp, l.LogLevelName, cr.CorrelationId, l.ServiceName, l.ShortMessage, l.FullMessageType, l.FullMessage)
 	return nil
 }

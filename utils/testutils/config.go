@@ -4,12 +4,13 @@ import (
 	"github.com/google/uuid"
 	"github.com/sabariramc/goserverbase/config"
 	"github.com/sabariramc/goserverbase/kafka"
+	"github.com/sabariramc/goserverbase/log"
 	"github.com/sabariramc/goserverbase/utils"
 )
 
 type TestConfig struct {
 	Mysql               *config.MySqlConnectionConfig
-	Logger              *config.LoggerConfig
+	Logger              *log.Config
 	App                 *config.ServerConfig
 	Mongo               *config.MongoConfig
 	MongoCSFLE          *config.MongoCFLEConfig
@@ -24,7 +25,7 @@ type TestConfig struct {
 	KafkaTestTopic      string
 }
 
-func (t *TestConfig) GetLoggerConfig() *config.LoggerConfig {
+func (t *TestConfig) GetLoggerConfig() *log.Config {
 	return t.Logger
 }
 func (t *TestConfig) GetAppConfig() *config.ServerConfig {
@@ -55,7 +56,7 @@ func NewConfig() *TestConfig {
 			Timezone:     utils.GetEnv("MYSQL_TIMEZONE", "Local"),
 			Charset:      utils.GetEnv("MYSQL_CHARSET", "utf8"),
 		},
-		Logger: &config.LoggerConfig{
+		Logger: &log.Config{
 			Version:           utils.GetEnv("LOG_VERSION", "1.1"),
 			Host:              utils.GetEnv("HOST", utils.GetHostName()),
 			ServiceName:       utils.GetEnv("SERVICE_NAME", "API"),

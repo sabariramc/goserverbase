@@ -39,14 +39,6 @@ type ServerConfig struct {
 	Debug       bool
 }
 
-type LoggerConfig struct {
-	Version           string
-	Host              string
-	ServiceName       string
-	LogLevel          int
-	BufferSize        int
-	AuthHeaderKeyList []string
-}
 
 type RuntimeConfig struct {
 	GoMaxProcs int

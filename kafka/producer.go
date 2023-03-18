@@ -9,7 +9,6 @@ import (
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/sabariramc/goserverbase/log"
-	"github.com/sabariramc/goserverbase/log/logwriter"
 	"github.com/sabariramc/goserverbase/utils"
 )
 
@@ -48,7 +47,7 @@ func (k *KafkaProducer) Produce(ctx context.Context, key string, message *utils.
 		k.log.Error(ctx, "Message", message)
 		return nil, fmt.Errorf("KafkaProducer.Send.EncodeMessage: %w", err)
 	}
-	correlationParam := logwriter.GetCorrelationParam(ctx)
+	correlationParam := log.GetCorrelationParam(ctx)
 	headers := make(map[string]string, 0)
 	utils.StrictJsonTransformer(correlationParam, &headers)
 	messageHeader := make([]kafka.Header, 0)

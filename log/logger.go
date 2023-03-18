@@ -6,11 +6,9 @@ import (
 	"fmt"
 	"reflect"
 	"time"
-
-	"github.com/sabariramc/goserverbase/config"
 )
 
-const ParseErrorMsg = "******************ERROR DURING MARSHAL OF FULLMESSAGE*******************"
+const ParseErrorMsg = "******************ERROR DURING MARSHAL OF FULL MESSAGE*******************"
 
 type LogLevel struct {
 	Level        LogLevelCode
@@ -65,14 +63,16 @@ type Logger struct {
 	hostParams  *HostParams
 	moduleName  string
 	serviceName string
+	config      *Config
 }
 
-func NewLogger(ctx context.Context, lc *config.LoggerConfig, lMux LogMux, moduleName string) *Logger {
+func NewLogger(ctx context.Context, lc *Config, lMux LogMux, moduleName string) *Logger {
 	l := &Logger{
 		logLevel:    INFO,
 		lMux:        lMux,
 		moduleName:  moduleName,
 		serviceName: lc.ServiceName,
+		config:      lc,
 		hostParams: &HostParams{
 			Version:     lc.Version,
 			Host:        lc.Host,
@@ -81,7 +81,7 @@ func NewLogger(ctx context.Context, lc *config.LoggerConfig, lMux LogMux, module
 	}
 	logLevel := lc.LogLevel
 	if logLevel > int(DEBUG) || logLevel < int(EMERGENCY) {
-		l.Warning(ctx, "Erronous log level - log set to INFO", nil)
+		l.Warning(ctx, "Erroneous log level - log set to INFO", nil)
 		logLevel = int(INFO)
 	}
 	l.logLevel = LogLevelCode(logLevel)

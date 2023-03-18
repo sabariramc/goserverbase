@@ -1,4 +1,4 @@
-package constant
+package log
 
 type ContextVariable string
 
