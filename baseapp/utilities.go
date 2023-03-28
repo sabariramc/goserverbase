@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/sabariramc/goserverbase/constant"
 	"github.com/sabariramc/goserverbase/log"
 	"github.com/sabariramc/goserverbase/utils"
 )
@@ -16,7 +15,7 @@ import (
 func (b *BaseApp) GetHttpCorrelationParams(r *http.Request) *log.CorrelationParam {
 	correlationId := r.Header.Get("x-correlation-id")
 	if correlationId == "" {
-		return log.GetDefaultCorrelationParams(b.c.AppConfig.ServiceName)
+		return log.GetDefaultCorrelationParams(b.c.ServiceName)
 	}
 	return &log.CorrelationParam{
 		CorrelationId: correlationId,
@@ -71,12 +70,12 @@ func GetBytes(key interface{}) ([]byte, error) {
 }
 
 func (b *BaseApp) GetCorrelationContext(ctx context.Context, c *log.CorrelationParam) context.Context {
-	ctx = context.WithValue(ctx, constant.CorrelationContextKey, c)
+	ctx = context.WithValue(ctx, log.CorrelationContextKey, c)
 	return ctx
 }
 
 func (b *BaseApp) GetPort() string {
-	return fmt.Sprintf("%v:%v", b.c.AppConfig.Host, b.c.AppConfig.Port)
+	return fmt.Sprintf("%v:%v", b.c.Host, b.c.Port)
 }
 
 type Filter struct {

@@ -24,8 +24,8 @@ func HTTPTestFunction(r *http.Request) (statusCode int, response interface{}, er
 func TestJsonResponder(t *testing.T) {
 	srv := baseapp.NewBaseApp(baseapp.ServerConfig{
 		LoggerConfig: ServerTestConfig.Logger,
-		AppConfig:    ServerTestConfig.App,
-	}, ServerTestLMux, ServerTestAuditLogger, nil)
+		ServerConfig: ServerTestConfig.App,
+	}, ServerTestLMux, nil, nil)
 	ip := make(map[string]string)
 	var buf bytes.Buffer
 	json.NewEncoder(&buf).Encode(map[string]string{"FASDFs": "fasdf"})
@@ -45,8 +45,8 @@ func HTTPTestFunctionPanic(r *http.Request) (statusCode int, response interface{
 func TestJsonResponderPanic(t *testing.T) {
 	srv := baseapp.NewBaseApp(baseapp.ServerConfig{
 		LoggerConfig: ServerTestConfig.Logger,
-		AppConfig:    ServerTestConfig.App,
-	}, ServerTestLMux, ServerTestAuditLogger, nil)
+		ServerConfig: ServerTestConfig.App,
+	}, ServerTestLMux, nil, nil)
 	ip := make(map[string]string)
 	var buf bytes.Buffer
 	json.NewEncoder(&buf).Encode(map[string]string{"FASDFs": "fasdf"})

@@ -6,7 +6,7 @@ import (
 )
 
 type CustomError struct {
-	ErrorData        interface{} `json:"errorData"`
+	ErrorData        interface{} `json:"-"`
 	ErrorMessage     string      `json:"errorMessage"`
 	ErrorDescription interface{} `json:"errorDescription"`
 	ErrorCode        string      `json:"errorCode"`

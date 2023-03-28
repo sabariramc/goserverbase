@@ -8,7 +8,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/sabariramc/goserverbase/baseapp"
 	"gotest.tools/assert"
 )
@@ -25,33 +24,26 @@ func Func2(w http.ResponseWriter, r *http.Request) {
 }
 
 var route = &baseapp.APIRoute{
-	"/tenant": &baseapp.APIResource{
-		Handlers: map[string]*baseapp.APIHandler{
-			http.MethodGet: {
-				Func: Func1,
-			},
+	"/tenant": map[string]*baseapp.APIHandler{
+		http.MethodGet: {
+			Func: Func1,
 		},
-		SubResource: map[string]*baseapp.APIResource{
-			"/:tenantId": {
-				Handlers: map[string]*baseapp.APIHandler{
-					http.MethodGet: {
-						Func: Func2,
-					},
-				},
-			},
+	},
+	"/tenant/:tenantId": map[string]*baseapp.APIHandler{
+		http.MethodGet: {
+			Func: Func1,
 		},
 	},
 }
 
 func TestRouter(t *testing.T) {
-	srv := &baseapp.BaseApp{}
-	srv.SetConfig(baseapp.ServerConfig{
-		LoggerConfig: ServerTestConfig.Logger,
-		AppConfig:    ServerTestConfig.App,
-	})
-	srv.SetLogger(ServerTestLogger)
-	srv.SetRouter(httprouter.New())
-	srv.RegisterRoutes(context.TODO(), route)
+	srv := baseapp.NewBaseApp(
+		baseapp.ServerConfig{
+			LoggerConfig: ServerTestConfig.Logger,
+			ServerConfig: ServerTestConfig.App,
+		}, ServerTestLMux, nil, nil)
+	srv.RegisterRoutes(context.TODO(), http.MethodGet, "/tenant", Func1)
+	srv.RegisterRoutes(context.TODO(), http.MethodGet, "/tenant/:tenantId", Func2)
 	req := httptest.NewRequest(http.MethodGet, "/tenant", nil)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)

@@ -3,7 +3,6 @@ package baseapp_test
 import (
 	"context"
 
-	"github.com/sabariramc/goserverbase/constant"
 	"github.com/sabariramc/goserverbase/log"
 	"github.com/sabariramc/goserverbase/log/logwriter"
 	"github.com/sabariramc/goserverbase/utils/testutils"
@@ -12,7 +11,6 @@ import (
 var ServerTestConfig *testutils.TestConfig
 var ServerTestLogger *log.Logger
 var ServerTestLMux log.LogMux
-var ServerTestAuditLogger log.AuditLogWriter
 
 func init() {
 	testutils.Initialize()
@@ -22,12 +20,11 @@ func init() {
 		Host:        ServerTestConfig.App.Host,
 		ServiceName: ServerTestConfig.App.ServiceName,
 	})
-	ServerTestAuditLogger = consoleLogWriter
 	ServerTestLMux = log.NewDefaultLogMux(consoleLogWriter)
-	ServerTestLogger = log.NewLogger(context.TODO(), ServerTestConfig.Logger, ServerTestLMux, consoleLogWriter, "BaseTest")
+	ServerTestLogger = log.NewLogger(context.TODO(), ServerTestConfig.Logger, "BaseTest", ServerTestLMux, nil)
 }
 
 func GetCorrelationContext() context.Context {
-	ctx := context.WithValue(context.Background(), constant.CorrelationContextKey, log.GetDefaultCorrelationParams(ServerTestConfig.App.ServiceName))
+	ctx := context.WithValue(context.Background(), log.CorrelationContextKey, log.GetDefaultCorrelationParams(ServerTestConfig.App.ServiceName))
 	return ctx
 }

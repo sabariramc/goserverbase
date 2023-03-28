@@ -13,8 +13,8 @@ import (
 )
 
 type ServerConfig struct {
-	LoggerConfig *config.LoggerConfig
-	AppConfig    *config.ServerConfig
+	*config.ServerConfig
+	LoggerConfig *log.Config
 }
 
 type BaseApp struct {
@@ -22,18 +22,24 @@ type BaseApp struct {
 	c             *ServerConfig
 	log           *log.Logger
 	errorNotifier errors.ErrorNotifier
+	docMeta       APIDocumentation
 }
 
-func NewBaseApp(c ServerConfig, lMux log.LogMux, auditLogger log.AuditLogWriter, errorNotifier errors.ErrorNotifier) *BaseApp {
+func NewBaseApp(c ServerConfig, lMux log.LogMux, errorNotifier errors.ErrorNotifier, auditLogger log.AuditLogWriter) *BaseApp {
 	b := &BaseApp{
 		c:             &c,
 		router:        httprouter.New(),
 		errorNotifier: errorNotifier,
+		docMeta: APIDocumentation{
+			Server: make([]DocumentServer, 0),
+			Routes: make(APIRoute, 0),
+		},
 	}
-	ctx := b.GetCorrelationContext(context.Background(), log.GetDefaultCorrelationParams(c.AppConfig.ServiceName))
-	b.log = log.NewLogger(ctx, c.LoggerConfig, lMux, auditLogger, c.LoggerConfig.ServiceName)
+	ctx := b.GetCorrelationContext(context.Background(), log.GetDefaultCorrelationParams(c.ServiceName))
+	b.log = log.NewLogger(ctx, c.LoggerConfig, c.LoggerConfig.ServiceName, lMux, auditLogger)
 	zone, _ := time.Now().Zone()
 	b.log.Notice(ctx, "Server Timezone", zone)
+	b.RegisterDefaultRoutes(ctx)
 	return b
 }
 
@@ -48,16 +54,20 @@ func (b *BaseApp) GetRouter() *httprouter.Router {
 	return b.router
 }
 
+func (b *BaseApp) GetAPIDocument() APIDocumentation {
+	return b.docMeta
+}
+
 func (b *BaseApp) SetRouter(router *httprouter.Router) {
 	b.router = router
+	b.docMeta = APIDocumentation{
+		Server: make([]DocumentServer, 0),
+		Routes: make(APIRoute, 0),
+	}
 }
 
 func (b *BaseApp) GetConfig() ServerConfig {
 	return *b.c
-}
-
-func (b *BaseApp) SetConfig(c ServerConfig) {
-	b.c = &c
 }
 
 func (b *BaseApp) GetLogger() *log.Logger {
@@ -66,4 +76,8 @@ func (b *BaseApp) GetLogger() *log.Logger {
 
 func (b *BaseApp) SetLogger(l *log.Logger) {
 	b.log = l
+}
+
+func (b *BaseApp) AddServerHost(server DocumentServer) {
+	b.docMeta.Server = append(b.docMeta.Server, server)
 }

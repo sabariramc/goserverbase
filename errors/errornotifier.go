@@ -5,5 +5,5 @@ import (
 )
 
 type ErrorNotifier interface {
-	Send(ctx context.Context, err error)
+	Send(ctx context.Context, errorCode string, err error, errorData interface{}, customerIdentifier interface{})
 }

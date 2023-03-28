@@ -64,9 +64,10 @@ type Logger struct {
 	moduleName  string
 	serviceName string
 	config      *Config
+	audit       AuditLogWriter
 }
 
-func NewLogger(ctx context.Context, lc *Config, lMux LogMux, moduleName string) *Logger {
+func NewLogger(ctx context.Context, lc *Config, moduleName string, lMux LogMux, audit AuditLogWriter) *Logger {
 	l := &Logger{
 		logLevel:    INFO,
 		lMux:        lMux,
@@ -78,6 +79,7 @@ func NewLogger(ctx context.Context, lc *Config, lMux LogMux, moduleName string) 
 			Host:        lc.Host,
 			ServiceName: lc.ServiceName,
 		},
+		audit: audit,
 	}
 	logLevel := lc.LogLevel
 	if logLevel > int(DEBUG) || logLevel < int(EMERGENCY) {
@@ -90,6 +92,13 @@ func NewLogger(ctx context.Context, lc *Config, lMux LogMux, moduleName string) 
 
 func (l *Logger) SetModuleName(moduleName string) {
 	l.moduleName = moduleName
+}
+
+func (l *Logger) Audit(ctx context.Context, msg interface{}) error {
+	if l.audit == nil {
+		return nil
+	}
+	return l.audit.WriteMessage(ctx, msg)
 }
 
 func (l *Logger) Debug(ctx context.Context, shortMessage string, fullMessage interface{}) {
