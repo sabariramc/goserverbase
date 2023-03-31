@@ -37,11 +37,7 @@ var route = &baseapp.APIRoute{
 }
 
 func TestRouter(t *testing.T) {
-	srv := baseapp.NewBaseApp(
-		baseapp.ServerConfig{
-			LoggerConfig: ServerTestConfig.Logger,
-			ServerConfig: ServerTestConfig.App,
-		}, ServerTestLMux, nil, nil)
+	srv := baseapp.New(*ServerTestConfig.App, *ServerTestConfig.Logger, ServerTestLMux, nil, nil)
 	srv.RegisterRoutes(context.TODO(), http.MethodGet, "/tenant", Func1)
 	srv.RegisterRoutes(context.TODO(), http.MethodGet, "/tenant/:tenantId", Func2)
 	req := httptest.NewRequest(http.MethodGet, "/tenant", nil)

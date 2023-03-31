@@ -3,5 +3,6 @@ package log
 type ContextVariable string
 
 const (
-	CorrelationContextKey ContextVariable = "correlationParam"
+	ContextKeyCorrelation        ContextVariable = "correlationParam"
+	ContextKeyCustomerIdentifier ContextVariable = "customerIdentity"
 )

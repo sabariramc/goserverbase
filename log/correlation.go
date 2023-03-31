@@ -14,6 +14,12 @@ type CorrelationParam struct {
 	ScenarioName  string `json:"x-scenario-name,omitempty"`
 }
 
+type CustomerIdentifier struct {
+	CustomerId string `json:"customerId"`
+	AppUserId  string `json:"appUserId"`
+	Id         string `json:"id"`
+}
+
 type HostParams struct {
 	Version     string `json:"version"`
 	Host        string `json:"host"`
@@ -27,9 +33,25 @@ func GetDefaultCorrelationParams(serviceName string) *CorrelationParam {
 }
 
 func GetCorrelationParam(ctx context.Context) *CorrelationParam {
-	val, ok := ctx.Value(CorrelationContextKey).(*CorrelationParam)
+	iVal := ctx.Value(ContextKeyCorrelation)
+	if iVal == nil {
+		return &CorrelationParam{}
+	}
+	val, ok := iVal.(*CorrelationParam)
 	if !ok {
 		return &CorrelationParam{}
+	}
+	return val
+}
+
+func GetCustomerIdentifier(ctx context.Context) *CustomerIdentifier {
+	iVal := ctx.Value(ContextKeyCustomerIdentifier)
+	if iVal == nil {
+		return &CustomerIdentifier{}
+	}
+	val, ok := iVal.(*CustomerIdentifier)
+	if !ok {
+		return &CustomerIdentifier{}
 	}
 	return val
 }

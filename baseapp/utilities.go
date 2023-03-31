@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/gob"
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -28,11 +27,11 @@ func (b *BaseApp) GetHttpCorrelationParams(r *http.Request) *log.CorrelationPara
 func (b *BaseApp) PrintRequest(ctx context.Context, r *http.Request) {
 	h := r.Header
 	popList := make(map[string][]string)
-	for _, key := range b.c.LoggerConfig.AuthHeaderKeyList {
+	for _, key := range b.lConfig.AuthHeaderKeyList {
 		val := h.Values(key)
 		if len(val) != 0 {
 			popList[key] = val
-			h.Set(key, "---reducted---")
+			h.Set(key, "---redacted---")
 		}
 	}
 	b.log.Info(ctx, "Request", map[string]interface{}{
@@ -53,12 +52,6 @@ func (b *BaseApp) PrintRequest(ctx context.Context, r *http.Request) {
 	}
 }
 
-func (b *BaseApp) PrintBody(ctx context.Context, body []byte) {
-	bodyMap := make(map[string]interface{})
-	_ = json.Unmarshal(body, &bodyMap)
-	b.log.Error(ctx, "Response-Body", bodyMap)
-}
-
 func GetBytes(key interface{}) ([]byte, error) {
 	var buf bytes.Buffer
 	enc := gob.NewEncoder(&buf)
@@ -70,7 +63,7 @@ func GetBytes(key interface{}) ([]byte, error) {
 }
 
 func (b *BaseApp) GetCorrelationContext(ctx context.Context, c *log.CorrelationParam) context.Context {
-	ctx = context.WithValue(ctx, log.CorrelationContextKey, c)
+	ctx = context.WithValue(ctx, log.ContextKeyCorrelation, c)
 	return ctx
 }
 
@@ -78,14 +71,26 @@ func (b *BaseApp) GetPort() string {
 	return fmt.Sprintf("%v:%v", b.c.Host, b.c.Port)
 }
 
+func (b *BaseApp) SetHandlerError(ctx context.Context, err error) {
+	iSetter := ctx.Value(ContextKeyError)
+	if iSetter == nil {
+		return
+	}
+	setter, ok := iSetter.(ErrorRecorder)
+	if !ok {
+		panic(fmt.Errorf("context error handler corrupted, error to handle: %w", err))
+	}
+	setter(err)
+}
+
 type Filter struct {
 	PageNo int64  `json:"pageNo" schema:"pageNo"`
 	Limit  int64  `json:"limit" schema:"limit"`
-	SortBy string `json:"sortby" schema:"sortby"`
+	SortBy string `json:"sortBy" schema:"sortBy"`
 	Asc    *bool  `json:"asc" schema:"asc"`
 }
 
-func SetDefaultPagination(filter interface{}, deafultSortBy string) error {
+func SetDefaultPagination(filter interface{}, defaultSortBy string) error {
 	var defaultFilter Filter
 	err := utils.StrictJsonTransformer(filter, &defaultFilter)
 	if err != nil {
@@ -98,7 +103,7 @@ func SetDefaultPagination(filter interface{}, deafultSortBy string) error {
 		defaultFilter.Limit = 10
 	}
 	if defaultFilter.SortBy == "" {
-		defaultFilter.SortBy = deafultSortBy
+		defaultFilter.SortBy = defaultSortBy
 	}
 	if defaultFilter.Asc == nil {
 		v := true

@@ -19,14 +19,14 @@ type KMS struct {
 
 var defaultKMSClient *kms.KMS
 
-func NewAWSKMSClient(awsSession *session.Session) *kms.KMS {
+func NewKMSClientWithSession(awsSession *session.Session) *kms.KMS {
 	client := kms.New(awsSession)
 	return client
 }
 
 func GetDefaultKMSClient(logger *log.Logger, keyArn string) *KMS {
 	if defaultKMSClient == nil {
-		defaultKMSClient = NewAWSKMSClient(defaultAWSSession)
+		defaultKMSClient = NewKMSClientWithSession(defaultAWSSession)
 	}
 	return NewKMSClient(logger, defaultKMSClient, keyArn)
 }

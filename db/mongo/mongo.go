@@ -17,7 +17,7 @@ type Mongo struct {
 	log            *log.Logger
 	database       *mongo.Database
 	c              *config.MongoConfig
-	csfle          *config.MongoCFLEConfig
+	csfle          *config.MongoCSFLEConfig
 	isCSFLEEnabled bool
 }
 
@@ -33,7 +33,7 @@ func NewMongo(ctx context.Context, logger *log.Logger, c config.MongoConfig) (*M
 	return &Mongo{client: client, log: logger, c: &c, database: client.Database(c.DatabaseName), isCSFLEEnabled: false}, nil
 }
 
-func NewCSFLEMongo(client *mongo.Client, logger *log.Logger, c config.MongoConfig, csfle config.MongoCFLEConfig) *Mongo {
+func NewCSFLEMongo(client *mongo.Client, logger *log.Logger, c config.MongoConfig, csfle config.MongoCSFLEConfig) *Mongo {
 	return &Mongo{client: client, log: logger, c: &c, database: client.Database(c.DatabaseName), csfle: &csfle, isCSFLEEnabled: true}
 }
 

@@ -21,11 +21,11 @@ func init() {
 		Host:        KafkaTestConfig.App.Host,
 		ServiceName: KafkaTestConfig.App.ServiceName,
 	})
-	lmux := log.NewDefaultLogMux(consoleLogWriter)
-	KafkaTestLogger = log.NewLogger(context.TODO(), KafkaTestConfig.Logger, "AWSTest", lmux, nil)
+	lMux := log.NewDefaultLogMux(consoleLogWriter)
+	KafkaTestLogger = log.NewLogger(context.TODO(), KafkaTestConfig.Logger, "AWSTest", lMux, nil)
 }
 
 func GetCorrelationContext() context.Context {
-	ctx := context.WithValue(context.Background(), log.CorrelationContextKey, log.GetDefaultCorrelationParams(KafkaTestConfig.App.ServiceName))
+	ctx := context.WithValue(context.Background(), log.ContextKeyCorrelation, log.GetDefaultCorrelationParams(KafkaTestConfig.App.ServiceName))
 	return ctx
 }

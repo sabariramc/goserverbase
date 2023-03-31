@@ -38,7 +38,7 @@ type APIHandler struct {
 
 func NotFound() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add(HeaderContentType, ContentTypeJSON)
+		w.Header().Add(HttpHeaderContentType, HttpContentTypeJSON)
 		w.WriteHeader(http.StatusNotFound)
 		body := errors.NewHTTPClientError(http.StatusNotFound, "Invalid path", map[string]string{
 			"path": r.URL.Path,
@@ -49,7 +49,7 @@ func NotFound() http.HandlerFunc {
 
 func MethodNotAllowed() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add(HeaderContentType, ContentTypeJSON)
+		w.Header().Add(HttpHeaderContentType, HttpContentTypeJSON)
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		body := errors.NewHTTPClientError(http.StatusMethodNotAllowed, "Invalid method", map[string]string{
 			"path":   r.URL.Path,

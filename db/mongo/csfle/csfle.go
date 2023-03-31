@@ -20,7 +20,7 @@ import (
 
 var tmp = "/tmp/mongocryptd"
 
-func NewPIIMongo(ctx context.Context, logger *log.Logger, c config.MongoConfig, csfle config.MongoCFLEConfig, schema map[string]interface{}, kmsProvider m.MasterKeyProvider) (*m.Mongo, error) {
+func NewPIIMongo(ctx context.Context, logger *log.Logger, c config.MongoConfig, csfle config.MongoCSFLEConfig, schema map[string]interface{}, kmsProvider m.MasterKeyProvider) (*m.Mongo, error) {
 	client, err := NewCSFLEClient(ctx, logger, csfle.KeyVaultNamespace, c.ConnectionString, schema, kmsProvider)
 	if err != nil {
 		return nil, fmt.Errorf("csfle.NewPIIMongo : %w", err)
@@ -35,7 +35,7 @@ func NewCSFLEClient(ctx context.Context, logger *log.Logger, keyVaultNamespace, 
 	extraOptions := map[string]interface{}{
 		// "mongocryptdURI":, defaults to "mongodb://localhost:27020"
 		// "mongocryptdBypassSpawn":, defaults to false
-		// "mongocryptdSpawnPath": mongocryptPath + "/bin/mongocryptd",
+		// "mongocryptdSpawnPath": mongocryptdPath + "/bin/mongocryptd",
 		"mongocryptdSpawnArgs": []string{fmt.Sprintf("--pidfilepath=%v/mongocryptd.pid", tmp)},
 	}
 	autoEncryptionOpts := options.AutoEncryption().
@@ -50,7 +50,7 @@ func NewCSFLEClient(ctx context.Context, logger *log.Logger, keyVaultNamespace, 
 	connectionOptions.SetAutoEncryptionOptions(autoEncryptionOpts)
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI).SetAutoEncryptionOptions(autoEncryptionOpts))
 	if err != nil {
-		logger.Error(ctx, "connect error for Mongo CSLFE client", err)
+		logger.Error(ctx, "connect error for Mongo CSFLE client", err)
 		return nil, fmt.Errorf("csfle.NewCSFLEClient : %w", err)
 	}
 	err = client.Ping(ctx, nil)

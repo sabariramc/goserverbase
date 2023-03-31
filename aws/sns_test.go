@@ -8,10 +8,10 @@ import (
 )
 
 func TestSNSClient(t *testing.T) {
-	arn := AWSTestConfig.SNS.Arn
+	arn := AWSTestConfig.AWS.SNS_ARN
 	ctx := GetCorrelationContext()
 	snsClient := aws.GetDefaultSNSClient(AWSTestLogger)
-	message := utils.NewMessage(utils.EventEntity, "sns.test")
+	message := utils.NewMessage("event", "sns.test")
 	message.AddPayload("payment", &utils.Payload{
 		Entity: map[string]interface{}{
 			"id":     "pay_14341234",

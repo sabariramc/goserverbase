@@ -60,7 +60,7 @@ func GetDefaultAWSKMSProvider(ctx context.Context, logger *log.Logger, awsKeyARN
 	if err != nil {
 		return nil, fmt.Errorf("mongo.GetDefaultAWSKMSProvider : %w", err)
 	}
-	provider.updateKMSARN(awsKeyARN)
+	provider.updateARN(awsKeyARN)
 	return provider, nil
 }
 
@@ -76,6 +76,6 @@ func (a *AWSKMSProvider) DataKeyOpts() interface{} {
 	return a.dataKeyOpts
 }
 
-func (a *AWSKMSProvider) updateKMSARN(awsKeyARN string) {
+func (a *AWSKMSProvider) updateARN(awsKeyARN string) {
 	a.dataKeyOpts.KeyARN = awsKeyARN
 }

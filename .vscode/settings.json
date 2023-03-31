@@ -1,4 +1,16 @@
 {
     // "go.buildTags": "cse"
-    "go.testTimeout": "60s"
+    "go.testTimeout": "60s",
+    "cSpell.words": [
+        "AWSSQS",
+        "baseapp",
+        "CSFLE",
+        "goserverbase",
+        "gotest",
+        "julienschmidt",
+        "lmux",
+        "logwriter",
+        "sabariramc",
+        "testutils"
+    ]
 }

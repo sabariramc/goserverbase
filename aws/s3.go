@@ -21,13 +21,13 @@ type S3 struct {
 
 var defaultS3Client *s3.S3
 
-func NewAWSS3Client(awsSession *session.Session) *s3.S3 {
+func NewS3ClientWithSession(awsSession *session.Session) *s3.S3 {
 	return s3.New(awsSession)
 }
 
 func GetDefaultS3Client(logger *log.Logger) *S3 {
 	if defaultS3Client == nil {
-		defaultS3Client = NewAWSS3Client(defaultAWSSession)
+		defaultS3Client = NewS3ClientWithSession(defaultAWSSession)
 	}
 	return NewS3Client(defaultS3Client, logger)
 }
@@ -104,7 +104,7 @@ func (s *S3) GetFile(ctx context.Context, s3Bucket, s3Key, localFilePath string)
 	return nil
 }
 
-func (s *S3) CreatePresignedURLGET(ctx context.Context, s3Bucket, s3Key string, expireTimeInSeconds int) (*string, error) {
+func (s *S3) CreatePresignedUrlGET(ctx context.Context, s3Bucket, s3Key string, expireTimeInSeconds int) (*string, error) {
 	req, _ := s.GetObjectRequest(&s3.GetObjectInput{
 		Bucket: &s3Bucket,
 		Key:    &s3Key,
@@ -112,13 +112,13 @@ func (s *S3) CreatePresignedURLGET(ctx context.Context, s3Bucket, s3Key string, 
 	urlStr, err := req.Presign(time.Duration(expireTimeInSeconds) * time.Second)
 	if err != nil {
 		s.log.Error(ctx, "S3 failed to sign GET request", err)
-		return nil, fmt.Errorf("S3.CreatePresignedURLGET: %w", err)
+		return nil, fmt.Errorf("S3.CreatePresignedUrlGET: %w", err)
 	}
 	s.log.Debug(ctx, "S3 presigned GET url", urlStr)
 	return &urlStr, nil
 }
 
-func (s *S3) CreatePresignedURLPUT(ctx context.Context, s3Bucket, s3Key string, expireTimeInSeconds int) (*string, error) {
+func (s *S3) CreatePresignedUrlPUT(ctx context.Context, s3Bucket, s3Key string, expireTimeInSeconds int) (*string, error) {
 	req, _ := s.PutObjectRequest(&s3.PutObjectInput{
 		Bucket: &s3Bucket,
 		Key:    &s3Key,
@@ -126,7 +126,7 @@ func (s *S3) CreatePresignedURLPUT(ctx context.Context, s3Bucket, s3Key string, 
 	urlStr, err := req.Presign(time.Duration(expireTimeInSeconds) * time.Second)
 	if err != nil {
 		s.log.Error(ctx, "S3 failed to sign PUT request", err)
-		return nil, fmt.Errorf("S3.CreatePresignedURLPUT: %w", err)
+		return nil, fmt.Errorf("S3.CreatePresignedUrlPUT: %w", err)
 	}
 	s.log.Debug(ctx, "S3 presigned PUT url", urlStr)
 	return &urlStr, nil

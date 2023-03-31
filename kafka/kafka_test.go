@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
+	cKafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/google/uuid"
 	"github.com/sabariramc/goserverbase/kafka"
 	"github.com/sabariramc/goserverbase/utils"
@@ -22,8 +22,8 @@ func TestKafkaMessage(t *testing.T) {
 	var s sync.WaitGroup
 	s.Add(1)
 	go func() {
-		kmsg, err := co.ReadMessage(ctx, time.Second*10)
-		KafkaTestLogger.Info(ctx, "Kafka message", kmsg)
+		kMsg, err := co.ReadMessage(ctx, time.Second*10)
+		KafkaTestLogger.Info(ctx, "Kafka message", kMsg)
 		assert.NilError(t, err)
 		s.Done()
 	}()
@@ -31,7 +31,7 @@ func TestKafkaMessage(t *testing.T) {
 	pr, err := kafka.NewKafkaProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.KafkaTestTopic)
 	assert.NilError(t, err)
 	_, err = pr.Produce(ctx, "test", &utils.Message{
-		Event: "Fadfasdfadsfds",
+		Event: "random event",
 	})
 	assert.NilError(t, err)
 	s.Wait()
@@ -44,7 +44,7 @@ func TestKafkaPoll(t *testing.T) {
 	assert.NilError(t, err)
 	pr, err := kafka.NewKafkaProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.KafkaTestTopic)
 	assert.NilError(t, err)
-	ch := make(chan *ckafka.Message, 100)
+	ch := make(chan *cKafka.Message, 100)
 	var s sync.WaitGroup
 	s.Add(1)
 	uuidVal := uuid.NewString()
@@ -58,9 +58,9 @@ func TestKafkaPoll(t *testing.T) {
 		}
 		s.Done()
 	}()
-	tctx, cancel := context.WithTimeout(ctx, time.Second*45)
+	tCtx, cancel := context.WithTimeout(ctx, time.Second*45)
 	defer cancel()
-	go co.Poll(tctx, 2000, ch)
+	go co.Poll(tCtx, 2000, ch)
 	count := 0
 	msgCount := 0
 	for i := range ch {
@@ -87,9 +87,9 @@ func TestKafkaPollWithDelay(t *testing.T) {
 	assert.NilError(t, err)
 	pr, err := kafka.NewKafkaProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.KafkaTestTopic)
 	assert.NilError(t, err)
-	ch := make(chan *ckafka.Message)
-	tctx, cancel := context.WithCancel(ctx)
-	go co.Poll(tctx, 2000, ch)
+	ch := make(chan *cKafka.Message)
+	tCtx, cancel := context.WithCancel(ctx)
+	go co.Poll(tCtx, 2000, ch)
 	time.Sleep(2 * time.Second)
 	cancel()
 	var s sync.WaitGroup
@@ -102,10 +102,10 @@ func TestKafkaPollWithDelay(t *testing.T) {
 		})
 		assert.NilError(t, err)
 	}
-	tctx, cancel = context.WithTimeout(ctx, time.Second*20)
+	tCtx, cancel = context.WithTimeout(ctx, time.Second*20)
 	defer cancel()
-	ch = make(chan *ckafka.Message, 100)
-	go co.Poll(tctx, 2000, ch)
+	ch = make(chan *cKafka.Message, 100)
+	go co.Poll(tCtx, 2000, ch)
 	s.Add(1)
 	go func() {
 		for i := 0; i < 40; i++ {
@@ -142,14 +142,14 @@ func TestKafkaPollWithDelayExtended(t *testing.T) {
 	assert.NilError(t, err)
 	pr, err := kafka.NewKafkaProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.KafkaTestTopic)
 	assert.NilError(t, err)
-	tctx, cancel := context.WithTimeout(ctx, time.Second*10)
+	tCtx, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
-	ch := make(chan *ckafka.Message, 100)
+	ch := make(chan *cKafka.Message, 100)
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		co.Poll(tctx, 2000, ch)
+		co.Poll(tCtx, 2000, ch)
 	}()
 	uuidVal := uuid.NewString()
 	time.Sleep(time.Second * 3)

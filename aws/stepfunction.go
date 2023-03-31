@@ -19,12 +19,12 @@ var defaultSFNClient *sfn.SFN
 
 func GetDefaultSFNClient(logger *log.Logger) *StepFunction {
 	if defaultSFNClient == nil {
-		defaultSFNClient = NewAWSSFNClient(defaultAWSSession)
+		defaultSFNClient = NewSFNClientWithSession(defaultAWSSession)
 	}
 	return NewSFNClient(logger, defaultSFNClient)
 }
 
-func NewAWSSFNClient(awsSession *session.Session) *sfn.SFN {
+func NewSFNClientWithSession(awsSession *session.Session) *sfn.SFN {
 	client := sfn.New(awsSession)
 	return client
 }

@@ -12,7 +12,7 @@ import (
 	"github.com/sabariramc/goserverbase/log"
 )
 
-var ErrIVLengthMismatch = fmt.Errorf("IV lenght is not matching with block size")
+var ErrIVLengthMismatch = fmt.Errorf("IV length is not matching with block size")
 
 type AESCBCV2 struct {
 	padder crypto.Padder
@@ -29,10 +29,10 @@ func NewAESCBCV2PKCS7(ctx context.Context, log *log.Logger, key string, iv []byt
 	}
 	block, err := aes.NewCipher(keyByte)
 	if err != nil {
-		return nil, fmt.Errorf("crypto.aes.ChiperV2: %w", err)
+		return nil, fmt.Errorf("crypto.aes.CipherV2: %w", err)
 	}
 	if len(iv) != block.BlockSize() {
-		return nil, fmt.Errorf("crypto.aes.ChiperV2: %w", ErrIVLengthMismatch)
+		return nil, fmt.Errorf("crypto.aes.CipherV2: %w", ErrIVLengthMismatch)
 	}
 	return NewAESCBCV2(ctx, log, key, dup(iv), padding.NewPKCS7(block.BlockSize()))
 }
@@ -60,13 +60,13 @@ func (a *AESCBCV2) Encrypt(ctx context.Context, plainBlob []byte) ([]byte, error
 
 func (a *AESCBCV2) EncryptString(ctx context.Context, plainText string) (string, error) {
 	a.log.Debug(ctx, "Plain Text", plainText)
-	res, err := a.Encrypt(ctx, []byte(plainText))
+	byteRes, err := a.Encrypt(ctx, []byte(plainText))
 	if err != nil {
 		return "", fmt.Errorf("AESCBCV2.EncryptString: %w", err)
 	}
-	strres := base64.StdEncoding.EncodeToString(res)
-	a.log.Debug(ctx, "EncryptedString", strres)
-	return strres, nil
+	res := base64.StdEncoding.EncodeToString(byteRes)
+	a.log.Debug(ctx, "EncryptedString", res)
+	return res, nil
 }
 
 func (a *AESCBCV2) Decrypt(ctx context.Context, encryptedData []byte) (plainData []byte, err error) {
@@ -87,13 +87,13 @@ func (a *AESCBCV2) DecryptString(ctx context.Context, encryptedText string) (str
 	if err != nil {
 		return "", fmt.Errorf("AESCBCV2.DecryptString.B64Decode: %w", err)
 	}
-	res, err := a.Decrypt(ctx, []byte(decoded))
+	blobRes, err := a.Decrypt(ctx, []byte(decoded))
 	if err != nil {
 		return "", fmt.Errorf("AESCBCV2.DecryptString: %w", err)
 	}
-	strres := string(res)
-	a.log.Debug(ctx, "DecryptedString", strres)
-	return strres, nil
+	res := string(blobRes)
+	a.log.Debug(ctx, "DecryptedString", res)
+	return res, nil
 }
 
 func dup(p []byte) []byte {

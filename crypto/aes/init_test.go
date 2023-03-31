@@ -3,7 +3,6 @@ package aes_test
 import (
 	"context"
 
-	"github.com/sabariramc/goserverbase/constant"
 	"github.com/sabariramc/goserverbase/log"
 	"github.com/sabariramc/goserverbase/log/logwriter"
 	"github.com/sabariramc/goserverbase/utils/testutils"
@@ -23,11 +22,11 @@ func init() {
 		ServiceName: ServerTestConfig.App.ServiceName,
 	})
 	lmux := log.NewDefaultLogMux(consoleLogWriter)
-	ServerTestLogger = log.NewLogger(context.TODO(), ServerTestConfig.Logger, lmux, "CRYPTOTEST")
+	ServerTestLogger = log.NewLogger(context.TODO(), ServerTestConfig.Logger, "CRYPTOTEST", lmux, nil)
 	ServerTestLMux = lmux
 }
 
 func GetCorrelationContext() context.Context {
-	ctx := context.WithValue(context.Background(), constant.CorrelationContextKey, log.GetDefaultCorrelationParams(ServerTestConfig.App.ServiceName))
+	ctx := context.WithValue(context.Background(), log.ContextKeyCorrelation, log.GetDefaultCorrelationParams(ServerTestConfig.App.ServiceName))
 	return ctx
 }

@@ -30,7 +30,7 @@ func (m *Collection) newHashFilter(ctx context.Context, filter map[string]interf
 					hashFilter[GetHashKey(key)] = utils.GetHash(strVal)
 					continue
 				}
-				m.log.Warning(ctx, "Hash filter not gererate for key - "+key, value)
+				m.log.Warning(ctx, "Hash filter not generated for key - "+key, value)
 			}
 			hashFilter[key] = value
 		}
@@ -78,7 +78,7 @@ func (m *Collection) newHashData(ctx context.Context, data map[string]interface{
 					}
 					hashData[GetHashKey(key)] = hashList
 				default:
-					m.log.Warning(ctx, "Hash filter not gererate for key - "+key, value)
+					m.log.Warning(ctx, "Hash filter not generated for key - "+key, value)
 				}
 			}
 			hashData[key] = value

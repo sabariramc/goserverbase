@@ -12,22 +12,19 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-type ServerConfig struct {
-	*config.ServerConfig
-	LoggerConfig *log.Config
-}
-
 type BaseApp struct {
 	router        *httprouter.Router
-	c             *ServerConfig
+	c             *config.ServerConfig
+	lConfig       *log.Config
 	log           *log.Logger
 	errorNotifier errors.ErrorNotifier
 	docMeta       APIDocumentation
 }
 
-func NewBaseApp(c ServerConfig, lMux log.LogMux, errorNotifier errors.ErrorNotifier, auditLogger log.AuditLogWriter) *BaseApp {
+func New(appConfig config.ServerConfig, loggerConfig log.Config, lMux log.LogMux, errorNotifier errors.ErrorNotifier, auditLogger log.AuditLogWriter) *BaseApp {
 	b := &BaseApp{
-		c:             &c,
+		c:             &appConfig,
+		lConfig:       &loggerConfig,
 		router:        httprouter.New(),
 		errorNotifier: errorNotifier,
 		docMeta: APIDocumentation{
@@ -35,8 +32,8 @@ func NewBaseApp(c ServerConfig, lMux log.LogMux, errorNotifier errors.ErrorNotif
 			Routes: make(APIRoute, 0),
 		},
 	}
-	ctx := b.GetCorrelationContext(context.Background(), log.GetDefaultCorrelationParams(c.ServiceName))
-	b.log = log.NewLogger(ctx, c.LoggerConfig, c.LoggerConfig.ServiceName, lMux, auditLogger)
+	ctx := b.GetCorrelationContext(context.Background(), log.GetDefaultCorrelationParams(appConfig.ServiceName))
+	b.log = log.NewLogger(ctx, &loggerConfig, loggerConfig.ServiceName, lMux, auditLogger)
 	zone, _ := time.Now().Zone()
 	b.log.Notice(ctx, "Server Timezone", zone)
 	b.RegisterDefaultRoutes(ctx)
@@ -44,10 +41,7 @@ func NewBaseApp(c ServerConfig, lMux log.LogMux, errorNotifier errors.ErrorNotif
 }
 
 func (b *BaseApp) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	r = r.WithContext(b.GetCorrelationContext(r.Context(), b.GetHttpCorrelationParams(r)))
-	st := time.Now()
-	b.router.ServeHTTP(w, r)
-	b.log.Info(r.Context(), "Request processing time in ms", time.Since(st).Milliseconds())
+	b.HandleExceptionMiddleware(b.LogRequestResponseMiddleware(b.RequestTimerMiddleware(b.SetContextMiddleware(b.router)))).ServeHTTP(w, r)
 }
 
 func (b *BaseApp) GetRouter() *httprouter.Router {
@@ -66,7 +60,7 @@ func (b *BaseApp) SetRouter(router *httprouter.Router) {
 	}
 }
 
-func (b *BaseApp) GetConfig() ServerConfig {
+func (b *BaseApp) GetConfig() config.ServerConfig {
 	return *b.c
 }
 

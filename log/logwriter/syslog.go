@@ -3,7 +3,7 @@ package logwriter
 import (
 	"context"
 	"fmt"
-	dlog "log"
+	stlLog "log"
 	"log/syslog"
 
 	"github.com/sabariramc/goserverbase/log"
@@ -11,15 +11,15 @@ import (
 
 type SyslogWriter struct {
 	BaseLogWriter
-	logger *dlog.Logger
+	logger *stlLog.Logger
 }
 
 func NewSyslogWriterWriter(hostParam log.HostParams, syslogTag, prefix string) *SyslogWriter {
 	logWriter, err := syslog.New(syslog.LOG_SYSLOG, syslogTag)
 	if err != nil {
-		panic(fmt.Errorf("Unable to set logfile: %w", err))
+		panic(fmt.Errorf("unable to set log file: %w", err))
 	}
-	syslog := &SyslogWriter{logger: dlog.New(logWriter, prefix, dlog.LstdFlags), BaseLogWriter: BaseLogWriter{hostParam: &hostParam}}
+	syslog := &SyslogWriter{logger: stlLog.New(logWriter, prefix, stlLog.LstdFlags), BaseLogWriter: BaseLogWriter{hostParam: &hostParam}}
 	return syslog
 }
 

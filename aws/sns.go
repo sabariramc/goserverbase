@@ -22,12 +22,12 @@ var defaultSNSClient *sns.SNS
 
 func GetDefaultSNSClient(logger *log.Logger) *SNS {
 	if defaultSecretManagerClient == nil {
-		defaultSNSClient = NewAWSSNSClient(defaultAWSSession)
+		defaultSNSClient = NewSNSClientWithSession(defaultAWSSession)
 	}
 	return NewSNSClient(logger, defaultSNSClient)
 }
 
-func NewAWSSNSClient(awsSession *session.Session) *sns.SNS {
+func NewSNSClientWithSession(awsSession *session.Session) *sns.SNS {
 	client := sns.New(awsSession)
 	return client
 }
@@ -43,7 +43,7 @@ func (s *SNS) PublishWithContext(ctx context.Context, topicArn, subject *string,
 		TopicArn:          topicArn,
 		Subject:           subject,
 		Message:           &message,
-		MessageAttributes: s.GetAttribure(attributes),
+		MessageAttributes: s.GetAttribute(attributes),
 	}
 	s.log.Debug(ctx, "SNS publish request", req)
 	res, err := s.SNS.PublishWithContext(ctx, req)
@@ -55,7 +55,7 @@ func (s *SNS) PublishWithContext(ctx context.Context, topicArn, subject *string,
 	return nil
 }
 
-func (s *SNS) GetAttribure(attribute map[string]string) map[string]*sns.MessageAttributeValue {
+func (s *SNS) GetAttribute(attribute map[string]string) map[string]*sns.MessageAttributeValue {
 	if len(attribute) == 0 {
 		return nil
 	}

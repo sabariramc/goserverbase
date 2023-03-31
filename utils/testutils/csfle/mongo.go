@@ -11,11 +11,11 @@ import (
 	"github.com/sabariramc/goserverbase/log"
 )
 
-func SetEncryptionKey(ctx context.Context, logger *log.Logger, encryptionSchema *string, c config.MongoConfig, csfleC config.MongoCFLEConfig, keyAltName string, kmsProvider mongo.MasterKeyProvider) error {
+func SetEncryptionKey(ctx context.Context, logger *log.Logger, encryptionSchema *string, c config.MongoConfig, csfleC config.MongoCSFLEConfig, keyAltName string, kmsProvider mongo.MasterKeyProvider) error {
 	schema := make(map[string]interface{})
 	err := json.Unmarshal([]byte(*encryptionSchema), &schema)
 	if err != nil {
-		logger.Error(ctx, "CSFL Schema unmarshal error", err)
+		logger.Error(ctx, "CSFLE Schema unmarshal error", err)
 		return err
 	}
 	client, err := mongo.NewMongo(ctx, logger, c)
@@ -45,7 +45,7 @@ func SetEncryptionKey(ctx context.Context, logger *log.Logger, encryptionSchema 
 	}
 	blob, err := json.Marshal(schema)
 	if err != nil {
-		logger.Error(ctx, "CSFL Schema marshal error", err)
+		logger.Error(ctx, "CSFLE Schema marshal error", err)
 		return err
 	}
 	*encryptionSchema = string(blob)

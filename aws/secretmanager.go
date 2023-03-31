@@ -28,14 +28,14 @@ var secretCache = make(map[string]secretManagerCache)
 
 var defaultSecretManagerClient *secretsmanager.SecretsManager
 
-func NewAWSSecretManagerClient(awsSession *session.Session) *secretsmanager.SecretsManager {
+func NewSecretManagerClientWithSession(awsSession *session.Session) *secretsmanager.SecretsManager {
 	client := secretsmanager.New(awsSession)
 	return client
 }
 
 func GetDefaultSecretManagerClient(logger *log.Logger) *SecretManager {
 	if defaultSecretManagerClient == nil {
-		defaultSecretManagerClient = NewAWSSecretManagerClient(defaultAWSSession)
+		defaultSecretManagerClient = NewSecretManagerClientWithSession(defaultAWSSession)
 	}
 	return NewSecretManagerClient(logger, defaultSecretManagerClient)
 }
@@ -60,7 +60,7 @@ func (s *SecretManager) GetSecret(ctx context.Context, secretArn string) (map[st
 	data := make(map[string]interface{})
 	err := json.Unmarshal([]byte(*secretCacheData.data.SecretString), &data)
 	if err != nil {
-		s.log.Error(ctx, "Secret unmarshall error", err)
+		s.log.Error(ctx, "Secret un-marshall error", err)
 		s.log.Debug(ctx, "Secret data", secretCacheData.data.SecretString)
 		return nil, fmt.Errorf("SecretManager.GetSecret: %w", err)
 	}

@@ -37,27 +37,27 @@ var piiFileCache = make(map[string]*urlCache)
 var defaultS3EncryptionClient *s3crypto.EncryptionClientV2
 var defaultS3DecryptionClient *s3crypto.DecryptionClient
 
-func NewAWSS3EncryptionClient(awsSession *session.Session, keyArn string) (*s3crypto.EncryptionClientV2, error) {
-	var matdesc s3crypto.MaterialDescription
-	keywrap := s3crypto.NewKMSContextKeyGenerator(kms.New(awsSession), keyArn, matdesc)
-	builder := s3crypto.AESGCMContentCipherBuilderV2(keywrap)
+func NewS3EncryptionClient(awsSession *session.Session, keyArn string) (*s3crypto.EncryptionClientV2, error) {
+	var desc s3crypto.MaterialDescription
+	keyWrap := s3crypto.NewKMSContextKeyGenerator(kms.New(awsSession), keyArn, desc)
+	builder := s3crypto.AESGCMContentCipherBuilderV2(keyWrap)
 	return s3crypto.NewEncryptionClientV2(awsSession, builder)
 }
 
-func NewAWSS3DecryptionClient(awsSession *session.Session) *s3crypto.DecryptionClient {
+func NewS3DecryptionClient(awsSession *session.Session) *s3crypto.DecryptionClient {
 	return s3crypto.NewDecryptionClient(awsSession)
 }
 
 func GetDefaultS3PIIClient(logger *log.Logger, keyArn string) (*S3PII, error) {
 	if defaultS3EncryptionClient == nil {
-		client, err := NewAWSS3EncryptionClient(defaultAWSSession, keyArn)
+		client, err := NewS3EncryptionClient(defaultAWSSession, keyArn)
 		if err != nil {
 			return nil, err
 		}
 		defaultS3EncryptionClient = client
 	}
 	if defaultS3DecryptionClient == nil {
-		defaultS3DecryptionClient = NewAWSS3DecryptionClient(defaultAWSSession)
+		defaultS3DecryptionClient = NewS3DecryptionClient(defaultAWSSession)
 	}
 	return NewS3PIIClient(defaultS3EncryptionClient, defaultS3DecryptionClient, GetDefaultS3Client(logger), logger), nil
 }
@@ -160,7 +160,7 @@ func (s *S3PII) GetFileCache(ctx context.Context, s3Bucket, s3Key, stage, tempPa
 		fileCache = &urlCache{expireTime: time.Now().Add(time.Hour * 20), key: tempS3Key, contentType: mime.String()}
 		piiFileCache[fullPath] = fileCache
 	}
-	url, err := s.CreatePresignedURLGET(ctx, s3Bucket, fileCache.key, 30*60)
+	url, err := s.CreatePresignedUrlGET(ctx, s3Bucket, fileCache.key, 30*60)
 	if err != nil {
 		return nil, fmt.Errorf("S3PII.GetFileCache: %w", err)
 	}

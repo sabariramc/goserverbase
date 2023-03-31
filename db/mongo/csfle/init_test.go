@@ -3,7 +3,6 @@ package csfle_test
 import (
 	"context"
 
-	"github.com/sabariramc/goserverbase/constant"
 	"github.com/sabariramc/goserverbase/log"
 	"github.com/sabariramc/goserverbase/log/logwriter"
 	"github.com/sabariramc/goserverbase/utils/testutils"
@@ -22,15 +21,11 @@ func init() {
 		ServiceName: MongoTestConfig.App.ServiceName,
 	}
 	consoleLogWriter := logwriter.NewConsoleWriter(hostParams)
-	graylog, err := logwriter.NewGraylogUDP(hostParams, consoleLogWriter, *MongoTestConfig.Logger.GrayLog)
-	if err != nil {
-		panic(err)
-	}
-	lmux := log.NewDefaultLogMux(consoleLogWriter, graylog)
-	MongoTestLogger = log.NewLogger(context.TODO(), MongoTestConfig.Logger, lmux, consoleLogWriter, "MongoTest")
+	lMux := log.NewDefaultLogMux(consoleLogWriter)
+	MongoTestLogger = log.NewLogger(context.TODO(), MongoTestConfig.Logger, "MongoTest", lMux, nil)
 }
 
 func GetCorrelationContext() context.Context {
-	ctx := context.WithValue(context.Background(), constant.CorrelationContextKey, log.GetDefaultCorrelationParams(MongoTestConfig.App.ServiceName))
+	ctx := context.WithValue(context.Background(), log.ContextKeyCorrelation, log.GetDefaultCorrelationParams(MongoTestConfig.App.ServiceName))
 	return ctx
 }

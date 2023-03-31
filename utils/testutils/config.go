@@ -8,18 +8,22 @@ import (
 	"github.com/sabariramc/goserverbase/utils"
 )
 
+type AWSConfig struct {
+	KMS_ARN      string
+	SNS_ARN      string
+	S3_BUCKET    string
+	SECRET_ARN   string
+	SQS_URL      string
+	FIFO_SQS_URL string
+}
+
 type TestConfig struct {
 	Mysql               *config.MySqlConnectionConfig
 	Logger              *log.Config
 	App                 *config.ServerConfig
 	Mongo               *config.MongoConfig
-	MongoCSFLE          *config.MongoCFLEConfig
-	S3                  *config.AWSS3Config
-	KMS                 *config.AWSConfig
-	SecretManager       *config.AWSConfig
-	SNS                 *config.AWSConfig
-	SQS                 *config.AWSSQSConfig
-	FIFOSQS             *config.AWSSQSConfig
+	MongoCSFLE          *config.MongoCSFLEConfig
+	AWS                 *AWSConfig
 	KafkaConsumerConfig *kafka.KafkaConsumerConfig
 	KafkaProducerConfig *kafka.KafkaProducerConfig
 	KafkaTestTopic      string
@@ -33,7 +37,7 @@ func (t *TestConfig) GetAppConfig() *config.ServerConfig {
 }
 
 func NewConfig() *TestConfig {
-	serviceName := utils.GetEnv("SERVICE_NAME", "lending-errornotifier")
+	serviceName := utils.GetEnv("SERVICE_NAME", "lending-error-notifier")
 	kafkaBaseConfig := kafka.KafkaCred{Brokers: utils.GetEnv("KAFKA_BROKER", ""),
 		ClientID: serviceName + "-" + uuid.NewString(),
 	}
@@ -72,33 +76,21 @@ func NewConfig() *TestConfig {
 		},
 		Mongo: &config.MongoConfig{
 			ConnectionString:  utils.GetEnv("MONGO_URL", "mongodb://localhost:60001"),
-			DatabaseName:      utils.GetEnv("MONGO_DATABASE", "GOLANGTEST"),
+			DatabaseName:      utils.GetEnv("MONGO_DATABASE", "GOTEST"),
 			MinConnectionPool: uint64(utils.GetEnvInt("MONGO_MIN_CONNECTION_POOL", 10)),
 			MaxConnectionPool: uint64(utils.GetEnvInt("MONGO_MAX_CONNECTION_POOL", 50)),
 		},
-		MongoCSFLE: &config.MongoCFLEConfig{
+		MongoCSFLE: &config.MongoCSFLEConfig{
 			KeyVaultNamespace: utils.GetEnv("MONGO_KEY_VAULT", "encryption.__keyVault"),
-			MasterKeyARN: &config.AWSConfig{
-				Arn: utils.GetEnv("KMS_ARN", ""),
-			},
+			MasterKeyARN:      utils.GetEnv("KMS_ARN", ""),
 		},
-		S3: &config.AWSS3Config{
-			BucketName: utils.GetEnv("S3_BUCKET", ""),
-		},
-		KMS: &config.AWSConfig{
-			Arn: utils.GetEnv("KMS_ARN", ""),
-		},
-		SecretManager: &config.AWSConfig{
-			Arn: utils.GetEnv("SECRET_ARN", ""),
-		},
-		SQS: &config.AWSSQSConfig{
-			QueueURL: utils.GetEnv("SQS_URL", ""),
-		},
-		FIFOSQS: &config.AWSSQSConfig{
-			QueueURL: utils.GetEnv("FIFO_SQS_URL", ""),
-		},
-		SNS: &config.AWSConfig{
-			Arn: utils.GetEnv("SNS_ARN", ""),
+		AWS: &AWSConfig{
+			KMS_ARN:      utils.GetEnv("KMS_ARN", ""),
+			SNS_ARN:      utils.GetEnv("SNS_ARN", ""),
+			S3_BUCKET:    utils.GetEnv("S3_BUCKET", ""),
+			SECRET_ARN:   utils.GetEnv("SECRET_ARN", ""),
+			SQS_URL:      utils.GetEnv("SQS_URL", ""),
+			FIFO_SQS_URL: utils.GetEnv("FIFO_SQS_URL", ""),
 		},
 		KafkaProducerConfig: &kafka.KafkaProducerConfig{
 			KafkaCred:   &kafkaBaseConfig,

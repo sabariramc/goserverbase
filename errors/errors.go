@@ -45,8 +45,8 @@ type HTTPError struct {
 
 func NewHTTPError(statusCode int, errorMessage string, errorData interface{}, errorDescription interface{}, notify bool) *HTTPError {
 	errorCode := http.StatusText(statusCode)
-	custError := NewCustomError(errorCode, errorMessage, errorData, errorDescription, notify)
-	return &HTTPError{CustomError: *custError, ErrorStatusCode: statusCode}
+	err := NewCustomError(errorCode, errorMessage, errorData, errorDescription, notify)
+	return &HTTPError{CustomError: *err, ErrorStatusCode: statusCode}
 }
 
 func NewHTTPClientError(statusCode int, errorMessage string, errorData interface{}, errorDescription interface{}) *HTTPError {

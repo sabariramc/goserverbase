@@ -3,7 +3,6 @@ package aws_test
 import (
 	"context"
 
-	"github.com/sabariramc/goserverbase/constant"
 	"github.com/sabariramc/goserverbase/log"
 	"github.com/sabariramc/goserverbase/log/logwriter"
 	"github.com/sabariramc/goserverbase/utils/testutils"
@@ -22,11 +21,11 @@ func init() {
 		Host:        AWSTestConfig.App.Host,
 		ServiceName: AWSTestConfig.App.ServiceName,
 	})
-	lmux := log.NewDefaultLogMux(consoleLogWriter)
-	AWSTestLogger = log.NewLogger(context.TODO(), AWSTestConfig.Logger, lmux, consoleLogWriter, "AWSTest")
+	lMux := log.NewDefaultLogMux(consoleLogWriter)
+	AWSTestLogger = log.NewLogger(context.TODO(), AWSTestConfig.Logger, "AWSTest", lMux, nil)
 }
 
 func GetCorrelationContext() context.Context {
-	ctx := context.WithValue(context.Background(), constant.CorrelationContextKey, log.GetDefaultCorrelationParams(AWSTestConfig.App.ServiceName))
+	ctx := context.WithValue(context.Background(), log.ContextKeyCorrelation, log.GetDefaultCorrelationParams(AWSTestConfig.App.ServiceName))
 	return ctx
 }

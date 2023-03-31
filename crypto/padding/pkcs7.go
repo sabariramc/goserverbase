@@ -12,12 +12,12 @@ func NewPKCS7(blockSize int) *PKCS7 {
 
 func (p *PKCS7) UnPad(encryptedData []byte) []byte {
 	length := len(encryptedData)
-	unpadding := int(encryptedData[length-1])
-	return encryptedData[:(length - unpadding)]
+	unPadding := int(encryptedData[length-1])
+	return encryptedData[:(length - unPadding)]
 }
 
 func (p *PKCS7) Pad(plainData []byte) []byte {
 	padding := p.blockSize - len(plainData)%p.blockSize
-	padtext := bytes.Repeat([]byte{byte(padding)}, padding)
-	return append(plainData, padtext...)
+	padText := bytes.Repeat([]byte{byte(padding)}, padding)
+	return append(plainData, padText...)
 }

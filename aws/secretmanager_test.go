@@ -9,15 +9,15 @@ import (
 func TestSecretManager(t *testing.T) {
 	ctx := GetCorrelationContext()
 	client := aws.GetDefaultSecretManagerClient(AWSTestLogger)
-	_, err := client.GetSecret(ctx, AWSTestConfig.SecretManager.Arn)
+	_, err := client.GetSecret(ctx, AWSTestConfig.AWS.SECRET_ARN)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = client.GetSecret(ctx, AWSTestConfig.SecretManager.Arn)
+	_, err = client.GetSecret(ctx, AWSTestConfig.AWS.SECRET_ARN)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = client.GetSecretValueWithContext(ctx, AWSTestConfig.SecretManager.Arn)
+	_, err = client.GetSecretValueWithContext(ctx, AWSTestConfig.AWS.SECRET_ARN)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -12,7 +12,7 @@ import (
 type TestVal struct {
 	mongo.BaseMongoModel `bson:",inline"`
 	IntVal               int64           `bson:"intVal"`
-	DeciVal              decimal.Decimal `bson:"deciVal"`
+	DecimalVal           decimal.Decimal `bson:"decimalVal"`
 	StrVal               string          `bson:"strVal"`
 	BoolVal              bool            `bson:"boolVal"`
 	TimeValUTC           time.Time       `bson:"timeValUTC"`
@@ -23,16 +23,16 @@ func GetSampleData() *TestVal {
 	val1, _ := decimal.NewFromString("123.1232")
 	val2, _ := decimal.NewFromString("123.1232")
 	data := &TestVal{}
-	data.SetCreateParam("fadsfa")
+	data.SetCreateParam("Random value")
 	data.StrVal = "value1"
 	data.IntVal = 123
-	data.DeciVal = val1.Add(val2)
+	data.DecimalVal = val1.Add(val2)
 	data.TimeValUTC = time.Now().UTC()
 	data.TimeValLocal = time.Now()
 	return data
 }
 
-func TestMongocollectionInsertOne(t *testing.T) {
+func TestMongoCollectionInsertOne(t *testing.T) {
 	ctx := GetCorrelationContext()
 	client, err := mongo.NewMongo(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
 	if err != nil {
@@ -49,7 +49,7 @@ func TestMongocollectionInsertOne(t *testing.T) {
 	_, err = coll.InsertOne(ctx, data)
 }
 
-func TestMongocollection(t *testing.T) {
+func TestMongoCollection(t *testing.T) {
 	ctx := GetCorrelationContext()
 	client, err := mongo.NewMongo(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
 	if err != nil {
@@ -83,7 +83,7 @@ func TestMongocollection(t *testing.T) {
 
 }
 
-func TestMongocollctionFindOne(t *testing.T) {
+func TestMongoCollectionFindOne(t *testing.T) {
 	ctx := GetCorrelationContext()
 	client, err := mongo.NewMongo(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
 	if err != nil {
@@ -99,7 +99,7 @@ func TestMongocollctionFindOne(t *testing.T) {
 	fmt.Printf("%+v\n", val)
 }
 
-func TestMongocollctionFindFetch(t *testing.T) {
+func TestMongoCollectionFindFetch(t *testing.T) {
 	ctx := GetCorrelationContext()
 	client, err := mongo.NewMongo(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
 	if err != nil {

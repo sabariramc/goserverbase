@@ -46,7 +46,7 @@ func TestCollectionPII(t *testing.T) {
 		t.Fatal(err)
 	}
 	scheme := string(schemeByte)
-	kmsArn := MongoTestConfig.KMS.Arn
+	kmsArn := MongoTestConfig.MongoCSFLE.MasterKeyARN
 	keyAltName := "MongoPIITestKey"
 	kmsProvider, err := mongo.GetDefaultAWSKMSProvider(ctx, MongoTestLogger, kmsArn)
 	if err != nil {

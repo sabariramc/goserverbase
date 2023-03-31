@@ -35,7 +35,7 @@ func NewKafkaConsumer(ctx context.Context, log *log.Logger, config *KafkaConsume
 		Consumer: c,
 		topic:    topic,
 	}
-	err = k.SubscribeTopics([]string{topic}, k.logRebalance)
+	err = k.SubscribeTopics([]string{topic}, k.logReBalance)
 	if err != nil {
 		k.log.Error(ctx, "Failed to create kafka consumer subscription", err)
 		return nil, fmt.Errorf("kafka.NewKafkaConsumer.SubscribeTopics: %w", err)
@@ -43,8 +43,8 @@ func NewKafkaConsumer(ctx context.Context, log *log.Logger, config *KafkaConsume
 	return k, nil
 }
 
-func (k *KafkaConsumer) logRebalance(consumer *kafka.Consumer, e kafka.Event) error {
-	k.log.Notice(context.Background(), fmt.Sprintf("Rebalance Event for topic %v", k.topic), e.String())
+func (k *KafkaConsumer) logReBalance(consumer *kafka.Consumer, e kafka.Event) error {
+	k.log.Notice(context.Background(), fmt.Sprintf("Re-balance Event for topic %v", k.topic), e.String())
 	return nil
 }
 

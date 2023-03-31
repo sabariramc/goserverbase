@@ -29,11 +29,11 @@ type ChanneledLogMux struct {
 func NewChanneledLogMux(bufferSize uint8, logWriterList ...ChanneledLogWriter) *ChanneledLogMux {
 	outChannelList := make([]chan MuxLogMessage, len(logWriterList))
 	for i, logWriter := range logWriterList {
-		lbufferSize := logWriter.GetBufferSize()
-		if lbufferSize < 1 {
-			lbufferSize = int(bufferSize)
+		lBufferSize := logWriter.GetBufferSize()
+		if lBufferSize < 1 {
+			lBufferSize = int(bufferSize)
 		}
-		outChannel := make(chan MuxLogMessage, lbufferSize)
+		outChannel := make(chan MuxLogMessage, lBufferSize)
 		outChannelList[i] = outChannel
 		go logWriter.Start(outChannel)
 	}

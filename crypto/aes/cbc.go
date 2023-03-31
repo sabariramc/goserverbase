@@ -14,8 +14,8 @@ import (
 	"github.com/sabariramc/goserverbase/log"
 )
 
-var ErrBlockError = fmt.Errorf("ciphertext is not a multiple of the block size")
-var ErrInvalidKeyLength = fmt.Errorf("Invalid key length")
+var ErrBlockError = fmt.Errorf("cipher text is not a multiple of the block size")
+var ErrInvalidKeyLength = fmt.Errorf("invalid key length")
 
 type AESCBC struct {
 	padder crypto.Padder
@@ -31,7 +31,7 @@ func NewAESCBCPKCS7(ctx context.Context, log *log.Logger, key string) (*AESCBC, 
 	}
 	block, err := aes.NewCipher(keyByte)
 	if err != nil {
-		return nil, fmt.Errorf("crypto.aes.Chiper: %w", err)
+		return nil, fmt.Errorf("crypto.aes.Cipher: %w", err)
 	}
 	return NewAESCBC(ctx, log, key, padding.NewPKCS7(block.BlockSize()))
 }
@@ -71,13 +71,13 @@ func (a *AESCBC) Encrypt(ctx context.Context, plainBlob []byte) ([]byte, error) 
 
 func (a *AESCBC) EncryptString(ctx context.Context, plainText string) (string, error) {
 	a.log.Debug(ctx, "Plain Text", plainText)
-	res, err := a.Encrypt(ctx, []byte(plainText))
+	blobRes, err := a.Encrypt(ctx, []byte(plainText))
 	if err != nil {
 		return "", fmt.Errorf("AESCBC.EncryptString: %w", err)
 	}
-	strres := base64.StdEncoding.EncodeToString(res)
-	a.log.Debug(ctx, "EncryptedString", strres)
-	return strres, nil
+	res := base64.StdEncoding.EncodeToString(blobRes)
+	a.log.Debug(ctx, "EncryptedString", res)
+	return res, nil
 }
 
 func (a *AESCBC) Decrypt(ctx context.Context, encryptedData []byte) (plainData []byte, err error) {
@@ -104,11 +104,11 @@ func (a *AESCBC) DecryptString(ctx context.Context, encryptedText string) (strin
 	if err != nil {
 		return "", fmt.Errorf("AESCBC.DecryptString.B64Decode: %w", err)
 	}
-	res, err := a.Decrypt(ctx, []byte(decoded))
+	blobRes, err := a.Decrypt(ctx, []byte(decoded))
 	if err != nil {
 		return "", fmt.Errorf("AESCBC.DecryptString: %w", err)
 	}
-	strres := string(res)
-	a.log.Debug(ctx, "DecryptedString", strres)
-	return strres, nil
+	res := string(blobRes)
+	a.log.Debug(ctx, "DecryptedString", res)
+	return res, nil
 }

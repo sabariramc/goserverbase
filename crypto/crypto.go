@@ -2,7 +2,7 @@ package crypto
 
 import "context"
 
-type Chiper interface {
+type Cipher interface {
 	Encrypt(ctx context.Context, plainBlob []byte) ([]byte, error)
 	Decrypt(ctx context.Context, encryptedBlob []byte) ([]byte, error)
 	EncryptString(ctx context.Context, plaintext string) (string, error)

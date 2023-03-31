@@ -11,18 +11,13 @@ require (
 	github.com/julienschmidt/httprouter v1.3.0
 	github.com/shopspring/decimal v1.3.1
 	go.mongodb.org/mongo-driver v1.8.4
-	gorm.io/driver/mysql v1.3.2
-	gorm.io/gorm v1.23.3
 	gotest.tools v2.2.0+incompatible
 )
 
 require (
-	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/go-cmp v0.5.4 // indirect
-	github.com/jinzhu/inflection v1.0.0 // indirect
-	github.com/jinzhu/now v1.1.4 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
 	github.com/pkg/errors v0.9.1 // indirect

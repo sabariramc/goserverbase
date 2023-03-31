@@ -9,7 +9,7 @@ import (
 )
 
 func GetMessage() *utils.Message {
-	message := utils.NewMessage(utils.EventEntity, "aws.test")
+	message := utils.NewMessage("event", "aws.test")
 	message.AddPayload("payment", &utils.Payload{
 		Entity: map[string]interface{}{
 			"id":     "pay_14341234",
@@ -31,7 +31,7 @@ func GetMessage() *utils.Message {
 }
 
 func TestSQSClient(t *testing.T) {
-	queueUrl := AWSTestConfig.SQS.QueueURL
+	queueUrl := AWSTestConfig.AWS.SQS_URL
 	ctx := GetCorrelationContext()
 
 	sqsClient := aws.GetDefaultSQSClient(AWSTestLogger, queueUrl)
@@ -83,14 +83,14 @@ func TestSQSClient(t *testing.T) {
 }
 
 func TestSQSFIFOClient(t *testing.T) {
-	queueUrl := AWSTestConfig.FIFOSQS.QueueURL
+	queueUrl := AWSTestConfig.AWS.FIFO_SQS_URL
 	sqsClient := aws.GetDefaultSQSClient(AWSTestLogger, queueUrl)
-	groupId, dedupId := uuid.NewString(), uuid.NewString()
+	groupId, dedupeId := uuid.NewString(), uuid.NewString()
 	ctx := GetCorrelationContext()
 	message := GetMessage()
 	err := sqsClient.SendMessageWithContext(ctx, message, map[string]string{
 		"id": uuid.NewString(),
-	}, 0, &groupId, &dedupId)
+	}, 0, &groupId, &dedupeId)
 	if err != nil {
 		t.Fatal(err)
 	}

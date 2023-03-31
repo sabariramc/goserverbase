@@ -10,16 +10,6 @@ type MySqlConnectionConfig struct {
 	Charset      string
 }
 
-type AWSConfig struct {
-	Arn string
-}
-type AWSSQSConfig struct {
-	QueueURL string
-}
-type AWSS3Config struct {
-	BucketName string
-}
-
 type MongoConfig struct {
 	ConnectionString  string
 	DatabaseName      string
@@ -27,9 +17,9 @@ type MongoConfig struct {
 	MaxConnectionPool uint64
 }
 
-type MongoCFLEConfig struct {
+type MongoCSFLEConfig struct {
 	KeyVaultNamespace string
-	MasterKeyARN      *AWSConfig
+	MasterKeyARN      string
 }
 
 type ServerConfig struct {
@@ -38,7 +28,6 @@ type ServerConfig struct {
 	ServiceName string
 	Debug       bool
 }
-
 
 type RuntimeConfig struct {
 	GoMaxProcs int
