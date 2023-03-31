@@ -1,7 +1,6 @@
 package mongo
 
 import (
-	"context"
 	"fmt"
 	"reflect"
 
@@ -54,16 +53,6 @@ var newRegistry = bson.NewRegistryBuilder().RegisterTypeEncoder(decimalType, bso
 }))
 
 var collectionOptions = options.Collection().SetRegistry(newCustomBsonRegistry().Build())
-
-func (m *Mongo) NewCSFLECollection(ctx context.Context, collectionName string, hashFieldList []string) *Collection {
-	if !m.isCSFLEEnabled {
-		m.log.Emergency(ctx, "Non CSFLE Client", "Client passed is not a CSFLE Client", fmt.Errorf("CSFLE COLLECTION ON NON CSFLE CLIENT"))
-	}
-	coll := &Collection{collectionName: collectionName, collection: m.database.Collection(collectionName, collectionOptions), log: m.log}
-	coll.SetHashList(hashFieldList)
-	return coll
-
-}
 
 func (m *Mongo) NewCollection(collectionName string) *Collection {
 	return &Collection{collectionName: collectionName, collection: m.database.Collection(collectionName, collectionOptions), log: m.log}

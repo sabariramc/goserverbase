@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	e "errors"
+	"fmt"
 	"net/http"
 	"runtime/debug"
 	"time"
@@ -69,7 +70,8 @@ func (b *BaseApp) HandleExceptionMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		var statusCode int
 		ctx := r.Context()
-		var body, errorData, customerIdentifier interface{}
+		var body []byte
+		var errorData, customerIdentifier interface{}
 		var errorCode string
 		defer func() {
 			if rec := recover(); rec != nil {
@@ -78,8 +80,11 @@ func (b *BaseApp) HandleExceptionMiddleware(next http.Handler) http.Handler {
 				b.log.Error(ctx, "Recovered in Responder - StackTrace", stackTrace)
 				statusCode = http.StatusInternalServerError
 				customerIdentifier = log.GetCustomerIdentifier(ctx)
-				err := rec.(error)
-				body = map[string]string{"error": "Internal error occurred, if persist contact technical team"}
+				err, ok := rec.(error)
+				if !ok {
+					blob, _ := json.Marshal(rec)
+					err = fmt.Errorf("non error panic: %v", string(blob))
+				}
 				notify := false
 				var customError *errors.CustomError
 				var httpErr *errors.HTTPError
@@ -97,17 +102,16 @@ func (b *BaseApp) HandleExceptionMiddleware(next http.Handler) http.Handler {
 					errorData = customError.ErrorData
 				} else {
 					statusCode = http.StatusInternalServerError
-					customError = errors.NewCustomError("UNKNOWN", "Unknown error", err, nil, true)
+					customError = errors.NewCustomError("UNKNOWN", "Unknown error", err, map[string]string{"error": "Internal error occurred, if persist contact technical team"}, true)
 					body = customError.GetErrorResponse()
 					err = customError
 				}
 				if notify && b.errorNotifier != nil {
 					b.errorNotifier.Send(ctx, errorCode, err, stackTrace, errorData, customerIdentifier)
 				}
-				w.Header().Set(HttpHeaderContentType, HttpContentTypeJSON)
+				w.Header().Add(HttpHeaderContentType, HttpContentTypeJSON)
 				w.WriteHeader(statusCode)
-				res, _ := json.Marshal(body)
-				w.Write([]byte(res))
+				w.Write(body)
 			}
 		}()
 		var handlerError error

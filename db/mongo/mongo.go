@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/sabariramc/goserverbase/config"
 	"github.com/sabariramc/goserverbase/log"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -13,31 +12,25 @@ import (
 )
 
 type Mongo struct {
-	client         *mongo.Client
-	log            *log.Logger
-	database       *mongo.Database
-	c              *config.MongoConfig
-	csfle          *config.MongoCSFLEConfig
-	isCSFLEEnabled bool
+	client   *mongo.Client
+	log      *log.Logger
+	database *mongo.Database
+	c        *Config
 }
 
 var ErrNoDocuments = mongo.ErrNoDocuments
 
-func NewMongo(ctx context.Context, logger *log.Logger, c config.MongoConfig) (*Mongo, error) {
+func New(ctx context.Context, logger *log.Logger, c Config) (*Mongo, error) {
 	var client *mongo.Client
 	var err error
 	client, err = NewMongoClient(ctx, logger, &c)
 	if err != nil {
 		return nil, fmt.Errorf("mongo.NewMongo : %w", err)
 	}
-	return &Mongo{client: client, log: logger, c: &c, database: client.Database(c.DatabaseName), isCSFLEEnabled: false}, nil
+	return &Mongo{client: client, log: logger, c: &c, database: client.Database(c.DatabaseName)}, nil
 }
 
-func NewCSFLEMongo(client *mongo.Client, logger *log.Logger, c config.MongoConfig, csfle config.MongoCSFLEConfig) *Mongo {
-	return &Mongo{client: client, log: logger, c: &c, database: client.Database(c.DatabaseName), csfle: &csfle, isCSFLEEnabled: true}
-}
-
-func NewMongoClient(ctx context.Context, logger *log.Logger, c *config.MongoConfig) (*mongo.Client, error) {
+func NewMongoClient(ctx context.Context, logger *log.Logger, c *Config) (*mongo.Client, error) {
 	connectionOptions := options.Client()
 	connectionOptions.ApplyURI(c.ConnectionString)
 	connectionOptions.SetConnectTimeout(time.Minute)

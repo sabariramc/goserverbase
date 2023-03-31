@@ -34,7 +34,7 @@ func GetSampleData() *TestVal {
 
 func TestMongoCollectionInsertOne(t *testing.T) {
 	ctx := GetCorrelationContext()
-	client, err := mongo.NewMongo(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
+	client, err := mongo.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,7 +51,7 @@ func TestMongoCollectionInsertOne(t *testing.T) {
 
 func TestMongoCollection(t *testing.T) {
 	ctx := GetCorrelationContext()
-	client, err := mongo.NewMongo(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
+	client, err := mongo.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -85,7 +85,7 @@ func TestMongoCollection(t *testing.T) {
 
 func TestMongoCollectionFindOne(t *testing.T) {
 	ctx := GetCorrelationContext()
-	client, err := mongo.NewMongo(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
+	client, err := mongo.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -101,7 +101,7 @@ func TestMongoCollectionFindOne(t *testing.T) {
 
 func TestMongoCollectionFindFetch(t *testing.T) {
 	ctx := GetCorrelationContext()
-	client, err := mongo.NewMongo(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
+	client, err := mongo.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
 	if err != nil {
 		t.Fatal(err)
 	}

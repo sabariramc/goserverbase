@@ -3,6 +3,7 @@ package testutils
 import (
 	"github.com/google/uuid"
 	"github.com/sabariramc/goserverbase/config"
+	"github.com/sabariramc/goserverbase/db/mongo"
 	"github.com/sabariramc/goserverbase/kafka"
 	"github.com/sabariramc/goserverbase/log"
 	"github.com/sabariramc/goserverbase/utils"
@@ -18,11 +19,9 @@ type AWSConfig struct {
 }
 
 type TestConfig struct {
-	Mysql               *config.MySqlConnectionConfig
 	Logger              *log.Config
 	App                 *config.ServerConfig
-	Mongo               *config.MongoConfig
-	MongoCSFLE          *config.MongoCSFLEConfig
+	Mongo               *mongo.Config
 	AWS                 *AWSConfig
 	KafkaConsumerConfig *kafka.KafkaConsumerConfig
 	KafkaProducerConfig *kafka.KafkaProducerConfig
@@ -37,7 +36,7 @@ func (t *TestConfig) GetAppConfig() *config.ServerConfig {
 }
 
 func NewConfig() *TestConfig {
-	serviceName := utils.GetEnv("SERVICE_NAME", "lending-error-notifier")
+	serviceName := utils.GetEnv("SERVICE_NAME", "go-base")
 	kafkaBaseConfig := kafka.KafkaCred{Brokers: utils.GetEnv("KAFKA_BROKER", ""),
 		ClientID: serviceName + "-" + uuid.NewString(),
 	}
@@ -51,15 +50,7 @@ func NewConfig() *TestConfig {
 		}
 	}
 	return &TestConfig{
-		Mysql: &config.MySqlConnectionConfig{
-			Host:         utils.GetEnv("MYSQL_HOST", "localhost"),
-			Port:         utils.GetEnv("MYSQL_PORT", "3306"),
-			DatabaseName: utils.GetEnv("MYSQL_DATABASE", ""),
-			Username:     utils.GetEnv("MYSQL_USERNAME", "root"),
-			Password:     utils.GetEnv("MYSQL_PASSWORD", ""),
-			Timezone:     utils.GetEnv("MYSQL_TIMEZONE", "Local"),
-			Charset:      utils.GetEnv("MYSQL_CHARSET", "utf8"),
-		},
+
 		Logger: &log.Config{
 			Version:           utils.GetEnv("LOG_VERSION", "1.1"),
 			Host:              utils.GetEnv("HOST", utils.GetHostName()),
@@ -74,15 +65,11 @@ func NewConfig() *TestConfig {
 			ServiceName: utils.GetEnv("SERVICE_NAME", "API"),
 			Debug:       utils.GetEnvBool("DEBUG", false),
 		},
-		Mongo: &config.MongoConfig{
+		Mongo: &mongo.Config{
 			ConnectionString:  utils.GetEnv("MONGO_URL", "mongodb://localhost:60001"),
 			DatabaseName:      utils.GetEnv("MONGO_DATABASE", "GOTEST"),
 			MinConnectionPool: uint64(utils.GetEnvInt("MONGO_MIN_CONNECTION_POOL", 10)),
 			MaxConnectionPool: uint64(utils.GetEnvInt("MONGO_MAX_CONNECTION_POOL", 50)),
-		},
-		MongoCSFLE: &config.MongoCSFLEConfig{
-			KeyVaultNamespace: utils.GetEnv("MONGO_KEY_VAULT", "encryption.__keyVault"),
-			MasterKeyARN:      utils.GetEnv("KMS_ARN", ""),
 		},
 		AWS: &AWSConfig{
 			KMS_ARN:      utils.GetEnv("KMS_ARN", ""),
@@ -99,9 +86,9 @@ func NewConfig() *TestConfig {
 		KafkaConsumerConfig: &kafka.KafkaConsumerConfig{
 			KafkaCred:      &kafkaBaseConfig,
 			GoEventChannel: false,
-			GroupID:        serviceName,
+			GroupID:        utils.GetEnv("KAFKA_CONSUMER_ID", serviceName),
 			OffsetReset:    "latest",
 		},
-		KafkaTestTopic: "com.sabariram.test",
+		KafkaTestTopic: "com.lending.staging.error",
 	}
 }

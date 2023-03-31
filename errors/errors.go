@@ -22,13 +22,13 @@ func (e *CustomError) Error() string {
 	return string(blob)
 }
 
-func (e *CustomError) GetErrorResponse() string {
+func (e *CustomError) GetErrorResponse() []byte {
 	blob, err := json.Marshal(e)
 	if err != nil {
 		e.ErrorData = ParseErrorMsg
 		blob, _ = json.Marshal(e)
 	}
-	return string(blob)
+	return blob
 }
 
 func NewCustomError(errorCode, errorMessage string, errorData interface{}, errorDescription interface{}, notify bool) *CustomError {
@@ -43,16 +43,18 @@ type HTTPError struct {
 	ErrorStatusCode int `json:""`
 }
 
-func NewHTTPError(statusCode int, errorMessage string, errorData interface{}, errorDescription interface{}, notify bool) *HTTPError {
-	errorCode := http.StatusText(statusCode)
+func NewHTTPError(statusCode int, errorCode, errorMessage string, errorData interface{}, errorDescription interface{}, notify bool) *HTTPError {
+	if errorCode == "" {
+		errorCode = http.StatusText(statusCode)
+	}
 	err := NewCustomError(errorCode, errorMessage, errorData, errorDescription, notify)
 	return &HTTPError{CustomError: *err, ErrorStatusCode: statusCode}
 }
 
-func NewHTTPClientError(statusCode int, errorMessage string, errorData interface{}, errorDescription interface{}) *HTTPError {
-	return NewHTTPError(statusCode, errorMessage, errorData, errorDescription, false)
+func NewHTTPClientError(statusCode int, errorCode, errorMessage string, errorData interface{}, errorDescription interface{}) *HTTPError {
+	return NewHTTPError(statusCode, errorCode, errorMessage, errorData, errorDescription, false)
 }
 
-func NewHTTPServerError(statusCode int, errorMessage string, errorData interface{}, errorDescription interface{}) *HTTPError {
-	return NewHTTPError(statusCode, errorMessage, errorData, errorDescription, true)
+func NewHTTPServerError(statusCode int, errorCode, errorMessage string, errorData interface{}, errorDescription interface{}) *HTTPError {
+	return NewHTTPError(statusCode, errorCode, errorMessage, errorData, errorDescription, true)
 }
