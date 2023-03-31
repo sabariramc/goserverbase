@@ -38,14 +38,14 @@ type server struct {
 }
 
 func (s *server) Func1(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello"))
 	w.WriteHeader(200)
+	w.Write([]byte("Hello"))
 }
 
 func (s *server) Func2(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(baseapp.GetPathParams(r.Context(), ServerTestLogger, r))
-	w.Write([]byte("World"))
 	w.WriteHeader(200)
+	w.Write([]byte("World"))
 }
 
 func (s *server) Func3(w http.ResponseWriter, r *http.Request) {

@@ -97,9 +97,7 @@ func (b *BaseApp) SendErrorResponse(ctx context.Context, w http.ResponseWriter, 
 	if notify && b.errorNotifier != nil {
 		b.errorNotifier.Send(ctx, errorCode, err, stackTrace, errorData, customerIdentifier)
 	}
-	w.Header().Add(HttpHeaderContentType, HttpContentTypeJSON)
-	w.WriteHeader(statusCode)
-	w.Write(body)
+	WriteJsonWithStatusCode(w, statusCode, body)
 }
 
 func (b *BaseApp) HandleExceptionMiddleware(next http.Handler) http.Handler {

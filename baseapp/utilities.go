@@ -118,9 +118,13 @@ func SetDefaultPagination(filter interface{}, defaultSortBy string) error {
 }
 
 func WriteJsonWithStatusCode(w http.ResponseWriter, statusCode int, responseBody any) {
-	blob, err := json.Marshal(responseBody)
-	if err != nil {
-		panic(fmt.Errorf("response marshal error: %w", err))
+	var err error
+	blob, ok := responseBody.([]byte)
+	if !ok {
+		blob, err = json.Marshal(responseBody)
+		if err != nil {
+			panic(fmt.Errorf("response marshal error: %w", err))
+		}
 	}
 	w.Header().Add(HttpHeaderContentType, HttpContentTypeJSON)
 	w.WriteHeader(statusCode)
