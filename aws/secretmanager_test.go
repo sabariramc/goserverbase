@@ -1,6 +1,7 @@
 package aws_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/sabariramc/goserverbase/aws"
@@ -9,7 +10,8 @@ import (
 func TestSecretManager(t *testing.T) {
 	ctx := GetCorrelationContext()
 	client := aws.GetDefaultSecretManagerClient(AWSTestLogger)
-	_, err := client.GetSecret(ctx, AWSTestConfig.AWS.SECRET_ARN)
+	secret, err := client.GetSecret(ctx, AWSTestConfig.AWS.SECRET_ARN)
+	fmt.Println(secret)
 	if err != nil {
 		t.Fatal(err)
 	}

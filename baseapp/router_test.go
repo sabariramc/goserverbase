@@ -1,7 +1,6 @@
 package baseapp_test
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -9,52 +8,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/sabariramc/goserverbase/baseapp"
-	"github.com/sabariramc/goserverbase/errors"
+	"github.com/sabariramc/goserverbase/baseapp/test/server"
 	"gotest.tools/assert"
 )
 
-type server struct {
-	*baseapp.BaseApp
-}
-
-func (s *server) Func1(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello"))
-	w.WriteHeader(200)
-}
-
-func (s *server) Func2(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(baseapp.GetPathParams(r.Context(), ServerTestLogger, r))
-	w.Write([]byte("World"))
-	w.WriteHeader(200)
-}
-
-func (s *server) Func3(w http.ResponseWriter, r *http.Request) {
-	s.SetHandlerError(r.Context(), errors.NewCustomError("hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, true))
-}
-
-func (s *server) Func4(w http.ResponseWriter, r *http.Request) {
-	panic("random panic at Func4")
-}
-
-func (s *server) Func5(w http.ResponseWriter, r *http.Request) {
-	s.SetHandlerError(r.Context(), errors.NewHTTPClientError(403, "hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil))
-}
-
-func NewServer() *server {
-	srv := &server{
-		BaseApp: baseapp.New(*ServerTestConfig.App, *ServerTestConfig.Logger, ServerTestLMux, nil, nil),
-	}
-	srv.RegisterRoutes(context.TODO(), http.MethodGet, "/tenant", srv.Func1)
-	srv.RegisterRoutes(context.TODO(), http.MethodGet, "/tenant/:tenantId", srv.Func2)
-	srv.RegisterRoutes(context.TODO(), http.MethodGet, "/error/error1", srv.Func3)
-	srv.RegisterRoutes(context.TODO(), http.MethodGet, "/error/error2", srv.Func4)
-	srv.RegisterRoutes(context.TODO(), http.MethodGet, "/error/error3", srv.Func5)
-	return srv
-}
-
 func TestRouter(t *testing.T) {
-	srv := NewServer()
+	srv := server.NewServer()
 	req := httptest.NewRequest(http.MethodGet, "/tenant", nil)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
@@ -88,7 +47,7 @@ func TestRouter(t *testing.T) {
 }
 
 func TestRouterCustomError(t *testing.T) {
-	srv := NewServer()
+	srv := server.NewServer()
 	req := httptest.NewRequest(http.MethodGet, "/error/error1", nil)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
@@ -102,21 +61,20 @@ func TestRouterCustomError(t *testing.T) {
 }
 
 func TestRouterPanic(t *testing.T) {
-	srv := NewServer()
+	srv := server.NewServer()
 	req := httptest.NewRequest(http.MethodGet, "/error/error2", nil)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
 	blob, _ := ioutil.ReadAll(w.Body)
 	res := make(map[string]any)
 	json.Unmarshal(blob, &res)
-	fmt.Println(string(blob))
 	expectedResponse := map[string]any{"errorDescription": map[string]any{"error": "Internal error occurred, if persist contact technical team"}, "errorMessage": "Unknown error", "errorCode": "UNKNOWN"}
 	assert.Equal(t, w.Result().StatusCode, http.StatusInternalServerError)
 	assert.DeepEqual(t, res, expectedResponse)
 }
 
 func TestRouterClientError(t *testing.T) {
-	srv := NewServer()
+	srv := server.NewServer()
 	req := httptest.NewRequest(http.MethodGet, "/error/error3", nil)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)

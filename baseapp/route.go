@@ -59,6 +59,10 @@ func MethodNotAllowed() http.HandlerFunc {
 	}
 }
 
+func HealthCheck(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(204)
+}
+
 func (b *BaseApp) RegisterRoutes(ctx context.Context, method, path string, handler http.HandlerFunc) {
 	b.RegisterRouteWithMetaData(ctx, method, path, handler, "", nil, nil, nil, nil)
 }
@@ -83,6 +87,7 @@ func (b *BaseApp) RegisterRouteWithMetaData(ctx context.Context, method, path st
 func (b *BaseApp) RegisterDefaultRoutes(ctx context.Context) {
 	b.router.NotFound = NotFound()
 	b.router.MethodNotAllowed = MethodNotAllowed()
+	b.RegisterRoutes(ctx, http.MethodGet, "/meta/health", HealthCheck)
 }
 
 func GetPathParams(ctx context.Context, log *log.Logger, r *http.Request) httprouter.Params {

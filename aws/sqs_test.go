@@ -1,6 +1,7 @@
 package aws_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/google/uuid"
@@ -62,7 +63,8 @@ func TestSQSClient(t *testing.T) {
 			},
 		}
 	}
-	_, err = sqsClient.SendMessageBatchWithContext(ctx, sqsMessageList, 1)
+	out, err := sqsClient.SendMessageBatchWithContext(ctx, sqsMessageList, 1)
+	fmt.Println(out)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -71,6 +73,7 @@ func TestSQSClient(t *testing.T) {
 		t.Fatal(err)
 	}
 	deleteMap := make(map[string]*string, len(messageList))
+	fmt.Println(deleteMap)
 	for _, m := range messageList {
 		id := uuid.NewString()
 		deleteMap[id] = m.ReceiptHandle

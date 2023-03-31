@@ -66,52 +66,56 @@ func (b *BaseApp) LogRequestResponseMiddleware(next http.Handler) http.Handler {
 
 type ErrorRecorder func(err error)
 
+func (b *BaseApp) SendErrorResponse(ctx context.Context, w http.ResponseWriter, stackTrace string, err error) {
+	var statusCode int
+	var body []byte
+	var errorData, customerIdentifier interface{}
+	var errorCode string
+	statusCode = http.StatusInternalServerError
+	customerIdentifier = log.GetCustomerIdentifier(ctx)
+	notify := false
+	var customError *errors.CustomError
+	var httpErr *errors.HTTPError
+	if e.As(err, &httpErr) {
+		statusCode = httpErr.ErrorStatusCode
+		notify = httpErr.Notify
+		body = httpErr.GetErrorResponse()
+		errorCode = httpErr.ErrorCode
+		errorData = httpErr.ErrorData
+
+	} else if e.As(err, &customError) {
+		statusCode = http.StatusInternalServerError
+		notify = customError.Notify
+		body = customError.GetErrorResponse()
+		errorData = customError.ErrorData
+	} else {
+		statusCode = http.StatusInternalServerError
+		customError = errors.NewCustomError("UNKNOWN", "Unknown error", err, map[string]string{"error": "Internal error occurred, if persist contact technical team"}, true)
+		body = customError.GetErrorResponse()
+		err = customError
+	}
+	if notify && b.errorNotifier != nil {
+		b.errorNotifier.Send(ctx, errorCode, err, stackTrace, errorData, customerIdentifier)
+	}
+	w.Header().Add(HttpHeaderContentType, HttpContentTypeJSON)
+	w.WriteHeader(statusCode)
+	w.Write(body)
+}
+
 func (b *BaseApp) HandleExceptionMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var statusCode int
 		ctx := r.Context()
-		var body []byte
-		var errorData, customerIdentifier interface{}
-		var errorCode string
 		defer func() {
 			if rec := recover(); rec != nil {
 				stackTrace := string(debug.Stack())
-				b.log.Error(ctx, "Recovered in Responder - Error", rec)
-				b.log.Error(ctx, "Recovered in Responder - StackTrace", stackTrace)
-				statusCode = http.StatusInternalServerError
-				customerIdentifier = log.GetCustomerIdentifier(ctx)
+				b.log.Error(ctx, "Recovered - Panic", rec)
+				b.log.Error(ctx, "Recovered - StackTrace", stackTrace)
 				err, ok := rec.(error)
 				if !ok {
 					blob, _ := json.Marshal(rec)
 					err = fmt.Errorf("non error panic: %v", string(blob))
 				}
-				notify := false
-				var customError *errors.CustomError
-				var httpErr *errors.HTTPError
-				if e.As(err, &httpErr) {
-					statusCode = httpErr.ErrorStatusCode
-					notify = httpErr.Notify
-					body = httpErr.GetErrorResponse()
-					errorCode = httpErr.ErrorCode
-					errorData = httpErr.ErrorData
-
-				} else if e.As(err, &customError) {
-					statusCode = http.StatusInternalServerError
-					notify = customError.Notify
-					body = customError.GetErrorResponse()
-					errorData = customError.ErrorData
-				} else {
-					statusCode = http.StatusInternalServerError
-					customError = errors.NewCustomError("UNKNOWN", "Unknown error", err, map[string]string{"error": "Internal error occurred, if persist contact technical team"}, true)
-					body = customError.GetErrorResponse()
-					err = customError
-				}
-				if notify && b.errorNotifier != nil {
-					b.errorNotifier.Send(ctx, errorCode, err, stackTrace, errorData, customerIdentifier)
-				}
-				w.Header().Add(HttpHeaderContentType, HttpContentTypeJSON)
-				w.WriteHeader(statusCode)
-				w.Write(body)
+				b.SendErrorResponse(ctx, w, stackTrace, err)
 			}
 		}()
 		var handlerError error
@@ -119,7 +123,7 @@ func (b *BaseApp) HandleExceptionMiddleware(next http.Handler) http.Handler {
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
 		if handlerError != nil {
-			panic(handlerError)
+			b.SendErrorResponse(ctx, w, "", handlerError)
 		}
 	})
 }

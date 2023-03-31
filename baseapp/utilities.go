@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/gob"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -76,7 +77,7 @@ func (b *BaseApp) SetHandlerError(ctx context.Context, err error) {
 	if iSetter == nil {
 		return
 	}
-	setter, ok := iSetter.(ErrorRecorder)
+	setter, ok := iSetter.(func(error))
 	if !ok {
 		panic(fmt.Errorf("context error handler corrupted, error to handle: %w", err))
 	}
@@ -114,4 +115,18 @@ func SetDefaultPagination(filter interface{}, defaultSortBy string) error {
 		return fmt.Errorf("app.SetDefault : %w", err)
 	}
 	return nil
+}
+
+func WriteJsonWithStatusCode(w http.ResponseWriter, statusCode int, responseBody any) {
+	blob, err := json.Marshal(responseBody)
+	if err != nil {
+		panic(fmt.Errorf("response marshal error: %w", err))
+	}
+	w.Header().Add(HttpHeaderContentType, HttpContentTypeJSON)
+	w.WriteHeader(statusCode)
+	w.Write(blob)
+}
+
+func WriteJson(w http.ResponseWriter, responseBody any) {
+	WriteJsonWithStatusCode(w, http.StatusOK, responseBody)
 }

@@ -35,13 +35,13 @@ func New(appConfig config.ServerConfig, loggerConfig log.Config, lMux log.LogMux
 	ctx := b.GetCorrelationContext(context.Background(), log.GetDefaultCorrelationParams(appConfig.ServiceName))
 	b.log = log.NewLogger(ctx, &loggerConfig, loggerConfig.ServiceName, lMux, auditLogger)
 	zone, _ := time.Now().Zone()
-	b.log.Notice(ctx, "Server Timezone", zone)
+	b.log.Notice(ctx, "Timezone", zone)
 	b.RegisterDefaultRoutes(ctx)
 	return b
 }
 
 func (b *BaseApp) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	b.HandleExceptionMiddleware(b.LogRequestResponseMiddleware(b.RequestTimerMiddleware(b.SetContextMiddleware(b.router)))).ServeHTTP(w, r)
+	b.SetContextMiddleware(b.RequestTimerMiddleware(b.LogRequestResponseMiddleware(b.HandleExceptionMiddleware(b.router)))).ServeHTTP(w, r)
 }
 
 func (b *BaseApp) GetRouter() *httprouter.Router {
