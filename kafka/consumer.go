@@ -12,7 +12,7 @@ import (
 	"github.com/sabariramc/goserverbase/utils"
 )
 
-type KafkaConsumer struct {
+type Consumer struct {
 	*kafka.Consumer
 	config *KafkaConsumerConfig
 	log    *log.Logger
@@ -20,7 +20,7 @@ type KafkaConsumer struct {
 	ready  bool
 }
 
-func NewKafkaConsumer(ctx context.Context, log *log.Logger, config *KafkaConsumerConfig, topic string) (*KafkaConsumer, error) {
+func NewConsumer(ctx context.Context, log *log.Logger, config *KafkaConsumerConfig, topic string) (*Consumer, error) {
 	parsedConfig := &kafka.ConfigMap{}
 	utils.StrictJsonTransformer(config, parsedConfig)
 	c, err := kafka.NewConsumer(parsedConfig)
@@ -29,7 +29,7 @@ func NewKafkaConsumer(ctx context.Context, log *log.Logger, config *KafkaConsume
 		log.Error(ctx, "Failed to create kafka consumer", err)
 		return nil, fmt.Errorf("kafka.NewKafkaConsumer.CreateConsumer: %w", err)
 	}
-	k := &KafkaConsumer{
+	k := &Consumer{
 		config:   config,
 		log:      log,
 		Consumer: c,
@@ -43,12 +43,12 @@ func NewKafkaConsumer(ctx context.Context, log *log.Logger, config *KafkaConsume
 	return k, nil
 }
 
-func (k *KafkaConsumer) logReBalance(consumer *kafka.Consumer, e kafka.Event) error {
+func (k *Consumer) logReBalance(consumer *kafka.Consumer, e kafka.Event) error {
 	k.log.Notice(context.Background(), fmt.Sprintf("Re-balance Event for topic %v", k.topic), e.String())
 	return nil
 }
 
-func (k *KafkaConsumer) Poll(ctx context.Context, timeout int, outChannel chan *kafka.Message) error {
+func (k *Consumer) Poll(ctx context.Context, timeout int, outChannel chan *kafka.Message) error {
 	defer close(outChannel)
 	var err error
 	k.log.Info(ctx, "Polling started for topic : "+k.topic, nil)
@@ -80,7 +80,7 @@ outer:
 	return err
 }
 
-func (k *KafkaConsumer) ReadMessage(ctx context.Context, timeout time.Duration) (*kafka.Message, error) {
+func (k *Consumer) ReadMessage(ctx context.Context, timeout time.Duration) (*kafka.Message, error) {
 	ev, err := k.Consumer.ReadMessage(timeout)
 	if err != nil {
 		k.log.Error(ctx, "Error reading message from topic: "+k.topic, err)
@@ -89,7 +89,7 @@ func (k *KafkaConsumer) ReadMessage(ctx context.Context, timeout time.Duration) 
 	return ev, err
 }
 
-func (k *KafkaConsumer) Close(ctx context.Context) error {
+func (k *Consumer) Close(ctx context.Context) error {
 	err := k.Consumer.Close()
 	if err != nil {
 		k.log.Error(ctx, "Error closing message from topic: "+k.topic, err)

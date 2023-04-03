@@ -26,6 +26,7 @@ type TestConfig struct {
 	KafkaConsumerConfig *kafka.KafkaConsumerConfig
 	KafkaProducerConfig *kafka.KafkaProducerConfig
 	KafkaTestTopic      string
+	KafkaHTTPProxyURL   string
 }
 
 func (t *TestConfig) GetLoggerConfig() *log.Config {
@@ -88,6 +89,7 @@ func NewConfig() *TestConfig {
 			GroupID:        utils.GetEnv("KAFKA_CONSUMER_ID", serviceName),
 			OffsetReset:    "latest",
 		},
-		KafkaTestTopic: "com.lending.staging.error",
+		KafkaTestTopic:    "com.lending.staging.error",
+		KafkaHTTPProxyURL: "https://bedrock.fnpaas.com/topics",
 	}
 }

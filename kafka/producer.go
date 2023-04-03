@@ -5,6 +5,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
@@ -12,14 +14,14 @@ import (
 	"github.com/sabariramc/goserverbase/utils"
 )
 
-type KafkaProducer struct {
+type Producer struct {
 	*kafka.Producer
 	config *KafkaProducerConfig
 	log    *log.Logger
 	topic  string
 }
 
-func NewKafkaProducer(ctx context.Context, log *log.Logger, config *KafkaProducerConfig, topic string) (*KafkaProducer, error) {
+func NewProducer(ctx context.Context, log *log.Logger, config *KafkaProducerConfig, topic string) (*Producer, error) {
 	parsedConfig := &kafka.ConfigMap{}
 	utils.StrictJsonTransformer(config, parsedConfig)
 	p, err := kafka.NewProducer(parsedConfig)
@@ -28,7 +30,7 @@ func NewKafkaProducer(ctx context.Context, log *log.Logger, config *KafkaProduce
 		log.Error(ctx, "Failed to create kafka producer", err)
 		return nil, fmt.Errorf("kafka.NewKafkaProducer.CreateProducer: %w", err)
 	}
-	k := &KafkaProducer{
+	k := &Producer{
 		config:   config,
 		log:      log,
 		Producer: p,
@@ -37,7 +39,7 @@ func NewKafkaProducer(ctx context.Context, log *log.Logger, config *KafkaProduce
 	return k, nil
 }
 
-func (k *KafkaProducer) Produce(ctx context.Context, key string, message *utils.Message) (m *kafka.Message, err error) {
+func (k *Producer) Produce(ctx context.Context, key string, message *utils.Message) (m *kafka.Message, err error) {
 	var buf bytes.Buffer
 	deliveryChannel := make(chan kafka.Event)
 	defer close(deliveryChannel)
@@ -73,4 +75,54 @@ func (k *KafkaProducer) Produce(ctx context.Context, key string, message *utils.
 	}
 	k.log.Info(ctx, "Send success for topic: "+k.topic, m)
 	return m, nil
+}
+
+type HTTPProducer struct {
+	baseUrl    string
+	log        *log.Logger
+	topicName  string
+	httpClient *http.Client
+}
+
+func NewHTTPProducer(ctx context.Context, log *log.Logger, baseURL, topicName string, timeout time.Duration) HTTPProducer {
+	return HTTPProducer{baseUrl: baseURL, topicName: topicName, log: log, httpClient: &http.Client{Timeout: timeout}}
+}
+
+func (k HTTPProducer) Produce(ctx context.Context, key string, message *utils.Message) (map[string]any, error) {
+	url := k.baseUrl + "/" + k.topicName
+	data := map[string]any{
+		"records": []map[string]any{{
+			"value": message,
+			"key":   key,
+		},
+		},
+	}
+	k.log.Debug(ctx, "Request payload", data)
+	var reqBodyBlob bytes.Buffer
+	err := json.NewEncoder(&reqBodyBlob).Encode(&data)
+	if err != nil {
+		k.log.Error(ctx, "KafkaHTTPProducer.Send.PayloadEncoding", err)
+		return nil, fmt.Errorf("KafkaHTTPProducer.Send.PayloadEncoding: %w", err)
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, &reqBodyBlob)
+	if err != nil {
+		k.log.Error(ctx, "KafkaHTTPProducer.Send.RequestCreation", err)
+		return nil, fmt.Errorf("KafkaHTTPProducer.Send.RequestCreation: %w", err)
+	}
+	log.SetCorrelationHeader(ctx, req)
+	req.Header.Add("Content-Type", "application/vnd.kafka.json.v2+json")
+	res, err := k.httpClient.Do(req)
+	if err != nil {
+		k.log.Error(ctx, "Error in sending kafka message", err)
+		return nil, fmt.Errorf("KafkaHTTPProducer.Send.HTTPCall: %w", err)
+	}
+	defer res.Body.Close()
+	blobBody, _ := ioutil.ReadAll(res.Body)
+	data = make(map[string]any)
+	json.Unmarshal(blobBody, &data)
+	if res.StatusCode > 299 {
+		err = fmt.Errorf("KafkaHTTPProducer.Send.HTTPCall.statusCode: %v", res.StatusCode)
+	}
+	k.log.Debug(ctx, "KAFKA HTTP response", data)
+	return data, err
 }
