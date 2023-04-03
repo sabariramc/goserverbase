@@ -11,10 +11,10 @@ type Database struct {
 	log *log.Logger
 }
 
-var collectionOptions = options.Collection().SetRegistry(newCustomBsonRegistry().Build())
+var decimalHandlerOptions = options.Collection().SetRegistry(newCustomBsonRegistry().Build())
 
 func (d *Database) Collection(name string, opts ...*options.CollectionOptions) *Collection {
-	opts = append(opts, collectionOptions)
+	opts = append(opts, decimalHandlerOptions)
 	coll := d.Database.Collection(name, opts...)
 	return &Collection{Collection: coll, log: d.log}
 }

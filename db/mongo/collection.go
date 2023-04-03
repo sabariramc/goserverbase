@@ -17,9 +17,8 @@ import (
 
 type Collection struct {
 	*mongo.Collection
-	collectionName string
-	log            *log.Logger
-	hashFieldMap   map[string]interface{}
+	log          *log.Logger
+	hashFieldMap map[string]interface{}
 }
 
 var dec, _ = decimal.NewFromString("1.234")

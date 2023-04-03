@@ -28,6 +28,20 @@ func (b *BaseMongoDocument) SetUpdateParam(actionBy string) {
 }
 
 type BaseMongoModel struct {
-	ID                *primitive.ObjectID `json:"-" bson:"_id,omitempty"`
-	BaseMongoDocument `bson:",inline"`
+	ID                 *primitive.ObjectID `json:"-" bson:"_id,omitempty"`
+	*BaseMongoDocument `bson:",inline"`
+}
+
+func (b *BaseMongoModel) SetCreateParam(actionBy string) {
+	if b.BaseMongoDocument == nil {
+		b.BaseMongoDocument = &BaseMongoDocument{}
+	}
+	b.BaseMongoDocument.SetCreateParam(actionBy)
+}
+
+func (b *BaseMongoModel) SetUpdateParam(actionBy string) {
+	if b.BaseMongoDocument == nil {
+		b.BaseMongoDocument = &BaseMongoDocument{}
+	}
+	b.BaseMongoDocument.SetCreateParam(actionBy)
 }
