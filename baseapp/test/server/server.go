@@ -38,6 +38,7 @@ type server struct {
 }
 
 func (s *server) Func1(w http.ResponseWriter, r *http.Request) {
+	s.PrintRequest(r.Context(), r)
 	w.WriteHeader(200)
 	w.Write([]byte("Hello"))
 }
@@ -61,10 +62,12 @@ func (s *server) Func5(w http.ResponseWriter, r *http.Request) {
 }
 
 func NewServer() *server {
+	router := baseapp.NewRouter()
 	srv := &server{
-		BaseApp: baseapp.New(*ServerTestConfig.App, *ServerTestConfig.Logger, ServerTestLMux, nil, nil),
+		BaseApp: baseapp.New(*ServerTestConfig.App, &router, *ServerTestConfig.Logger, ServerTestLMux, nil, nil),
 	}
 	srv.RegisterRoutes(context.TODO(), http.MethodGet, "/tenant", srv.Func1)
+	srv.RegisterRoutes(context.TODO(), http.MethodPost, "/tenant", srv.Func1)
 	srv.RegisterRoutes(context.TODO(), http.MethodGet, "/tenant/:tenantId", srv.Func2)
 	srv.RegisterRoutes(context.TODO(), http.MethodGet, "/error/error1", srv.Func3)
 	srv.RegisterRoutes(context.TODO(), http.MethodGet, "/error/error2", srv.Func4)

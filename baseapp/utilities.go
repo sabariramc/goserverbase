@@ -6,6 +6,8 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/sabariramc/goserverbase/log"
@@ -45,22 +47,21 @@ func (b *BaseApp) PrintRequest(ctx context.Context, r *http.Request) {
 		"RemoteAddr":    r.RemoteAddr,
 		"RequestURI":    r.RequestURI,
 	})
+	if r.ContentLength > 0 {
+		body := r.Body
+		defer body.Close()
+		blobBody, _ := ioutil.ReadAll(body)
+		data := make(map[string]any)
+		json.Unmarshal(blobBody, &data)
+		r.Body = io.NopCloser(bytes.NewReader(blobBody))
+		b.log.Debug(ctx, "Request Body", data)
+	}
 	for key, value := range popList {
 		h.Del(key)
 		for _, v := range value {
 			h.Add(key, v)
 		}
 	}
-}
-
-func GetBytes(key interface{}) ([]byte, error) {
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	err := enc.Encode(key)
-	if err != nil {
-		return nil, fmt.Errorf("baseapp.GetBytes: %w", err)
-	}
-	return buf.Bytes(), nil
 }
 
 func (b *BaseApp) GetCorrelationContext(ctx context.Context, c *log.CorrelationParam) context.Context {
@@ -82,6 +83,16 @@ func (b *BaseApp) SetHandlerError(ctx context.Context, err error) {
 		panic(fmt.Errorf("context error handler corrupted, error to handle: %w", err))
 	}
 	setter(err)
+}
+
+func GetBytes(key interface{}) ([]byte, error) {
+	var buf bytes.Buffer
+	enc := gob.NewEncoder(&buf)
+	err := enc.Encode(key)
+	if err != nil {
+		return nil, fmt.Errorf("baseapp.GetBytes: %w", err)
+	}
+	return buf.Bytes(), nil
 }
 
 type Filter struct {

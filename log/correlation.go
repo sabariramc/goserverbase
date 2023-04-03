@@ -3,6 +3,7 @@ package log
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/google/uuid"
 )
@@ -54,4 +55,12 @@ func GetCustomerIdentifier(ctx context.Context) *CustomerIdentifier {
 		return &CustomerIdentifier{}
 	}
 	return val
+}
+
+func SetCorrelationHeader(ctx context.Context, req *http.Request) {
+	correlation := GetCorrelationParam(ctx)
+	req.Header.Add("x-correlation-id", correlation.CorrelationId)
+	req.Header.Add("x-scenario-id", correlation.ScenarioId)
+	req.Header.Add("x-session-id", correlation.SessionId)
+	req.Header.Add("x-scenario-id", correlation.ScenarioName)
 }

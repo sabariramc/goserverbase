@@ -8,12 +8,17 @@ import (
 	"github.com/sabariramc/goserverbase/config"
 	"github.com/sabariramc/goserverbase/errors"
 	"github.com/sabariramc/goserverbase/log"
-
-	"github.com/julienschmidt/httprouter"
 )
 
+type CustomHandler interface {
+	http.Handler
+	SetNotFound(http.HandlerFunc)
+	SetMethodNotAllowed(http.HandlerFunc)
+	RegisterRoute(method, path string, handler http.HandlerFunc)
+}
+
 type BaseApp struct {
-	router        *httprouter.Router
+	handler       CustomHandler
 	c             *config.ServerConfig
 	lConfig       *log.Config
 	log           *log.Logger
@@ -21,11 +26,11 @@ type BaseApp struct {
 	docMeta       APIDocumentation
 }
 
-func New(appConfig config.ServerConfig, loggerConfig log.Config, lMux log.LogMux, errorNotifier errors.ErrorNotifier, auditLogger log.AuditLogWriter) *BaseApp {
+func New(appConfig config.ServerConfig, handler CustomHandler, loggerConfig log.Config, lMux log.LogMux, errorNotifier errors.ErrorNotifier, auditLogger log.AuditLogWriter) *BaseApp {
 	b := &BaseApp{
 		c:             &appConfig,
 		lConfig:       &loggerConfig,
-		router:        httprouter.New(),
+		handler:       handler,
 		errorNotifier: errorNotifier,
 		docMeta: APIDocumentation{
 			Server: make([]DocumentServer, 0),
@@ -41,23 +46,11 @@ func New(appConfig config.ServerConfig, loggerConfig log.Config, lMux log.LogMux
 }
 
 func (b *BaseApp) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	b.SetContextMiddleware(b.RequestTimerMiddleware(b.LogRequestResponseMiddleware(b.HandleExceptionMiddleware(b.router)))).ServeHTTP(w, r)
-}
-
-func (b *BaseApp) GetRouter() *httprouter.Router {
-	return b.router
+	b.SetContextMiddleware(b.RequestTimerMiddleware(b.LogRequestResponseMiddleware(b.HandleExceptionMiddleware(b.handler)))).ServeHTTP(w, r)
 }
 
 func (b *BaseApp) GetAPIDocument() APIDocumentation {
 	return b.docMeta
-}
-
-func (b *BaseApp) SetRouter(router *httprouter.Router) {
-	b.router = router
-	b.docMeta = APIDocumentation{
-		Server: make([]DocumentServer, 0),
-		Routes: make(APIRoute, 0),
-	}
 }
 
 func (b *BaseApp) GetConfig() config.ServerConfig {
