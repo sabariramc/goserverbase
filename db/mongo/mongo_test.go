@@ -38,7 +38,7 @@ func TestMongoCollectionInsertOne(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	coll := client.NewCollection("Plain")
+	coll := client.Database("GOTEST").Collection("Plain")
 	data := GetSampleData()
 	fmt.Printf("%+v\n", data)
 	_, err = coll.InsertOne(ctx, data)
@@ -55,7 +55,7 @@ func TestMongoCollection(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	coll := client.NewCollection("Plain")
+	coll := client.Database("GOTEST").Collection("Plain")
 	data := GetSampleData()
 	fmt.Printf("%+v\n", data)
 	coll.InsertOne(ctx, data)
@@ -89,7 +89,7 @@ func TestMongoCollectionFindOne(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	coll := client.NewCollection("Plain")
+	coll := client.Database("GOTEST").Collection("Plain")
 	cur := coll.FindOne(ctx, map[string]string{"strVal": "val2"})
 	val := &TestVal{}
 	err = cur.Decode(val)
@@ -105,7 +105,7 @@ func TestMongoCollectionFindFetch(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	coll := client.NewCollection("Plain")
+	coll := client.Database("GOTEST").Collection("Plain")
 	loader := func(count int) []interface{} {
 		val := make([]interface{}, count)
 		for i := 0; i < count; i++ {

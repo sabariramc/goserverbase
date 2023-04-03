@@ -13,12 +13,11 @@ import (
 	"go.mongodb.org/mongo-driver/bson/bsonrw"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Collection struct {
+	*mongo.Collection
 	collectionName string
-	collection     *mongo.Collection
 	log            *log.Logger
 	hashFieldMap   map[string]interface{}
 }
@@ -51,12 +50,6 @@ var newRegistry = bson.NewRegistryBuilder().RegisterTypeEncoder(decimalType, bso
 	val.Set(reflect.ValueOf(dec))
 	return nil
 }))
-
-var collectionOptions = options.Collection().SetRegistry(newCustomBsonRegistry().Build())
-
-func (m *Mongo) NewCollection(collectionName string) *Collection {
-	return &Collection{collectionName: collectionName, collection: m.database.Collection(collectionName, collectionOptions), log: m.log}
-}
 
 func newCustomBsonRegistry() *bsoncodec.RegistryBuilder {
 	return newRegistry

@@ -67,7 +67,6 @@ func NewConfig() *TestConfig {
 		},
 		Mongo: &mongo.Config{
 			ConnectionString:  utils.GetEnv("MONGO_URL", "mongodb://localhost:60001"),
-			DatabaseName:      utils.GetEnv("MONGO_DATABASE", "GOTEST"),
 			MinConnectionPool: uint64(utils.GetEnvInt("MONGO_MIN_CONNECTION_POOL", 10)),
 			MaxConnectionPool: uint64(utils.GetEnvInt("MONGO_MAX_CONNECTION_POOL", 50)),
 		},

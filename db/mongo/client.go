@@ -12,7 +12,7 @@ import (
 )
 
 type Mongo struct {
-	client   *mongo.Client
+	*mongo.Client
 	log      *log.Logger
 	database *mongo.Database
 	c        *Config
@@ -27,7 +27,11 @@ func New(ctx context.Context, logger *log.Logger, c Config) (*Mongo, error) {
 	if err != nil {
 		return nil, fmt.Errorf("mongo.NewMongo : %w", err)
 	}
-	return &Mongo{client: client, log: logger, c: &c, database: client.Database(c.DatabaseName)}, nil
+	return NewWithClient(ctx, logger, c, client), nil
+}
+
+func NewWithClient(ctx context.Context, logger *log.Logger, c Config, client *mongo.Client) *Mongo {
+	return &Mongo{Client: client, log: logger, c: &c}
 }
 
 func NewMongoClient(ctx context.Context, logger *log.Logger, c *Config) (*mongo.Client, error) {
@@ -51,8 +55,13 @@ func NewMongoClient(ctx context.Context, logger *log.Logger, c *Config) (*mongo.
 }
 
 func (m *Mongo) GetClient() *mongo.Client {
-	return m.client
+	return m.Client
 }
 func (m *Mongo) GetLogger() *log.Logger {
 	return m.log
+}
+
+func (m *Mongo) Database(name string, opts ...*options.DatabaseOptions) *Database {
+	db := m.Client.Database(name, opts...)
+	return &Database{Database: db, log: m.log}
 }
