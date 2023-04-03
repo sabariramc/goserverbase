@@ -2,13 +2,9 @@ package utils
 
 import (
 	"fmt"
-
-	"github.com/sabariramc/goserverbase/errors"
 )
 
-type Payload struct {
-	Entity map[string]interface{} `json:"entity"`
-}
+type Payload map[string]interface{}
 
 type Message struct {
 	Entity   string              `json:"entity"`
@@ -29,7 +25,7 @@ func NewMessage(entity string, event string) *Message {
 func (m *Message) AddPayload(name string, payload *Payload) error {
 	for _, v := range m.Contains {
 		if v == name {
-			return fmt.Errorf("Message.AddPayload : %w", errors.NewCustomError("DUPLICATE_PAYLOAD", fmt.Sprintf("Payload `%v` already exist", name), nil, nil, false))
+			return fmt.Errorf("Message.AddPayload.DuplicatePayload : %v", name)
 		}
 	}
 	m.Contains = append(m.Contains, name)

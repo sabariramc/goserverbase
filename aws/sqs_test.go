@@ -12,19 +12,19 @@ import (
 func GetMessage() *utils.Message {
 	message := utils.NewMessage("event", "aws.test")
 	message.AddPayload("payment", &utils.Payload{
-		Entity: map[string]interface{}{
+		"entity": map[string]interface{}{
 			"id":     "pay_14341234",
 			"amount": 123,
 		},
 	})
 	message.AddPayload("bank", &utils.Payload{
-		Entity: map[string]interface{}{
+		"entity": map[string]interface{}{
 			"id":                "bank_fadsfas",
 			"bankAccountNumber": "0000021312",
 		},
 	})
 	message.AddPayload("customer", &utils.Payload{
-		Entity: map[string]interface{}{
+		"entity": map[string]interface{}{
 			"id": "cust_fasdfsa",
 		},
 	})
