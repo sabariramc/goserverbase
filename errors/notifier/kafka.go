@@ -21,23 +21,19 @@ func New(ctx context.Context, log *log.Logger, baseURL, topicName, serviceName s
 	return &ErrorNotifierKafka{producer: kafka.NewHTTPProducer(ctx, log, baseURL, topicName, time.Minute), log: log, serviceName: serviceName}
 }
 
-func (e ErrorNotifierKafka) Send5XX(ctx context.Context, errorCode string, err error, stackTrace string, errorData interface{}, customerIdentifier interface{}) error {
-	return e.send(ctx, errorCode, err, stackTrace, errorData, customerIdentifier, errors.ERROR_5xx)
+func (e ErrorNotifierKafka) Send5XX(ctx context.Context, errorCode string, err error, stackTrace string, errorData interface{}) error {
+	return e.send(ctx, errorCode, err, stackTrace, errorData, errors.ERROR_5xx)
 }
-func (e ErrorNotifierKafka) Send4XX(ctx context.Context, errorCode string, err error, stackTrace string, errorData interface{}, customerIdentifier interface{}) error {
-	return e.send(ctx, errorCode, err, stackTrace, errorData, customerIdentifier, errors.ERROR_4xx)
+func (e ErrorNotifierKafka) Send4XX(ctx context.Context, errorCode string, err error, stackTrace string, errorData interface{}) error {
+	return e.send(ctx, errorCode, err, stackTrace, errorData, errors.ERROR_4xx)
 }
 
-func (e ErrorNotifierKafka) send(ctx context.Context, errorCode string, err error, stackTrace string, errorData interface{}, customerIdentifier interface{}, alertType string) error {
+func (e ErrorNotifierKafka) send(ctx context.Context, errorCode string, err error, stackTrace string, errorData interface{}, alertType string) error {
 	correlation_params := log.GetCorrelationParam(ctx)
 	correlation := make(map[string]any, 0)
 	utils.StrictJsonTransformer(correlation_params, &correlation)
 	correlation["timestamp"] = time.Now().UnixMilli()
-	if customerIdentifier == nil {
-		correlation["identity"] = log.GetCustomerIdentifier(ctx)
-	} else {
-		correlation["identity"] = customerIdentifier
-	}
+	correlation["identity"] = log.GetCustomerIdentifier(ctx)
 	msg := utils.NewMessage("error", errorCode)
 	msg.AddPayload("category", &utils.Payload{"entity": map[string]interface{}{"category": alertType}})
 	msg.AddPayload("correlation", &utils.Payload{"entity": correlation})

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/sabariramc/goserverbase/errors"
-	"github.com/sabariramc/goserverbase/log"
 )
 
 func (b *BaseApp) RequestTimerMiddleware(next http.Handler) http.Handler {
@@ -69,10 +68,9 @@ type ErrorRecorder func(err error)
 func (b *BaseApp) SendErrorResponse(ctx context.Context, w http.ResponseWriter, stackTrace string, err error) {
 	var statusCode int
 	var body []byte
-	var errorData, customerIdentifier interface{}
+	var errorData interface{}
 	var errorCode string
 	statusCode = http.StatusInternalServerError
-	customerIdentifier = log.GetCustomerIdentifier(ctx)
 	notify := false
 	var customError *errors.CustomError
 	var httpErr *errors.HTTPError
@@ -96,9 +94,9 @@ func (b *BaseApp) SendErrorResponse(ctx context.Context, w http.ResponseWriter, 
 	}
 	if notify && b.errorNotifier != nil {
 		if statusCode >= 500 {
-			b.errorNotifier.Send5XX(ctx, errorCode, err, stackTrace, errorData, customerIdentifier)
+			b.errorNotifier.Send5XX(ctx, errorCode, err, stackTrace, errorData)
 		} else {
-			b.errorNotifier.Send4XX(ctx, errorCode, err, stackTrace, errorData, customerIdentifier)
+			b.errorNotifier.Send4XX(ctx, errorCode, err, stackTrace, errorData)
 		}
 
 	}
