@@ -95,7 +95,12 @@ func (b *BaseApp) SendErrorResponse(ctx context.Context, w http.ResponseWriter, 
 		err = customError
 	}
 	if notify && b.errorNotifier != nil {
-		b.errorNotifier.Send5XX(ctx, errorCode, err, stackTrace, errorData, customerIdentifier)
+		if statusCode >= 500 {
+			b.errorNotifier.Send5XX(ctx, errorCode, err, stackTrace, errorData, customerIdentifier)
+		} else {
+			b.errorNotifier.Send4XX(ctx, errorCode, err, stackTrace, errorData, customerIdentifier)
+		}
+
 	}
 	WriteJsonWithStatusCode(w, statusCode, body)
 }

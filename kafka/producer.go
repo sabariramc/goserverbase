@@ -59,6 +59,7 @@ func (k *Producer) Produce(ctx context.Context, key string, message *utils.Messa
 			Value: []byte(v),
 		})
 	}
+	k.log.Debug(ctx, "Message payload", map[string]any{"body": message, "key": key, "headers": messageHeader})
 	k.Producer.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{Topic: &k.topic, Partition: kafka.PartitionAny},
 		Key:            []byte(key),
@@ -84,8 +85,8 @@ type HTTPProducer struct {
 	httpClient *http.Client
 }
 
-func NewHTTPProducer(ctx context.Context, log *log.Logger, baseURL, topicName string, timeout time.Duration) HTTPProducer {
-	return HTTPProducer{baseUrl: baseURL, topicName: topicName, log: log, httpClient: &http.Client{Timeout: timeout}}
+func NewHTTPProducer(ctx context.Context, log *log.Logger, baseURL, topicName string, timeout time.Duration) *HTTPProducer {
+	return &HTTPProducer{baseUrl: baseURL, topicName: topicName, log: log, httpClient: &http.Client{Timeout: timeout}}
 }
 
 func (k HTTPProducer) Produce(ctx context.Context, key string, message *utils.Message) (map[string]any, error) {

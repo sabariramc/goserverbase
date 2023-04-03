@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	"github.com/sabariramc/goserverbase/utils"
 )
 
 type CorrelationParam struct {
@@ -59,8 +60,9 @@ func GetCustomerIdentifier(ctx context.Context) *CustomerIdentifier {
 
 func SetCorrelationHeader(ctx context.Context, req *http.Request) {
 	correlation := GetCorrelationParam(ctx)
-	req.Header.Add("x-correlation-id", correlation.CorrelationId)
-	req.Header.Add("x-scenario-id", correlation.ScenarioId)
-	req.Header.Add("x-session-id", correlation.SessionId)
-	req.Header.Add("x-scenario-id", correlation.ScenarioName)
+	headers := make(map[string]string, 0)
+	utils.StrictJsonTransformer(correlation, &headers)
+	for i, v := range headers {
+		req.Header.Add(i, v)
+	}
 }
