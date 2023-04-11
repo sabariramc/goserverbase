@@ -32,7 +32,7 @@ func TestKafkaMessage(t *testing.T) {
 	assert.NilError(t, err)
 	_, err = pr.Produce(ctx, "test", &utils.Message{
 		Event: "random event",
-	})
+	}, nil)
 	assert.NilError(t, err)
 	s.Wait()
 }
@@ -53,7 +53,7 @@ func TestKafkaPoll(t *testing.T) {
 		for i := 0; i < 50; i++ {
 			_, err = pr.Produce(ctx, strconv.Itoa(i), &utils.Message{
 				Event: uuidVal,
-			})
+			}, nil)
 			assert.NilError(t, err)
 		}
 		s.Done()
@@ -99,7 +99,7 @@ func TestKafkaPollWithDelay(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		_, err = pr.Produce(ctx, strconv.Itoa(i), &utils.Message{
 			Event: uuidVal,
-		})
+		}, nil)
 		assert.NilError(t, err)
 	}
 	tCtx, cancel = context.WithTimeout(ctx, time.Second*20)
@@ -111,7 +111,7 @@ func TestKafkaPollWithDelay(t *testing.T) {
 		for i := 0; i < 40; i++ {
 			_, err = pr.Produce(ctx, strconv.Itoa(i), &utils.Message{
 				Event: uuidVal,
-			})
+			}, nil)
 			assert.NilError(t, err)
 		}
 		s.Done()
@@ -156,7 +156,7 @@ func TestKafkaPollWithDelayExtended(t *testing.T) {
 	for i := 0; i < 10; i++ {
 		_, err = pr.Produce(ctx, strconv.Itoa(i), &utils.Message{
 			Event: uuidVal,
-		})
+		}, nil)
 		assert.NilError(t, err)
 	}
 	wg.Wait()
@@ -179,7 +179,7 @@ func TestKafkaPollHTTPProducer(t *testing.T) {
 		for i := 0; i < 50; i++ {
 			_, err = pr.Produce(tCtx, strconv.Itoa(i), &utils.Message{
 				Event: uuidVal,
-			})
+			}, nil)
 			assert.NilError(t, err)
 		}
 		s.Done()
