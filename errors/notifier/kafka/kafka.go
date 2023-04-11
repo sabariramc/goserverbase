@@ -6,9 +6,9 @@ import (
 	"time"
 
 	cKafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/sabariramc/goserverbase/errors"
-	"github.com/sabariramc/goserverbase/log"
-	"github.com/sabariramc/goserverbase/utils"
+	"github.com/sabariramc/goserverbase/v2/errors"
+	"github.com/sabariramc/goserverbase/v2/log"
+	"github.com/sabariramc/goserverbase/v2/utils"
 )
 
 type Producer interface {

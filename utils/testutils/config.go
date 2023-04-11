@@ -2,11 +2,11 @@ package testutils
 
 import (
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/config"
-	"github.com/sabariramc/goserverbase/db/mongo"
-	"github.com/sabariramc/goserverbase/kafka"
-	"github.com/sabariramc/goserverbase/log"
-	"github.com/sabariramc/goserverbase/utils"
+	"github.com/sabariramc/goserverbase/v2/config"
+	"github.com/sabariramc/goserverbase/v2/db/mongo"
+	"github.com/sabariramc/goserverbase/v2/kafka"
+	"github.com/sabariramc/goserverbase/v2/log"
+	"github.com/sabariramc/goserverbase/v2/utils"
 )
 
 type AWSConfig struct {

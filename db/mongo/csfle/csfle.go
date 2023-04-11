@@ -13,8 +13,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	m "github.com/sabariramc/goserverbase/db/mongo"
-	"github.com/sabariramc/goserverbase/log"
+	m "github.com/sabariramc/goserverbase/v2/db/mongo"
+	"github.com/sabariramc/goserverbase/v2/log"
 )
 
 var tmp = "/tmp/mongocryptd"

@@ -3,8 +3,8 @@ package aws_test
 import (
 	"testing"
 
-	"github.com/sabariramc/goserverbase/aws"
-	"github.com/sabariramc/goserverbase/utils"
+	"github.com/sabariramc/goserverbase/v2/aws"
+	"github.com/sabariramc/goserverbase/v2/utils"
 )
 
 func TestSNSClient(t *testing.T) {

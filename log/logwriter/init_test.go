@@ -1,8 +1,8 @@
 package logwriter_test
 
 import (
-	"github.com/sabariramc/goserverbase/log"
-	"github.com/sabariramc/goserverbase/utils/testutils"
+	"github.com/sabariramc/goserverbase/v2/log"
+	"github.com/sabariramc/goserverbase/v2/utils/testutils"
 )
 
 var LoggerTestConfig *testutils.TestConfig

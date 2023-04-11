@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/sabariramc/goserverbase/log"
+	"github.com/sabariramc/goserverbase/v2/log"
 )
 
 type KMS struct {

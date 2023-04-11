@@ -4,7 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/sabariramc/goserverbase/errors"
+	"github.com/sabariramc/goserverbase/v2/errors"
 )
 
 type APIDocumentation struct {

@@ -9,7 +9,7 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/sabariramc/goserverbase/errors"
+	"github.com/sabariramc/goserverbase/v2/errors"
 )
 
 func (b *BaseApp) RequestTimerMiddleware(next http.Handler) http.Handler {

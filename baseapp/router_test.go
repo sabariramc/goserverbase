@@ -8,7 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/sabariramc/goserverbase/baseapp/test/server"
+	"github.com/sabariramc/goserverbase/v2/baseapp/test/server"
 	"gotest.tools/assert"
 )
 

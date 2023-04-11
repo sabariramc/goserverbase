@@ -9,8 +9,8 @@ import (
 
 	cKafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/kafka"
-	"github.com/sabariramc/goserverbase/utils"
+	"github.com/sabariramc/goserverbase/v2/kafka"
+	"github.com/sabariramc/goserverbase/v2/utils"
 	"gotest.tools/assert"
 )
 
