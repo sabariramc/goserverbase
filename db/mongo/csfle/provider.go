@@ -5,9 +5,9 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/sabariramc/goserverbase/aws"
-	"github.com/sabariramc/goserverbase/db/mongo"
-	"github.com/sabariramc/goserverbase/log"
+	"github.com/sabariramc/goserverbase/v2/aws"
+	"github.com/sabariramc/goserverbase/v2/db/mongo"
+	"github.com/sabariramc/goserverbase/v2/log"
 
 	"github.com/aws/aws-sdk-go/aws/session"
 )

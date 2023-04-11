@@ -7,9 +7,9 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/sabariramc/goserverbase/crypto"
-	"github.com/sabariramc/goserverbase/crypto/padding"
-	"github.com/sabariramc/goserverbase/log"
+	"github.com/sabariramc/goserverbase/v2/crypto"
+	"github.com/sabariramc/goserverbase/v2/crypto/padding"
+	"github.com/sabariramc/goserverbase/v2/log"
 )
 
 var ErrIVLengthMismatch = fmt.Errorf("IV length is not matching with block size")

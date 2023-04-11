@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/sabariramc/goserverbase/errors"
+	"github.com/sabariramc/goserverbase/v2/errors"
 )
 
 func GetEnv(key string, defaultVal string) string {

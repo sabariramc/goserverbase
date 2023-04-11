@@ -10,8 +10,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
-	"github.com/sabariramc/goserverbase/log"
-	"github.com/sabariramc/goserverbase/utils"
+	"github.com/sabariramc/goserverbase/v2/log"
+	"github.com/sabariramc/goserverbase/v2/utils"
 )
 
 func (b *BaseApp) GetHttpCorrelationParams(r *http.Request) *log.CorrelationParam {

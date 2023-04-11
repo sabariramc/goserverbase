@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/aws"
-	"github.com/sabariramc/goserverbase/utils"
+	"github.com/sabariramc/goserverbase/v2/aws"
+	"github.com/sabariramc/goserverbase/v2/utils"
 )
 
 func GetMessage() *utils.Message {

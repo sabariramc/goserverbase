@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sabariramc/goserverbase/db/mongo"
-	"github.com/sabariramc/goserverbase/utils"
+	"github.com/sabariramc/goserverbase/v2/db/mongo"
+	"github.com/sabariramc/goserverbase/v2/utils"
 	"github.com/shopspring/decimal"
 	"gotest.tools/assert"
 )
