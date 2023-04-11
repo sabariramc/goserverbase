@@ -2,6 +2,8 @@ package utils
 
 import (
 	"fmt"
+
+	"github.com/sabariramc/goserverbase/errors"
 )
 
 type Payload map[string]interface{}
@@ -25,7 +27,7 @@ func NewMessage(entity string, event string) *Message {
 func (m *Message) AddPayload(name string, payload *Payload) error {
 	for _, v := range m.Contains {
 		if v == name {
-			return fmt.Errorf("Message.AddPayload.DuplicatePayload : %v", name)
+			return errors.NewCustomError("DUPLICATE_PAYLOAD", "Duplicate payload for key :`"+name+"`", nil, nil, true)
 		}
 	}
 	m.Contains = append(m.Contains, name)

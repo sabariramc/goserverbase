@@ -62,9 +62,8 @@ func (s *server) Func5(w http.ResponseWriter, r *http.Request) {
 }
 
 func NewServer() *server {
-	router := baseapp.NewRouter()
 	srv := &server{
-		BaseApp: baseapp.New(*ServerTestConfig.App, &router, *ServerTestConfig.Logger, ServerTestLMux, nil, nil),
+		BaseApp: baseapp.New(*ServerTestConfig.App, *ServerTestConfig.Logger, ServerTestLMux, nil, nil),
 	}
 	srv.RegisterRoutes(context.TODO(), http.MethodGet, "/tenant", srv.Func1)
 	srv.RegisterRoutes(context.TODO(), http.MethodPost, "/tenant", srv.Func1)

@@ -81,12 +81,12 @@ func (b *BaseApp) RegisterRouteWithMetaData(ctx context.Context, method, path st
 		SuccessResponse: successResponse,
 		FailureResponse: failureResponse,
 	}
-	b.handler.RegisterRoute(method, path, handler)
+	b.handler.HandlerFunc(method, path, handler)
 }
 
 func (b *BaseApp) RegisterDefaultRoutes(ctx context.Context) {
-	b.handler.SetNotFound(NotFound())
-	b.handler.SetMethodNotAllowed(MethodNotAllowed())
+	b.handler.NotFound = NotFound()
+	b.handler.MethodNotAllowed = MethodNotAllowed()
 	b.RegisterRoutes(ctx, http.MethodGet, "/meta/health", HealthCheck)
 }
 

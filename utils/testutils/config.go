@@ -89,7 +89,7 @@ func NewConfig() *TestConfig {
 			GroupID:        utils.GetEnv("KAFKA_CONSUMER_ID", serviceName),
 			OffsetReset:    "latest",
 		},
-		KafkaTestTopic:    "com.lending.staging.error",
-		KafkaHTTPProxyURL: "https://bedrock.fnpaas.com/topics",
+		KafkaTestTopic:    utils.GetEnv("KAFKA_TEST_TOPIC", serviceName),
+		KafkaHTTPProxyURL: utils.GetEnv("KAFKA_HTTP_PROXY", serviceName),
 	}
 }

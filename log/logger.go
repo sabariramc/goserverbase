@@ -153,7 +153,7 @@ func (l *Logger) print(ctx context.Context, level *LogLevel, shortMessage string
 		default:
 			blob, err := json.MarshalIndent(v, "", "    ")
 			if err != nil {
-				msg = ParseErrorMsg
+				msg = fmt.Sprintf("%v - %v", ParseErrorMsg, err)
 			} else {
 				msg = string(blob)
 			}

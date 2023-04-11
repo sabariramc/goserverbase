@@ -17,9 +17,9 @@ type CorrelationParam struct {
 }
 
 type CustomerIdentifier struct {
-	CustomerId string `json:"customerId"`
-	AppUserId  string `json:"appUserId"`
-	Id         string `json:"id"`
+	CustomerId string `json:"x-customer-id"`
+	AppUserId  string `json:"x-appUser-id"`
+	Id         string `json:"x-entity-id"`
 }
 
 type HostParams struct {

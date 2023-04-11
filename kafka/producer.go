@@ -51,7 +51,9 @@ func (k *Producer) Produce(ctx context.Context, key string, message *utils.Messa
 	}
 	correlationParam := log.GetCorrelationParam(ctx)
 	headers := make(map[string]string, 0)
+	customerIdentity := log.GetCustomerIdentifier(ctx)
 	utils.StrictJsonTransformer(correlationParam, &headers)
+	utils.StrictJsonTransformer(customerIdentity, &headers)
 	messageHeader := make([]kafka.Header, 0)
 	for i, v := range headers {
 		messageHeader = append(messageHeader, kafka.Header{
@@ -89,7 +91,7 @@ func NewHTTPProducer(ctx context.Context, log *log.Logger, baseURL, topicName st
 	return &HTTPProducer{baseUrl: baseURL, topicName: topicName, log: log, httpClient: &http.Client{Timeout: timeout}}
 }
 
-func (k HTTPProducer) Produce(ctx context.Context, key string, message *utils.Message) (map[string]any, error) {
+func (k HTTPProducer) Produce(ctx context.Context, key string, message *utils.Message) (*kafka.Message, error) {
 	url := k.baseUrl + "/" + k.topicName
 	data := map[string]any{
 		"records": []map[string]any{{
@@ -98,7 +100,7 @@ func (k HTTPProducer) Produce(ctx context.Context, key string, message *utils.Me
 		},
 		},
 	}
-	k.log.Debug(ctx, "Request payload", data)
+
 	var reqBodyBlob bytes.Buffer
 	err := json.NewEncoder(&reqBodyBlob).Encode(&data)
 	if err != nil {
@@ -112,6 +114,9 @@ func (k HTTPProducer) Produce(ctx context.Context, key string, message *utils.Me
 	}
 	log.SetCorrelationHeader(ctx, req)
 	req.Header.Add("Content-Type", "application/vnd.kafka.json.v2+json")
+	k.log.Debug(ctx, "Request payload", data)
+	k.log.Debug(ctx, "Request header", req.Header)
+	k.log.Debug(ctx, "Request url", req.URL)
 	res, err := k.httpClient.Do(req)
 	if err != nil {
 		k.log.Error(ctx, "Error in sending kafka message", err)
@@ -119,11 +124,18 @@ func (k HTTPProducer) Produce(ctx context.Context, key string, message *utils.Me
 	}
 	defer res.Body.Close()
 	blobBody, _ := ioutil.ReadAll(res.Body)
-	data = make(map[string]any)
-	json.Unmarshal(blobBody, &data)
+	var resBody any
+	resBody = make(map[string]any)
+	err = json.Unmarshal(blobBody, &data)
+	if err != nil {
+		k.log.Error(ctx, "KafkaHTTPProducer : Error in JSON Marshal", err)
+		resBody = string(blobBody)
+	}
 	if res.StatusCode > 299 {
 		err = fmt.Errorf("KafkaHTTPProducer.Send.HTTPCall.statusCode: %v", res.StatusCode)
+		k.log.Error(ctx, fmt.Sprintf("KAFKA HTTP response -%v", res.StatusCode), resBody)
+	} else {
+		k.log.Debug(ctx, fmt.Sprintf("KAFKA HTTP response -%v", res.StatusCode), resBody)
 	}
-	k.log.Debug(ctx, "KAFKA HTTP response", data)
-	return data, err
+	return nil, err
 }

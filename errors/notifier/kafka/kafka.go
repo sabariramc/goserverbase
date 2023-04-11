@@ -1,24 +1,28 @@
-package notifier
+package kafka
 
 import (
 	"context"
 	"fmt"
 	"time"
 
+	cKafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/sabariramc/goserverbase/errors"
-	"github.com/sabariramc/goserverbase/kafka"
 	"github.com/sabariramc/goserverbase/log"
 	"github.com/sabariramc/goserverbase/utils"
 )
 
+type Producer interface {
+	Produce(ctx context.Context, key string, message *utils.Message) (*cKafka.Message, error)
+}
+
 type ErrorNotifierKafka struct {
-	producer    *kafka.HTTPProducer
+	producer    Producer
 	log         *log.Logger
 	serviceName string
 }
 
-func New(ctx context.Context, log *log.Logger, baseURL, topicName, serviceName string) *ErrorNotifierKafka {
-	return &ErrorNotifierKafka{producer: kafka.NewHTTPProducer(ctx, log, baseURL, topicName, time.Minute), log: log, serviceName: serviceName}
+func New(ctx context.Context, log *log.Logger, baseURL, topicName, serviceName string, producer Producer) *ErrorNotifierKafka {
+	return &ErrorNotifierKafka{producer: producer, log: log, serviceName: serviceName}
 }
 
 func (e ErrorNotifierKafka) Send5XX(ctx context.Context, errorCode string, err error, stackTrace string, errorData interface{}) error {

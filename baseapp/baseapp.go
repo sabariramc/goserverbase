@@ -5,20 +5,14 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/julienschmidt/httprouter"
 	"github.com/sabariramc/goserverbase/config"
 	"github.com/sabariramc/goserverbase/errors"
 	"github.com/sabariramc/goserverbase/log"
 )
 
-type CustomHandler interface {
-	http.Handler
-	SetNotFound(http.HandlerFunc)
-	SetMethodNotAllowed(http.HandlerFunc)
-	RegisterRoute(method, path string, handler http.HandlerFunc)
-}
-
 type BaseApp struct {
-	handler       CustomHandler
+	handler       *httprouter.Router
 	c             *config.ServerConfig
 	lConfig       *log.Config
 	log           *log.Logger
@@ -26,11 +20,11 @@ type BaseApp struct {
 	docMeta       APIDocumentation
 }
 
-func New(appConfig config.ServerConfig, handler CustomHandler, loggerConfig log.Config, lMux log.LogMux, errorNotifier errors.ErrorNotifier, auditLogger log.AuditLogWriter) *BaseApp {
+func New(appConfig config.ServerConfig, loggerConfig log.Config, lMux log.LogMux, errorNotifier errors.ErrorNotifier, auditLogger log.AuditLogWriter) *BaseApp {
 	b := &BaseApp{
 		c:             &appConfig,
 		lConfig:       &loggerConfig,
-		handler:       handler,
+		handler:       httprouter.New(),
 		errorNotifier: errorNotifier,
 		docMeta: APIDocumentation{
 			Server: make([]DocumentServer, 0),
