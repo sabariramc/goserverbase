@@ -4,9 +4,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/julienschmidt/httprouter"
 	"github.com/sabariramc/goserverbase/errors"
-	"github.com/sabariramc/goserverbase/log"
 )
 
 type APIDocumentation struct {
@@ -63,41 +61,9 @@ func HealthCheck(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(204)
 }
 
-func (b *BaseApp) RegisterRoutes(ctx context.Context, method, path string, handler http.HandlerFunc) {
-	b.RegisterRouteWithMetaData(ctx, method, path, handler, "", nil, nil, nil, nil)
-}
-
-func (b *BaseApp) RegisterRouteWithMetaData(ctx context.Context, method, path string, handler http.HandlerFunc, description string, tags []string, payload interface{}, successResponse, failureResponse []Response) {
-	val, ok := b.docMeta.Routes[path]
-	if !ok {
-		val = map[string]*APIHandler{}
-		b.docMeta.Routes[path] = val
-	}
-	val[method] = &APIHandler{
-		Func:            handler,
-		Description:     description,
-		Tags:            tags,
-		Payload:         payload,
-		SuccessResponse: successResponse,
-		FailureResponse: failureResponse,
-	}
-	b.handler.HandlerFunc(method, path, handler)
-}
-
-func (b *BaseApp) RegisterDefaultRoutes(ctx context.Context) {
-	b.handler.NotFound = NotFound()
-	b.handler.MethodNotAllowed = MethodNotAllowed()
-	b.RegisterRoutes(ctx, http.MethodGet, "/meta/health", HealthCheck)
-}
-
-func GetPathParams(ctx context.Context, log *log.Logger, r *http.Request) httprouter.Params {
-	pp := r.Context().Value(httprouter.ParamsKey)
-	pathParams, ok := pp.(httprouter.Params)
-	if !ok {
-		err := errors.NewHTTPServerError(http.StatusInternalServerError, "INTERNAL_SERVER_ERROR", "Invalid path params processing", nil, map[string]interface{}{
-			"pathParams": pp,
-		})
-		log.Emergency(ctx, "Invalid path params processing", err, err)
-	}
-	return pathParams
+func (b *BaseApp) SetupRouter(ctx context.Context) {
+	b.handler.Use(b.SetContextMiddleware, b.RequestTimerMiddleware, b.LogRequestResponseMiddleware, b.HandleExceptionMiddleware)
+	b.handler.NotFound(NotFound())
+	b.handler.MethodNotAllowed(MethodNotAllowed())
+	b.handler.Get("/meta/health", HealthCheck)
 }

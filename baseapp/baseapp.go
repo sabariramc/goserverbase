@@ -5,14 +5,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/julienschmidt/httprouter"
+	"github.com/go-chi/chi/v5"
 	"github.com/sabariramc/goserverbase/config"
 	"github.com/sabariramc/goserverbase/errors"
 	"github.com/sabariramc/goserverbase/log"
 )
 
 type BaseApp struct {
-	handler       *httprouter.Router
+	handler       *chi.Mux
 	c             *config.ServerConfig
 	lConfig       *log.Config
 	log           *log.Logger
@@ -24,7 +24,7 @@ func New(appConfig config.ServerConfig, loggerConfig log.Config, lMux log.LogMux
 	b := &BaseApp{
 		c:             &appConfig,
 		lConfig:       &loggerConfig,
-		handler:       httprouter.New(),
+		handler:       chi.NewRouter(),
 		errorNotifier: errorNotifier,
 		docMeta: APIDocumentation{
 			Server: make([]DocumentServer, 0),
@@ -35,16 +35,20 @@ func New(appConfig config.ServerConfig, loggerConfig log.Config, lMux log.LogMux
 	b.log = log.NewLogger(ctx, &loggerConfig, loggerConfig.ServiceName, lMux, auditLogger)
 	zone, _ := time.Now().Zone()
 	b.log.Notice(ctx, "Timezone", zone)
-	b.RegisterDefaultRoutes(ctx)
+	b.SetupRouter(ctx)
 	return b
 }
 
 func (b *BaseApp) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	b.SetContextMiddleware(b.RequestTimerMiddleware(b.LogRequestResponseMiddleware(b.HandleExceptionMiddleware(b.handler)))).ServeHTTP(w, r)
+	b.handler.ServeHTTP(w, r)
 }
 
 func (b *BaseApp) GetAPIDocument() APIDocumentation {
 	return b.docMeta
+}
+
+func (b *BaseApp) GetRouter() *chi.Mux {
+	return b.handler
 }
 
 func (b *BaseApp) GetConfig() config.ServerConfig {

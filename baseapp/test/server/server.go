@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/sabariramc/goserverbase/baseapp"
 	"github.com/sabariramc/goserverbase/errors"
 	"github.com/sabariramc/goserverbase/log"
@@ -44,7 +45,7 @@ func (s *server) Func1(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) Func2(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(baseapp.GetPathParams(r.Context(), ServerTestLogger, r))
+	fmt.Println(chi.URLParam(r, "tenantId"))
 	w.WriteHeader(200)
 	w.Write([]byte("World"))
 }
@@ -65,11 +66,24 @@ func NewServer() *server {
 	srv := &server{
 		BaseApp: baseapp.New(*ServerTestConfig.App, *ServerTestConfig.Logger, ServerTestLMux, nil, nil),
 	}
-	srv.RegisterRoutes(context.TODO(), http.MethodGet, "/tenant", srv.Func1)
-	srv.RegisterRoutes(context.TODO(), http.MethodPost, "/tenant", srv.Func1)
-	srv.RegisterRoutes(context.TODO(), http.MethodGet, "/tenant/:tenantId", srv.Func2)
-	srv.RegisterRoutes(context.TODO(), http.MethodGet, "/error/error1", srv.Func3)
-	srv.RegisterRoutes(context.TODO(), http.MethodGet, "/error/error2", srv.Func4)
-	srv.RegisterRoutes(context.TODO(), http.MethodGet, "/error/error3", srv.Func5)
+	r := chi.NewRouter()
+	r.Route(
+		"/tenant", func(r chi.Router) {
+			r.Get("/", srv.Func1)
+			r.Post("/", srv.Func1)
+
+			r.Route("/{tenantId}", func(r chi.Router) {
+				r.Get("/", srv.Func2)
+			})
+		},
+	)
+	r.Route(
+		"/error", func(r chi.Router) {
+			r.Get("/error1", srv.Func3)
+			r.Get("/error2", srv.Func4)
+			r.Get("/error3", srv.Func5)
+		},
+	)
+	srv.GetRouter().Mount("/service/v1", r)
 	return srv
 }
