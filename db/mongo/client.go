@@ -7,7 +7,7 @@ import (
 
 	mongotrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/go.mongodb.org/mongo-driver/mongo"
 
-	"github.com/sabariramc/goserverbase/log"
+	"github.com/sabariramc/goserverbase/v2/log"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/aws"
+	"github.com/sabariramc/goserverbase/v2/aws"
 )
 
 func TestS3(t *testing.T) {

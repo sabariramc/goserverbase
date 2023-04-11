@@ -3,7 +3,7 @@ package utils
 import (
 	"fmt"
 
-	"github.com/sabariramc/goserverbase/errors"
+	"github.com/sabariramc/goserverbase/v2/errors"
 )
 
 type Payload map[string]interface{}

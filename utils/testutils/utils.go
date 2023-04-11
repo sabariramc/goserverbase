@@ -3,7 +3,7 @@ package testutils
 import (
 	"fmt"
 
-	base "github.com/sabariramc/goserverbase/aws"
+	base "github.com/sabariramc/goserverbase/v2/aws"
 
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/joho/godotenv"

@@ -6,7 +6,7 @@ import (
 	stlLog "log"
 	"net/http"
 
-	"github.com/sabariramc/goserverbase/baseapp/test/server"
+	"github.com/sabariramc/goserverbase/v2/baseapp/test/server"
 )
 
 func main() {

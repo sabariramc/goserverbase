@@ -3,9 +3,11 @@ package aws_test
 import (
 	"context"
 
-	"github.com/sabariramc/goserverbase/log"
-	"github.com/sabariramc/goserverbase/log/logwriter"
-	"github.com/sabariramc/goserverbase/utils/testutils"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/sabariramc/goserverbase/v2/aws"
+	"github.com/sabariramc/goserverbase/v2/log"
+	"github.com/sabariramc/goserverbase/v2/log/logwriter"
+	"github.com/sabariramc/goserverbase/v2/utils/testutils"
 )
 
 var AWSTestConfig *testutils.TestConfig
@@ -23,6 +25,7 @@ func init() {
 	})
 	lMux := log.NewDefaultLogMux(consoleLogWriter)
 	AWSTestLogger = log.NewLogger(context.TODO(), AWSTestConfig.Logger, "AWSTest", lMux, nil)
+	aws.SetDefaultAWSSession(session.Must(session.NewSession()))
 }
 
 func GetCorrelationContext() context.Context {
