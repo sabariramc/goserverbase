@@ -5,56 +5,50 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/sabariramc/goserverbase/config"
-	"github.com/sabariramc/goserverbase/log"
-
 	"github.com/julienschmidt/httprouter"
+	"github.com/sabariramc/goserverbase/config"
+	"github.com/sabariramc/goserverbase/errors"
+	"github.com/sabariramc/goserverbase/log"
 )
 
-type ServerConfig struct {
-	LoggerConfig *config.LoggerConfig
-	AppConfig    *config.ServerConfig
-}
-
 type BaseApp struct {
-	router *httprouter.Router
-	c      *ServerConfig
-	log    *log.Logger
+	handler       *httprouter.Router
+	c             *config.ServerConfig
+	lConfig       *log.Config
+	log           *log.Logger
+	errorNotifier errors.ErrorNotifier
+	docMeta       APIDocumentation
 }
 
-func NewBaseApp(c ServerConfig, lMux log.LogMultipluxer, auditLogger log.AuditLogWriter) *BaseApp {
+func New(appConfig config.ServerConfig, loggerConfig log.Config, lMux log.LogMux, errorNotifier errors.ErrorNotifier, auditLogger log.AuditLogWriter) *BaseApp {
 	b := &BaseApp{
-		c:      &c,
-		router: httprouter.New(),
+		c:             &appConfig,
+		lConfig:       &loggerConfig,
+		handler:       httprouter.New(),
+		errorNotifier: errorNotifier,
+		docMeta: APIDocumentation{
+			Server: make([]DocumentServer, 0),
+			Routes: make(APIRoute, 0),
+		},
 	}
-	ctx := b.GetCorrelationContext(context.Background(), log.GetDefaultCorrelationParams(c.AppConfig.ServiceName))
-	b.log = log.NewLogger(ctx, c.LoggerConfig, lMux, auditLogger, c.LoggerConfig.ServiceName, c.LoggerConfig.ServiceName)
+	ctx := b.GetCorrelationContext(context.Background(), log.GetDefaultCorrelationParams(appConfig.ServiceName))
+	b.log = log.NewLogger(ctx, &loggerConfig, loggerConfig.ServiceName, lMux, auditLogger)
 	zone, _ := time.Now().Zone()
-	b.log.Notice(ctx, "Server Timezone", zone)
+	b.log.Notice(ctx, "Timezone", zone)
+	b.RegisterDefaultRoutes(ctx)
 	return b
 }
 
 func (b *BaseApp) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	r = r.WithContext(b.GetCorrelationContext(r.Context(), b.GetHttpCorrelationParams(r)))
-	st := time.Now()
-	b.router.ServeHTTP(w, r)
-	b.log.Info(r.Context(), "Request processing time in ms", time.Since(st).Milliseconds())
+	b.SetContextMiddleware(b.RequestTimerMiddleware(b.LogRequestResponseMiddleware(b.HandleExceptionMiddleware(b.handler)))).ServeHTTP(w, r)
 }
 
-func (b *BaseApp) GetRouter() *httprouter.Router {
-	return b.router
+func (b *BaseApp) GetAPIDocument() APIDocumentation {
+	return b.docMeta
 }
 
-func (b *BaseApp) SetRouter(router *httprouter.Router) {
-	b.router = router
-}
-
-func (b *BaseApp) GetConfig() ServerConfig {
+func (b *BaseApp) GetConfig() config.ServerConfig {
 	return *b.c
-}
-
-func (b *BaseApp) SetConfig(c ServerConfig) {
-	b.c = &c
 }
 
 func (b *BaseApp) GetLogger() *log.Logger {
@@ -63,4 +57,8 @@ func (b *BaseApp) GetLogger() *log.Logger {
 
 func (b *BaseApp) SetLogger(l *log.Logger) {
 	b.log = l
+}
+
+func (b *BaseApp) AddServerHost(server DocumentServer) {
+	b.docMeta.Server = append(b.docMeta.Server, server)
 }

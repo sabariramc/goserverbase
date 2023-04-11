@@ -7,22 +7,22 @@ import (
 
 var defaultAWSSession *session.Session
 
-func SetDefaultAWSSession(sess *session.Session) {
-	defaultAWSSession = sess
+func SetDefaultAWSSession(defaultSession *session.Session) {
+	defaultAWSSession = defaultSession
 }
 
 func GetDefaultAWSSession() *session.Session {
 	return defaultAWSSession
 }
 
-func GetRegionalDefaultAWSSession(region string) *session.Session {
-	return GetRegionalAWSSession(defaultAWSSession, region)
+func NewRegionalDefaultAWSSession(region string) *session.Session {
+	return NewRegionalAWSSession(defaultAWSSession, region)
 }
 
-func GetRegionalAWSSession(awsSession *session.Session, region string) *session.Session {
-	sess := session.Must(session.NewSession(&aws.Config{
+func NewRegionalAWSSession(awsSession *session.Session, region string) *session.Session {
+	newSession := session.Must(session.NewSession(&aws.Config{
 		Region:      &region,
 		Credentials: awsSession.Config.Credentials,
 	}))
-	return sess
+	return newSession
 }

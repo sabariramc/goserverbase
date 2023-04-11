@@ -4,22 +4,21 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/sabariramc/goserverbase/utils"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func (m *Collection) Find(ctx context.Context, filter interface{}, opts ...*options.FindOptions) (cur *mongo.Cursor, err error) {
-	return m.collection.Find(ctx, filter, opts...)
-
-}
-
-func (m *Collection) FindOne(ctx context.Context, filter interface{}, opts ...*options.FindOneOptions) (s *mongo.SingleResult) {
-	return m.collection.FindOne(ctx, filter, opts...)
-}
-
 type NewLoadContainer func(count int) []interface{}
+
+func (m *Collection) FindWithHash(ctx context.Context, filter map[string]interface{}, opts ...*options.FindOptions) (cur *mongo.Cursor, err error) {
+	return m.Find(ctx, m.newHashFilter(ctx, filter), opts...)
+}
+
+func (m *Collection) FindOneWithHash(ctx context.Context, filter map[string]interface{}, opts ...*options.FindOneOptions) (s *mongo.SingleResult) {
+	return m.FindOne(ctx, m.newHashFilter(ctx, filter), opts...)
+}
 
 func (m *Collection) FindFetch(ctx context.Context, loader NewLoadContainer, filter interface{}, opts ...*options.FindOptions) (res []interface{}, err error) {
 	if filter == nil {
@@ -44,82 +43,77 @@ func (m *Collection) FindFetch(ctx context.Context, loader NewLoadContainer, fil
 	return
 }
 
-func (m *Collection) InsertOne(ctx context.Context, doc interface{}, opts ...*options.InsertOneOptions) (ins *mongo.InsertOneResult, err error) {
-	ins, err = m.collection.InsertOne(ctx, doc, opts...)
-	m.log.Debug(ctx, "Mongo insert one response", ins)
-	return
+func (m *Collection) FindFetchWithHash(ctx context.Context, loader NewLoadContainer, filter map[string]interface{}, opts ...*options.FindOptions) (res []interface{}, err error) {
+	return m.FindFetch(ctx, loader, m.newHashFilter(ctx, filter), opts...)
 }
 
-func (m *Collection) InsertMany(ctx context.Context, doc []interface{}, opts ...*options.InsertManyOptions) (ins *mongo.InsertManyResult, err error) {
-	ins, err = m.collection.InsertMany(ctx, doc, opts...)
-	if err != nil {
-		m.log.Error(ctx, "Mongo insert many error", err)
-		return
-	}
-	m.log.Debug(ctx, "Mongo insert many response", ins)
-	return
-}
-
-func (m *Collection) UpdateByID(ctx context.Context, id interface{}, update interface{}, opts ...*options.UpdateOptions) (res *mongo.UpdateResult, err error) {
-	val, ok := id.(string)
-	if ok {
-		id, err = primitive.ObjectIDFromHex(val)
-		if err != nil {
-			m.log.Error(ctx, "Mongo update by id, id creation error", err)
-			err = fmt.Errorf("Collection.UpdateById : %w", err)
-			return
+func (m *Collection) newHashFilter(ctx context.Context, filter map[string]interface{}) map[string]interface{} {
+	if len(m.hashFieldMap) > 0 {
+		hashFilter := make(map[string]interface{}, len(filter))
+		for key, value := range filter {
+			if _, ok := m.hashFieldMap[key]; ok {
+				if strVal, ok := value.(string); ok {
+					hashFilter[GetHashKey(key)] = utils.GetHash(strVal)
+					continue
+				}
+				m.log.Warning(ctx, "Hash filter not generated for key - "+key, value)
+			}
+			hashFilter[key] = value
 		}
+		return hashFilter
 	}
-	res, err = m.collection.UpdateByID(ctx, id, update, opts...)
-	if err != nil {
-		m.log.Error(ctx, "Mongo update by id error", err)
-		err = fmt.Errorf("Collection.UpdateById : %w", err)
-		return
-	}
-	m.log.Debug(ctx, "Mongo update by id response", res)
-	return
+	return filter
 }
 
-func (m *Collection) UpdateMany(ctx context.Context, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (res *mongo.UpdateResult, err error) {
-	res, err = m.collection.UpdateMany(ctx, filter, update, opts...)
-	if err != nil {
-		m.log.Error(ctx, "Mongo update many error", err)
-		err = fmt.Errorf("Collection.UpdateMany : %w", err)
-		return
-	}
-	m.log.Debug(ctx, "Mongo update many response", res)
-	return
+func (m *Collection) InsertOneWithHash(ctx context.Context, doc map[string]interface{}, opts ...*options.InsertOneOptions) (ins interface{}, err error) {
+	return m.InsertOne(ctx, m.newHashData(ctx, doc), opts...)
+
 }
 
-func (m *Collection) UpdateOne(ctx context.Context, filter interface{}, update interface{}, opts ...*options.UpdateOptions) (res *mongo.UpdateResult, err error) {
-	res, err = m.collection.UpdateOne(ctx, filter, update, opts...)
-	if err != nil {
-		m.log.Error(ctx, "Mongo update one error", err)
-		err = fmt.Errorf("Collection.UpdateOne : %w", err)
-		return
+func (m *Collection) InsertManyWithHash(ctx context.Context, doc []map[string]interface{}, opts ...*options.InsertManyOptions) (ins interface{}, err error) {
+	hashDoc := make([]interface{}, len(doc))
+	for i, v := range doc {
+		hashDoc[i] = m.newHashData(ctx, v)
 	}
-	m.log.Debug(ctx, "Mongo update one response", res)
-	return
+	return m.InsertMany(ctx, hashDoc, opts...)
 }
 
-func (m *Collection) DeleteOne(ctx context.Context, filter interface{}, opts ...*options.DeleteOptions) (res *mongo.DeleteResult, err error) {
-	res, err = m.collection.DeleteOne(ctx, filter, opts...)
-	if err != nil {
-		m.log.Error(ctx, "Mongo delete one error", err)
-		err = fmt.Errorf("Collection.DeleteOne : %w", err)
-		return
-	}
-	m.log.Debug(ctx, "Mongo delete one response", res)
-	return
+func (m *Collection) UpdateByIDWithHash(ctx context.Context, id interface{}, update map[string]map[string]interface{}, opts ...*options.UpdateOptions) (upd *mongo.UpdateResult, err error) {
+	update["$set"] = m.newHashData(ctx, update["$set"])
+	return m.UpdateByID(ctx, id, update, opts...)
 }
 
-func (m *Collection) DeleteMany(ctx context.Context, filter interface{}, opts ...*options.DeleteOptions) (res *mongo.DeleteResult, err error) {
-	res, err = m.collection.DeleteMany(ctx, filter, opts...)
-	if err != nil {
-		m.log.Error(ctx, "Mongo delete one error", err)
-		err = fmt.Errorf("Collection.DeleteMany : %w", err)
-		return
+func (m *Collection) UpdateOneWithHash(ctx context.Context, filter interface{}, update map[string]map[string]interface{}, opts ...*options.UpdateOptions) (upd *mongo.UpdateResult, err error) {
+	update["$set"] = m.newHashData(ctx, update["$set"])
+	return m.UpdateOne(ctx, filter, update, opts...)
+
+}
+
+func (m *Collection) newHashData(ctx context.Context, data map[string]interface{}) map[string]interface{} {
+	if len(m.hashFieldMap) > 0 {
+		hashData := make(map[string]interface{}, len(data))
+		for key, value := range data {
+			if _, ok := m.hashFieldMap[key]; ok {
+				switch v := value.(type) {
+				case string:
+					hashData[GetHashKey(key)] = utils.GetHash(v)
+				case []string:
+					hashList := make([]string, len(v))
+					for i, lv := range v {
+						hashList[i] = utils.GetHash(lv)
+					}
+					hashData[GetHashKey(key)] = hashList
+				default:
+					m.log.Warning(ctx, "Hash filter not generated for key - "+key, value)
+				}
+			}
+			hashData[key] = value
+		}
+		return hashData
 	}
-	m.log.Debug(ctx, "Mongo delete many response", res)
-	return
+	return data
+}
+
+func GetHashKey(key string) string {
+	return fmt.Sprintf("%vHash", key)
 }

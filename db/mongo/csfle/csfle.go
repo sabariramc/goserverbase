@@ -13,22 +13,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	"github.com/sabariramc/goserverbase/config"
 	m "github.com/sabariramc/goserverbase/db/mongo"
 	"github.com/sabariramc/goserverbase/log"
 )
 
 var tmp = "/tmp/mongocryptd"
 
-func NewPIIMongo(ctx context.Context, logger *log.Logger, c config.MongoConfig, csfle config.MongoCFLEConfig, schema map[string]interface{}, kmsProvider m.MasterKeyProvider) (*m.Mongo, error) {
-	client, err := NewCSFLEClient(ctx, logger, csfle.KeyVaultNamespace, c.ConnectionString, schema, kmsProvider)
-	if err != nil {
-		return nil, fmt.Errorf("csfle.NewPIIMongo : %w", err)
-	}
-	return m.NewCSFLEMongo(client, logger, c, csfle), nil
-}
-
-func NewCSFLEClient(ctx context.Context, logger *log.Logger, keyVaultNamespace, mongoURI string, schemaMap map[string]interface{}, provider m.MasterKeyProvider) (*mongo.Client, error) {
+func New(ctx context.Context, logger *log.Logger, c m.Config, keyVaultNamespace string, schemaMap map[string]interface{}, provider MasterKeyProvider) (*mongo.Client, error) {
 	// extra options that can be specified
 	// see https://github.com/mongodb/specifications/blob/master/source/client-side-encryption/client-side-encryption.rst#extraoptions
 
@@ -44,11 +35,13 @@ func NewCSFLEClient(ctx context.Context, logger *log.Logger, keyVaultNamespace, 
 		SetSchemaMap(schemaMap).
 		SetExtraOptions(extraOptions)
 	connectionOptions := options.Client()
-	connectionOptions.ApplyURI(mongoURI)
+	connectionOptions.ApplyURI(c.ConnectionString)
 	connectionOptions.SetConnectTimeout(time.Minute)
 	connectionOptions.SetMaxConnIdleTime(time.Minute * 12)
 	connectionOptions.SetAutoEncryptionOptions(autoEncryptionOpts)
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI).SetAutoEncryptionOptions(autoEncryptionOpts))
+	connectionOptions.SetMinPoolSize(c.MinConnectionPool)
+	connectionOptions.SetMaxPoolSize(c.MaxConnectionPool)
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(c.ConnectionString).SetAutoEncryptionOptions(autoEncryptionOpts))
 	if err != nil {
 		logger.Error(ctx, "connect error for Mongo CSLFE client", err)
 		return nil, fmt.Errorf("csfle.NewCSFLEClient : %w", err)
@@ -61,7 +54,7 @@ func NewCSFLEClient(ctx context.Context, logger *log.Logger, keyVaultNamespace, 
 	return client, nil
 }
 
-func GetDataKey(ctx context.Context, m *m.Mongo, keyVaultNamespace, keyAltName string, provider m.MasterKeyProvider) (res string, err error) {
+func GetDataKey(ctx context.Context, m *m.Mongo, keyVaultNamespace, keyAltName string, provider MasterKeyProvider) (res string, err error) {
 
 	// configuring encryption options by setting the keyVault namespace and the kms providers information
 	// we configure this client to fetch the master key so that we can
@@ -96,7 +89,7 @@ func GetDataKey(ctx context.Context, m *m.Mongo, keyVaultNamespace, keyAltName s
 
 }
 
-func CreateDataKey(ctx context.Context, m *m.Mongo, keyVaultNamespace, keyAltName string, provider m.MasterKeyProvider) (*string, error) {
+func CreateDataKey(ctx context.Context, m *m.Mongo, keyVaultNamespace, keyAltName string, provider MasterKeyProvider) (*string, error) {
 	// specify the master key information that will be used to
 	// encrypt the data key(s) that will in turn be used to encrypt
 	// fields, and create the data key

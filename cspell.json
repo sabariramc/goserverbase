@@ -1,0 +1,40 @@
+{
+    // Version of the setting file.  Always 0.2
+    "version": "0.2",
+    // language - current active spelling language
+    "language": "en",
+    // words - list of words to be always considered correct
+    "words": [
+        "sabariramc",
+        "baseapp",
+        "goserverbase",
+        "csfle",
+        "testutils",
+        "gotest",
+        "godotenv",
+        "joho",
+        "sabariram",
+        "SASL",
+        "shopspring",
+        "confluentinc",
+        "logwriter",
+        "bson",
+        "bsoncodec",
+        "varchar",
+        "bsonrw",
+        "mongocryptd",
+        "pidfilepath",
+        "PKCS7",
+        "httprouter",
+        "julienschmidt",
+        "vasile",
+        "CiphertextBlob"
+    ],
+    // flagWords - list of words to be always considered incorrect
+    // This is useful for offensive words and common spelling errors.
+    // For example "hte" should be "the"
+    "ignorePaths":["docker-compose.yml", "go.mod", "go.sum", "cspell.json","baseapp/samples/**", "**_test.go"],
+    "flagWords": [
+        "hte"
+    ]
+}

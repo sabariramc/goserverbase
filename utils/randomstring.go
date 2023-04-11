@@ -31,7 +31,12 @@ func GetRandomString(n int, prefix string) string {
 	}
 	randStr := string(b)
 	if prefix != "" {
-		randStr = fmt.Sprintf("%v_%v", prefix, randStr)
+		randStr = fmt.Sprintf("%v%v", prefix, randStr)
 	}
 	return randStr
+}
+
+func GenerateId(totalLength int, prefix string) string {
+	n := totalLength - len(prefix)
+	return GetRandomString(n, prefix)
 }

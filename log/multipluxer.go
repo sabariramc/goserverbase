@@ -3,7 +3,7 @@ package log
 import "context"
 
 type ChanneledLogWriter interface {
-	Start(chan MultipluxerLogMessage)
+	Start(chan MuxLogMessage)
 	WriteMessage(context.Context, *LogMessage) error
 	GetBufferSize() int
 }
@@ -12,48 +12,44 @@ type LogWriter interface {
 	WriteMessage(context.Context, *LogMessage) error
 }
 
-type AuditLogWriter interface {
-	WriteAuditMessage(context.Context, *AuditLogMessage) error
-}
-
-type LogMultipluxer interface {
+type LogMux interface {
 	Print(context.Context, *LogMessage)
 }
 
-type MultipluxerLogMessage struct {
+type MuxLogMessage struct {
 	Ctx        context.Context
 	LogMessage LogMessage
 }
 
-type ChanneledLogMultipluxer struct {
-	inChannel  chan MultipluxerLogMessage
-	outChannel []chan MultipluxerLogMessage
+type ChanneledLogMux struct {
+	inChannel  chan MuxLogMessage
+	outChannel []chan MuxLogMessage
 }
 
-func NewChanneledLogMultipluxer(bufferSize uint8, logWriterList ...ChanneledLogWriter) *ChanneledLogMultipluxer {
-	outChannelList := make([]chan MultipluxerLogMessage, len(logWriterList))
+func NewChanneledLogMux(bufferSize uint8, logWriterList ...ChanneledLogWriter) *ChanneledLogMux {
+	outChannelList := make([]chan MuxLogMessage, len(logWriterList))
 	for i, logWriter := range logWriterList {
-		lbufferSize := logWriter.GetBufferSize()
-		if lbufferSize < 1 {
-			lbufferSize = int(bufferSize)
+		lBufferSize := logWriter.GetBufferSize()
+		if lBufferSize < 1 {
+			lBufferSize = int(bufferSize)
 		}
-		outChannel := make(chan MultipluxerLogMessage, lbufferSize)
+		outChannel := make(chan MuxLogMessage, lBufferSize)
 		outChannelList[i] = outChannel
 		go logWriter.Start(outChannel)
 	}
-	ls := &ChanneledLogMultipluxer{inChannel: make(chan MultipluxerLogMessage, bufferSize), outChannel: outChannelList}
+	ls := &ChanneledLogMux{inChannel: make(chan MuxLogMessage, bufferSize), outChannel: outChannelList}
 	go ls.start()
 	return ls
 }
 
-func (ls *ChanneledLogMultipluxer) Print(ctx context.Context, msg *LogMessage) {
-	ls.inChannel <- MultipluxerLogMessage{
+func (ls *ChanneledLogMux) Print(ctx context.Context, msg *LogMessage) {
+	ls.inChannel <- MuxLogMessage{
 		Ctx:        ctx,
 		LogMessage: *msg,
 	}
 }
 
-func (ls *ChanneledLogMultipluxer) start() {
+func (ls *ChanneledLogMux) start() {
 	for log := range ls.inChannel {
 		for _, outChannel := range ls.outChannel {
 			outChannel <- log
@@ -61,16 +57,16 @@ func (ls *ChanneledLogMultipluxer) start() {
 	}
 }
 
-type SequenctialLogMultipluxer struct {
+type DefaultLogMux struct {
 	writer []LogWriter
 }
 
-func NewSequenctialLogMultipluxer(logWriterList ...LogWriter) *SequenctialLogMultipluxer {
-	ls := &SequenctialLogMultipluxer{writer: logWriterList}
+func NewDefaultLogMux(logWriterList ...LogWriter) *DefaultLogMux {
+	ls := &DefaultLogMux{writer: logWriterList}
 	return ls
 }
 
-func (ls *SequenctialLogMultipluxer) Print(ctx context.Context, msg *LogMessage) {
+func (ls *DefaultLogMux) Print(ctx context.Context, msg *LogMessage) {
 	for _, w := range ls.writer {
 		_ = w.WriteMessage(ctx, msg)
 	}
