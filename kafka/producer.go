@@ -39,7 +39,7 @@ func NewProducer(ctx context.Context, log *log.Logger, config *KafkaProducerConf
 	return k, nil
 }
 
-func (k *Producer) Produce(ctx context.Context, key string, message *utils.Message) (m *kafka.Message, err error) {
+func (k *Producer) Produce(ctx context.Context, key string, message *utils.Message, headers map[string]string) (m *kafka.Message, err error) {
 	var buf bytes.Buffer
 	deliveryChannel := make(chan kafka.Event)
 	defer close(deliveryChannel)
@@ -50,7 +50,9 @@ func (k *Producer) Produce(ctx context.Context, key string, message *utils.Messa
 		return nil, fmt.Errorf("KafkaProducer.Send.EncodeMessage: %w", err)
 	}
 	correlationParam := log.GetCorrelationParam(ctx)
-	headers := make(map[string]string, 0)
+	if headers == nil {
+		headers = make(map[string]string, 0)
+	}
 	customerIdentity := log.GetCustomerIdentifier(ctx)
 	utils.StrictJsonTransformer(correlationParam, &headers)
 	utils.StrictJsonTransformer(customerIdentity, &headers)
@@ -91,7 +93,7 @@ func NewHTTPProducer(ctx context.Context, log *log.Logger, baseURL, topicName st
 	return &HTTPProducer{baseUrl: baseURL, topicName: topicName, log: log, httpClient: &http.Client{Timeout: timeout}}
 }
 
-func (k HTTPProducer) Produce(ctx context.Context, key string, message *utils.Message) (*kafka.Message, error) {
+func (k HTTPProducer) Produce(ctx context.Context, key string, message *utils.Message, headers map[string]string) (*kafka.Message, error) {
 	url := k.baseUrl + "/" + k.topicName
 	data := map[string]any{
 		"records": []map[string]any{{
@@ -114,6 +116,9 @@ func (k HTTPProducer) Produce(ctx context.Context, key string, message *utils.Me
 	}
 	log.SetCorrelationHeader(ctx, req)
 	req.Header.Add("Content-Type", "application/vnd.kafka.json.v2+json")
+	for key, val := range headers {
+		req.Header.Add(key, val)
+	}
 	k.log.Debug(ctx, "Request payload", data)
 	k.log.Debug(ctx, "Request header", req.Header)
 	k.log.Debug(ctx, "Request url", req.URL)
