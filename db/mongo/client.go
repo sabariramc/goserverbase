@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	mongotrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/go.mongodb.org/mongo-driver/mongo"
+
 	"github.com/sabariramc/goserverbase/log"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -22,6 +24,9 @@ var ErrNoDocuments = mongo.ErrNoDocuments
 func New(ctx context.Context, logger *log.Logger, c Config, opts ...*options.ClientOptions) (*Mongo, error) {
 	var client *mongo.Client
 	var err error
+	mon := options.Client()
+	mon.Monitor = mongotrace.NewMonitor()
+	opts = append(opts, mon)
 	client, err = NewMongoClient(ctx, logger, &c, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("mongo.NewMongo : %w", err)

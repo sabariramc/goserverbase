@@ -10,10 +10,11 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/sabariramc/goserverbase/log"
 	"github.com/sabariramc/goserverbase/utils"
+	kafkatrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/confluentinc/confluent-kafka-go/kafka"
 )
 
 type Consumer struct {
-	*kafka.Consumer
+	*kafkatrace.Consumer
 	config *KafkaConsumerConfig
 	log    *log.Logger
 	topic  string
@@ -23,7 +24,7 @@ type Consumer struct {
 func NewConsumer(ctx context.Context, log *log.Logger, config *KafkaConsumerConfig, topic string) (*Consumer, error) {
 	parsedConfig := &kafka.ConfigMap{}
 	utils.StrictJsonTransformer(config, parsedConfig)
-	c, err := kafka.NewConsumer(parsedConfig)
+	c, err := kafkatrace.NewConsumer(parsedConfig)
 
 	if err != nil {
 		log.Error(ctx, "Failed to create kafka consumer", err)

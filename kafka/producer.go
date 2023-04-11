@@ -12,10 +12,11 @@ import (
 	"github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/sabariramc/goserverbase/log"
 	"github.com/sabariramc/goserverbase/utils"
+	kafkatrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/confluentinc/confluent-kafka-go/kafka"
 )
 
 type Producer struct {
-	*kafka.Producer
+	*kafkatrace.Producer
 	config *KafkaProducerConfig
 	log    *log.Logger
 	topic  string
@@ -24,7 +25,7 @@ type Producer struct {
 func NewProducer(ctx context.Context, log *log.Logger, config *KafkaProducerConfig, topic string) (*Producer, error) {
 	parsedConfig := &kafka.ConfigMap{}
 	utils.StrictJsonTransformer(config, parsedConfig)
-	p, err := kafka.NewProducer(parsedConfig)
+	p, err := kafkatrace.NewProducer(parsedConfig)
 
 	if err != nil {
 		log.Error(ctx, "Failed to create kafka producer", err)
@@ -62,6 +63,7 @@ func (k *Producer) Produce(ctx context.Context, key string, message *utils.Messa
 		})
 	}
 	k.log.Debug(ctx, "Message payload", map[string]any{"body": message, "key": key, "headers": messageHeader})
+
 	k.Producer.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{Topic: &k.topic, Partition: kafka.PartitionAny},
 		Key:            []byte(key),

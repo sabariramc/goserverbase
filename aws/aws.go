@@ -3,12 +3,13 @@ package aws
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	awstrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/aws/aws-sdk-go/aws"
 )
 
 var defaultAWSSession *session.Session
 
 func SetDefaultAWSSession(defaultSession *session.Session) {
-	defaultAWSSession = defaultSession
+	defaultAWSSession = awstrace.WrapSession(defaultSession)
 }
 
 func GetDefaultAWSSession() *session.Session {
@@ -24,5 +25,5 @@ func NewRegionalAWSSession(awsSession *session.Session, region string) *session.
 		Region:      &region,
 		Credentials: awsSession.Config.Credentials,
 	}))
-	return newSession
+	return awstrace.WrapSession(newSession)
 }

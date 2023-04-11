@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi"
 	"github.com/sabariramc/goserverbase/config"
 	"github.com/sabariramc/goserverbase/errors"
 	"github.com/sabariramc/goserverbase/log"

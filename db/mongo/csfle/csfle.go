@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	mongotrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/go.mongodb.org/mongo-driver/mongo"
 
 	m "github.com/sabariramc/goserverbase/db/mongo"
 	"github.com/sabariramc/goserverbase/log"
@@ -35,6 +36,7 @@ func New(ctx context.Context, logger *log.Logger, c m.Config, keyVaultNamespace 
 		SetSchemaMap(schemaMap).
 		SetExtraOptions(extraOptions)
 	connectionOptions := options.Client()
+	connectionOptions.Monitor = mongotrace.NewMonitor()
 	connectionOptions.ApplyURI(c.ConnectionString)
 	connectionOptions.SetConnectTimeout(time.Minute)
 	connectionOptions.SetMaxConnIdleTime(time.Minute * 12)
