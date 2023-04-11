@@ -9,10 +9,10 @@ import (
 type Payload map[string]interface{}
 
 type Message struct {
-	Entity   string              `json:"entity"`
-	Event    string              `json:"event"`
-	Contains []string            `json:"contains"`
-	Payload  map[string]*Payload `json:"payload"`
+	Entity   string             `json:"entity"`
+	Event    string             `json:"event"`
+	Contains []string           `json:"contains"`
+	Payload  map[string]Payload `json:"payload"`
 }
 
 func NewMessage(entity string, event string) *Message {
@@ -20,11 +20,11 @@ func NewMessage(entity string, event string) *Message {
 		Entity:   entity,
 		Event:    event,
 		Contains: make([]string, 0),
-		Payload:  make(map[string]*Payload, 0),
+		Payload:  make(map[string]Payload, 0),
 	}
 }
 
-func (m *Message) AddPayload(name string, payload *Payload) error {
+func (m *Message) AddPayload(name string, payload Payload) error {
 	for _, v := range m.Contains {
 		if v == name {
 			return errors.NewCustomError("DUPLICATE_PAYLOAD", "Duplicate payload for key :`"+name+"`", nil, nil, true)
@@ -35,7 +35,7 @@ func (m *Message) AddPayload(name string, payload *Payload) error {
 	return nil
 }
 
-func (m *Message) GetPayload(name string) (p *Payload, err error) {
+func (m *Message) GetPayload(name string) (p Payload, err error) {
 	for _, v := range m.Contains {
 		if v == name {
 			var ok bool
