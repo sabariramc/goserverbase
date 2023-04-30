@@ -18,7 +18,7 @@ type CorrelationParam struct {
 
 type CustomerIdentifier struct {
 	CustomerId string `json:"x-customer-id"`
-	AppUserId  string `json:"x-appUser-id"`
+	AppUserId  string `json:"x-app-user-id"`
 	Id         string `json:"x-entity-id"`
 }
 
@@ -59,10 +59,17 @@ func GetCustomerIdentifier(ctx context.Context) *CustomerIdentifier {
 }
 
 func SetCorrelationHeader(ctx context.Context, req *http.Request) {
-	correlation := GetCorrelationParam(ctx)
-	headers := make(map[string]string, 0)
-	utils.StrictJsonTransformer(correlation, &headers)
+	headers := GetCorrelationHeader(ctx)
 	for i, v := range headers {
 		req.Header.Add(i, v)
 	}
+}
+
+func GetCorrelationHeader(ctx context.Context) map[string]string {
+	correlation := GetCorrelationParam(ctx)
+	headers := make(map[string]string, 0)
+	utils.StrictJsonTransformer(correlation, &headers)
+	identity := GetCustomerIdentifier(ctx)
+	utils.StrictJsonTransformer(correlation, &identity)
+	return headers
 }
