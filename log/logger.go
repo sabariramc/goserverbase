@@ -65,6 +65,7 @@ type Logger struct {
 	serviceName string
 	config      *Config
 	audit       AuditLogWriter
+	PrintIndent bool
 }
 
 func NewLogger(ctx context.Context, lc *Config, moduleName string, lMux LogMux, audit AuditLogWriter) *Logger {
@@ -79,7 +80,8 @@ func NewLogger(ctx context.Context, lc *Config, moduleName string, lMux LogMux, 
 			Host:        lc.Host,
 			ServiceName: lc.ServiceName,
 		},
-		audit: audit,
+		audit:       audit,
+		PrintIndent: true,
 	}
 	logLevel := lc.LogLevel
 	if logLevel > int(DEBUG) || logLevel < int(EMERGENCY) {
@@ -144,14 +146,20 @@ func (l *Logger) print(ctx context.Context, level *LogLevel, shortMessage string
 		msg = shortMessage
 		msgType = "nil"
 	} else {
-		msgType = reflect.TypeOf(fullMessage).Name()
+		msgType = reflect.TypeOf(fullMessage).String()
 		switch v := fullMessage.(type) {
 		case string:
 			msg = v
 		case error:
 			msg = v.Error()
 		default:
-			blob, err := json.MarshalIndent(v, "", "    ")
+			var blob []byte
+			var err error
+			if l.PrintIndent {
+				blob, err = json.MarshalIndent(v, "", "    ")
+			} else {
+				blob, err = json.Marshal(v)
+			}
 			if err != nil {
 				msg = fmt.Sprintf("%v - %v", ParseErrorMsg, err)
 			} else {
