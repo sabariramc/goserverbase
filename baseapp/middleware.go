@@ -23,7 +23,8 @@ func (b *BaseApp) RequestTimerMiddleware(next http.Handler) http.Handler {
 
 func (b *BaseApp) SetContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := b.GetCorrelationContext(r.Context(), b.GetHttpCorrelationParams(r))
+		ctx := b.GetContextWithCorrelation(r.Context(), b.GetHttpCorrelationParams(r))
+		ctx = b.GetContextWithCustomerId(ctx, b.GetHttpCustomerId(r))
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
 	})

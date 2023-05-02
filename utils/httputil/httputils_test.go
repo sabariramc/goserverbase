@@ -49,7 +49,7 @@ func TestHttpUtilUnwrapError(t *testing.T) {
 		"tag": "Test",
 	}
 	res, err := client.Do(GetCorrelationContext(), "POST", "https://d6o0fhi2nl.execute-api.ap-south-1.amazonaws.com/dev/echo/go/base", &body, &data, nil)
-	if !errors.Is(err, httputil.ErrorResponseUnmarshal) {
+	if !errors.Is(err, httputil.ErrResponseUnmarshal) {
 		t.Fail()
 	}
 	assert.Equal(t, res.StatusCode, 200)

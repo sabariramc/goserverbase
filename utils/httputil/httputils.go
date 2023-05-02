@@ -15,7 +15,7 @@ import (
 	"github.com/sabariramc/goserverbase/v2/log"
 )
 
-var ErrorResponseUnmarshal = fmt.Errorf("http.do.responseBodyMarshall")
+var ErrResponseUnmarshal = fmt.Errorf("http.do.responseBodyMarshall")
 
 type LogConfig struct {
 	MaxContentLength int64
@@ -106,7 +106,7 @@ func (h *HttpClient) Decode(ctx context.Context, body []byte, data interface{}) 
 			if err != nil {
 				newBuff := io.NopCloser(bytes.NewReader(body))
 				h.log.Error(ctx, "http.Do.responseBodyMarshall", err)
-				return newBuff, fmt.Errorf("%w : %w", ErrorResponseUnmarshal, err)
+				return newBuff, fmt.Errorf("%w : %w", ErrResponseUnmarshal, err)
 			}
 		}
 		return nil, nil
