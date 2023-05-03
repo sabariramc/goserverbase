@@ -9,6 +9,7 @@ require (
 	github.com/go-chi/chi v1.5.0
 	github.com/go-chi/chi/v5 v5.0.8
 	github.com/google/uuid v1.3.0
+	github.com/hashicorp/go-retryablehttp v0.7.2
 	github.com/joho/godotenv v1.5.1
 	github.com/shopspring/decimal v1.3.1
 	go.mongodb.org/mongo-driver v1.11.4
@@ -29,6 +30,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
+	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/klauspost/compress v1.16.3 // indirect
 	github.com/montanaflynn/stats v0.0.0-20171201202039-1bf9dbcd8cbe // indirect

@@ -27,6 +27,18 @@ func (b *BaseApp) GetHttpCorrelationParams(r *http.Request) *log.CorrelationPara
 	}
 }
 
+func (b *BaseApp) GetHttpCustomerId(r *http.Request) *log.CustomerIdentifier {
+	appUserId := r.Header.Get("x-app-user-id")
+	if appUserId == "" {
+		return &log.CustomerIdentifier{}
+	}
+	return &log.CustomerIdentifier{
+		AppUserId:  appUserId,
+		CustomerId: r.Header.Get("x-customer-id"),
+		Id:         r.Header.Get("x-entity-id"),
+	}
+}
+
 func (b *BaseApp) PrintRequest(ctx context.Context, r *http.Request) {
 	h := r.Header
 	popList := make(map[string][]string)
@@ -64,8 +76,13 @@ func (b *BaseApp) PrintRequest(ctx context.Context, r *http.Request) {
 	}
 }
 
-func (b *BaseApp) GetCorrelationContext(ctx context.Context, c *log.CorrelationParam) context.Context {
+func (b *BaseApp) GetContextWithCorrelation(ctx context.Context, c *log.CorrelationParam) context.Context {
 	ctx = context.WithValue(ctx, log.ContextKeyCorrelation, c)
+	return ctx
+}
+
+func (b *BaseApp) GetContextWithCustomerId(ctx context.Context, c *log.CustomerIdentifier) context.Context {
+	ctx = context.WithValue(ctx, log.ContextKeyCustomerIdentifier, c)
 	return ctx
 }
 

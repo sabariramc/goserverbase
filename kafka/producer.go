@@ -50,14 +50,17 @@ func (k *Producer) Produce(ctx context.Context, key string, message *utils.Messa
 		k.log.Error(ctx, "Message", message)
 		return nil, fmt.Errorf("KafkaProducer.Send.EncodeMessage: %w", err)
 	}
-	correlationParam := log.GetCorrelationParam(ctx)
 	if headers == nil {
 		headers = make(map[string]string, 0)
 	}
-	customerIdentity := log.GetCustomerIdentifier(ctx)
-	utils.StrictJsonTransformer(correlationParam, &headers)
-	utils.StrictJsonTransformer(customerIdentity, &headers)
+	corr := log.GetCorrelationHeader(ctx)
 	messageHeader := make([]kafka.Header, 0)
+	for i, v := range corr {
+		messageHeader = append(messageHeader, kafka.Header{
+			Key:   i,
+			Value: []byte(v),
+		})
+	}
 	for i, v := range headers {
 		messageHeader = append(messageHeader, kafka.Header{
 			Key:   i,
@@ -133,7 +136,7 @@ func (k HTTPProducer) Produce(ctx context.Context, key string, message *utils.Me
 	blobBody, _ := ioutil.ReadAll(res.Body)
 	var resBody any
 	resBody = make(map[string]any)
-	err = json.Unmarshal(blobBody, &data)
+	err = json.Unmarshal(blobBody, &resBody)
 	if err != nil {
 		k.log.Error(ctx, "KafkaHTTPProducer : Error in JSON Marshal", err)
 		resBody = string(blobBody)
