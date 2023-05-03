@@ -31,7 +31,7 @@ func New(appConfig config.ServerConfig, loggerConfig log.Config, lMux log.LogMux
 			Routes: make(APIRoute, 0),
 		},
 	}
-	ctx := b.GetCorrelationContext(context.Background(), log.GetDefaultCorrelationParams(appConfig.ServiceName))
+	ctx := b.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParams(appConfig.ServiceName))
 	b.log = log.NewLogger(ctx, &loggerConfig, loggerConfig.ServiceName, lMux, auditLogger)
 	zone, _ := time.Now().Zone()
 	b.log.Notice(ctx, "Timezone", zone)
