@@ -12,6 +12,7 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/sabariramc/goserverbase/v2/log"
+	ddtrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/net/http"
 )
 
 var ErrResponseUnmarshal = fmt.Errorf("http.do.responseBodyMarshall")
@@ -42,7 +43,7 @@ func NewHttpClient(timeout time.Duration, log *log.Logger, logConfig LogConfig, 
 	t.MaxIdleConns = 100
 	t.MaxConnsPerHost = 100
 	t.MaxIdleConnsPerHost = 100
-	c := &HttpClient{Client: &http.Client{Transport: t}, log: log, LogConfig: logConfig, RetryMax: retryMax, RetryWaitMin: retryWaitMin, RetryWaitMax: retryWaitMax}
+	c := &HttpClient{Client: ddtrace.WrapClient(&http.Client{Transport: t}), log: log, LogConfig: logConfig, RetryMax: retryMax, RetryWaitMin: retryWaitMin, RetryWaitMax: retryWaitMax}
 	return c
 }
 
