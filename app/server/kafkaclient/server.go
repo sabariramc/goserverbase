@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/sabariramc/goserverbase/v2/baseapp"
+	baseapp "github.com/sabariramc/goserverbase/v2/app"
 	"github.com/sabariramc/goserverbase/v2/errors"
 	"github.com/sabariramc/goserverbase/v2/kafka"
 	"github.com/sabariramc/goserverbase/v2/log"

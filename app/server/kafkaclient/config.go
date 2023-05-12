@@ -1,7 +1,7 @@
 package kafkaclient
 
 import (
-	"github.com/sabariramc/goserverbase/v2/baseapp"
+	baseapp "github.com/sabariramc/goserverbase/v2/app"
 	"github.com/sabariramc/goserverbase/v2/kafka"
 )
 
