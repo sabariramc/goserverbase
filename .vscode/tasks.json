@@ -4,16 +4,32 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "build",
+            "label": "buildHttp",
             "command": "go",
             "args": [
                 "build",
                 "-o",
-                "${workspaceFolder}/bin/${workspaceFolderBasename}",
+                "${workspaceFolder}/bin/${workspaceFolderBasename}-http",
             ],
             "type": "shell",
             "options": {
-                "cwd": "${workspaceFolder}/baseapp/test"
+                "cwd": "${workspaceFolder}/app/server/httpserver/test"
+            },
+            "problemMatcher": [
+                "$go"
+            ],
+        },
+        {
+            "label": "buildKafka",
+            "command": "go",
+            "args": [
+                "build",
+                "-o",
+                "${workspaceFolder}/bin/${workspaceFolderBasename}-kafka",
+            ],
+            "type": "shell",
+            "options": {
+                "cwd": "${workspaceFolder}/app/server/kafkaclient/test"
             },
             "problemMatcher": [
                 "$go"

@@ -17,11 +17,10 @@ type Consumer struct {
 	*kafkatrace.Consumer
 	config *KafkaConsumerConfig
 	log    *log.Logger
-	topic  string
-	ready  bool
+	topic  []string
 }
 
-func NewConsumer(ctx context.Context, log *log.Logger, config *KafkaConsumerConfig, topic string) (*Consumer, error) {
+func NewConsumer(ctx context.Context, log *log.Logger, config *KafkaConsumerConfig, topic ...string) (*Consumer, error) {
 	parsedConfig := &kafka.ConfigMap{}
 	utils.StrictJsonTransformer(config, parsedConfig)
 	c, err := kafkatrace.NewConsumer(parsedConfig)
@@ -36,7 +35,7 @@ func NewConsumer(ctx context.Context, log *log.Logger, config *KafkaConsumerConf
 		Consumer: c,
 		topic:    topic,
 	}
-	err = k.SubscribeTopics([]string{topic}, k.logReBalance)
+	err = k.SubscribeTopics(topic, k.logReBalance)
 	if err != nil {
 		k.log.Error(ctx, "Failed to create kafka consumer subscription", err)
 		return nil, fmt.Errorf("kafka.NewKafkaConsumer.SubscribeTopics: %w", err)
@@ -52,7 +51,7 @@ func (k *Consumer) logReBalance(consumer *kafka.Consumer, e kafka.Event) error {
 func (k *Consumer) Poll(ctx context.Context, timeout int, outChannel chan *kafka.Message) error {
 	defer close(outChannel)
 	var err error
-	k.log.Info(ctx, "Polling started for topic : "+k.topic, nil)
+	k.log.Info(ctx, fmt.Sprintf("Polling started for topic : %v", k.topic), nil)
 outer:
 	for {
 		select {
@@ -64,7 +63,6 @@ outer:
 			switch e := ev.(type) {
 			case *kafka.Message:
 				outChannel <- e
-				k.log.Debug(ctx, "Polling result", e)
 			case kafka.PartitionEOF:
 				k.log.Info(ctx, "Reached EOF, Ending poll", e)
 				break outer
@@ -72,19 +70,17 @@ outer:
 				k.log.Error(ctx, "Poll error", e)
 				err = fmt.Errorf("KafkaConsumer.Poll: %w", err)
 				break outer
-			default:
-				k.log.Debug(ctx, "Polling next message from topic: "+k.topic, e)
 			}
 		}
 	}
-	k.log.Info(ctx, "Polling ended for topic : "+k.topic, nil)
+	k.log.Warning(ctx, fmt.Sprintf("Polling ended for topic : %v", k.topic), nil)
 	return err
 }
 
 func (k *Consumer) ReadMessage(ctx context.Context, timeout time.Duration) (*kafka.Message, error) {
 	ev, err := k.Consumer.ReadMessage(timeout)
 	if err != nil {
-		k.log.Error(ctx, "Error reading message from topic: "+k.topic, err)
+		k.log.Error(ctx, fmt.Sprintf("Polling started for topic : %v", k.topic), err)
 		return nil, fmt.Errorf("KafkaConsumer.ReadMessage: %w", err)
 	}
 	return ev, err
@@ -93,7 +89,7 @@ func (k *Consumer) ReadMessage(ctx context.Context, timeout time.Duration) (*kaf
 func (k *Consumer) Close(ctx context.Context) error {
 	err := k.Consumer.Close()
 	if err != nil {
-		k.log.Error(ctx, "Error closing message from topic: "+k.topic, err)
+		k.log.Error(ctx, fmt.Sprintf("Polling started for topic : %v", k.topic), err)
 		return fmt.Errorf("KafkaConsumer.Close: %w", err)
 	}
 	return nil

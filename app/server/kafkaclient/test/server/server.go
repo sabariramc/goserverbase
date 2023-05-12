@@ -1,8 +1,10 @@
-package baseapp_test
+package server
 
 import (
 	"context"
 
+	"github.com/sabariramc/goserverbase/v2/app/server/kafkaclient"
+	"github.com/sabariramc/goserverbase/v2/kafka"
 	"github.com/sabariramc/goserverbase/v2/log"
 	"github.com/sabariramc/goserverbase/v2/log/logwriter"
 	"github.com/sabariramc/goserverbase/v2/utils/testutils"
@@ -17,7 +19,7 @@ func init() {
 	ServerTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter(log.HostParams{
 		Version:     ServerTestConfig.Logger.Version,
-		Host:        ServerTestConfig.App.Host,
+		Host:        ServerTestConfig.Http.Host,
 		ServiceName: ServerTestConfig.App.ServiceName,
 	})
 	ServerTestLMux = log.NewDefaultLogMux(consoleLogWriter)
@@ -27,4 +29,23 @@ func init() {
 func GetCorrelationContext() context.Context {
 	ctx := context.WithValue(context.Background(), log.ContextKeyCorrelation, log.GetDefaultCorrelationParams(ServerTestConfig.App.ServiceName))
 	return ctx
+}
+
+type server struct {
+	*kafkaclient.KafkaClient
+	log *log.Logger
+}
+
+func (s *server) Func1(ctx context.Context, msg *kafka.Message) error {
+	msg.Print(ctx, s.log)
+	return nil
+}
+
+func NewServer() *server {
+	srv := &server{
+		KafkaClient: kafkaclient.New(*ServerTestConfig.Kafka, *ServerTestConfig.Logger, ServerTestLMux, nil, nil),
+	}
+	srv.log = srv.GetLogger()
+	srv.AddHandler(ServerTestConfig.KafkaTestTopic, srv.Func1)
+	return srv
 }

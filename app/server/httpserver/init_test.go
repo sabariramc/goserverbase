@@ -1,4 +1,4 @@
-package aes_test
+package httpserver_test
 
 import (
 	"context"
@@ -13,7 +13,6 @@ var ServerTestLogger *log.Logger
 var ServerTestLMux log.LogMux
 
 func init() {
-	testutils.LoadEnv("../../.env")
 	testutils.Initialize()
 	ServerTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter(log.HostParams{
@@ -21,9 +20,8 @@ func init() {
 		Host:        ServerTestConfig.Http.Host,
 		ServiceName: ServerTestConfig.App.ServiceName,
 	})
-	lmux := log.NewDefaultLogMux(consoleLogWriter)
-	ServerTestLogger = log.NewLogger(context.TODO(), ServerTestConfig.Logger, "CRYPTOTEST", lmux, nil)
-	ServerTestLMux = lmux
+	ServerTestLMux = log.NewDefaultLogMux(consoleLogWriter)
+	ServerTestLogger = log.NewLogger(context.TODO(), ServerTestConfig.Logger, "BaseTest", ServerTestLMux, nil)
 }
 
 func GetCorrelationContext() context.Context {

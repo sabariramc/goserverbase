@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/sabariramc/goserverbase/v2/baseapp"
+	"github.com/sabariramc/goserverbase/v2/app/server/httpserver"
 	"github.com/sabariramc/goserverbase/v2/errors"
 	"github.com/sabariramc/goserverbase/v2/log"
 	"github.com/sabariramc/goserverbase/v2/log/logwriter"
@@ -22,7 +22,7 @@ func init() {
 	ServerTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter(log.HostParams{
 		Version:     ServerTestConfig.Logger.Version,
-		Host:        ServerTestConfig.App.Host,
+		Host:        ServerTestConfig.Http.Host,
 		ServiceName: ServerTestConfig.App.ServiceName,
 	})
 	ServerTestLMux = log.NewDefaultLogMux(consoleLogWriter)
@@ -35,7 +35,7 @@ func GetCorrelationContext() context.Context {
 }
 
 type server struct {
-	*baseapp.BaseApp
+	*httpserver.HttpServer
 }
 
 func (s *server) Func1(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +64,7 @@ func (s *server) Func5(w http.ResponseWriter, r *http.Request) {
 
 func NewServer() *server {
 	srv := &server{
-		BaseApp: baseapp.New(*ServerTestConfig.App, *ServerTestConfig.Logger, ServerTestLMux, nil, nil),
+		HttpServer: httpserver.New(*ServerTestConfig.Http, *ServerTestConfig.Logger, ServerTestLMux, nil, nil),
 	}
 	r := chi.NewRouter()
 	r.Route(

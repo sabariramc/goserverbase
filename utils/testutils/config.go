@@ -2,7 +2,9 @@ package testutils
 
 import (
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/v2/config"
+	baseapp "github.com/sabariramc/goserverbase/v2/app"
+	"github.com/sabariramc/goserverbase/v2/app/server/httpserver"
+	"github.com/sabariramc/goserverbase/v2/app/server/kafkaclient"
 	"github.com/sabariramc/goserverbase/v2/db/mongo"
 	"github.com/sabariramc/goserverbase/v2/kafka"
 	"github.com/sabariramc/goserverbase/v2/log"
@@ -20,7 +22,9 @@ type AWSConfig struct {
 
 type TestConfig struct {
 	Logger              *log.Config
-	App                 *config.ServerConfig
+	App                 *baseapp.ServerConfig
+	Http                *httpserver.HttpServerConfig
+	Kafka               *kafkaclient.KafkaServerConfig
 	Mongo               *mongo.Config
 	AWS                 *AWSConfig
 	KafkaConsumerConfig *kafka.KafkaConsumerConfig
@@ -32,7 +36,7 @@ type TestConfig struct {
 func (t *TestConfig) GetLoggerConfig() *log.Config {
 	return t.Logger
 }
-func (t *TestConfig) GetAppConfig() *config.ServerConfig {
+func (t *TestConfig) GetAppConfig() *baseapp.ServerConfig {
 	return t.App
 }
 
@@ -50,21 +54,37 @@ func NewConfig() *TestConfig {
 			ClientID:      serviceName + "-" + uuid.NewString(),
 		}
 	}
+	appConfig := &baseapp.ServerConfig{
+
+		ServiceName: utils.GetEnv("SERVICE_NAME", "API"),
+		Debug:       utils.GetEnvBool("DEBUG", false),
+	}
+	consumer := &kafka.KafkaConsumerConfig{
+		KafkaCred:      &kafkaBaseConfig,
+		GoEventChannel: false,
+		GroupID:        utils.GetEnv("KAFKA_CONSUMER_ID", serviceName),
+		OffsetReset:    "latest",
+	}
 	return &TestConfig{
 
 		Logger: &log.Config{
-			Version:           utils.GetEnv("LOG_VERSION", "1.1"),
-			Host:              utils.GetEnv("HOST", utils.GetHostName()),
-			ServiceName:       utils.GetEnv("SERVICE_NAME", "API"),
-			LogLevel:          utils.GetEnvInt("LOG_LEVEL", 6),
-			BufferSize:        utils.GetEnvInt("LOG_BUFFER_SIZE", 1),
-			AuthHeaderKeyList: utils.GetEnvAsSlice("AUTH_HEADER_LIST", []string{}, ";"),
-		},
-		App: &config.ServerConfig{
-			Host:        "0.0.0.0",
-			Port:        utils.GetEnv("APP_PORT", "8080"),
+			Version:     utils.GetEnv("LOG_VERSION", "1.1"),
+			Host:        utils.GetEnv("HOST", utils.GetHostName()),
 			ServiceName: utils.GetEnv("SERVICE_NAME", "API"),
-			Debug:       utils.GetEnvBool("DEBUG", false),
+			LogLevel:    utils.GetEnvInt("LOG_LEVEL", 6),
+			BufferSize:  utils.GetEnvInt("LOG_BUFFER_SIZE", 1),
+		},
+		App: appConfig,
+		Http: &httpserver.HttpServerConfig{
+			ServerConfig:      appConfig,
+			AuthHeaderKeyList: utils.GetEnvAsSlice("AUTH_HEADER_LIST", []string{}, ";"),
+			Host:              "0.0.0.0",
+			Port:              utils.GetEnv("APP_PORT", "8080"),
+		},
+		Kafka: &kafkaclient.KafkaServerConfig{
+			ServerConfig:        appConfig,
+			KafkaConsumerConfig: consumer,
+			
 		},
 		Mongo: &mongo.Config{
 			ConnectionString:  utils.GetEnv("MONGO_URL", "mongodb://localhost:60001"),
@@ -83,13 +103,8 @@ func NewConfig() *TestConfig {
 			KafkaCred:   &kafkaBaseConfig,
 			Acknowledge: "all",
 		},
-		KafkaConsumerConfig: &kafka.KafkaConsumerConfig{
-			KafkaCred:      &kafkaBaseConfig,
-			GoEventChannel: false,
-			GroupID:        utils.GetEnv("KAFKA_CONSUMER_ID", serviceName),
-			OffsetReset:    "latest",
-		},
-		KafkaTestTopic:    utils.GetEnv("KAFKA_TEST_TOPIC", serviceName),
-		KafkaHTTPProxyURL: utils.GetEnv("KAFKA_HTTP_PROXY", serviceName),
+		KafkaConsumerConfig: consumer,
+		KafkaTestTopic:      utils.GetEnv("KAFKA_TEST_TOPIC", serviceName),
+		KafkaHTTPProxyURL:   utils.GetEnv("KAFKA_HTTP_PROXY", serviceName),
 	}
 }

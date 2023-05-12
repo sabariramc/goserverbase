@@ -1,4 +1,4 @@
-package baseapp
+package httpserver
 
 const (
 	HttpContentTypeJSON   = "application/json"
