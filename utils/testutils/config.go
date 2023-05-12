@@ -4,6 +4,7 @@ import (
 	"github.com/google/uuid"
 	baseapp "github.com/sabariramc/goserverbase/v2/app"
 	"github.com/sabariramc/goserverbase/v2/app/server/httpserver"
+	"github.com/sabariramc/goserverbase/v2/app/server/kafkaclient"
 	"github.com/sabariramc/goserverbase/v2/db/mongo"
 	"github.com/sabariramc/goserverbase/v2/kafka"
 	"github.com/sabariramc/goserverbase/v2/log"
@@ -23,6 +24,7 @@ type TestConfig struct {
 	Logger              *log.Config
 	App                 *baseapp.ServerConfig
 	Http                *httpserver.HttpServerConfig
+	Kafka               *kafkaclient.KafkaServerConfig
 	Mongo               *mongo.Config
 	AWS                 *AWSConfig
 	KafkaConsumerConfig *kafka.KafkaConsumerConfig
@@ -57,6 +59,12 @@ func NewConfig() *TestConfig {
 		ServiceName: utils.GetEnv("SERVICE_NAME", "API"),
 		Debug:       utils.GetEnvBool("DEBUG", false),
 	}
+	consumer := &kafka.KafkaConsumerConfig{
+		KafkaCred:      &kafkaBaseConfig,
+		GoEventChannel: false,
+		GroupID:        utils.GetEnv("KAFKA_CONSUMER_ID", serviceName),
+		OffsetReset:    "latest",
+	}
 	return &TestConfig{
 
 		Logger: &log.Config{
@@ -72,6 +80,11 @@ func NewConfig() *TestConfig {
 			AuthHeaderKeyList: utils.GetEnvAsSlice("AUTH_HEADER_LIST", []string{}, ";"),
 			Host:              "0.0.0.0",
 			Port:              utils.GetEnv("APP_PORT", "8080"),
+		},
+		Kafka: &kafkaclient.KafkaServerConfig{
+			ServerConfig:        appConfig,
+			KafkaConsumerConfig: consumer,
+			
 		},
 		Mongo: &mongo.Config{
 			ConnectionString:  utils.GetEnv("MONGO_URL", "mongodb://localhost:60001"),
@@ -90,13 +103,8 @@ func NewConfig() *TestConfig {
 			KafkaCred:   &kafkaBaseConfig,
 			Acknowledge: "all",
 		},
-		KafkaConsumerConfig: &kafka.KafkaConsumerConfig{
-			KafkaCred:      &kafkaBaseConfig,
-			GoEventChannel: false,
-			GroupID:        utils.GetEnv("KAFKA_CONSUMER_ID", serviceName),
-			OffsetReset:    "latest",
-		},
-		KafkaTestTopic:    utils.GetEnv("KAFKA_TEST_TOPIC", serviceName),
-		KafkaHTTPProxyURL: utils.GetEnv("KAFKA_HTTP_PROXY", serviceName),
+		KafkaConsumerConfig: consumer,
+		KafkaTestTopic:      utils.GetEnv("KAFKA_TEST_TOPIC", serviceName),
+		KafkaHTTPProxyURL:   utils.GetEnv("KAFKA_HTTP_PROXY", serviceName),
 	}
 }

@@ -8,6 +8,4 @@ import (
 type KafkaServerConfig struct {
 	*baseapp.ServerConfig
 	*kafka.KafkaConsumerConfig
-	Host              string
-	AuthHeaderKeyList []string
 }
