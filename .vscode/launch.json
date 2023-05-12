@@ -2,12 +2,22 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch Server",
+            "name": "Launch HTTP Server",
             "type": "go",
             "request": "launch",
             "mode": "exec",
-            "program": "${workspaceFolder}/bin/${workspaceFolderBasename}",
-            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/bin/${workspaceFolderBasename}-http",
+            "preLaunchTask": "buildHttp",
+            "cwd": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "Launch Kafka Client",
+            "type": "go",
+            "request": "launch",
+            "mode": "exec",
+            "program": "${workspaceFolder}/bin/${workspaceFolderBasename}-kafka",
+            "preLaunchTask": "buildKafka",
             "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env"
         }

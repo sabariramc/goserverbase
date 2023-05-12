@@ -3,8 +3,8 @@ package server
 import (
 	"context"
 
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/sabariramc/goserverbase/v2/app/server/kafkaclient"
+	"github.com/sabariramc/goserverbase/v2/kafka"
 	"github.com/sabariramc/goserverbase/v2/log"
 	"github.com/sabariramc/goserverbase/v2/log/logwriter"
 	"github.com/sabariramc/goserverbase/v2/utils/testutils"
@@ -36,7 +36,8 @@ type server struct {
 	log *log.Logger
 }
 
-func (s *server) Func1(context.Context, *ckafka.Message) error {
+func (s *server) Func1(ctx context.Context, msg *kafka.Message) error {
+	msg.Print(ctx, s.log)
 	return nil
 }
 

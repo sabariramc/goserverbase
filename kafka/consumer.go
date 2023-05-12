@@ -62,7 +62,6 @@ outer:
 			switch e := ev.(type) {
 			case *kafka.Message:
 				outChannel <- e
-				k.log.Debug(ctx, "Polling result", e)
 			case kafka.PartitionEOF:
 				k.log.Info(ctx, "Reached EOF, Ending poll", e)
 				break outer
@@ -70,12 +69,10 @@ outer:
 				k.log.Error(ctx, "Poll error", e)
 				err = fmt.Errorf("KafkaConsumer.Poll: %w", err)
 				break outer
-			default:
-				k.log.Debug(ctx, fmt.Sprintf("Polling started for topic : %v", k.topic), e)
 			}
 		}
 	}
-	k.log.Info(ctx, fmt.Sprintf("Polling started for topic : %v", k.topic), nil)
+	k.log.Warning(ctx, fmt.Sprintf("Polling ended for topic : %v", k.topic), nil)
 	return err
 }
 

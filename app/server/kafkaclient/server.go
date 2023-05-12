@@ -15,7 +15,7 @@ import (
 	"github.com/sabariramc/goserverbase/v2/utils"
 )
 
-type KafkaEventProcessor func(context.Context, *ckafka.Message) error
+type KafkaEventProcessor func(context.Context, *kafka.Message) error
 
 type KafkaClient struct {
 	*baseapp.BaseApp
@@ -60,28 +60,46 @@ func (k *KafkaClient) Subscribe(ctx context.Context) {
 
 func (k *KafkaClient) StartKafkaConsumer() {
 	ctx, cancel := context.WithCancel(k.GetContextWithCorrelation(context.Background(), &log.CorrelationParam{CorrelationId: fmt.Sprintf("%v-KAFKA-CONSUMER", k.c.ServiceName)}))
+	k.log.Notice(ctx, "Starting kafka consumer", nil)
+	defer func() {
+		if rec := recover(); rec != nil {
+			stackTrace := string(debug.Stack())
+			k.log.Error(ctx, "Recovered - Panic", rec)
+			k.log.Error(ctx, "Recovered - StackTrace", stackTrace)
+			err, ok := rec.(error)
+			if !ok {
+				blob, _ := json.Marshal(rec)
+				err = fmt.Errorf("non error panic: %v", string(blob))
+			}
+			k.ProcessError(ctx, stackTrace, err)
+		}
+	}()
 	defer cancel()
 	k.Subscribe(ctx)
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
+		defer close(k.ch)
+		defer wg.Done()
 		k.client.Poll(ctx, 1, k.ch)
-		wg.Done()
-		close(k.ch)
 	}()
+	k.log.Notice(ctx, "Kafka consumer started", nil)
 	for msg := range k.ch {
 		topicName := *msg.TopicPartition.Topic
 		handler := k.handler[topicName]
-		headers := k.PreProcessHeader(msg)
+		if handler == nil {
+			panic(fmt.Errorf("missing handler for topic - %v", topicName))
+		}
+		emMsg := &kafka.Message{Message: msg}
 		ctx := context.Background()
-		ctx = k.GetContextWithCorrelation(ctx, k.GetCorrelationParams(headers))
-		ctx = k.GetContextWithCustomerId(ctx, k.GetCustomerId(headers))
-		k.ProcessEvent(ctx, msg, handler)
+		ctx = k.GetContextWithCorrelation(ctx, k.GetCorrelationParams(emMsg.GetHeaders()))
+		ctx = k.GetContextWithCustomerId(ctx, k.GetCustomerId(emMsg.GetHeaders()))
+		k.ProcessEvent(ctx, emMsg, handler)
 	}
 	wg.Wait()
 }
 
-func (k *KafkaClient) ProcessEvent(ctx context.Context, msg *ckafka.Message, handler KafkaEventProcessor) {
+func (k *KafkaClient) ProcessEvent(ctx context.Context, msg *kafka.Message, handler KafkaEventProcessor) {
 	defer func() {
 		if rec := recover(); rec != nil {
 			stackTrace := string(debug.Stack())
@@ -99,14 +117,6 @@ func (k *KafkaClient) ProcessEvent(ctx context.Context, msg *ckafka.Message, han
 	if err != nil {
 		k.ProcessError(ctx, "", err)
 	}
-}
-
-func (k *KafkaClient) PreProcessHeader(msg *ckafka.Message) map[string]string {
-	headers := make(map[string]string, len(msg.Headers))
-	for _, header := range msg.Headers {
-		headers[header.Key] = string(header.Value)
-	}
-	return headers
 }
 
 func (k *KafkaClient) GetCorrelationParams(headers map[string]string) *log.CorrelationParam {

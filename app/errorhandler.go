@@ -14,7 +14,7 @@ func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error
 	var errorData interface{}
 	var errorCode string
 	statusCode = http.StatusInternalServerError
-	notify := false
+	notify := true
 	var customError *errors.CustomError
 	var httpErr *errors.HTTPError
 	if e.As(err, &httpErr) {
