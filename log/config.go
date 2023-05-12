@@ -6,5 +6,5 @@ type Config struct {
 	ServiceName       string
 	LogLevel          int
 	BufferSize        int
-	AuthHeaderKeyList []string
+	
 }

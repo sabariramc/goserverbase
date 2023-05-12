@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
 
@@ -131,7 +131,7 @@ func (k HTTPProducer) Produce(ctx context.Context, key string, message *utils.Me
 		return nil, fmt.Errorf("KafkaHTTPProducer.Send.HTTPCall: %w", err)
 	}
 	defer res.Body.Close()
-	blobBody, _ := ioutil.ReadAll(res.Body)
+	blobBody, _ := io.ReadAll(res.Body)
 	var resBody any
 	resBody = make(map[string]any)
 	err = json.Unmarshal(blobBody, &resBody)

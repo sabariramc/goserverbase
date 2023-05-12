@@ -1,4 +1,4 @@
-package baseapp_test
+package httpserver_test
 
 import (
 	"context"
@@ -17,7 +17,7 @@ func init() {
 	ServerTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter(log.HostParams{
 		Version:     ServerTestConfig.Logger.Version,
-		Host:        ServerTestConfig.App.Host,
+		Host:        ServerTestConfig.Http.Host,
 		ServiceName: ServerTestConfig.App.ServiceName,
 	})
 	ServerTestLMux = log.NewDefaultLogMux(consoleLogWriter)

@@ -1,18 +1,15 @@
-package baseapp
+package httpserver
 
 import (
 	"context"
 	"encoding/json"
-	e "errors"
 	"fmt"
 	"net/http"
 	"runtime/debug"
 	"time"
-
-	"github.com/sabariramc/goserverbase/v2/errors"
 )
 
-func (b *BaseApp) RequestTimerMiddleware(next http.Handler) http.Handler {
+func (b *HttpServer) RequestTimerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
 		next.ServeHTTP(w, r)
@@ -21,10 +18,10 @@ func (b *BaseApp) RequestTimerMiddleware(next http.Handler) http.Handler {
 
 }
 
-func (b *BaseApp) SetContextMiddleware(next http.Handler) http.Handler {
+func (b *HttpServer) SetContextMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := b.GetContextWithCorrelation(r.Context(), b.GetHttpCorrelationParams(r))
-		ctx = b.GetContextWithCustomerId(ctx, b.GetHttpCustomerId(r))
+		ctx := b.GetContextWithCorrelation(r.Context(), b.GetCorrelationParams(r))
+		ctx = b.GetContextWithCustomerId(ctx, b.GetCustomerId(r))
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
 	})
@@ -46,7 +43,7 @@ func (w *loggingResponseWriter) Write(body []byte) (int, error) {
 	return w.ResponseWriter.Write(body)
 }
 
-func (b *BaseApp) LogRequestResponseMiddleware(next http.Handler) http.Handler {
+func (b *HttpServer) LogRequestResponseMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		b.PrintRequest(r.Context(), r)
 		loggingRW := &loggingResponseWriter{
@@ -64,47 +61,12 @@ func (b *BaseApp) LogRequestResponseMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-type ErrorRecorder func(err error)
-
-func (b *BaseApp) SendErrorResponse(ctx context.Context, w http.ResponseWriter, stackTrace string, err error) {
-	var statusCode int
-	var body []byte
-	var errorData interface{}
-	var errorCode string
-	statusCode = http.StatusInternalServerError
-	notify := false
-	var customError *errors.CustomError
-	var httpErr *errors.HTTPError
-	if e.As(err, &httpErr) {
-		statusCode = httpErr.ErrorStatusCode
-		notify = httpErr.Notify
-		body = httpErr.GetErrorResponse()
-		errorCode = httpErr.ErrorCode
-		errorData = httpErr.ErrorData
-
-	} else if e.As(err, &customError) {
-		statusCode = http.StatusInternalServerError
-		notify = customError.Notify
-		body = customError.GetErrorResponse()
-		errorData = customError.ErrorData
-	} else {
-		statusCode = http.StatusInternalServerError
-		customError = errors.NewCustomError("UNKNOWN", "Unknown error", err, map[string]string{"error": "Internal error occurred, if persist contact technical team"}, true)
-		body = customError.GetErrorResponse()
-		err = customError
-	}
-	if notify && b.errorNotifier != nil {
-		if statusCode >= 500 {
-			b.errorNotifier.Send5XX(ctx, errorCode, err, stackTrace, errorData)
-		} else {
-			b.errorNotifier.Send4XX(ctx, errorCode, err, stackTrace, errorData)
-		}
-
-	}
+func (b *HttpServer) SendErrorResponse(ctx context.Context, w http.ResponseWriter, stackTrace string, err error) {
+	statusCode, body := b.ProcessError(ctx, stackTrace, err)
 	WriteJsonWithStatusCode(w, statusCode, body)
 }
 
-func (b *BaseApp) HandleExceptionMiddleware(next http.Handler) http.Handler {
+func (b *HttpServer) HandleExceptionMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		defer func() {

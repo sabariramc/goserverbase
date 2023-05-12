@@ -2,7 +2,7 @@ package csfle_test
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"testing"
 
@@ -40,7 +40,7 @@ func TestCollectionPII(t *testing.T) {
 			t.Fatal(err)
 		}
 	}()
-	schemeByte, err := ioutil.ReadAll(file)
+	schemeByte, err := io.ReadAll(file)
 	if err != nil {
 		t.Fatal(err)
 	}

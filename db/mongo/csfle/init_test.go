@@ -17,7 +17,7 @@ func init() {
 	MongoTestConfig = testutils.NewConfig()
 	hostParams := log.HostParams{
 		Version:     MongoTestConfig.Logger.Version,
-		Host:        MongoTestConfig.App.Host,
+		Host:        MongoTestConfig.Http.Host,
 		ServiceName: MongoTestConfig.App.ServiceName,
 	}
 	consoleLogWriter := logwriter.NewConsoleWriter(hostParams)

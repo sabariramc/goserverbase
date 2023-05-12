@@ -18,7 +18,7 @@ func init() {
 	KafkaTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter(log.HostParams{
 		Version:     KafkaTestConfig.Logger.Version,
-		Host:        KafkaTestConfig.App.Host,
+		Host:        KafkaTestConfig.Http.Host,
 		ServiceName: KafkaTestConfig.App.ServiceName,
 	})
 	lMux := log.NewDefaultLogMux(consoleLogWriter)

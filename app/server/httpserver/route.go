@@ -1,4 +1,4 @@
-package baseapp
+package httpserver
 
 import (
 	"context"
@@ -61,7 +61,7 @@ func HealthCheck(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(204)
 }
 
-func (b *BaseApp) SetupRouter(ctx context.Context) {
+func (b *HttpServer) SetupRouter(ctx context.Context) {
 	b.handler.Use(b.SetContextMiddleware, b.RequestTimerMiddleware, b.LogRequestResponseMiddleware, b.HandleExceptionMiddleware)
 	b.handler.NotFound(NotFound())
 	b.handler.MethodNotAllowed(MethodNotAllowed())
