@@ -1,3 +1,3 @@
 package errors
 
-const ParseErrorMsg = "******************ERROR DURING MARSHAL OF FULL MESSAGE*******************"
+const ErrParse = "******************ERROR DURING MARSHAL OF FULL MESSAGE*******************"

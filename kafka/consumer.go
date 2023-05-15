@@ -48,7 +48,6 @@ func (k *Consumer) logReBalance(consumer *kafka.Consumer, e kafka.Event) error {
 }
 
 func (k *Consumer) Poll(ctx context.Context, timeout int, outChannel chan *kafka.Message) error {
-	defer close(outChannel)
 	var err error
 	k.log.Info(ctx, fmt.Sprintf("Polling started for topic : %v", k.topic), nil)
 outer:
@@ -59,16 +58,23 @@ outer:
 			break outer
 		default:
 			ev := k.Consumer.Poll(timeout)
-			switch e := ev.(type) {
-			case *kafka.Message:
-				outChannel <- e
-			case kafka.PartitionEOF:
-				k.log.Info(ctx, "Reached EOF, Ending poll", e)
-				break outer
-			case kafka.Error:
-				k.log.Error(ctx, "Poll error", e)
-				err = fmt.Errorf("KafkaConsumer.Poll: %w", err)
-				break outer
+			if ev != nil {
+				switch e := ev.(type) {
+				case *kafka.Message:
+					outChannel <- e
+				case kafka.PartitionEOF:
+					k.log.Error(ctx, "Reached EOF, Ending poll", e)
+					err = fmt.Errorf("KafkaConsumer.Poll: EOF: %v", e)
+					break outer
+				case kafka.Error:
+					k.log.Error(ctx, "Poll error", e)
+					err = fmt.Errorf("KafkaConsumer.Poll: Error: %w", e)
+					break outer
+				default:
+					k.log.Error(ctx, "Poll error", e)
+					err = fmt.Errorf("KafkaConsumer.Poll: Unknown: %v", e.String())
+					break outer
+				}
 			}
 		}
 	}

@@ -46,6 +46,6 @@ func NewServer() *server {
 		KafkaClient: kafkaclient.New(*ServerTestConfig.Kafka, *ServerTestConfig.Logger, ServerTestLMux, nil, nil),
 	}
 	srv.log = srv.GetLogger()
-	srv.AddHandler(ServerTestConfig.KafkaTestTopic, srv.Func1)
+	srv.AddHandler(GetCorrelationContext(), ServerTestConfig.KafkaTestTopic, srv.Func1)
 	return srv
 }

@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -39,9 +40,8 @@ type server struct {
 }
 
 func (s *server) Func1(w http.ResponseWriter, r *http.Request) {
-	s.PrintRequest(r.Context(), r)
-	w.WriteHeader(200)
-	w.Write([]byte("Hello"))
+	data, _ := io.ReadAll(r.Body)
+	s.WriteJsonWithStatusCode(r.Context(), w, 200, map[string]string{"body": string(data)})
 }
 
 func (s *server) Func2(w http.ResponseWriter, r *http.Request) {
@@ -51,15 +51,15 @@ func (s *server) Func2(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) Func3(w http.ResponseWriter, r *http.Request) {
-	s.SetHandlerError(r.Context(), errors.NewCustomError("hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, true))
+	s.SetContextError(r.Context(), errors.NewCustomError("hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, true))
 }
 
 func (s *server) Func4(w http.ResponseWriter, r *http.Request) {
-	panic("random panic at Func4")
+	s.Log.Emergency(r.Context(), "random panic at Func4", nil, nil)
 }
 
 func (s *server) Func5(w http.ResponseWriter, r *http.Request) {
-	s.SetHandlerError(r.Context(), errors.NewHTTPClientError(403, "hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil))
+	s.SetContextError(r.Context(), errors.NewHTTPClientError(403, "hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil))
 }
 
 func NewServer() *server {

@@ -18,7 +18,7 @@ func TestRouter(t *testing.T) {
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
 	blob, _ := io.ReadAll(w.Body)
-	assert.Equal(t, string(blob), "Hello")
+	assert.Equal(t, string(blob), "{\"body\":\"\"}")
 	assert.Equal(t, w.Result().StatusCode, http.StatusOK)
 	req = httptest.NewRequest(http.MethodGet, "/service/v1/tenants/search", nil)
 	w = httptest.NewRecorder()

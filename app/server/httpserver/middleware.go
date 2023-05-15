@@ -2,10 +2,7 @@ package httpserver
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"net/http"
-	"runtime/debug"
 	"time"
 )
 
@@ -13,7 +10,7 @@ func (b *HttpServer) RequestTimerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
 		next.ServeHTTP(w, r)
-		b.log.Info(r.Context(), "Request processing time in ms", time.Since(st).Milliseconds())
+		b.Log.Info(r.Context(), "Request processing time in ms", time.Since(st).Milliseconds())
 	})
 
 }
@@ -51,43 +48,35 @@ func (b *HttpServer) LogRequestResponseMiddleware(next http.Handler) http.Handle
 		}
 		next.ServeHTTP(loggingRW, r)
 		if loggingRW.status < 500 {
-			b.log.Info(r.Context(), "Response", map[string]any{"statusCode": loggingRW.status, "headers": loggingRW.Header()})
-			b.log.Debug(r.Context(), "Response-Body", loggingRW.body)
+			b.Log.Info(r.Context(), "Response", map[string]any{"statusCode": loggingRW.status, "headers": loggingRW.Header()})
+			b.Log.Debug(r.Context(), "Response-Body", loggingRW.body)
 		} else {
-			b.log.Error(r.Context(), "Response", map[string]any{"statusCode": loggingRW.status, "headers": loggingRW.Header()})
-			b.log.Error(r.Context(), "Response-Body", loggingRW.body)
+			b.Log.Error(r.Context(), "Response", map[string]any{"statusCode": loggingRW.status, "headers": loggingRW.Header()})
+			b.Log.Error(r.Context(), "Response-Body", loggingRW.body)
 		}
 
 	})
 }
 
-func (b *HttpServer) SendErrorResponse(ctx context.Context, w http.ResponseWriter, stackTrace string, err error) {
-	statusCode, body := b.ProcessError(ctx, stackTrace, err)
-	WriteJsonWithStatusCode(w, statusCode, body)
-}
-
 func (b *HttpServer) HandleExceptionMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
 		defer func() {
 			if rec := recover(); rec != nil {
-				stackTrace := string(debug.Stack())
-				b.log.Error(ctx, "Recovered - Panic", rec)
-				b.log.Error(ctx, "Recovered - StackTrace", stackTrace)
-				err, ok := rec.(error)
-				if !ok {
-					blob, _ := json.Marshal(rec)
-					err = fmt.Errorf("non error panic: %v", string(blob))
-				}
-				b.SendErrorResponse(ctx, w, stackTrace, err)
+				statusCode, body := b.PanicRecovery(r.Context(), rec, nil)
+				b.WriteJsonWithStatusCode(r.Context(), w, statusCode, body)
 			}
 		}()
+		body := b.CopyRequestBody(r.Context(), r)
+		ctx := r.Context()
 		var handlerError error
 		ctx = context.WithValue(ctx, ContextKeyError, func(err error) { handlerError = err })
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
 		if handlerError != nil {
-			b.SendErrorResponse(ctx, w, "", handlerError)
+			reqMeta := b.ExtractRequestMetadata(r)
+			reqMeta["Body"] = string(body)
+			statusCode, body := b.ProcessError(ctx, "", handlerError, reqMeta)
+			b.WriteJsonWithStatusCode(r.Context(), w, statusCode, body)
 		}
 	})
 }
