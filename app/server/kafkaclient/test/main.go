@@ -6,5 +6,5 @@ import (
 
 func main() {
 	s := server.NewServer()
-	s.StartKafkaConsumer()
+	s.StartConsumer()
 }
