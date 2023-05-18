@@ -29,7 +29,10 @@ func (h *HttpServer) LogRequestResponseMiddleware(next http.Handler) http.Handle
 		loggingW := &loggingResponseWriter{
 			ResponseWriter: w,
 		}
-		r = h.SetRequestBodyInContext(r)
+		var body string
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, ContextKeyRequestBody, &body)
+		r = r.WithContext(ctx)
 		h.PrintRequest(r.Context(), r)
 		next.ServeHTTP(loggingW, r)
 		if loggingW.status < 500 {
