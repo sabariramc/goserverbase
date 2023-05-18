@@ -37,7 +37,8 @@ type server struct {
 }
 
 func (s *server) Func1(ctx context.Context, msg *kafka.Message) error {
-	msg.Print(ctx, s.log)
+	s.log.Info(ctx, "Kafka message", msg.GetMeta())
+	s.log.Info(ctx, "Kafka body", msg.GetBody())
 	return nil
 }
 

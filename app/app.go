@@ -44,6 +44,10 @@ func (b *BaseApp) SetLogger(l *log.Logger) {
 	b.log = l
 }
 
+func (b *BaseApp) GetErrorNotifier() errors.ErrorNotifier {
+	return b.errorNotifier
+}
+
 func (b *BaseApp) PanicRecovery(ctx context.Context, rec any, errorData any) (int, []byte) {
 	stackTrace := string(debug.Stack())
 	b.log.Error(ctx, "Recovered - Panic", rec)

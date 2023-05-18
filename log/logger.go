@@ -136,6 +136,8 @@ func (l *Logger) Emergency(ctx context.Context, shortMessage string, fullMessage
 	panic(fmt.Errorf("%v : %w", shortMessage, err))
 }
 
+type logObj func() string
+
 func (l *Logger) print(ctx context.Context, level *LogLevel, shortMessage string, fullMessage interface{}) {
 	if level.Level > l.logLevel {
 		return
@@ -152,6 +154,10 @@ func (l *Logger) print(ctx context.Context, level *LogLevel, shortMessage string
 			msg = v
 		case error:
 			msg = v.Error()
+		case logObj:
+			msg = v()
+		case []byte:
+			msg = string(v)
 		default:
 			var blob []byte
 			var err error

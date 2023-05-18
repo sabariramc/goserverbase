@@ -9,7 +9,7 @@ import (
 
 func (k *KafkaClient) AddHandler(ctx context.Context, topicName string, handler KafkaEventProcessor) {
 	if handler == nil {
-		k.Log.Emergency(ctx, "missing handler for topic - "+topicName, nil, fmt.Errorf("missing handler for topic - %v", topicName))
+		k.Log.Emergency(ctx, "missing handler for topic - "+topicName, nil, fmt.Errorf("handler parameter cannot be nil"))
 	}
 	k.handler[topicName] = handler
 }

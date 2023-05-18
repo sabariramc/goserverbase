@@ -41,7 +41,7 @@ func (k *KafkaClient) Subscribe(ctx context.Context) {
 	}
 	ch := make(chan *ckafka.Message)
 	k.ch = ch
-	client, err := kafka.NewConsumer(ctx, k.Log, k.c.KafkaConsumerConfig, topicList...)
+	client, err := kafka.NewConsumer(ctx, k.c.ServiceName, k.Log, k.c.KafkaConsumerConfig, k.GetErrorNotifier(), topicList...)
 	if err != nil {
 		k.Log.Emergency(ctx, "Error occurred during client creation", map[string]any{
 			"topicList": topicList,
@@ -65,7 +65,6 @@ func (k *KafkaClient) StartConsumer() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		defer close(k.ch)
 		err := k.client.Poll(ctx, 1, k.ch)
 		if err != nil {
 			k.Log.Emergency(ctx, "Kafka consumer exited", nil, err)

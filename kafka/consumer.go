@@ -8,18 +8,21 @@ import (
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/sabariramc/goserverbase/v2/errors"
 	"github.com/sabariramc/goserverbase/v2/log"
 	"github.com/sabariramc/goserverbase/v2/utils"
 )
 
 type Consumer struct {
 	*kafka.Consumer
-	config *KafkaConsumerConfig
-	log    *log.Logger
-	topic  []string
+	config      *KafkaConsumerConfig
+	log         *log.Logger
+	notifier    errors.ErrorNotifier
+	topic       []string
+	serviceName string
 }
 
-func NewConsumer(ctx context.Context, log *log.Logger, config *KafkaConsumerConfig, topic ...string) (*Consumer, error) {
+func NewConsumer(ctx context.Context, serviceName string, log *log.Logger, config *KafkaConsumerConfig, notifier errors.ErrorNotifier, topic ...string) (*Consumer, error) {
 	parsedConfig := &kafka.ConfigMap{}
 	utils.StrictJsonTransformer(config, parsedConfig)
 	c, err := kafka.NewConsumer(parsedConfig)
@@ -29,10 +32,12 @@ func NewConsumer(ctx context.Context, log *log.Logger, config *KafkaConsumerConf
 		return nil, fmt.Errorf("kafka.NewKafkaConsumer.CreateConsumer: %w", err)
 	}
 	k := &Consumer{
-		config:   config,
-		log:      log,
-		Consumer: c,
-		topic:    topic,
+		config:      config,
+		log:         log,
+		Consumer:    c,
+		topic:       topic,
+		notifier:    notifier,
+		serviceName: serviceName,
 	}
 	err = k.SubscribeTopics(topic, k.logReBalance)
 	if err != nil {
@@ -47,8 +52,10 @@ func (k *Consumer) logReBalance(consumer *kafka.Consumer, e kafka.Event) error {
 	return nil
 }
 
-func (k *Consumer) Poll(ctx context.Context, timeout int, outChannel chan *kafka.Message) error {
+
+func (k *Consumer) Poll(ctx context.Context, timeout int, ch chan *kafka.Message) error {
 	var err error
+	defer close(ch)
 	k.log.Info(ctx, fmt.Sprintf("Polling started for topic : %v", k.topic), nil)
 outer:
 	for {
@@ -61,7 +68,7 @@ outer:
 			if ev != nil {
 				switch e := ev.(type) {
 				case *kafka.Message:
-					outChannel <- e
+					ch <- e
 				case kafka.PartitionEOF:
 					k.log.Error(ctx, "Reached EOF, Ending poll", e)
 					err = fmt.Errorf("KafkaConsumer.Poll: EOF: %v", e)
@@ -70,10 +77,25 @@ outer:
 					k.log.Error(ctx, "Poll error", e)
 					err = fmt.Errorf("KafkaConsumer.Poll: Error: %w", e)
 					break outer
+				case kafka.RevokedPartitions:
+					k.log.Notice(ctx, "Partition revoked", e.Partitions)
+					if k.notifier != nil {
+						k.notifier.Send4XX(ctx, fmt.Sprintf("com.error.%v.kafka.partition.revoked", k.serviceName), nil, "", nil)
+					}
+				case kafka.AssignedPartitions:
+					k.log.Notice(ctx, "Partition assigned", e.Partitions)
+					if k.notifier != nil {
+						k.notifier.Send4XX(ctx, fmt.Sprintf("com.notice.%v.kafka.partition.assigned", k.serviceName), nil, "", nil)
+					}
+				case kafka.OffsetsCommitted:
+					k.log.Notice(ctx, "KafkaConsumer.Poll: Offset Committed", e.Offsets)
+					if e.Error != nil {
+						k.log.Error(ctx, "Poll Offset Committed error", e.Error)
+						err = fmt.Errorf("KafkaConsumer.Poll: Offset Committed Error: %w", e.Error)
+						break outer
+					}
 				default:
-					k.log.Error(ctx, "Poll error", e)
-					err = fmt.Errorf("KafkaConsumer.Poll: Unknown: %v", e.String())
-					break outer
+					k.log.Notice(ctx, "KafkaConsumer.Poll: Event", e.String())
 				}
 			}
 		}

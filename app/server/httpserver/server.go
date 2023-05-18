@@ -39,28 +39,28 @@ func New(appConfig HttpServerConfig, loggerConfig log.Config, lMux log.LogMux, e
 	return h
 }
 
-func (b *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	b.handler.ServeHTTP(w, r)
+func (h *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.handler.ServeHTTP(w, r)
 }
 
-func (b *HttpServer) GetAPIDocument() APIDocumentation {
-	return b.docMeta
+func (h *HttpServer) GetAPIDocument() APIDocumentation {
+	return h.docMeta
 }
 
-func (b *HttpServer) GetRouter() *chi.Mux {
-	return b.handler
+func (h *HttpServer) GetRouter() *chi.Mux {
+	return h.handler
 }
 
-func (b *HttpServer) StartServer() {
-	b.Log.Notice(context.TODO(), fmt.Sprintf("Server starting at %v", b.GetPort()), nil)
-	err := http.ListenAndServe(b.GetPort(), b)
-	b.Log.Emergency(context.Background(), "Server crashed", nil, err)
+func (h *HttpServer) StartServer() {
+	h.Log.Notice(context.TODO(), fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
+	err := http.ListenAndServe(h.GetPort(), h)
+	h.Log.Emergency(context.Background(), "Server crashed", nil, err)
 }
 
-func (b *HttpServer) GetPort() string {
-	return fmt.Sprintf("%v:%v", b.c.Host, b.c.Port)
+func (h *HttpServer) GetPort() string {
+	return fmt.Sprintf("%v:%v", h.c.Host, h.c.Port)
 }
 
-func (b *HttpServer) AddServerHost(server DocumentServer) {
-	b.docMeta.Server = append(b.docMeta.Server, server)
+func (h *HttpServer) AddServerHost(server DocumentServer) {
+	h.docMeta.Server = append(h.docMeta.Server, server)
 }

@@ -5,7 +5,25 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+
+	"github.com/sabariramc/goserverbase/v2/utils"
 )
+
+type loggingResponseWriter struct {
+	status int
+	body   string
+	http.ResponseWriter
+}
+
+func (w *loggingResponseWriter) WriteHeader(code int) {
+	w.status = code
+	w.ResponseWriter.WriteHeader(code)
+}
+
+func (w *loggingResponseWriter) Write(body []byte) (int, error) {
+	w.body = string(body)
+	return w.ResponseWriter.Write(body)
+}
 
 func (h *HttpServer) WriteJsonWithStatusCode(ctx context.Context, w http.ResponseWriter, statusCode int, responseBody any) {
 	var err error
@@ -30,7 +48,7 @@ func (h *HttpServer) WriteResponseWithStatusCode(ctx context.Context, w http.Res
 	var ok bool
 	var err error
 	if blob, ok = responseBody.([]byte); !ok {
-		blob, err = h.GetBytes(responseBody)
+		blob, err = utils.GetBytes(responseBody)
 		if err != nil {
 			h.Log.Emergency(ctx, "response encoding error", responseBody, err)
 		}

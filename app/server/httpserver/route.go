@@ -61,9 +61,9 @@ func HealthCheck(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(204)
 }
 
-func (b *HttpServer) SetupRouter(ctx context.Context) {
-	b.handler.Use(b.SetContextMiddleware, b.RequestTimerMiddleware, b.LogRequestResponseMiddleware, b.HandleExceptionMiddleware)
-	b.handler.NotFound(NotFound())
-	b.handler.MethodNotAllowed(MethodNotAllowed())
-	b.handler.Get("/meta/health", HealthCheck)
+func (h *HttpServer) SetupRouter(ctx context.Context) {
+	h.handler.Use(h.SetContextMiddleware, h.RequestTimerMiddleware, h.LogRequestResponseMiddleware, h.HandleExceptionMiddleware)
+	h.handler.NotFound(NotFound())
+	h.handler.MethodNotAllowed(MethodNotAllowed())
+	h.handler.Get("/meta/health", HealthCheck)
 }

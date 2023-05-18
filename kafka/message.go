@@ -1,16 +1,15 @@
 package kafka
 
 import (
-	"context"
 	"encoding/json"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/sabariramc/goserverbase/v2/log"
 )
 
 type Message struct {
 	*kafka.Message
 	headers map[string]string
+	body    any
 }
 
 func (m *Message) GetKey() string {
@@ -28,16 +27,22 @@ func (m *Message) GetHeaders() map[string]string {
 	return m.headers
 }
 
-func (m *Message) LoadBody(v any) {
-	json.Unmarshal(m.Message.Value, v)
+func (m *Message) LoadBody(v any) error {
+	return json.Unmarshal(m.Message.Value, v)
 }
 
-func (m *Message) Print(ctx context.Context, log *log.Logger) {
-	log.Info(ctx, "Kafka Message", map[string]any{
+func (m *Message) GetBody() any {
+	if m.body == nil {
+		m.body = string(m.Message.Value)
+	}
+	return m.body
+}
+
+func (m *Message) GetMeta() map[string]any {
+	return map[string]any{
 		"Key":            m.GetKey(),
 		"Headers":        m.GetHeaders(),
 		"TopicPartition": m.TopicPartition,
 		"Timestamp":      m.Timestamp,
-	})
-	log.Debug(ctx, "Kafka Message-Body", string(m.Message.Value))
+	}
 }

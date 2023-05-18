@@ -11,10 +11,10 @@ import (
 	"github.com/sabariramc/goserverbase/v2/log"
 )
 
-func (b *HttpServer) GetCorrelationParams(r *http.Request) *log.CorrelationParam {
+func (h *HttpServer) GetCorrelationParams(r *http.Request) *log.CorrelationParam {
 	correlationId := r.Header.Get("x-correlation-id")
 	if correlationId == "" {
-		return log.GetDefaultCorrelationParams(b.c.ServiceName)
+		return log.GetDefaultCorrelationParams(h.c.ServiceName)
 	}
 	return &log.CorrelationParam{
 		CorrelationId: correlationId,
@@ -24,7 +24,7 @@ func (b *HttpServer) GetCorrelationParams(r *http.Request) *log.CorrelationParam
 	}
 }
 
-func (b *HttpServer) GetCustomerId(r *http.Request) *log.CustomerIdentifier {
+func (h *HttpServer) GetCustomerId(r *http.Request) *log.CustomerIdentifier {
 	appUserId := r.Header.Get("x-app-user-id")
 	if appUserId == "" {
 		return &log.CustomerIdentifier{}
@@ -36,33 +36,34 @@ func (b *HttpServer) GetCustomerId(r *http.Request) *log.CustomerIdentifier {
 	}
 }
 
-func (b *HttpServer) PrintRequest(ctx context.Context, r *http.Request) {
-	h := r.Header
+func (h *HttpServer) PrintRequest(ctx context.Context, r *http.Request) {
+	header := r.Header
 	popList := make(map[string][]string)
-	for _, key := range b.c.Log.AuthHeaderKeyList {
-		val := h.Values(key)
+	for _, key := range h.c.Log.AuthHeaderKeyList {
+		val := header.Values(key)
 		if len(val) != 0 {
 			popList[key] = val
-			h.Set(key, "---redacted---")
+			header.Set(key, "---redacted---")
 		}
 	}
-	req := b.ExtractRequestMetadata(r)
-	b.Log.Info(ctx, "Request", req)
-	if b.c.Log.ContentLength >= r.ContentLength {
-		body := b.CopyRequestBody(ctx, r)
-		b.Log.Debug(ctx, "Request-Body", string(body))
-	} else if b.c.Log.ContentLength < r.ContentLength {
-		b.Log.Notice(ctx, "Request-Body", "Content length is too big to print check server log configuration")
+	req := h.ExtractRequestMetadata(r)
+	h.Log.Info(ctx, "Request", req)
+	if h.c.Log.ContentLength >= r.ContentLength {
+		h.Log.Debug(ctx, "Request-Body", func() string {
+			return *h.GetRequestBody(r)
+		})
+	} else if h.c.Log.ContentLength < r.ContentLength {
+		h.Log.Notice(ctx, "Request-Body", "Content length is too big to print check server log configuration")
 	}
 	for key, value := range popList {
-		h.Del(key)
+		header.Del(key)
 		for _, v := range value {
-			h.Add(key, v)
+			header.Add(key, v)
 		}
 	}
 }
 
-func (b *HttpServer) CopyRequestBody(ctx context.Context, r *http.Request) []byte {
+func (h *HttpServer) CopyRequestBody(r *http.Request) []byte {
 	if r.ContentLength <= 0 {
 		return nil
 	}
@@ -81,7 +82,7 @@ func (b *HttpServer) CopyRequestBody(ctx context.Context, r *http.Request) []byt
 	return blobBody
 }
 
-func (b *HttpServer) ExtractRequestMetadata(r *http.Request) map[string]any {
+func (h *HttpServer) ExtractRequestMetadata(r *http.Request) map[string]any {
 	res := map[string]interface{}{
 		"Method":        r.Method,
 		"Header":        r.Header,
@@ -93,4 +94,23 @@ func (b *HttpServer) ExtractRequestMetadata(r *http.Request) map[string]any {
 		"RequestURI":    r.RequestURI,
 	}
 	return res
+}
+
+func (h *HttpServer) SetRequestBodyInContext(r *http.Request) *http.Request {
+	body := string(h.CopyRequestBody(r))
+	ctx := r.Context()
+	ctx = context.WithValue(ctx, ContextKeyRequestBody, &body)
+	r = r.WithContext(ctx)
+	return r
+}
+
+func (h *HttpServer) GetRequestBody(r *http.Request) *string {
+	ctx := r.Context()
+	ctxBody := ctx.Value(ContextKeyRequestBody)
+	body, ok := ctxBody.(*string)
+	if ctxBody == nil || !ok {
+		val := string(h.CopyRequestBody(r))
+		body = &val
+	}
+	return body
 }

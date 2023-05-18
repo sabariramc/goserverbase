@@ -16,7 +16,7 @@ import (
 
 func TestKafkaMessage(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := kafka.NewConsumer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaConsumerConfig, KafkaTestConfig.KafkaTestTopic)
+	co, err := kafka.NewConsumer(ctx, "TEST", KafkaTestLogger, KafkaTestConfig.KafkaConsumerConfig, nil, KafkaTestConfig.KafkaTestTopic)
 	defer co.Close(ctx)
 	assert.NilError(t, err)
 	var s sync.WaitGroup
@@ -39,7 +39,7 @@ func TestKafkaMessage(t *testing.T) {
 
 func TestKafkaPoll(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := kafka.NewConsumer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaConsumerConfig, KafkaTestConfig.KafkaTestTopic)
+	co, err := kafka.NewConsumer(ctx, "TEST", KafkaTestLogger, KafkaTestConfig.KafkaConsumerConfig, nil, KafkaTestConfig.KafkaTestTopic)
 	defer co.Close(ctx)
 	assert.NilError(t, err)
 	pr, err := kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.KafkaTestTopic)
@@ -82,7 +82,7 @@ func TestKafkaPoll(t *testing.T) {
 
 func TestKafkaPollWithDelay(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := kafka.NewConsumer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaConsumerConfig, KafkaTestConfig.KafkaTestTopic)
+	co, err := kafka.NewConsumer(ctx, "TEST", KafkaTestLogger, KafkaTestConfig.KafkaConsumerConfig, nil, KafkaTestConfig.KafkaTestTopic)
 	defer co.Close(ctx)
 	assert.NilError(t, err)
 	pr, err := kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.KafkaTestTopic)
@@ -137,7 +137,7 @@ func TestKafkaPollWithDelay(t *testing.T) {
 
 func TestKafkaPollWithDelayExtended(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := kafka.NewConsumer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaConsumerConfig, KafkaTestConfig.KafkaTestTopic)
+	co, err := kafka.NewConsumer(ctx, "TEST", KafkaTestLogger, KafkaTestConfig.KafkaConsumerConfig, nil, KafkaTestConfig.KafkaTestTopic)
 	defer co.Close(ctx)
 	assert.NilError(t, err)
 	pr, err := kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.KafkaTestTopic)
@@ -164,7 +164,7 @@ func TestKafkaPollWithDelayExtended(t *testing.T) {
 
 func TestKafkaPollHTTPProducer(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := kafka.NewConsumer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaConsumerConfig, KafkaTestConfig.KafkaTestTopic)
+	co, err := kafka.NewConsumer(ctx, "TEST", KafkaTestLogger, KafkaTestConfig.KafkaConsumerConfig, nil, KafkaTestConfig.KafkaTestTopic)
 	defer co.Close(ctx)
 	assert.NilError(t, err)
 	pr := kafka.NewHTTPProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaHTTPProxyURL, KafkaTestConfig.KafkaTestTopic, time.Minute)
