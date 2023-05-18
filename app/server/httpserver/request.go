@@ -50,7 +50,7 @@ func (h *HttpServer) PrintRequest(ctx context.Context, r *http.Request) {
 	h.Log.Info(ctx, "Request", req)
 	if h.c.Log.ContentLength >= r.ContentLength {
 		h.Log.Debug(ctx, "Request-Body", func() string {
-			return *h.GetRequestBody(r)
+			return h.GetRequestBody(r)
 		})
 	} else if h.c.Log.ContentLength < r.ContentLength {
 		h.Log.Notice(ctx, "Request-Body", "Content length is too big to print check server log configuration")
@@ -96,21 +96,19 @@ func (h *HttpServer) ExtractRequestMetadata(r *http.Request) map[string]any {
 	return res
 }
 
-func (h *HttpServer) SetRequestBodyInContext(r *http.Request) *http.Request {
-	body := string(h.CopyRequestBody(r))
-	ctx := r.Context()
-	ctx = context.WithValue(ctx, ContextKeyRequestBody, &body)
-	r = r.WithContext(ctx)
-	return r
-}
-
-func (h *HttpServer) GetRequestBody(r *http.Request) *string {
+func (h *HttpServer) GetRequestBody(r *http.Request) string {
 	ctx := r.Context()
 	ctxBody := ctx.Value(ContextKeyRequestBody)
-	body, ok := ctxBody.(*string)
-	if ctxBody == nil || !ok {
-		val := string(h.CopyRequestBody(r))
-		body = &val
+	if ctxBody != nil {
+		body, ok := ctxBody.(*string)
+		if ok {
+			if *body == "" {
+				val := string(h.CopyRequestBody(r))
+				*body = val
+			}
+			return *body
+		}
 	}
-	return body
+	val := string(h.CopyRequestBody(r))
+	return val
 }
