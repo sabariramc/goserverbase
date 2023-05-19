@@ -2,6 +2,9 @@ package baseapp
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"runtime/debug"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/session"
@@ -39,4 +42,20 @@ func (b *BaseApp) GetLogger() *log.Logger {
 
 func (b *BaseApp) SetLogger(l *log.Logger) {
 	b.log = l
+}
+
+func (b *BaseApp) GetErrorNotifier() errors.ErrorNotifier {
+	return b.errorNotifier
+}
+
+func (b *BaseApp) PanicRecovery(ctx context.Context, rec any, errorData any) (int, []byte) {
+	stackTrace := string(debug.Stack())
+	b.log.Error(ctx, "Recovered - Panic", rec)
+	b.log.Error(ctx, "Recovered - StackTrace", stackTrace)
+	err, ok := rec.(error)
+	if !ok {
+		blob, _ := json.Marshal(rec)
+		err = fmt.Errorf("non error panic: %v", string(blob))
+	}
+	return b.ProcessError(ctx, stackTrace, err, errorData)
 }

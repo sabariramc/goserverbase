@@ -2,92 +2,68 @@ package httpserver
 
 import (
 	"context"
-	"encoding/json"
-	"fmt"
 	"net/http"
-	"runtime/debug"
 	"time"
 )
 
-func (b *HttpServer) RequestTimerMiddleware(next http.Handler) http.Handler {
+func (h *HttpServer) SetContextMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx := h.GetContextWithCorrelation(r.Context(), h.GetCorrelationParams(r))
+		ctx = h.GetContextWithCustomerId(ctx, h.GetCustomerId(r))
+		r = r.WithContext(ctx)
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (h *HttpServer) RequestTimerMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		st := time.Now()
 		next.ServeHTTP(w, r)
-		b.log.Info(r.Context(), "Request processing time in ms", time.Since(st).Milliseconds())
+		h.Log.Info(r.Context(), "Request processing time in ms", time.Since(st).Milliseconds())
 	})
 
 }
 
-func (b *HttpServer) SetContextMiddleware(next http.Handler) http.Handler {
+func (h *HttpServer) LogRequestResponseMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := b.GetContextWithCorrelation(r.Context(), b.GetCorrelationParams(r))
-		ctx = b.GetContextWithCustomerId(ctx, b.GetCustomerId(r))
-		r = r.WithContext(ctx)
-		next.ServeHTTP(w, r)
-	})
-}
-
-type loggingResponseWriter struct {
-	status int
-	body   string
-	http.ResponseWriter
-}
-
-func (w *loggingResponseWriter) WriteHeader(code int) {
-	w.status = code
-	w.ResponseWriter.WriteHeader(code)
-}
-
-func (w *loggingResponseWriter) Write(body []byte) (int, error) {
-	w.body = string(body)
-	return w.ResponseWriter.Write(body)
-}
-
-func (b *HttpServer) LogRequestResponseMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		b.PrintRequest(r.Context(), r)
-		loggingRW := &loggingResponseWriter{
+		loggingW := &loggingResponseWriter{
 			ResponseWriter: w,
 		}
-		next.ServeHTTP(loggingRW, r)
-		if loggingRW.status < 500 {
-			b.log.Info(r.Context(), "Response", map[string]any{"statusCode": loggingRW.status, "headers": loggingRW.Header()})
-			b.log.Debug(r.Context(), "Response-Body", loggingRW.body)
+		var body string
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, ContextKeyRequestBody, &body)
+		r = r.WithContext(ctx)
+		h.PrintRequest(r.Context(), r)
+		next.ServeHTTP(loggingW, r)
+		if loggingW.status < 500 {
+			h.Log.Info(r.Context(), "Response", map[string]any{"statusCode": loggingW.status, "headers": loggingW.Header()})
+			h.Log.Debug(r.Context(), "Response-Body", loggingW.body)
 		} else {
-			b.log.Error(r.Context(), "Response", map[string]any{"statusCode": loggingRW.status, "headers": loggingRW.Header()})
-			b.log.Error(r.Context(), "Response-Body", loggingRW.body)
+			h.Log.Error(r.Context(), "Response", map[string]any{"statusCode": loggingW.status, "headers": loggingW.Header()})
+			h.Log.Error(r.Context(), "Response-Body", loggingW.body)
 		}
 
 	})
 }
 
-func (b *HttpServer) SendErrorResponse(ctx context.Context, w http.ResponseWriter, stackTrace string, err error) {
-	statusCode, body := b.ProcessError(ctx, stackTrace, err)
-	WriteJsonWithStatusCode(w, statusCode, body)
-}
-
-func (b *HttpServer) HandleExceptionMiddleware(next http.Handler) http.Handler {
+func (h *HttpServer) HandleExceptionMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+		req := h.ExtractRequestMetadata(r)
+		req["Body"] = h.GetRequestBody(r)
 		defer func() {
 			if rec := recover(); rec != nil {
-				stackTrace := string(debug.Stack())
-				b.log.Error(ctx, "Recovered - Panic", rec)
-				b.log.Error(ctx, "Recovered - StackTrace", stackTrace)
-				err, ok := rec.(error)
-				if !ok {
-					blob, _ := json.Marshal(rec)
-					err = fmt.Errorf("non error panic: %v", string(blob))
-				}
-				b.SendErrorResponse(ctx, w, stackTrace, err)
+				statusCode, body := h.PanicRecovery(r.Context(), rec, req)
+				h.WriteJsonWithStatusCode(r.Context(), w, statusCode, body)
 			}
 		}()
+		ctx := r.Context()
 		var handlerError error
-		ctx = context.WithValue(ctx, ContextKeyError, func(err error) { handlerError = err })
+		ctx = context.WithValue(ctx, ContextKeyHandlerError, func(err error) { handlerError = err })
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
 		if handlerError != nil {
-			b.SendErrorResponse(ctx, w, "", handlerError)
+			statusCode, body := h.ProcessError(ctx, "", handlerError, req)
+			h.WriteJsonWithStatusCode(r.Context(), w, statusCode, body)
 		}
 	})
 }

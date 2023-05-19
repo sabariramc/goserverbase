@@ -6,7 +6,7 @@ import (
 )
 
 type CustomError struct {
-	ErrorData        interface{} `json:"-"`
+	ErrorData        interface{} `json:"errorData"`
 	ErrorMessage     string      `json:"errorMessage"`
 	ErrorDescription interface{} `json:"errorDescription"`
 	ErrorCode        string      `json:"errorCode"`
@@ -16,25 +16,28 @@ type CustomError struct {
 func (e *CustomError) Error() string {
 	blob, err := json.MarshalIndent(e, "", "    ")
 	if err != nil {
-		e.ErrorData = ParseErrorMsg
+		e.ErrorData = ErrParse
+		e.ErrorDescription = ErrParse
 		blob, _ = json.MarshalIndent(e, "", "    ")
 	}
 	return string(blob)
 }
 
-func (e *CustomError) GetErrorResponse() []byte {
-	blob, err := json.Marshal(e)
+func (e *CustomError) GetErrorResponse() ([]byte, error) {
+	data := map[string]any{
+		"errorMessage":     e.ErrorMessage,
+		"errorCode":        e.ErrorCode,
+		"errorDescription": e.ErrorDescription,
+	}
+	blob, err := json.Marshal(data)
 	if err != nil {
-		e.ErrorData = ParseErrorMsg
+		e.ErrorDescription = "{\"error\":Internal error occurred, if persist contact technical team}"
 		blob, _ = json.Marshal(e)
 	}
-	return blob
+	return blob, err
 }
 
 func NewCustomError(errorCode, errorMessage string, errorData interface{}, errorDescription interface{}, notify bool) *CustomError {
-	if v, ok := errorData.(error); ok {
-		errorData = v.Error()
-	}
 	return &CustomError{ErrorCode: errorCode, ErrorMessage: errorMessage, ErrorData: errorData, Notify: notify, ErrorDescription: errorDescription}
 }
 

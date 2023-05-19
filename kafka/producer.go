@@ -83,7 +83,11 @@ func (k *Producer) Produce(ctx context.Context, key string, message *utils.Messa
 		k.log.Error(ctx, "Send failed for topic: "+k.topic, err)
 		return nil, fmt.Errorf("KafkaProducer.Send.ProduceMessage: %w", err)
 	}
-	k.log.Info(ctx, "Send success for topic: "+k.topic, m)
+	logMsg := &Message{
+		Message: m,
+	}
+	k.log.Info(ctx, "Send success for topic: "+k.topic, logMsg.GetMeta())
+	k.log.Debug(ctx, "Send success for topic - body: "+k.topic, logMsg.GetBody)
 	return m, nil
 }
 

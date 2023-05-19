@@ -76,15 +76,14 @@ func NewConfig() *TestConfig {
 		},
 		App: appConfig,
 		Http: &httpserver.HttpServerConfig{
-			ServerConfig:      appConfig,
-			AuthHeaderKeyList: utils.GetEnvAsSlice("AUTH_HEADER_LIST", []string{}, ";"),
-			Host:              "0.0.0.0",
-			Port:              utils.GetEnv("APP_PORT", "8080"),
+			ServerConfig: appConfig,
+			Log:          &httpserver.LogConfig{AuthHeaderKeyList: utils.GetEnvAsSlice("AUTH_HEADER_LIST", []string{}, ";")},
+			Host:         "0.0.0.0",
+			Port:         utils.GetEnv("APP_PORT", "8080"),
 		},
 		Kafka: &kafkaclient.KafkaServerConfig{
 			ServerConfig:        appConfig,
 			KafkaConsumerConfig: consumer,
-			
 		},
 		Mongo: &mongo.Config{
 			ConnectionString:  utils.GetEnv("MONGO_URL", "mongodb://localhost:60001"),

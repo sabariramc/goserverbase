@@ -152,6 +152,10 @@ func (l *Logger) print(ctx context.Context, level *LogLevel, shortMessage string
 			msg = v
 		case error:
 			msg = v.Error()
+		case func() string:
+			msg = v()
+		case []byte:
+			msg = string(v)
 		default:
 			var blob []byte
 			var err error
