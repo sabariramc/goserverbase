@@ -76,9 +76,7 @@ func (h *HttpServer) HandleExceptionMiddleware(next http.Handler) http.Handler {
 						} else {
 							cfg.Error = fmt.Errorf("panic during execution")
 						}
-						cfg.NoDebugStack = false
 						cfg.StackFrames = 15
-						cfg.SkipStackFrames = 1
 					})
 				}
 			}

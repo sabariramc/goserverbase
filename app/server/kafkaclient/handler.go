@@ -30,7 +30,6 @@ func (k *KafkaClient) ProcessEvent(ctx context.Context, msg *kafka.Message, hand
 						cfg.Error = fmt.Errorf("panic during execution")
 					}
 					cfg.StackFrames = 15
-					cfg.SkipStackFrames = 1
 				})
 			}
 		}
@@ -44,9 +43,8 @@ func (k *KafkaClient) ProcessEvent(ctx context.Context, msg *kafka.Message, hand
 		if spanOk && statusCode >= 500 {
 			span.Finish(func(cfg *ddtrace.FinishConfig) {
 				cfg.Error = err
-				cfg.NoDebugStack = true
 			})
 		}
 	}
-	
+
 }
