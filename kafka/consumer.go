@@ -15,7 +15,7 @@ import (
 )
 
 type Consumer struct {
-	*kafka.Consumer
+	*kafkatrace.Consumer
 	config      *KafkaConsumerConfig
 	log         *log.Logger
 	notifier    errors.ErrorNotifier
@@ -52,7 +52,6 @@ func (k *Consumer) logReBalance(consumer *kafka.Consumer, e kafka.Event) error {
 	k.log.Notice(context.Background(), fmt.Sprintf("Re-balance Event for topic %v", k.topic), e.String())
 	return nil
 }
-
 
 func (k *Consumer) Poll(ctx context.Context, timeout int, ch chan *kafka.Message) error {
 	var err error

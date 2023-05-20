@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/sabariramc/goserverbase/v2/errors"
+	chitrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/go-chi/chi"
 )
 
 type APIDocumentation struct {
@@ -62,6 +63,7 @@ func HealthCheck(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *HttpServer) SetupRouter(ctx context.Context) {
+	h.handler.Use(chitrace.Middleware())
 	h.handler.Use(h.SetContextMiddleware, h.RequestTimerMiddleware, h.LogRequestResponseMiddleware, h.HandleExceptionMiddleware)
 	h.handler.NotFound(NotFound())
 	h.handler.MethodNotAllowed(MethodNotAllowed())
