@@ -39,12 +39,8 @@ func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error
 	if parseErr != nil {
 		b.log.Alert(ctx, "Error occurred during marshal of errors", parseErr)
 	}
-	b.log.Error(ctx, "Error request data", requestData)
-	if errorData == nil {
-		errorData = requestData
-	} else {
-		b.log.Error(ctx, "Error data", errorData)
-	}
+	b.log.Error(ctx, "Error", err)
+	b.log.Error(ctx, "Request data", requestData)
 	if notify && b.errorNotifier != nil {
 		if statusCode >= 500 {
 			b.errorNotifier.Send5XX(ctx, errorCode, err, stackTrace, errorData)
@@ -52,6 +48,5 @@ func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error
 			b.errorNotifier.Send4XX(ctx, errorCode, err, stackTrace, errorData)
 		}
 	}
-
 	return statusCode, body
 }
