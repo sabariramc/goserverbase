@@ -43,7 +43,7 @@ func NewCustomError(errorCode, errorMessage string, errorData interface{}, error
 
 type HTTPError struct {
 	CustomError
-	ErrorStatusCode int `json:""`
+	ErrorStatusCode int `json:"statusCode"`
 }
 
 func NewHTTPError(statusCode int, errorCode, errorMessage string, errorData interface{}, errorDescription interface{}, notify bool) *HTTPError {
