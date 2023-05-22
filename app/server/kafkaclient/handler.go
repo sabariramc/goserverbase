@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/sabariramc/goserverbase/v2/kafka"
-	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
@@ -19,18 +19,19 @@ func (k *KafkaClient) AddHandler(ctx context.Context, topicName string, handler 
 func (k *KafkaClient) ProcessEvent(ctx context.Context, msg *kafka.Message, handler KafkaEventProcessor) {
 	span, spanOk := tracer.SpanFromContext(ctx)
 	defer func() {
+		if spanOk {
+			span.Finish()
+		}
+	}()
+	defer func() {
 		if rec := recover(); rec != nil {
 			k.PanicRecovery(ctx, rec, msg)
 			if spanOk {
 				err, errOk := rec.(error)
-				span.Finish(func(cfg *ddtrace.FinishConfig) {
-					if errOk {
-						cfg.Error = err
-					} else {
-						cfg.Error = fmt.Errorf("panic during execution")
-					}
-					cfg.StackFrames = 15
-				})
+				if !errOk {
+					err = fmt.Errorf("panic during execution")
+				}
+				span.SetTag(ext.Error, err)
 			}
 		}
 	}()
@@ -41,9 +42,7 @@ func (k *KafkaClient) ProcessEvent(ctx context.Context, msg *kafka.Message, hand
 	if err != nil {
 		statusCode, _ := k.ProcessError(ctx, "", err, msg)
 		if spanOk && statusCode >= 500 {
-			span.Finish(func(cfg *ddtrace.FinishConfig) {
-				cfg.Error = err
-			})
+			span.SetTag(ext.Error, err)
 		}
 	}
 

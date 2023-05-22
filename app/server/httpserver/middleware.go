@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
@@ -70,14 +69,10 @@ func (h *HttpServer) HandleExceptionMiddleware(next http.Handler) http.Handler {
 				h.WriteJsonWithStatusCode(r.Context(), w, statusCode, body)
 				if spanOk {
 					err, errOk := rec.(error)
-					span.Finish(func(cfg *ddtrace.FinishConfig) {
-						if errOk {
-							cfg.Error = err
-						} else {
-							cfg.Error = fmt.Errorf("panic during execution")
-						}
-						cfg.StackFrames = 15
-					})
+					if !errOk {
+						err = fmt.Errorf("panic during execution")
+					}
+					span.SetTag(ext.Error, err)
 				}
 			}
 		}()
