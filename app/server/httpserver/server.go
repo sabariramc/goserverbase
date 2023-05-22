@@ -9,6 +9,7 @@ import (
 	baseapp "github.com/sabariramc/goserverbase/v2/app"
 	"github.com/sabariramc/goserverbase/v2/errors"
 	"github.com/sabariramc/goserverbase/v2/log"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
 type HttpServer struct {
@@ -52,6 +53,8 @@ func (h *HttpServer) GetRouter() *chi.Mux {
 }
 
 func (h *HttpServer) StartServer() {
+	tracer.Start()
+	defer tracer.Stop()
 	h.Log.Notice(context.TODO(), fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
 	err := http.ListenAndServe(h.GetPort(), h)
 	h.Log.Emergency(context.Background(), "Server crashed", nil, err)

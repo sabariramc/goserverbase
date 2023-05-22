@@ -10,6 +10,7 @@ import (
 	"github.com/sabariramc/goserverbase/v2/errors"
 	"github.com/sabariramc/goserverbase/v2/kafka"
 	"github.com/sabariramc/goserverbase/v2/log"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
 type KafkaEventProcessor func(context.Context, *kafka.Message) error
@@ -52,6 +53,8 @@ func (k *KafkaClient) Subscribe(ctx context.Context) {
 }
 
 func (k *KafkaClient) StartConsumer() {
+	tracer.Start()
+	defer tracer.Stop()
 	ctx, cancel := context.WithCancel(k.GetContextWithCorrelation(context.Background(), &log.CorrelationParam{CorrelationId: fmt.Sprintf("%v-KAFKA-CONSUMER", k.c.ServiceName)}))
 	k.Log.Notice(ctx, "Starting kafka consumer", nil)
 	defer func() {
@@ -62,6 +65,7 @@ func (k *KafkaClient) StartConsumer() {
 	defer cancel()
 	k.Subscribe(ctx)
 	var wg sync.WaitGroup
+	defer wg.Wait()
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
@@ -83,5 +87,4 @@ func (k *KafkaClient) StartConsumer() {
 		ctx = k.GetContextWithCustomerId(ctx, k.GetCustomerId(emMsg.GetHeaders()))
 		k.ProcessEvent(ctx, emMsg, handler)
 	}
-	wg.Wait()
 }
