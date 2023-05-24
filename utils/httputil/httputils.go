@@ -16,6 +16,10 @@ import (
 
 var ErrResponseUnmarshal = fmt.Errorf("http.do.responseBodyMarshall")
 
+type CheckRetry func(ctx context.Context, resp *http.Response, err error) (bool, error)
+
+type Backoff func(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration
+
 type LogConfig struct {
 	MaxContentLength int64
 }
@@ -31,18 +35,20 @@ type HttpClient struct {
 	RetryMax     int
 	RetryWaitMin time.Duration
 	RetryWaitMax time.Duration
+	CheckRetry   CheckRetry
+	Backoff      Backoff
 }
 
 func NewDefaultHttpClient(log *log.Logger) *HttpClient {
-	return NewHttpClient(time.Minute, log, *DefaultLogConfig, 4, time.Second*1, time.Second*5)
+	return NewHttpClient(log, *DefaultLogConfig, 4, time.Second*1, time.Second*5)
 }
 
-func NewHttpClient(timeout time.Duration, log *log.Logger, logConfig LogConfig, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HttpClient {
+func NewHttpClient(log *log.Logger, logConfig LogConfig, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HttpClient {
 	t := http.DefaultTransport.(*http.Transport).Clone()
 	t.MaxIdleConns = 100
 	t.MaxConnsPerHost = 100
 	t.MaxIdleConnsPerHost = 100
-	c := &HttpClient{Client: &http.Client{Transport: t}, log: log, LogConfig: logConfig, RetryMax: retryMax, RetryWaitMin: retryWaitMin, RetryWaitMax: retryWaitMax}
+	c := &HttpClient{Client: &http.Client{Transport: t}, log: log, LogConfig: logConfig, RetryMax: retryMax, RetryWaitMin: retryWaitMin, RetryWaitMax: retryWaitMax, CheckRetry: retryablehttp.DefaultRetryPolicy, Backoff: retryablehttp.DefaultBackoff}
 	return c
 }
 
@@ -207,7 +213,7 @@ func (h *HttpClient) Do(req *http.Request) (*http.Response, error) {
 		attempt++
 		req.Body = io.NopCloser(bytes.NewReader(reqBody))
 		resp, doErr = h.Client.Do(req)
-		shouldRetry, checkErr = retryablehttp.DefaultRetryPolicy(req.Context(), resp, doErr)
+		shouldRetry, checkErr = h.CheckRetry(req.Context(), resp, doErr)
 		if !shouldRetry || checkErr != nil {
 			break
 		}
@@ -215,7 +221,7 @@ func (h *HttpClient) Do(req *http.Request) (*http.Response, error) {
 		if remain <= 0 {
 			break
 		}
-		wait := retryablehttp.DefaultBackoff(h.RetryWaitMin, h.RetryWaitMax, i, resp)
+		wait := h.Backoff(h.RetryWaitMin, h.RetryWaitMax, i, resp)
 		if resp != nil && resp.ContentLength > 0 {
 			defer resp.Body.Close()
 			resBlob, _ = io.ReadAll(resp.Body)
