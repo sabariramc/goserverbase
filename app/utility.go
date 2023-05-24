@@ -15,3 +15,5 @@ func (b *BaseApp) GetContextWithCustomerId(ctx context.Context, c *log.CustomerI
 	ctx = context.WithValue(ctx, log.ContextKeyCustomerIdentifier, c)
 	return ctx
 }
+
+

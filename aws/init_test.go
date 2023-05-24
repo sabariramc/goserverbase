@@ -29,6 +29,6 @@ func init() {
 }
 
 func GetCorrelationContext() context.Context {
-	ctx := context.WithValue(context.Background(), log.ContextKeyCorrelation, log.GetDefaultCorrelationParams(AWSTestConfig.App.ServiceName))
+	ctx := context.WithValue(context.Background(), log.ContextKeyCorrelation, log.GetDefaultCorrelationParam(AWSTestConfig.App.ServiceName))
 	return ctx
 }
