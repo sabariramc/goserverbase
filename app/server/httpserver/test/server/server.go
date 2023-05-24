@@ -31,7 +31,7 @@ func init() {
 }
 
 func GetCorrelationContext() context.Context {
-	ctx := context.WithValue(context.Background(), log.ContextKeyCorrelation, log.GetDefaultCorrelationParams(ServerTestConfig.App.ServiceName))
+	ctx := context.WithValue(context.Background(), log.ContextKeyCorrelation, log.GetDefaultCorrelationParam(ServerTestConfig.App.ServiceName))
 	return ctx
 }
 
@@ -40,6 +40,10 @@ type server struct {
 }
 
 func (s *server) Func1(w http.ResponseWriter, r *http.Request) {
+	id := log.GetCustomerIdentifier(r.Context())
+	corr := log.GetCorrelationParam(r.Context())
+	s.Log.Info(r.Context(), "identity", id)
+	s.Log.Info(r.Context(), "correlation", corr)
 	data, _ := io.ReadAll(r.Body)
 	s.WriteJsonWithStatusCode(r.Context(), w, 200, map[string]string{"body": string(data)})
 }

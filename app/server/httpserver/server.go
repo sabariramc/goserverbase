@@ -34,7 +34,7 @@ func New(appConfig HttpServerConfig, loggerConfig log.Config, lMux log.LogMux, e
 		Log: b.GetLogger(),
 		c:   &appConfig,
 	}
-	ctx := b.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParams(appConfig.ServiceName))
+	ctx := b.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(appConfig.ServiceName))
 	h.SetupRouter(ctx)
 	return h
 }

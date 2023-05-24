@@ -24,7 +24,7 @@ func New(appConfig ServerConfig, loggerConfig log.Config, lMux log.LogMux, error
 		c:             &appConfig,
 		errorNotifier: errorNotifier,
 	}
-	ctx := b.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParams(appConfig.ServiceName))
+	ctx := b.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(appConfig.ServiceName))
 	b.log = log.NewLogger(ctx, &loggerConfig, loggerConfig.ServiceName, lMux, auditLogger)
 	zone, _ := time.Now().Zone()
 	aws.SetDefaultAWSSession(session.Must(session.NewSession()))

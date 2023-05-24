@@ -14,7 +14,7 @@ import (
 func (h *HttpServer) GetCorrelationParams(r *http.Request) *log.CorrelationParam {
 	correlationId := r.Header.Get("x-correlation-id")
 	if correlationId == "" {
-		return log.GetDefaultCorrelationParams(h.c.ServiceName)
+		return log.GetDefaultCorrelationParam(h.c.ServiceName)
 	}
 	return &log.CorrelationParam{
 		CorrelationId: correlationId,
