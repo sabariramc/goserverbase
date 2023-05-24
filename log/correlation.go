@@ -2,6 +2,7 @@ package log
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -9,26 +10,54 @@ import (
 	"github.com/sabariramc/goserverbase/v2/utils"
 )
 
-type CorrelationParam struct {
-	CorrelationId string `json:"x-correlation-id"`
-	ScenarioId    string `json:"x-scenario-id,omitempty"`
-	SessionId     string `json:"x-session-id,omitempty"`
-	ScenarioName  string `json:"x-scenario-name,omitempty"`
-}
-
-type CustomerIdentifier struct {
-	CustomerId string `json:"x-customer-id"`
-	AppUserId  string `json:"x-app-user-id"`
-	Id         string `json:"x-entity-id"`
-}
-
 type HostParams struct {
 	Version     string `json:"version"`
 	Host        string `json:"host"`
 	ServiceName string `json:"service-name,omitempty"`
 }
 
-func GetDefaultCorrelationParams(serviceName string) *CorrelationParam {
+type CorrelationParam struct {
+	CorrelationId string `header:"x-correlation-id" body:"correlationId"`
+	ScenarioId    string `header:"x-scenario-id,omitempty" body:"scenarioId,omitempty"`
+	SessionId     string `header:"x-session-id,omitempty" body:"sessionId,omitempty"`
+	ScenarioName  string `header:"x-scenario-name,omitempty" body:"scenarioName,omitempty"`
+}
+
+func (c *CorrelationParam) GetPayload() map[string]string {
+	encodedData, _ := utils.BodyJson.Marshal(c)
+	res := map[string]string{}
+	json.Unmarshal(encodedData, &res)
+	return res
+}
+
+func (c *CorrelationParam) GetHeader() map[string]string {
+	encodedData, _ := utils.HeaderJson.Marshal(c)
+	res := map[string]string{}
+	json.Unmarshal(encodedData, &res)
+	return res
+}
+
+type CustomerIdentifier struct {
+	CustomerId string `header:"x-customer-id" body:"customerId"`
+	AppUserId  string `header:"x-app-user-id" body:"appUserId"`
+	Id         string `header:"x-entity-id" body:"Id"`
+}
+
+func (c *CustomerIdentifier) GetPayload() map[string]string {
+	encodedData, _ := utils.BodyJson.Marshal(c)
+	res := map[string]string{}
+	json.Unmarshal(encodedData, &res)
+	return res
+}
+
+func (c *CustomerIdentifier) GetHeader() map[string]string {
+	encodedData, _ := utils.HeaderJson.Marshal(c)
+	res := map[string]string{}
+	json.Unmarshal(encodedData, &res)
+	return res
+}
+
+func GetDefaultCorrelationParam(serviceName string) *CorrelationParam {
 	return &CorrelationParam{
 		CorrelationId: fmt.Sprintf("%v-%v", serviceName, uuid.New().String()),
 	}
@@ -66,10 +95,18 @@ func SetCorrelationHeader(ctx context.Context, req *http.Request) {
 }
 
 func GetCorrelationHeader(ctx context.Context) map[string]string {
-	correlation := GetCorrelationParam(ctx)
-	headers := make(map[string]string, 0)
-	utils.StrictJsonTransformer(correlation, &headers)
-	identity := GetCustomerIdentifier(ctx)
-	utils.StrictJsonTransformer(correlation, &identity)
+	headers := make(map[string]string, 10)
+	corr := GetCorrelationParam(ctx).GetHeader()
+	identity := GetCustomerIdentifier(ctx).GetHeader()
+	for k, v := range corr {
+		if v != "" {
+			headers[k] = v
+		}
+	}
+	for k, v := range identity {
+		if v != "" {
+			headers[k] = v
+		}
+	}
 	return headers
 }

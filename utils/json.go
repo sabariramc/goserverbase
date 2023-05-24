@@ -5,6 +5,8 @@ import (
 
 	"encoding/json"
 	"fmt"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 func Serialize(val interface{}) (*string, error) {
@@ -16,27 +18,47 @@ func Serialize(val interface{}) (*string, error) {
 	return &str, nil
 }
 
-func StrictJsonTransformer(src interface{}, dest interface{}) error {
-	return jsonTransformer(src, dest, true)
-}
-
 func LenientJsonTransformer(src interface{}, dest interface{}) error {
-	return jsonTransformer(src, dest, false)
-}
-
-func jsonTransformer(src interface{}, dest interface{}, strict bool) error {
-	var buf bytes.Buffer
-	err := json.NewEncoder(&buf).Encode(src)
+	blob, err := json.Marshal(src)
 	if err != nil {
-		return fmt.Errorf("JsonTransformer encoding: %w", err)
+		return fmt.Errorf("LenientJsonTransformer encoding: %w", err)
 	}
-	decoder := json.NewDecoder(&buf)
-	if strict {
-		decoder.DisallowUnknownFields()
-	}
-	err = decoder.Decode(dest)
+	err = json.Unmarshal(blob, dest)
 	if err != nil {
-		return fmt.Errorf("JsonTransformer decoding: %w", err)
+		return fmt.Errorf("LenientJsonTransformer decoding: %w", err)
 	}
 	return nil
 }
+
+func StrictJsonTransformer(src interface{}, dest interface{}) error {
+	var buf bytes.Buffer
+	err := json.NewEncoder(&buf).Encode(src)
+	if err != nil {
+		return fmt.Errorf("StrictJsonTransformer encoding: %w", err)
+	}
+	decoder := json.NewDecoder(&buf)
+	decoder.DisallowUnknownFields()
+	err = decoder.Decode(dest)
+	if err != nil {
+		return fmt.Errorf("StrictJsonTransformer decoding: %w", err)
+	}
+	return nil
+}
+
+type CustomJsonTagHandler struct {
+	jsoniter.API
+}
+
+func NewCustomJsonTagHandler(tag string) *CustomJsonTagHandler {
+	return &CustomJsonTagHandler{
+		API: jsoniter.Config{
+			EscapeHTML:             true,
+			SortMapKeys:            true,
+			ValidateJsonRawMessage: true,
+			TagKey:                 tag,
+		}.Froze(),
+	}
+}
+
+var HeaderJson = NewCustomJsonTagHandler("header")
+var BodyJson = NewCustomJsonTagHandler("body")

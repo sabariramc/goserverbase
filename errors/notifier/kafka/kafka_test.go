@@ -30,12 +30,15 @@ func init() {
 }
 
 func GetCorrelationContext() context.Context {
-	ctx := context.WithValue(context.Background(), log.ContextKeyCorrelation, log.GetDefaultCorrelationParams(KafkaTestConfig.App.ServiceName))
+	ctx := context.WithValue(context.Background(), log.ContextKeyCorrelation, log.GetDefaultCorrelationParam(KafkaTestConfig.App.ServiceName))
 	return ctx
 }
 
 func TestErrorNotification(t *testing.T) {
 	p, _ := pKafka.NewProducer(context.TODO(), KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.KafkaTestTopic)
 	notifier := kafka.New(context.TODO(), KafkaTestLogger, KafkaTestConfig.KafkaHTTPProxyURL, KafkaTestConfig.KafkaTestTopic, "Test", p)
-	notifier.Send4XX(GetCorrelationContext(), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
+	ctx := GetCorrelationContext()
+	notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{CustomerId: "customer_id_test"}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
+	notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{AppUserId: "app_user_id"}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
+	notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{Id: "entity_id"}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
 }

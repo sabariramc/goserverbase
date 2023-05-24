@@ -6,10 +6,10 @@ import (
 )
 
 func (k *KafkaClient) GetCorrelationParams(headers map[string]string) *log.CorrelationParam {
-	correlation := log.GetDefaultCorrelationParams(k.c.ServiceName)
+	correlation := log.GetDefaultCorrelationParam(k.c.ServiceName)
 	err := utils.LenientJsonTransformer(headers, correlation)
 	if err != nil {
-		return log.GetDefaultCorrelationParams(k.c.ServiceName)
+		return log.GetDefaultCorrelationParam(k.c.ServiceName)
 	}
 	return correlation
 }
