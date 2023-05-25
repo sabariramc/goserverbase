@@ -6,9 +6,9 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	baseapp "github.com/sabariramc/goserverbase/v2/app"
-	"github.com/sabariramc/goserverbase/v2/errors"
-	"github.com/sabariramc/goserverbase/v2/log"
+	baseapp "github.com/sabariramc/goserverbase/v3/app"
+	"github.com/sabariramc/goserverbase/v3/errors"
+	"github.com/sabariramc/goserverbase/v3/log"
 )
 
 type HttpServer struct {

@@ -6,8 +6,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/sabariramc/goserverbase/v2/db/mongo"
-	"github.com/sabariramc/goserverbase/v2/db/mongo/csfle"
+	"github.com/sabariramc/goserverbase/v3/db/mongo"
+	"github.com/sabariramc/goserverbase/v3/db/mongo/csfle"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

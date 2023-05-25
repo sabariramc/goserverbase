@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/sabariramc/goserverbase/v2/errors"
-	"github.com/sabariramc/goserverbase/v2/log"
-	"github.com/sabariramc/goserverbase/v2/utils"
+	"github.com/sabariramc/goserverbase/v3/errors"
+	"github.com/sabariramc/goserverbase/v3/log"
+	"github.com/sabariramc/goserverbase/v3/utils"
 )
 
 type Consumer struct {
@@ -51,7 +51,6 @@ func (k *Consumer) logReBalance(consumer *kafka.Consumer, e kafka.Event) error {
 	k.log.Notice(context.Background(), fmt.Sprintf("Re-balance Event for topic %v", k.topic), e.String())
 	return nil
 }
-
 
 func (k *Consumer) Poll(ctx context.Context, timeout int, ch chan *kafka.Message) error {
 	var err error

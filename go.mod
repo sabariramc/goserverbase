@@ -1,4 +1,4 @@
-module github.com/sabariramc/goserverbase/v2
+module github.com/sabariramc/goserverbase/v3
 
 go 1.20
 

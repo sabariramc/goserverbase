@@ -7,11 +7,11 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/sabariramc/goserverbase/v2/app/server/httpserver"
-	"github.com/sabariramc/goserverbase/v2/errors"
-	"github.com/sabariramc/goserverbase/v2/log"
-	"github.com/sabariramc/goserverbase/v2/log/logwriter"
-	"github.com/sabariramc/goserverbase/v2/utils/testutils"
+	"github.com/sabariramc/goserverbase/v3/app/server/httpserver"
+	"github.com/sabariramc/goserverbase/v3/errors"
+	"github.com/sabariramc/goserverbase/v3/log"
+	"github.com/sabariramc/goserverbase/v3/log/logwriter"
+	"github.com/sabariramc/goserverbase/v3/utils/testutils"
 )
 
 var ServerTestConfig *testutils.TestConfig

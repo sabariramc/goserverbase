@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/sabariramc/goserverbase/v2/log"
+	"github.com/sabariramc/goserverbase/v3/log"
 )
 
 var ErrResponseUnmarshal = fmt.Errorf("http.do.responseBodyMarshall")

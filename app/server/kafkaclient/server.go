@@ -6,10 +6,10 @@ import (
 	"sync"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	baseapp "github.com/sabariramc/goserverbase/v2/app"
-	"github.com/sabariramc/goserverbase/v2/errors"
-	"github.com/sabariramc/goserverbase/v2/kafka"
-	"github.com/sabariramc/goserverbase/v2/log"
+	baseapp "github.com/sabariramc/goserverbase/v3/app"
+	"github.com/sabariramc/goserverbase/v3/errors"
+	"github.com/sabariramc/goserverbase/v3/kafka"
+	"github.com/sabariramc/goserverbase/v3/log"
 )
 
 type KafkaEventProcessor func(context.Context, *kafka.Message) error

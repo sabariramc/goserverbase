@@ -6,7 +6,7 @@ import (
 	stlLog "log"
 	"log/syslog"
 
-	"github.com/sabariramc/goserverbase/v2/log"
+	"github.com/sabariramc/goserverbase/v3/log"
 )
 
 type SyslogWriter struct {
