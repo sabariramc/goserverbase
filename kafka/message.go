@@ -9,7 +9,7 @@ import (
 type Message struct {
 	*kafka.Message
 	headers map[string]string
-	body    any
+	body    string
 }
 
 func (m *Message) GetKey() string {
@@ -31,8 +31,8 @@ func (m *Message) LoadBody(v any) error {
 	return json.Unmarshal(m.Message.Value, v)
 }
 
-func (m *Message) GetBody() any {
-	if m.body == nil {
+func (m *Message) GetBody() string {
+	if m.body == "" {
 		m.body = string(m.Message.Value)
 	}
 	return m.body

@@ -55,10 +55,7 @@ func (k *Producer) Produce(ctx context.Context, key string, message *utils.Messa
 	corr := log.GetCorrelationHeader(ctx)
 	messageHeader := make([]kafka.Header, 0)
 	for i, v := range corr {
-		messageHeader = append(messageHeader, kafka.Header{
-			Key:   i,
-			Value: []byte(v),
-		})
+		headers[i] = v
 	}
 	for i, v := range headers {
 		messageHeader = append(messageHeader, kafka.Header{
@@ -66,7 +63,7 @@ func (k *Producer) Produce(ctx context.Context, key string, message *utils.Messa
 			Value: []byte(v),
 		})
 	}
-	k.log.Debug(ctx, "Message payload", map[string]any{"body": message, "key": key, "headers": messageHeader})
+	k.log.Debug(ctx, "Message payload", map[string]any{"body": message, "key": key, "headers": headers})
 	k.Producer.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{Topic: &k.topic, Partition: kafka.PartitionAny},
 		Key:            []byte(key),
