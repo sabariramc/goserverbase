@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/sabariramc/goserverbase/v2/errors"
-	chitrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/go-chi/chi"
+	chitrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/go-chi/chi.v5"
 )
 
 type APIDocumentation struct {

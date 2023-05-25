@@ -5,9 +5,8 @@
             "name": "Launch HTTP Server",
             "type": "go",
             "request": "launch",
-            "mode": "exec",
-            "program": "${workspaceFolder}/bin/${workspaceFolderBasename}-http",
-            "preLaunchTask": "buildHttp",
+            "mode": "debug",
+            "program": "${workspaceFolder}/app/server/httpserver/test/main.go",
             "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env"
         },
@@ -15,9 +14,8 @@
             "name": "Launch Kafka Client",
             "type": "go",
             "request": "launch",
-            "mode": "exec",
-            "program": "${workspaceFolder}/bin/${workspaceFolderBasename}-kafka",
-            "preLaunchTask": "buildKafka",
+            "mode": "debug",
+            "program": "${workspaceFolder}/app/server/kafkaclient/test/main.go",
             "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env"
         }
