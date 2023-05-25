@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sabariramc/goserverbase/v2/log"
+	"github.com/sabariramc/goserverbase/v3/log"
 )
 
 type ConsoleWriter struct {

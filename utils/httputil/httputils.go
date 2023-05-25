@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/sabariramc/goserverbase/v2/log"
+	"github.com/sabariramc/goserverbase/v3/log"
 	ddtrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/net/http"
 )
 

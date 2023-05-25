@@ -6,10 +6,10 @@ import (
 	"sync"
 
 	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
-	baseapp "github.com/sabariramc/goserverbase/v2/app"
-	"github.com/sabariramc/goserverbase/v2/errors"
-	"github.com/sabariramc/goserverbase/v2/kafka"
-	"github.com/sabariramc/goserverbase/v2/log"
+	baseapp "github.com/sabariramc/goserverbase/v3/app"
+	"github.com/sabariramc/goserverbase/v3/errors"
+	"github.com/sabariramc/goserverbase/v3/kafka"
+	"github.com/sabariramc/goserverbase/v3/log"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 

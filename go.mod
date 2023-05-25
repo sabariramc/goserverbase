@@ -1,4 +1,4 @@
-module github.com/sabariramc/goserverbase/v2
+module github.com/sabariramc/goserverbase/v3
 
 go 1.20
 
@@ -28,7 +28,6 @@ require (
 	github.com/Microsoft/go-winio v0.6.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/go-chi/chi v1.5.4 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect

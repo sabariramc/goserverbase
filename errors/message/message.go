@@ -4,8 +4,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v2/log"
-	"github.com/sabariramc/goserverbase/v2/utils"
+	"github.com/sabariramc/goserverbase/v3/log"
+	"github.com/sabariramc/goserverbase/v3/utils"
 )
 
 func CreateErrorMessage(ctx context.Context, serviceName, errorCode string, err error, stackTrace string, errorData interface{}, alertType string) *utils.Message {

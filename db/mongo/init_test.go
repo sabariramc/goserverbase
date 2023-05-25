@@ -3,9 +3,9 @@ package mongo_test
 import (
 	"context"
 
-	"github.com/sabariramc/goserverbase/v2/log"
-	"github.com/sabariramc/goserverbase/v2/log/logwriter"
-	"github.com/sabariramc/goserverbase/v2/utils/testutils"
+	"github.com/sabariramc/goserverbase/v3/log"
+	"github.com/sabariramc/goserverbase/v3/log/logwriter"
+	"github.com/sabariramc/goserverbase/v3/utils/testutils"
 )
 
 var MongoTestConfig *testutils.TestConfig

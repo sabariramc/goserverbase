@@ -1,8 +1,8 @@
 package kafkaclient
 
 import (
-	baseapp "github.com/sabariramc/goserverbase/v2/app"
-	"github.com/sabariramc/goserverbase/v2/kafka"
+	baseapp "github.com/sabariramc/goserverbase/v3/app"
+	"github.com/sabariramc/goserverbase/v3/kafka"
 )
 
 type KafkaServerConfig struct {

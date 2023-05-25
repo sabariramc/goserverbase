@@ -4,10 +4,10 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/sabariramc/goserverbase/v2/aws"
-	"github.com/sabariramc/goserverbase/v2/log"
-	"github.com/sabariramc/goserverbase/v2/log/logwriter"
-	"github.com/sabariramc/goserverbase/v2/utils/testutils"
+	"github.com/sabariramc/goserverbase/v3/aws"
+	"github.com/sabariramc/goserverbase/v3/log"
+	"github.com/sabariramc/goserverbase/v3/log/logwriter"
+	"github.com/sabariramc/goserverbase/v3/utils/testutils"
 )
 
 var AWSTestConfig *testutils.TestConfig

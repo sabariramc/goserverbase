@@ -3,7 +3,7 @@ package baseapp
 import (
 	"context"
 
-	"github.com/sabariramc/goserverbase/v2/log"
+	"github.com/sabariramc/goserverbase/v3/log"
 )
 
 func (b *BaseApp) GetContextWithCorrelation(ctx context.Context, c *log.CorrelationParam) context.Context {

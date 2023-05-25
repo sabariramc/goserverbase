@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/sabariramc/goserverbase/v2/aws"
-	"github.com/sabariramc/goserverbase/v2/errors"
-	"github.com/sabariramc/goserverbase/v2/log"
+	"github.com/sabariramc/goserverbase/v3/aws"
+	"github.com/sabariramc/goserverbase/v3/errors"
+	"github.com/sabariramc/goserverbase/v3/log"
 )
 
 type BaseApp struct {

@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/sabariramc/goserverbase/v2/log"
-	"github.com/sabariramc/goserverbase/v2/log/logwriter"
-	"github.com/sabariramc/goserverbase/v2/utils/httputil"
-	"github.com/sabariramc/goserverbase/v2/utils/testutils"
+	"github.com/sabariramc/goserverbase/v3/log"
+	"github.com/sabariramc/goserverbase/v3/log/logwriter"
+	"github.com/sabariramc/goserverbase/v3/utils/httputil"
+	"github.com/sabariramc/goserverbase/v3/utils/testutils"
 	"gotest.tools/assert"
 )
 

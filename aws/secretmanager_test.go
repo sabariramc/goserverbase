@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/sabariramc/goserverbase/v2/aws"
+	"github.com/sabariramc/goserverbase/v3/aws"
 )
 
 func TestSecretManager(t *testing.T) {
