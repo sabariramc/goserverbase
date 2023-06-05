@@ -29,7 +29,7 @@
             ],
             "type": "shell",
             "options": {
-                "cwd": "${workspaceFolder}/app/server/kafkaclient/test"
+                "cwd": "${workspaceFolder}/app/server/kafkaconsumer/test"
             },
             "problemMatcher": [
                 "$go"
