@@ -1,4 +1,4 @@
-package kafkaclient
+package kafkaconsumer
 
 import (
 	"context"
@@ -9,14 +9,14 @@ import (
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
-func (k *KafkaClient) AddHandler(ctx context.Context, topicName string, handler KafkaEventProcessor) {
+func (k *KafkaConsumerServer) AddHandler(ctx context.Context, topicName string, handler KafkaEventProcessor) {
 	if handler == nil {
 		k.Log.Emergency(ctx, "missing handler for topic - "+topicName, nil, fmt.Errorf("handler parameter cannot be nil"))
 	}
 	k.handler[topicName] = handler
 }
 
-func (k *KafkaClient) ProcessEvent(ctx context.Context, msg *kafka.Message, handler KafkaEventProcessor) {
+func (k *KafkaConsumerServer) ProcessEvent(ctx context.Context, msg *kafka.Message, handler KafkaEventProcessor) {
 	span, spanOk := tracer.SpanFromContext(ctx)
 	defer func() {
 		if spanOk {

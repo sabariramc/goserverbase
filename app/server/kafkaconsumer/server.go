@@ -1,4 +1,4 @@
-package kafkaclient
+package kafkaconsumer
 
 import (
 	"context"
@@ -15,18 +15,18 @@ import (
 
 type KafkaEventProcessor func(context.Context, *kafka.Message) error
 
-type KafkaClient struct {
+type KafkaConsumerServer struct {
 	*baseapp.BaseApp
 	client  *kafka.Consumer
 	handler map[string]KafkaEventProcessor
 	Log     *log.Logger
 	ch      chan *ckafka.Message
-	c       *KafkaServerConfig
+	c       *KafkaConsumerServerConfig
 }
 
-func New(appConfig KafkaServerConfig, loggerConfig log.Config, lMux log.LogMux, errorNotifier errors.ErrorNotifier, auditLogger log.AuditLogWriter) *KafkaClient {
+func New(appConfig KafkaConsumerServerConfig, loggerConfig log.Config, lMux log.LogMux, errorNotifier errors.ErrorNotifier, auditLogger log.AuditLogWriter) *KafkaConsumerServer {
 	b := baseapp.New(*appConfig.ServerConfig, loggerConfig, lMux, errorNotifier, auditLogger)
-	h := &KafkaClient{
+	h := &KafkaConsumerServer{
 		BaseApp: b,
 		Log:     b.GetLogger(),
 		c:       &appConfig,
@@ -35,7 +35,7 @@ func New(appConfig KafkaServerConfig, loggerConfig log.Config, lMux log.LogMux, 
 	return h
 }
 
-func (k *KafkaClient) Subscribe(ctx context.Context) {
+func (k *KafkaConsumerServer) Subscribe(ctx context.Context) {
 	topicList := make([]string, 0, len(k.handler))
 	for h := range k.handler {
 		topicList = append(topicList, h)
@@ -52,7 +52,7 @@ func (k *KafkaClient) Subscribe(ctx context.Context) {
 	k.client = client
 }
 
-func (k *KafkaClient) StartConsumer() {
+func (k *KafkaConsumerServer) StartConsumer() {
 	tracer.Start()
 	defer tracer.Stop()
 	ctx, cancel := context.WithCancel(k.GetContextWithCorrelation(context.Background(), &log.CorrelationParam{CorrelationId: fmt.Sprintf("%v-KAFKA-CONSUMER", k.c.ServiceName)}))

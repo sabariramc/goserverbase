@@ -4,7 +4,7 @@ import (
 	"github.com/google/uuid"
 	baseapp "github.com/sabariramc/goserverbase/v3/app"
 	"github.com/sabariramc/goserverbase/v3/app/server/httpserver"
-	"github.com/sabariramc/goserverbase/v3/app/server/kafkaclient"
+	"github.com/sabariramc/goserverbase/v3/app/server/kafkaconsumer"
 	"github.com/sabariramc/goserverbase/v3/db/mongo"
 	"github.com/sabariramc/goserverbase/v3/kafka"
 	"github.com/sabariramc/goserverbase/v3/log"
@@ -24,7 +24,7 @@ type TestConfig struct {
 	Logger              *log.Config
 	App                 *baseapp.ServerConfig
 	Http                *httpserver.HttpServerConfig
-	Kafka               *kafkaclient.KafkaServerConfig
+	Kafka               *kafkaconsumer.KafkaConsumerServerConfig
 	Mongo               *mongo.Config
 	AWS                 *AWSConfig
 	KafkaConsumerConfig *kafka.KafkaConsumerConfig
@@ -81,7 +81,7 @@ func NewConfig() *TestConfig {
 			Host:         "0.0.0.0",
 			Port:         utils.GetEnv("APP_PORT", "8080"),
 		},
-		Kafka: &kafkaclient.KafkaServerConfig{
+		Kafka: &kafkaconsumer.KafkaConsumerServerConfig{
 			ServerConfig:        appConfig,
 			KafkaConsumerConfig: consumer,
 		},

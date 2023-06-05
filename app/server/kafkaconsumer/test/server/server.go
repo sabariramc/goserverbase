@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 
-	"github.com/sabariramc/goserverbase/v3/app/server/kafkaclient"
+	"github.com/sabariramc/goserverbase/v3/app/server/kafkaconsumer"
 	"github.com/sabariramc/goserverbase/v3/kafka"
 	"github.com/sabariramc/goserverbase/v3/log"
 	"github.com/sabariramc/goserverbase/v3/log/logwriter"
@@ -32,7 +32,7 @@ func GetCorrelationContext() context.Context {
 }
 
 type server struct {
-	*kafkaclient.KafkaClient
+	*kafkaconsumer.KafkaConsumerServer
 	log *log.Logger
 }
 
@@ -44,7 +44,7 @@ func (s *server) Func1(ctx context.Context, msg *kafka.Message) error {
 
 func NewServer() *server {
 	srv := &server{
-		KafkaClient: kafkaclient.New(*ServerTestConfig.Kafka, *ServerTestConfig.Logger, ServerTestLMux, nil, nil),
+		KafkaConsumerServer: kafkaconsumer.New(*ServerTestConfig.Kafka, *ServerTestConfig.Logger, ServerTestLMux, nil, nil),
 	}
 	srv.log = srv.GetLogger()
 	srv.AddHandler(GetCorrelationContext(), ServerTestConfig.KafkaTestTopic, srv.Func1)

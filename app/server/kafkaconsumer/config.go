@@ -1,11 +1,11 @@
-package kafkaclient
+package kafkaconsumer
 
 import (
 	baseapp "github.com/sabariramc/goserverbase/v3/app"
 	"github.com/sabariramc/goserverbase/v3/kafka"
 )
 
-type KafkaServerConfig struct {
+type KafkaConsumerServerConfig struct {
 	*baseapp.ServerConfig
 	*kafka.KafkaConsumerConfig
 }
