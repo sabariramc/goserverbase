@@ -1,10 +1,14 @@
 package main
 
 import (
+	"context"
+	"time"
+
 	"github.com/sabariramc/goserverbase/v3/app/server/kafkaconsumer/test/server"
 )
 
 func main() {
 	s := server.NewServer()
-	s.StartConsumer()
+	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
+	s.StartConsumer(ctx)
 }
