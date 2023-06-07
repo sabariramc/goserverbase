@@ -38,9 +38,9 @@ func (c *CorrelationParam) GetHeader() map[string]string {
 }
 
 type CustomerIdentifier struct {
-	CustomerId string `header:"x-customer-id" body:"customerId"`
-	AppUserId  string `header:"x-app-user-id" body:"appUserId"`
-	Id         string `header:"x-entity-id" body:"Id"`
+	CustomerId string `header:"x-customer-id,omitempty" body:"customerId,omitempty"`
+	AppUserId  string `header:"x-app-user-id,omitempty" body:"appUserId,omitempty"`
+	Id         string `header:"x-entity-id,omitempty" body:"Id,omitempty"`
 }
 
 func (c *CustomerIdentifier) GetPayload() map[string]string {
