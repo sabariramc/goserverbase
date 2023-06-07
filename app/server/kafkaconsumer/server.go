@@ -51,37 +51,48 @@ func (k *KafkaConsumerServer) Subscribe(ctx context.Context) {
 	k.client = client
 }
 
-func (k *KafkaConsumerServer) StartConsumer() {
-	ctx, cancel := context.WithCancel(k.GetContextWithCorrelation(context.Background(), &log.CorrelationParam{CorrelationId: fmt.Sprintf("%v-KAFKA-CONSUMER", k.c.ServiceName)}))
-	k.Log.Notice(ctx, "Starting kafka consumer", nil)
+func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
+	corr := &log.CorrelationParam{CorrelationId: fmt.Sprintf("%v-KAFKA-CONSUMER", k.c.ServiceName)}
+	ctx = log.GetContextWithCorrelation(ctx, corr)
+	pollCtx, cancelPoll := context.WithCancel(log.GetContextWithCorrelation(context.Background(), corr))
+	k.Log.Notice(pollCtx, "Starting kafka consumer", nil)
 	defer func() {
 		if rec := recover(); rec != nil {
-			k.PanicRecovery(ctx, rec, nil)
+			k.PanicRecovery(pollCtx, rec, nil)
 		}
 	}()
-	defer cancel()
-	k.Subscribe(ctx)
 	var wg sync.WaitGroup
+	k.Subscribe(pollCtx)
+	defer k.client.Close(ctx)
+	defer wg.Wait()
+	defer cancelPoll()
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := k.client.Poll(ctx, 1, k.ch)
+		err := k.client.Poll(pollCtx, 1, k.ch)
 		if err != nil {
-			k.Log.Emergency(ctx, "Kafka consumer exited", nil, err)
+			k.Log.Emergency(pollCtx, "Kafka consumer exited", nil, err)
 		}
 	}()
-	k.Log.Notice(ctx, "Kafka consumer started", nil)
-	for msg := range k.ch {
-		topicName := *msg.TopicPartition.Topic
-		handler := k.handler[topicName]
-		if handler == nil {
-			k.Log.Emergency(ctx, "missing handler for topic - "+topicName, nil, fmt.Errorf("missing handler for topic - %v", topicName))
+	k.Log.Notice(pollCtx, "Kafka consumer started", nil)
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case msg, ok := <-k.ch:
+			if !ok {
+				return
+			}
+			topicName := *msg.TopicPartition.Topic
+			handler := k.handler[topicName]
+			if handler == nil {
+				k.Log.Emergency(pollCtx, "missing handler for topic - "+topicName, nil, fmt.Errorf("missing handler for topic - %v", topicName))
+			}
+			emMsg := &kafka.Message{Message: msg}
+			msgCtx := context.Background()
+			msgCtx = k.GetContextWithCorrelation(msgCtx, k.GetCorrelationParams(emMsg.GetHeaders()))
+			msgCtx = k.GetContextWithCustomerId(msgCtx, k.GetCustomerId(emMsg.GetHeaders()))
+			k.ProcessEvent(msgCtx, emMsg, handler)
 		}
-		emMsg := &kafka.Message{Message: msg}
-		ctx := context.Background()
-		ctx = k.GetContextWithCorrelation(ctx, k.GetCorrelationParams(emMsg.GetHeaders()))
-		ctx = k.GetContextWithCustomerId(ctx, k.GetCustomerId(emMsg.GetHeaders()))
-		k.ProcessEvent(ctx, emMsg, handler)
 	}
-	wg.Wait()
 }

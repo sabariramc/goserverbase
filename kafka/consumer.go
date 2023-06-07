@@ -106,7 +106,7 @@ outer:
 func (k *Consumer) ReadMessage(ctx context.Context, timeout time.Duration) (*kafka.Message, error) {
 	ev, err := k.Consumer.ReadMessage(timeout)
 	if err != nil {
-		k.log.Error(ctx, fmt.Sprintf("Polling started for topic : %v", k.topic), err)
+		k.log.Error(ctx, fmt.Sprintf("Read message error for topic : %v", k.topic), err)
 		return nil, fmt.Errorf("KafkaConsumer.ReadMessage: %w", err)
 	}
 	return ev, err
@@ -115,9 +115,10 @@ func (k *Consumer) ReadMessage(ctx context.Context, timeout time.Duration) (*kaf
 func (k *Consumer) Close(ctx context.Context) error {
 	err := k.Consumer.Close()
 	if err != nil {
-		k.log.Error(ctx, fmt.Sprintf("Polling started for topic : %v", k.topic), err)
+		k.log.Error(ctx, fmt.Sprintf("Consumer closed with error for topic : %v", k.topic), err)
 		return fmt.Errorf("KafkaConsumer.Close: %w", err)
 	}
+	k.log.Notice(ctx, "Consumer closed for topic", k.topic)
 	return nil
 }
 
