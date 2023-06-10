@@ -32,6 +32,9 @@ func NewProducer(ctx context.Context, log *log.Logger, config *KafkaProducerConf
 			return nil, fmt.Errorf("kafka.NewProducer: notifier cannot be of same type")
 		}
 	}
+	if config.MaxBuffer == 0 {
+		config.MaxBuffer = 1000
+	}
 	parsedConfig := &kafka.ConfigMap{}
 	utils.StrictJsonTransformer(config, parsedConfig)
 	ch := make(chan kafka.LogEvent, 10000)
@@ -163,10 +166,12 @@ func (k *Producer) Produce(ctx context.Context, key string, message []byte, head
 	return nil
 }
 
-func (k *Producer) Close() {
+func (k *Producer) Close(ctx context.Context) {
+	k.log.Notice(ctx, "Producer closer initiated for topic", k.topic)
 	k.Producer.Flush(10000)
 	close(k.deliveryCh)
 	close(k.logCh)
 	k.wg.Wait()
 	k.Producer.Close()
+	k.log.Notice(ctx, "Producer closed for topic", k.topic)
 }

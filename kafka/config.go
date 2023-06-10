@@ -11,9 +11,11 @@ type KafkaCred struct {
 
 type KafkaConsumerConfig struct {
 	*KafkaCred
-	GroupID        interface{} `json:"group.id,omitempty"`
-	GoEventChannel bool        `json:"go.events.channel.enable,omitempty"`
-	OffsetReset    interface{} `json:"auto.offset.reset,omitempty"`
+	GroupID                interface{} `json:"group.id,omitempty"`
+	GoEventChannel         bool        `json:"go.events.channel.enable,omitempty"`
+	OffsetReset            interface{} `json:"auto.offset.reset,omitempty"`
+	MaxBuffer              int         `json:"-"`
+	AutoCommitIntervalInMs int         `json:"-"`
 }
 
 type KafkaProducerConfig struct {

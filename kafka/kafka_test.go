@@ -37,7 +37,7 @@ func TestKafkaMessage(t *testing.T) {
 	}()
 	time.Sleep(time.Second * 5)
 	pr, err := kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.App.ServiceName, KafkaTestConfig.KafkaTestTopic, nil)
-	defer pr.Close()
+	defer pr.Close(ctx)
 	assert.NilError(t, err)
 	err = pr.ProduceMessage(ctx, "test", &utils.Message{
 		Event: "random event",
@@ -52,7 +52,7 @@ func TestKafkaPoll(t *testing.T) {
 	defer co.Close(ctx)
 	assert.NilError(t, err)
 	pr, err := kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.App.ServiceName, KafkaTestConfig.KafkaTestTopic, nil)
-	defer pr.Close()
+	defer pr.Close(ctx)
 	assert.NilError(t, err)
 	ch := make(chan *cKafka.Message, 100)
 	var s sync.WaitGroup
@@ -97,7 +97,7 @@ func TestKafkaPollWithDelay(t *testing.T) {
 	defer co.Close(ctx)
 	assert.NilError(t, err)
 	pr, err := kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.App.ServiceName, KafkaTestConfig.KafkaTestTopic, nil)
-	defer pr.Close()
+	defer pr.Close(ctx)
 	assert.NilError(t, err)
 	ch := make(chan *cKafka.Message)
 	tCtx, cancel := context.WithCancel(ctx)
@@ -154,7 +154,7 @@ func TestKafkaPollWithDelayExtended(t *testing.T) {
 	defer co.Close(ctx)
 	assert.NilError(t, err)
 	pr, err := kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.App.ServiceName, KafkaTestConfig.KafkaTestTopic, nil)
-	defer pr.Close()
+	defer pr.Close(ctx)
 	assert.NilError(t, err)
 	tCtx, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
