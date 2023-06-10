@@ -19,4 +19,5 @@ type KafkaConsumerConfig struct {
 type KafkaProducerConfig struct {
 	*KafkaCred
 	Acknowledge interface{} `json:"acks,omitempty"`
+	MaxBuffer   int         `json:"-"`
 }

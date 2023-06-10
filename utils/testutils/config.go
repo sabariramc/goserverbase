@@ -101,6 +101,7 @@ func NewConfig() *TestConfig {
 		KafkaProducerConfig: &kafka.KafkaProducerConfig{
 			KafkaCred:   &kafkaBaseConfig,
 			Acknowledge: "all",
+			MaxBuffer:   utils.GetEnvInt("KAFKA_PRODUCER_MAX_BUFFER", 1000),
 		},
 		KafkaConsumerConfig: consumer,
 		KafkaTestTopic:      utils.GetEnv("KAFKA_TEST_TOPIC", serviceName),

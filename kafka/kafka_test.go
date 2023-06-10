@@ -9,14 +9,22 @@ import (
 
 	cKafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/google/uuid"
+	eKafka "github.com/sabariramc/goserverbase/v3/errors/notifier/kafka"
 	"github.com/sabariramc/goserverbase/v3/kafka"
 	"github.com/sabariramc/goserverbase/v3/utils"
 	"gotest.tools/assert"
 )
 
+func newProducer(ctx context.Context) (*kafka.Producer, error) {
+	log := KafkaTestLogger
+	hProducer := kafka.NewHTTPProducer(ctx, log, KafkaTestConfig.KafkaHTTPProxyURL, KafkaTestConfig.KafkaTestTopic, time.Second)
+	notifier := eKafka.New(ctx, log, KafkaTestConfig.App.ServiceName, hProducer)
+	return kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.App.ServiceName, KafkaTestConfig.KafkaTestTopic, notifier)
+}
+
 func TestKafkaMessage(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := kafka.NewConsumer(ctx, "TEST", KafkaTestLogger, KafkaTestConfig.KafkaConsumerConfig, nil, KafkaTestConfig.KafkaTestTopic)
+	co, err := kafka.NewConsumer(ctx, KafkaTestConfig.App.ServiceName, KafkaTestLogger, KafkaTestConfig.KafkaConsumerConfig, nil, KafkaTestConfig.KafkaTestTopic)
 	defer co.Close(ctx)
 	assert.NilError(t, err)
 	var s sync.WaitGroup
@@ -28,9 +36,10 @@ func TestKafkaMessage(t *testing.T) {
 		s.Done()
 	}()
 	time.Sleep(time.Second * 5)
-	pr, err := kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.KafkaTestTopic)
+	pr, err := kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.App.ServiceName, KafkaTestConfig.KafkaTestTopic, nil)
+	defer pr.Close()
 	assert.NilError(t, err)
-	_, err = pr.Produce(ctx, "test", &utils.Message{
+	err = pr.ProduceMessage(ctx, "test", &utils.Message{
 		Event: "random event",
 	}, nil)
 	assert.NilError(t, err)
@@ -39,10 +48,11 @@ func TestKafkaMessage(t *testing.T) {
 
 func TestKafkaPoll(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := kafka.NewConsumer(ctx, "TEST", KafkaTestLogger, KafkaTestConfig.KafkaConsumerConfig, nil, KafkaTestConfig.KafkaTestTopic)
+	co, err := kafka.NewConsumer(ctx, KafkaTestConfig.App.ServiceName, KafkaTestLogger, KafkaTestConfig.KafkaConsumerConfig, nil, KafkaTestConfig.KafkaTestTopic)
 	defer co.Close(ctx)
 	assert.NilError(t, err)
-	pr, err := kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.KafkaTestTopic)
+	pr, err := kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.App.ServiceName, KafkaTestConfig.KafkaTestTopic, nil)
+	defer pr.Close()
 	assert.NilError(t, err)
 	ch := make(chan *cKafka.Message, 100)
 	var s sync.WaitGroup
@@ -51,7 +61,7 @@ func TestKafkaPoll(t *testing.T) {
 	time.Sleep(time.Second * 5)
 	go func() {
 		for i := 0; i < 50; i++ {
-			_, err = pr.Produce(ctx, strconv.Itoa(i), &utils.Message{
+			err = pr.ProduceMessage(ctx, strconv.Itoa(i), &utils.Message{
 				Event: uuidVal,
 			}, nil)
 			assert.NilError(t, err)
@@ -78,14 +88,16 @@ func TestKafkaPoll(t *testing.T) {
 	KafkaTestLogger.Info(ctx, "Total received", msgCount)
 	s.Wait()
 	assert.Equal(t, 50, count)
+
 }
 
 func TestKafkaPollWithDelay(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := kafka.NewConsumer(ctx, "TEST", KafkaTestLogger, KafkaTestConfig.KafkaConsumerConfig, nil, KafkaTestConfig.KafkaTestTopic)
+	co, err := kafka.NewConsumer(ctx, KafkaTestConfig.App.ServiceName, KafkaTestLogger, KafkaTestConfig.KafkaConsumerConfig, nil, KafkaTestConfig.KafkaTestTopic)
 	defer co.Close(ctx)
 	assert.NilError(t, err)
-	pr, err := kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.KafkaTestTopic)
+	pr, err := kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.App.ServiceName, KafkaTestConfig.KafkaTestTopic, nil)
+	defer pr.Close()
 	assert.NilError(t, err)
 	ch := make(chan *cKafka.Message)
 	tCtx, cancel := context.WithCancel(ctx)
@@ -97,7 +109,7 @@ func TestKafkaPollWithDelay(t *testing.T) {
 	uuidVal := uuid.NewString()
 	time.Sleep(time.Second * 3)
 	for i := 0; i < 10; i++ {
-		_, err = pr.Produce(ctx, strconv.Itoa(i), &utils.Message{
+		err = pr.ProduceMessage(ctx, strconv.Itoa(i), &utils.Message{
 			Event: uuidVal,
 		}, nil)
 		assert.NilError(t, err)
@@ -109,7 +121,7 @@ func TestKafkaPollWithDelay(t *testing.T) {
 	s.Add(1)
 	go func() {
 		for i := 0; i < 40; i++ {
-			_, err = pr.Produce(ctx, strconv.Itoa(i), &utils.Message{
+			err = pr.ProduceMessage(ctx, strconv.Itoa(i), &utils.Message{
 				Event: uuidVal,
 			}, nil)
 			assert.NilError(t, err)
@@ -133,14 +145,16 @@ func TestKafkaPollWithDelay(t *testing.T) {
 	KafkaTestLogger.Info(ctx, "Total received", msgCount)
 	s.Wait()
 	assert.Equal(t, 50, count)
+
 }
 
 func TestKafkaPollWithDelayExtended(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := kafka.NewConsumer(ctx, "TEST", KafkaTestLogger, KafkaTestConfig.KafkaConsumerConfig, nil, KafkaTestConfig.KafkaTestTopic)
+	co, err := kafka.NewConsumer(ctx, KafkaTestConfig.App.ServiceName, KafkaTestLogger, KafkaTestConfig.KafkaConsumerConfig, nil, KafkaTestConfig.KafkaTestTopic)
 	defer co.Close(ctx)
 	assert.NilError(t, err)
-	pr, err := kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.KafkaTestTopic)
+	pr, err := kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.App.ServiceName, KafkaTestConfig.KafkaTestTopic, nil)
+	defer pr.Close()
 	assert.NilError(t, err)
 	tCtx, cancel := context.WithTimeout(ctx, time.Second*10)
 	defer cancel()
@@ -154,7 +168,7 @@ func TestKafkaPollWithDelayExtended(t *testing.T) {
 	uuidVal := uuid.NewString()
 	time.Sleep(time.Second * 3)
 	for i := 0; i < 10; i++ {
-		_, err = pr.Produce(ctx, strconv.Itoa(i), &utils.Message{
+		err = pr.ProduceMessage(ctx, strconv.Itoa(i), &utils.Message{
 			Event: uuidVal,
 		}, nil)
 		assert.NilError(t, err)
@@ -177,7 +191,7 @@ func TestKafkaPollHTTPProducer(t *testing.T) {
 	go func() {
 		tCtx, _ := context.WithDeadline(ctx, time.Now().Add(time.Minute))
 		for i := 0; i < 50; i++ {
-			_, err = pr.Produce(tCtx, strconv.Itoa(i), &utils.Message{
+			err = pr.ProduceMessage(tCtx, strconv.Itoa(i), &utils.Message{
 				Event: uuidVal,
 			}, nil)
 			assert.NilError(t, err)
