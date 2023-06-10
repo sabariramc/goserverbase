@@ -19,44 +19,49 @@ type Producer struct {
 	log         *log.Logger
 	topic       string
 	deliveryCh  chan kafka.Event
+	logCh       chan kafka.LogEvent
 	serviceName string
 	wg          sync.WaitGroup
 	notifier    errors.ErrorNotifier
 }
 
-func createProducer(ctx context.Context, log *log.Logger, config *KafkaProducerConfig, serviceName, topic string) (*Producer, error) {
-	parsedConfig := &kafka.ConfigMap{}
-	utils.StrictJsonTransformer(config, parsedConfig)
-	p, err := kafka.NewProducer(parsedConfig)
-	if err != nil {
-		log.Error(ctx, "Failed to create kafka producer", err)
-		return nil, fmt.Errorf("kafka.createProducer: %w", err)
-	}
-	return &Producer{
-		config:      config,
-		log:         log,
-		Producer:    p,
-		topic:       topic,
-		serviceName: serviceName,
-	}, nil
-}
-
 func NewProducer(ctx context.Context, log *log.Logger, config *KafkaProducerConfig, serviceName, topic string, notifier errors.ErrorNotifier) (*Producer, error) {
-	k, err := createProducer(ctx, log, config, serviceName, topic)
-	k.deliveryCh = make(chan kafka.Event, config.MaxBuffer+100)
 	if notifier != nil {
 		_, ok := notifier.GetProcessor().(*Producer)
 		if ok {
 			return nil, fmt.Errorf("kafka.NewProducer: notifier cannot be of same type")
 		}
 	}
-	k.notifier = notifier
+	parsedConfig := &kafka.ConfigMap{}
+	utils.StrictJsonTransformer(config, parsedConfig)
+	ch := make(chan kafka.LogEvent, 10000)
+	(*parsedConfig)["go.logs.channel.enable"] = true
+	(*parsedConfig)["go.logs.channel"] = ch
+	p, err := kafka.NewProducer(parsedConfig)
+	if err != nil {
+		log.Error(ctx, "Failed to create kafka producer", err)
+		return nil, fmt.Errorf("kafka.createProducer: %w", err)
+	}
+	k := &Producer{
+		config:      config,
+		log:         log,
+		Producer:    p,
+		topic:       topic,
+		serviceName: serviceName,
+		logCh:       ch,
+		deliveryCh:  make(chan kafka.Event, config.MaxBuffer+100),
+		notifier:    notifier,
+	}
 	if err != nil {
 		return nil, fmt.Errorf("kafka.NewProducer: %w", err)
 	}
-	k.wg.Add(1)
+	k.wg.Add(2)
 	go func() {
 		k.deliveryReport()
+		k.wg.Done()
+	}()
+	go func() {
+		k.printKafkaLog()
 		k.wg.Done()
 	}()
 	return k, nil
@@ -108,12 +113,19 @@ func (k *Producer) handleEvent(defaultCtx context.Context, ev kafka.Event) (cont
 }
 
 func (k *Producer) deliveryReport() {
-	defaultCtx := log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(k.serviceName))
+	defaultCtx := log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(k.serviceName+"-kafka-producer"))
 	for ev := range k.deliveryCh {
 		ctx, err := k.handleEvent(defaultCtx, ev)
 		if err != nil && k.notifier != nil {
 			k.notifier.Send5XX(ctx, fmt.Sprintf("com.%v.kafka.Producer.error", k.serviceName), err, "", ev.String())
 		}
+	}
+}
+
+func (k *Producer) printKafkaLog() {
+	defaultCtx := log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(k.serviceName+"-kafka-producer"))
+	for kLog := range k.logCh {
+		k.log.Log(defaultCtx, kLog.Level, kLog.Message, kLog, fmt.Errorf("%v", kLog.Message))
 	}
 }
 
@@ -154,6 +166,7 @@ func (k *Producer) Produce(ctx context.Context, key string, message []byte, head
 func (k *Producer) Close() {
 	k.Producer.Flush(10000)
 	close(k.deliveryCh)
+	close(k.logCh)
 	k.wg.Wait()
 	k.Producer.Close()
 }

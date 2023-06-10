@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/syslog"
 	"reflect"
 	"time"
 )
@@ -134,6 +135,14 @@ func (l *Logger) Alert(ctx context.Context, shortMessage string, fullMessage int
 func (l *Logger) Emergency(ctx context.Context, shortMessage string, fullMessage interface{}, err error) {
 	l.print(ctx, logLevelMap[EMERGENCY], shortMessage, fullMessage)
 	panic(fmt.Errorf("%v : %w", shortMessage, err))
+}
+
+func (l *Logger) Log(ctx context.Context, logLevel int, shortMessage string, fullMessage interface{}, err error) {
+	if logLevel == int(syslog.LOG_EMERG) {
+		l.Emergency(ctx, shortMessage, fullMessage, err)
+	}
+	level := GetLogLevelMap(LogLevelCode(logLevel))
+	l.print(ctx, &level, shortMessage, fullMessage)
 }
 
 func (l *Logger) print(ctx context.Context, level *LogLevel, shortMessage string, fullMessage interface{}) {
