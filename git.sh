@@ -1,5 +1,5 @@
 export message="Kafka consumer and producer testing"
-export version="v3.2.0"
+export version="v3.2.1"
 export branch="master"
 git add .
 git commit -m "$message"
