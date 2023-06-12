@@ -1,6 +1,6 @@
-export message="Error logging changes"
-export version="v3.2.5.ddtrace"
-export branch="ddtrace"
+export message="trace merge"
+export version="v3.2.6.ddtrace"
+export branch="master"
 git add .
 git commit -m "$message"
 git tag $version
