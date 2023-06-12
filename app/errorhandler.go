@@ -25,7 +25,6 @@ func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error
 		body, parseErr = httpErr.GetErrorResponse()
 		errorCode = httpErr.ErrorCode
 		errorData = httpErr.ErrorData
-
 	} else if e.As(err, &customError) {
 		statusCode = http.StatusInternalServerError
 		notify = customError.Notify
@@ -39,6 +38,9 @@ func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error
 	}
 	if parseErr != nil {
 		b.log.Alert(ctx, "Error occurred during marshal of errors", parseErr)
+	}
+	if errorData == nil {
+		errorData = requestData
 	}
 	b.log.Error(ctx, "Wrapped Error", err)
 	b.log.Error(ctx, "Request data", requestData)

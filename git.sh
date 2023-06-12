@@ -1,5 +1,5 @@
-export message="Error logging changes"
-export version="v3.2.5"
+export message="Error data handling changes"
+export version="v3.2.6"
 export branch="master"
 git add .
 git commit -m "$message"
