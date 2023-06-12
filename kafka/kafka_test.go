@@ -60,6 +60,7 @@ func TestKafkaProducer(t *testing.T) {
 	assert.NilError(t, err)
 	uuidVal := uuid.NewString()
 	for i := 0; i < 1000; i++ {
+		ctx := GetCorrelationContext()
 		err = pr.ProduceMessage(ctx, strconv.Itoa(i), &utils.Message{
 			Event: uuidVal,
 		}, nil)
