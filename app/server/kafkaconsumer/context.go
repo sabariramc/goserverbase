@@ -2,23 +2,25 @@ package kafkaconsumer
 
 import (
 	"github.com/sabariramc/goserverbase/v3/log"
-	"github.com/sabariramc/goserverbase/v3/utils"
 )
 
 func (k *KafkaConsumerServer) GetCorrelationParams(headers map[string]string) *log.CorrelationParam {
-	correlation := log.GetDefaultCorrelationParam(k.c.ServiceName)
-	err := utils.LenientJsonTransformer(headers, correlation)
-	if err != nil {
+	correlationId, ok := headers["x-correlation-id"]
+	if !ok {
 		return log.GetDefaultCorrelationParam(k.c.ServiceName)
 	}
-	return correlation
+	return &log.CorrelationParam{
+		CorrelationId: correlationId,
+		ScenarioId:    headers["x-scenario-id"],
+		ScenarioName:  headers["x-scenario-name"],
+		SessionId:     headers["x-session-id"],
+	}
 }
 
 func (k *KafkaConsumerServer) GetCustomerId(headers map[string]string) *log.CustomerIdentifier {
-	customerId := &log.CustomerIdentifier{}
-	err := utils.LenientJsonTransformer(headers, customerId)
-	if err != nil {
-		return &log.CustomerIdentifier{}
+	return &log.CustomerIdentifier{
+		AppUserId:  headers["x-app-user-id"],
+		CustomerId: headers["x-customer-id"],
+		Id:         headers["x-entity-id"],
 	}
-	return customerId
 }

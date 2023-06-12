@@ -25,12 +25,8 @@ func (h *HttpServer) GetCorrelationParams(r *http.Request) *log.CorrelationParam
 }
 
 func (h *HttpServer) GetCustomerId(r *http.Request) *log.CustomerIdentifier {
-	appUserId := r.Header.Get("x-app-user-id")
-	if appUserId == "" {
-		return &log.CustomerIdentifier{}
-	}
 	return &log.CustomerIdentifier{
-		AppUserId:  appUserId,
+		AppUserId:  r.Header.Get("x-app-user-id"),
 		CustomerId: r.Header.Get("x-customer-id"),
 		Id:         r.Header.Get("x-entity-id"),
 	}
