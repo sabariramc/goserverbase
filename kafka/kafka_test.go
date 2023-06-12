@@ -60,6 +60,7 @@ func TestKafkaProducer(t *testing.T) {
 	assert.NilError(t, err)
 	uuidVal := uuid.NewString()
 	for i := 0; i < 1000; i++ {
+		ctx := GetCorrelationContext()
 		err = pr.ProduceMessage(ctx, strconv.Itoa(i), &utils.Message{
 			Event: uuidVal,
 		}, nil)
@@ -110,6 +111,7 @@ func TestKafkaPoll(t *testing.T) {
 	time.Sleep(time.Second * 5)
 	go func() {
 		for i := 0; i < totalCount; i++ {
+			ctx := GetCorrelationContext()
 			err = pr.ProduceMessage(ctx, strconv.Itoa(i), &utils.Message{
 				Event: uuidVal,
 			}, nil)
@@ -163,6 +165,7 @@ func TestKafkaPollWithDelay(t *testing.T) {
 	uuidVal := uuid.NewString()
 	time.Sleep(time.Second * 3)
 	for i := 0; i < 10; i++ {
+		ctx := GetCorrelationContext()
 		err = pr.ProduceMessage(ctx, strconv.Itoa(i), &utils.Message{
 			Event: uuidVal,
 		}, nil)
@@ -175,6 +178,7 @@ func TestKafkaPollWithDelay(t *testing.T) {
 	s.Add(1)
 	go func() {
 		for i := 0; i < 40; i++ {
+			ctx := GetCorrelationContext()
 			err = pr.ProduceMessage(ctx, strconv.Itoa(i), &utils.Message{
 				Event: uuidVal,
 			}, nil)
@@ -222,6 +226,7 @@ func TestKafkaPollWithDelayExtended(t *testing.T) {
 	uuidVal := uuid.NewString()
 	time.Sleep(time.Second * 3)
 	for i := 0; i < 10; i++ {
+		ctx := GetCorrelationContext()
 		err = pr.ProduceMessage(ctx, strconv.Itoa(i), &utils.Message{
 			Event: uuidVal,
 		}, nil)

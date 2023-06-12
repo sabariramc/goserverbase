@@ -1,5 +1,5 @@
-export message="Kafka consumer correlation fix"
-export version="v3.2.2"
+export message="Kafka producer new method"
+export version="v3.2.3"
 export branch="master"
 git add .
 git commit -m "$message"

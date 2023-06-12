@@ -139,6 +139,10 @@ func (k *Producer) printKafkaLog() {
 }
 
 func (k *Producer) Produce(ctx context.Context, key string, message []byte, headers map[string]string) (err error) {
+	return k.ProduceToTopic(ctx, k.topic, key, message, headers)
+}
+
+func (k *Producer) ProduceToTopic(ctx context.Context, topicName, key string, message []byte, headers map[string]string) (err error) {
 	if k.Producer.Len() >= k.config.MaxBuffer {
 		k.Producer.Flush(1000)
 	}
