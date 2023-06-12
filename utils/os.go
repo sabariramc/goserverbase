@@ -38,6 +38,7 @@ func GetEnvBool(key string, defaultVal bool) bool {
 		if value == "1" || strings.ToLower(value) == "true" {
 			return true
 		}
+		return false
 	}
 	return defaultVal
 }
