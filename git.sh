@@ -1,5 +1,5 @@
-export message="Kafka producer new method"
-export version="v3.2.3"
+export message="Env utility bug fix"
+export version="v3.2.4"
 export branch="master"
 git add .
 git commit -m "$message"
