@@ -69,6 +69,12 @@ type Logger struct {
 	PrintIndent bool
 }
 
+func (l *Logger) NewResourceLogger(resourceName string) *Logger {
+	newLog := *l
+	newLog.SetModuleName(resourceName)
+	return &newLog
+}
+
 func NewLogger(ctx context.Context, lc *Config, moduleName string, lMux LogMux, audit AuditLogWriter) *Logger {
 	l := &Logger{
 		logLevel:    INFO,

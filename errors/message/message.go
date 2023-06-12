@@ -12,7 +12,13 @@ func CreateErrorMessage(ctx context.Context, serviceName, errorCode string, err 
 	msg := utils.NewMessage("error", errorCode)
 	msg.AddPayload("category", utils.Payload{"entity": map[string]string{"category": alertType}})
 	msg.AddPayload("source", utils.Payload{"entity": map[string]string{"source": serviceName}})
-	msg.AddPayload("stackTrace", utils.Payload{"entity": map[string]interface{}{"stackTrace": stackTrace, "error": err.Error()}})
+	stackTracePayload := map[string]string{
+		"stackTrace": stackTrace,
+	}
+	if err != nil {
+		stackTracePayload["error"] = err.Error()
+	}
+	msg.AddPayload("stackTrace", utils.Payload{"entity": stackTracePayload})
 	msg.AddPayload("version", utils.Payload{"entity": map[string]string{"version": "v1"}})
 	msg.AddPayload("errorData", utils.Payload{"entity": map[string]interface{}{"errorData": errorData}})
 	msg.AddPayload("identity", utils.Payload{"entity": log.GetCustomerIdentifier(ctx).GetPayload()})

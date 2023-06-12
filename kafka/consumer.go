@@ -16,17 +16,22 @@ import (
 
 type Consumer struct {
 	*kafka.Consumer
-	config      *KafkaConsumerConfig
-	log         *log.Logger
-	notifier    errors.ErrorNotifier
-	topic       []string
-	serviceName string
-	logCh       chan kafka.LogEvent
-	msgCh       chan *kafka.Message
-	wg          sync.WaitGroup
+	config       *KafkaConsumerConfig
+	log          *log.Logger
+	notifier     errors.ErrorNotifier
+	topic        []string
+	serviceName  string
+	resourceName string
+	logCh        chan kafka.LogEvent
+	msgCh        chan *kafka.Message
+	wg           sync.WaitGroup
 }
 
 func NewConsumer(ctx context.Context, serviceName string, log *log.Logger, config *KafkaConsumerConfig, notifier errors.ErrorNotifier, topic ...string) (*Consumer, error) {
+	return NewConsumerResource(ctx, serviceName, "KAFKA_CONSUMER", log, config, notifier, topic...)
+}
+
+func NewConsumerResource(ctx context.Context, serviceName, resourceName string, log *log.Logger, config *KafkaConsumerConfig, notifier errors.ErrorNotifier, topic ...string) (*Consumer, error) {
 	parsedConfig := &kafka.ConfigMap{}
 	ch := make(chan kafka.LogEvent, 10000)
 	(*parsedConfig)["go.logs.channel.enable"] = true
@@ -45,13 +50,14 @@ func NewConsumer(ctx context.Context, serviceName string, log *log.Logger, confi
 		return nil, fmt.Errorf("kafka.NewKafkaConsumer.CreateConsumer: %w", err)
 	}
 	k := &Consumer{
-		config:      config,
-		log:         log,
-		Consumer:    c,
-		topic:       topic,
-		notifier:    notifier,
-		serviceName: serviceName,
-		logCh:       ch,
+		log:          log.NewResourceLogger(resourceName),
+		resourceName: resourceName,
+		config:       config,
+		Consumer:     c,
+		topic:        topic,
+		logCh:        ch,
+		notifier:     notifier,
+		serviceName:  serviceName,
 	}
 	err = k.SubscribeTopics(topic, k.logReBalance)
 	if err != nil {
@@ -69,7 +75,12 @@ func NewConsumer(ctx context.Context, serviceName string, log *log.Logger, confi
 func (k *Consumer) commit(ctx context.Context) error {
 	offset, err := k.Consumer.Commit()
 	if err != nil {
-		k.log.Error(ctx, "Error on commit", err)
+		if err.Error() == "Local: No offset stored" {
+			k.log.Info(ctx, "No offset to commit", err)
+			err = nil
+		} else {
+			k.log.Error(ctx, "Error on commit", err)
+		}
 	}
 	if len(offset) > 0 {
 		k.log.Notice(ctx, "Committed offsets", offset)
@@ -83,7 +94,7 @@ func (k *Consumer) logReBalance(consumer *kafka.Consumer, e kafka.Event) error {
 }
 
 func (k *Consumer) printKafkaLog() {
-	defaultCtx := log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(k.serviceName+"-kafka-consumer"))
+	defaultCtx := log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(k.serviceName+k.resourceName))
 	for kLog := range k.logCh {
 		k.log.Log(defaultCtx, kLog.Level, kLog.Message, kLog, fmt.Errorf("%v", kLog.Message))
 	}
@@ -201,7 +212,11 @@ func (k *Consumer) ReadMessage(ctx context.Context, timeout time.Duration) (*kaf
 		k.log.Error(ctx, fmt.Sprintf("Read message error for topic : %v", k.topic), err)
 		return nil, fmt.Errorf("KafkaConsumer.ReadMessage: %w", err)
 	}
-	k.Consumer.StoreMessage(ev)
+	offset, err := k.Consumer.StoreMessage(ev)
+	if err != nil {
+		k.log.Error(ctx, "error storing offset", err)
+	}
+	k.log.Info(ctx, "stored offset", offset)
 	err = k.commit(ctx)
 	return ev, err
 }
@@ -210,7 +225,9 @@ func (k *Consumer) Close(ctx context.Context) error {
 	k.log.Notice(ctx, "Consumer closer initiated for topic", k.topic)
 	commitErr := k.commit(ctx)
 	close(k.logCh)
-	close(k.msgCh)
+	if k.msgCh != nil {
+		close(k.msgCh)
+	}
 	closeErr := k.Consumer.Close()
 	k.wg.Wait()
 	k.log.Notice(ctx, "Consumer closed for topic", k.topic)

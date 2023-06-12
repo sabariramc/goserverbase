@@ -56,13 +56,13 @@ func NewConfig() *TestConfig {
 	}
 	appConfig := &baseapp.ServerConfig{
 
-		ServiceName: utils.GetEnv("SERVICE_NAME", "API"),
+		ServiceName: serviceName,
 		Debug:       utils.GetEnvBool("DEBUG", false),
 	}
 	consumer := &kafka.KafkaConsumerConfig{
 		KafkaCred:      &kafkaBaseConfig,
 		GoEventChannel: false,
-		GroupID:        utils.GetEnv("KAFKA_CONSUMER_ID", serviceName),
+		GroupID:        utils.GetEnvMust("KAFKA_CONSUMER_ID"),
 		OffsetReset:    "latest",
 		MaxBuffer:      utils.GetEnvInt("KAFKA_CONSUMER_MAX_BUFFER", 1000),
 	}
@@ -71,7 +71,7 @@ func NewConfig() *TestConfig {
 		Logger: &log.Config{
 			Version:     utils.GetEnv("LOG_VERSION", "1.1"),
 			Host:        utils.GetEnv("HOST", utils.GetHostName()),
-			ServiceName: utils.GetEnv("SERVICE_NAME", "API"),
+			ServiceName: serviceName,
 			LogLevel:    utils.GetEnvInt("LOG_LEVEL", 6),
 			BufferSize:  utils.GetEnvInt("LOG_BUFFER_SIZE", 1),
 		},
@@ -105,7 +105,7 @@ func NewConfig() *TestConfig {
 			MaxBuffer:   utils.GetEnvInt("KAFKA_PRODUCER_MAX_BUFFER", 1000),
 		},
 		KafkaConsumerConfig: consumer,
-		KafkaTestTopic:      utils.GetEnv("KAFKA_TEST_TOPIC", serviceName),
-		KafkaHTTPProxyURL:   utils.GetEnv("KAFKA_HTTP_PROXY", serviceName),
+		KafkaTestTopic:      utils.GetEnvMust("KAFKA_TEST_TOPIC"),
+		KafkaHTTPProxyURL:   utils.GetEnvMust("KAFKA_HTTP_PROXY"),
 	}
 }

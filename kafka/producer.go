@@ -15,17 +15,22 @@ import (
 
 type Producer struct {
 	*kafka.Producer
-	config      *KafkaProducerConfig
-	log         *log.Logger
-	topic       string
-	deliveryCh  chan kafka.Event
-	logCh       chan kafka.LogEvent
-	serviceName string
-	wg          sync.WaitGroup
-	notifier    errors.ErrorNotifier
+	config       *KafkaProducerConfig
+	log          *log.Logger
+	topic        string
+	deliveryCh   chan kafka.Event
+	logCh        chan kafka.LogEvent
+	serviceName  string
+	resourceName string
+	wg           sync.WaitGroup
+	notifier     errors.ErrorNotifier
 }
 
 func NewProducer(ctx context.Context, log *log.Logger, config *KafkaProducerConfig, serviceName, topic string, notifier errors.ErrorNotifier) (*Producer, error) {
+	return NewProducerResource(ctx, log, config, serviceName, "KAFKA_PRODUCER", topic, notifier)
+}
+
+func NewProducerResource(ctx context.Context, log *log.Logger, config *KafkaProducerConfig, serviceName, resourceName, topic string, notifier errors.ErrorNotifier) (*Producer, error) {
 	if notifier != nil {
 		_, ok := notifier.GetProcessor().(*Producer)
 		if ok {
@@ -46,14 +51,14 @@ func NewProducer(ctx context.Context, log *log.Logger, config *KafkaProducerConf
 		return nil, fmt.Errorf("kafka.createProducer: %w", err)
 	}
 	k := &Producer{
-		config:      config,
-		log:         log,
-		Producer:    p,
-		topic:       topic,
-		serviceName: serviceName,
-		logCh:       ch,
-		deliveryCh:  make(chan kafka.Event, config.MaxBuffer+100),
-		notifier:    notifier,
+		serviceName:  serviceName,
+		resourceName: resourceName,
+		log:          log.NewResourceLogger(resourceName),
+		config:       config,
+		Producer:     p,
+		topic:        topic,
+		logCh:        ch,
+		deliveryCh:   make(chan kafka.Event, config.MaxBuffer+100),
 	}
 	if err != nil {
 		return nil, fmt.Errorf("kafka.NewProducer: %w", err)
@@ -87,24 +92,25 @@ func (k *Producer) handleEvent(defaultCtx context.Context, ev kafka.Event) (cont
 			Message: e,
 		}
 		headers := logMsg.GetHeaders()
-		corr := &log.CorrelationParam{}
-		data, _ := json.Marshal(headers)
-		err := utils.HeaderJson.Unmarshal(data, corr)
-		var ctx context.Context
-		if err != nil || corr.CorrelationId == "" {
-			k.log.Error(defaultCtx, "Error extracting header", headers)
-			ctx = defaultCtx
-		} else {
-			ctx = log.GetContextWithCorrelation(context.Background(), corr)
+		ctx := defaultCtx
+		if len(headers) > 0 {
+			corr := &log.CorrelationParam{}
+			data, _ := json.Marshal(headers)
+			err := utils.HeaderJson.Unmarshal(data, corr)
+			if err != nil || corr.CorrelationId == "" {
+				k.log.Error(defaultCtx, "Error extracting header", headers)
+			} else {
+				ctx = log.GetContextWithCorrelation(context.Background(), corr)
+			}
 		}
-		err = e.TopicPartition.Error
+		err := e.TopicPartition.Error
 		if err != nil {
 			k.log.Error(ctx, "Error in publishing message", err)
 			k.log.Error(ctx, "Error Meta", logMsg.GetMeta())
 			k.log.Debug(ctx, "Error Body", logMsg.GetBody)
 			return ctx, err
 		}
-		k.log.Info(ctx, "Send success for topic: "+k.topic, logMsg.GetMeta())
+		k.log.Info(ctx, "Send success for topic - meta: "+k.topic, logMsg.GetMeta())
 		k.log.Debug(ctx, "Send success for topic - body: "+k.topic, logMsg.GetBody)
 	case kafka.Error:
 		k.log.Error(defaultCtx, "Produce Error", e)
@@ -116,7 +122,7 @@ func (k *Producer) handleEvent(defaultCtx context.Context, ev kafka.Event) (cont
 }
 
 func (k *Producer) deliveryReport() {
-	defaultCtx := log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(k.serviceName+"-kafka-producer"))
+	defaultCtx := log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(k.serviceName+k.resourceName))
 	for ev := range k.deliveryCh {
 		ctx, err := k.handleEvent(defaultCtx, ev)
 		if err != nil && k.notifier != nil {
@@ -126,7 +132,7 @@ func (k *Producer) deliveryReport() {
 }
 
 func (k *Producer) printKafkaLog() {
-	defaultCtx := log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(k.serviceName+"-kafka-producer"))
+	defaultCtx := log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(k.serviceName+k.resourceName))
 	for kLog := range k.logCh {
 		k.log.Log(defaultCtx, kLog.Level, kLog.Message, kLog, fmt.Errorf("%v", kLog.Message))
 	}

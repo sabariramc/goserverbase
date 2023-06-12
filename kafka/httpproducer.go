@@ -14,14 +14,21 @@ import (
 )
 
 type HTTPProducer struct {
-	baseUrl    string
-	log        *log.Logger
-	topicName  string
-	httpClient *http.Client
+	baseUrl      string
+	log          *log.Logger
+	topicName    string
+	httpClient   *http.Client
+	resourceName string
 }
 
 func NewHTTPProducer(ctx context.Context, log *log.Logger, baseURL, topicName string, timeout time.Duration) *HTTPProducer {
-	return &HTTPProducer{baseUrl: baseURL, topicName: topicName, log: log, httpClient: &http.Client{Timeout: timeout}}
+	return NewHTTPProducerResource(ctx, log, "KAFKA_PRODUCER_HTTP", baseURL, topicName, timeout)
+}
+
+func NewHTTPProducerResource(ctx context.Context, log *log.Logger, resourceName, baseURL, topicName string, timeout time.Duration) *HTTPProducer {
+	p := &HTTPProducer{baseUrl: baseURL, topicName: topicName, httpClient: &http.Client{Timeout: timeout}, resourceName: resourceName, log: log.NewResourceLogger(resourceName)}
+
+	return p
 }
 
 func (k HTTPProducer) ProduceMessage(ctx context.Context, key string, message *utils.Message, headers map[string]string) error {

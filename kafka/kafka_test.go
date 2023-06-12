@@ -22,25 +22,73 @@ func newProducer(ctx context.Context) (*kafka.Producer, error) {
 	return kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.App.ServiceName, KafkaTestConfig.KafkaTestTopic, notifier)
 }
 
+func newConsumer(ctx context.Context) (*kafka.Consumer, error) {
+	log := KafkaTestLogger
+	hProducer := kafka.NewHTTPProducer(ctx, log, KafkaTestConfig.KafkaHTTPProxyURL, KafkaTestConfig.KafkaTestTopic, time.Second)
+	notifier := eKafka.New(ctx, log, KafkaTestConfig.App.ServiceName, hProducer)
+	return kafka.NewConsumer(ctx, KafkaTestConfig.App.ServiceName, KafkaTestLogger, KafkaTestConfig.KafkaConsumerConfig, notifier, KafkaTestConfig.KafkaTestTopic)
+}
+
+func TestKafkaConsumer(t *testing.T) {
+	ctx := GetCorrelationContext()
+	co, err := newConsumer(ctx)
+	defer co.Close(ctx)
+	ch := make(chan *cKafka.Message, 100)
+	tCtx, cancel := context.WithTimeout(ctx, time.Second*45)
+	defer cancel()
+	assert.NilError(t, err)
+	var s sync.WaitGroup
+	s.Add(1)
+	go func() {
+		co.Poll(tCtx, 1000, ch)
+		s.Done()
+	}()
+	for msg := range ch {
+		kMsg := kafka.Message{
+			Message: msg,
+		}
+		KafkaTestLogger.Info(ctx, "Kafka message", kMsg.GetBody())
+	}
+	s.Wait()
+	assert.NilError(t, err)
+}
+
+func TestKafkaProducer(t *testing.T) {
+	ctx := GetCorrelationContext()
+	pr, err := newProducer(ctx)
+	defer pr.Close(ctx)
+	assert.NilError(t, err)
+	uuidVal := uuid.NewString()
+	for i := 0; i < 1000; i++ {
+		err = pr.ProduceMessage(ctx, strconv.Itoa(i), &utils.Message{
+			Event: uuidVal,
+		}, nil)
+		assert.NilError(t, err)
+	}
+}
+
 func TestKafkaMessage(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := kafka.NewConsumer(ctx, KafkaTestConfig.App.ServiceName, KafkaTestLogger, KafkaTestConfig.KafkaConsumerConfig, nil, KafkaTestConfig.KafkaTestTopic)
+	co, err := newConsumer(ctx)
 	defer co.Close(ctx)
 	assert.NilError(t, err)
 	var s sync.WaitGroup
 	s.Add(1)
 	go func() {
-		kMsg, err := co.ReadMessage(ctx, time.Second*10)
-		KafkaTestLogger.Info(ctx, "Kafka message", kMsg)
+		msg, err := co.ReadMessage(ctx, time.Second*10)
 		assert.NilError(t, err)
+		kMsg := kafka.Message{
+			Message: msg,
+		}
+		KafkaTestLogger.Info(ctx, "Kafka message", kMsg.GetBody())
 		s.Done()
 	}()
 	time.Sleep(time.Second * 5)
-	pr, err := kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.App.ServiceName, KafkaTestConfig.KafkaTestTopic, nil)
+	pr, err := newProducer(ctx)
 	defer pr.Close(ctx)
 	assert.NilError(t, err)
 	err = pr.ProduceMessage(ctx, "test", &utils.Message{
-		Event: "random event",
+		Event: "random event:" + uuid.NewString(),
 	}, nil)
 	assert.NilError(t, err)
 	s.Wait()
@@ -48,19 +96,20 @@ func TestKafkaMessage(t *testing.T) {
 
 func TestKafkaPoll(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := kafka.NewConsumer(ctx, KafkaTestConfig.App.ServiceName, KafkaTestLogger, KafkaTestConfig.KafkaConsumerConfig, nil, KafkaTestConfig.KafkaTestTopic)
+	co, err := newConsumer(ctx)
 	defer co.Close(ctx)
 	assert.NilError(t, err)
-	pr, err := kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.App.ServiceName, KafkaTestConfig.KafkaTestTopic, nil)
+	pr, err := newProducer(ctx)
 	defer pr.Close(ctx)
 	assert.NilError(t, err)
 	ch := make(chan *cKafka.Message, 100)
 	var s sync.WaitGroup
 	s.Add(1)
+	totalCount := 1000
 	uuidVal := uuid.NewString()
 	time.Sleep(time.Second * 5)
 	go func() {
-		for i := 0; i < 50; i++ {
+		for i := 0; i < totalCount; i++ {
 			err = pr.ProduceMessage(ctx, strconv.Itoa(i), &utils.Message{
 				Event: uuidVal,
 			}, nil)
@@ -70,6 +119,7 @@ func TestKafkaPoll(t *testing.T) {
 	}()
 	tCtx, cancel := context.WithTimeout(ctx, time.Second*45)
 	defer cancel()
+	st := time.Now()
 	go co.Poll(tCtx, 2000, ch)
 	count := 0
 	msgCount := 0
@@ -79,16 +129,20 @@ func TestKafkaPoll(t *testing.T) {
 		if m.Event == uuidVal {
 			count++
 		}
+		if totalCount == count {
+			cancel()
+		}
 		if err != nil {
 			KafkaTestLogger.Error(ctx, "parse error", err)
 		}
-		KafkaTestLogger.Info(ctx, "Kafka message", i)
+		KafkaTestLogger.Info(ctx, "Kafka message", m)
 	}
 	KafkaTestLogger.Info(ctx, "Total matched", count)
 	KafkaTestLogger.Info(ctx, "Total received", msgCount)
 	s.Wait()
-	assert.Equal(t, 50, count)
-
+	assert.Equal(t, totalCount, count)
+	et := time.Now()
+	KafkaTestLogger.Info(ctx, "Time taken in ms", et.Sub(st)/1000000)
 }
 
 func TestKafkaPollWithDelay(t *testing.T) {

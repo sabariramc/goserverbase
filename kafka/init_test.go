@@ -22,7 +22,7 @@ func init() {
 		ServiceName: KafkaTestConfig.App.ServiceName,
 	})
 	lMux := log.NewDefaultLogMux(consoleLogWriter)
-	KafkaTestLogger = log.NewLogger(context.TODO(), KafkaTestConfig.Logger, "AWSTest", lMux, nil)
+	KafkaTestLogger = log.NewLogger(context.TODO(), KafkaTestConfig.Logger, "KafkaTest", lMux, nil)
 }
 
 func GetCorrelationContext() context.Context {
