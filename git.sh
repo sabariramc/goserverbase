@@ -1,4 +1,4 @@
-export message="Trace fixs"
+export message="Trace update"
 export version="v3.2.1.ddtrace"
 export branch="ddtrace"
 git add .
