@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
@@ -16,36 +17,76 @@ import (
 
 type Consumer struct {
 	*kafkatrace.Consumer
-	config      *KafkaConsumerConfig
-	log         *log.Logger
-	notifier    errors.ErrorNotifier
-	topic       []string
-	serviceName string
+	config       *KafkaConsumerConfig
+	log          *log.Logger
+	notifier     errors.ErrorNotifier
+	topic        []string
+	serviceName  string
+	resourceName string
+	logCh        chan kafka.LogEvent
+	msgCh        chan *kafka.Message
+	wg           sync.WaitGroup
 }
 
 func NewConsumer(ctx context.Context, serviceName string, log *log.Logger, config *KafkaConsumerConfig, notifier errors.ErrorNotifier, topic ...string) (*Consumer, error) {
+	return NewConsumerResource(ctx, serviceName, "KAFKA_CONSUMER", log, config, notifier, topic...)
+}
+
+func NewConsumerResource(ctx context.Context, serviceName, resourceName string, log *log.Logger, config *KafkaConsumerConfig, notifier errors.ErrorNotifier, topic ...string) (*Consumer, error) {
 	parsedConfig := &kafka.ConfigMap{}
+	ch := make(chan kafka.LogEvent, 10000)
+	(*parsedConfig)["go.logs.channel.enable"] = true
+	(*parsedConfig)["go.logs.channel"] = ch
+	(*parsedConfig)["enable.auto.commit"] = false
 	utils.StrictJsonTransformer(config, parsedConfig)
 	c, err := kafkatrace.NewConsumer(parsedConfig)
-
+	if config.MaxBuffer <= 0 {
+		config.MaxBuffer = 1000
+	}
+	if config.AutoCommitIntervalInMs <= 0 {
+		config.AutoCommitIntervalInMs = 1000 * 10
+	}
 	if err != nil {
 		log.Error(ctx, "Failed to create kafka consumer", err)
 		return nil, fmt.Errorf("kafka.NewKafkaConsumer.CreateConsumer: %w", err)
 	}
 	k := &Consumer{
-		config:      config,
-		log:         log,
-		Consumer:    c,
-		topic:       topic,
-		notifier:    notifier,
-		serviceName: serviceName,
+		log:          log.NewResourceLogger(resourceName),
+		resourceName: resourceName,
+		config:       config,
+		Consumer:     c,
+		topic:        topic,
+		logCh:        ch,
+		notifier:     notifier,
+		serviceName:  serviceName,
 	}
 	err = k.SubscribeTopics(topic, k.logReBalance)
 	if err != nil {
 		k.log.Error(ctx, "Failed to create kafka consumer subscription", err)
 		return nil, fmt.Errorf("kafka.NewKafkaConsumer.SubscribeTopics: %w", err)
 	}
+	k.wg.Add(1)
+	go func() {
+		k.printKafkaLog()
+		k.wg.Done()
+	}()
 	return k, nil
+}
+
+func (k *Consumer) commit(ctx context.Context) error {
+	offset, err := k.Consumer.Commit()
+	if err != nil {
+		if err.Error() == "Local: No offset stored" {
+			k.log.Info(ctx, "No offset to commit", err)
+			err = nil
+		} else {
+			k.log.Error(ctx, "Error on commit", err)
+		}
+	}
+	if len(offset) > 0 {
+		k.log.Notice(ctx, "Committed offsets", offset)
+	}
+	return err
 }
 
 func (k *Consumer) logReBalance(consumer *kafka.Consumer, e kafka.Event) error {
@@ -53,30 +94,36 @@ func (k *Consumer) logReBalance(consumer *kafka.Consumer, e kafka.Event) error {
 	return nil
 }
 
-func (k *Consumer) Poll(ctx context.Context, timeout int, ch chan *kafka.Message) error {
-	var err error
-	defer close(ch)
-	k.log.Info(ctx, fmt.Sprintf("Polling started for topic : %v", k.topic), nil)
-outer:
+func (k *Consumer) printKafkaLog() {
+	defaultCtx := log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(k.serviceName+k.resourceName))
+	for kLog := range k.logCh {
+		k.log.Log(defaultCtx, kLog.Level, kLog.Message, kLog, fmt.Errorf("%v", kLog.Message))
+	}
+}
+
+func (k *Consumer) poll(ctx context.Context, timeout int) error {
 	for {
 		select {
 		case <-ctx.Done():
-			k.log.Notice(ctx, "Polling Timeout/cancelled", nil)
-			break outer
+			return nil
 		default:
 			ev := k.Consumer.Poll(timeout)
 			if ev != nil {
 				switch e := ev.(type) {
 				case *kafka.Message:
-					ch <- e
+					if e.TopicPartition.Error != nil {
+						return e.TopicPartition.Error
+					}
+					if e.TopicPartition.Offset < 0 {
+						return fmt.Errorf("KafkaConsumer.Poll: offset is less than zero: topic - %v, partition- %v", e.TopicPartition.Topic, e.TopicPartition.Partition)
+					}
+					k.msgCh <- e
 				case kafka.PartitionEOF:
 					k.log.Error(ctx, "Reached EOF, Ending poll", e)
-					err = fmt.Errorf("KafkaConsumer.Poll: EOF: %v", e)
-					break outer
+					return fmt.Errorf("KafkaConsumer.Poll: EOF: %v", e)
 				case kafka.Error:
 					k.log.Error(ctx, "Poll error", e)
-					err = fmt.Errorf("KafkaConsumer.Poll: Error: %w", e)
-					break outer
+					return fmt.Errorf("KafkaConsumer.Poll: Error: %w", e)
 				case kafka.RevokedPartitions:
 					k.log.Notice(ctx, "Partition revoked", e.Partitions)
 					if k.notifier != nil {
@@ -91,8 +138,7 @@ outer:
 					k.log.Notice(ctx, "KafkaConsumer.Poll: Offset Committed", e.Offsets)
 					if e.Error != nil {
 						k.log.Error(ctx, "Poll Offset Committed error", e.Error)
-						err = fmt.Errorf("KafkaConsumer.Poll: Offset Committed Error: %w", e.Error)
-						break outer
+						return fmt.Errorf("KafkaConsumer.Poll: Offset Committed Error: %w", e.Error)
 					}
 				default:
 					k.log.Notice(ctx, "KafkaConsumer.Poll: Event", e.String())
@@ -100,8 +146,65 @@ outer:
 			}
 		}
 	}
-	k.log.Warning(ctx, fmt.Sprintf("Polling ended for topic : %v", k.topic), nil)
-	return err
+}
+
+func (k *Consumer) Poll(ctx context.Context, timeout int, ch chan *kafka.Message) error {
+	k.msgCh = make(chan *kafka.Message, k.config.MaxBuffer)
+	pollCtx, cancelPoll := context.WithCancel(ctx)
+	var pollErr, commitErr error
+	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		pollErr = k.poll(pollCtx, timeout)
+		wg.Done()
+	}()
+	defer close(ch)
+	defer wg.Wait()
+	k.log.Info(ctx, fmt.Sprintf("Polling started for topic : %v", k.topic), nil)
+	commitTimeout, _ := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(k.config.AutoCommitIntervalInMs))
+outer:
+	for {
+		for i := 0; i < k.config.MaxBuffer; i++ {
+			select {
+			case <-ctx.Done():
+				cancelPoll()
+				commitErr = k.commit(ctx)
+				k.log.Notice(ctx, "Polling Timeout/cancelled", nil)
+				break outer
+			case <-commitTimeout.Done():
+				commitErr = k.commit(ctx)
+				if commitErr != nil {
+					cancelPoll()
+					break outer
+				}
+				commitTimeout, _ = context.WithTimeout(context.Background(), time.Millisecond*time.Duration(k.config.AutoCommitIntervalInMs))
+			case msg, ok := <-k.msgCh:
+				if msg != nil {
+					ch <- msg
+					k.Consumer.StoreMessage(msg)
+				}
+				if !ok {
+					cancelPoll()
+					commitErr = k.commit(ctx)
+					break outer
+				}
+			}
+		}
+		commitErr = k.commit(ctx)
+		if commitErr != nil {
+			cancelPoll()
+			break
+		}
+	}
+	if commitErr != nil {
+		if pollErr == nil {
+			pollErr = commitErr
+		} else {
+			pollErr = fmt.Errorf("kafka.Poll.Error: %w, %w", pollErr, commitErr)
+		}
+	}
+	k.log.Notice(ctx, fmt.Sprintf("Polling ended for topic : %v", k.topic), nil)
+	return pollErr
 }
 
 func (k *Consumer) ReadMessage(ctx context.Context, timeout time.Duration) (*kafka.Message, error) {
@@ -110,16 +213,29 @@ func (k *Consumer) ReadMessage(ctx context.Context, timeout time.Duration) (*kaf
 		k.log.Error(ctx, fmt.Sprintf("Read message error for topic : %v", k.topic), err)
 		return nil, fmt.Errorf("KafkaConsumer.ReadMessage: %w", err)
 	}
+	offset, err := k.Consumer.StoreMessage(ev)
+	if err != nil {
+		k.log.Error(ctx, "error storing offset", err)
+	}
+	k.log.Info(ctx, "stored offset", offset)
+	err = k.commit(ctx)
 	return ev, err
 }
 
 func (k *Consumer) Close(ctx context.Context) error {
-	err := k.Consumer.Close()
-	if err != nil {
-		k.log.Error(ctx, fmt.Sprintf("Consumer closed with error for topic : %v", k.topic), err)
-		return fmt.Errorf("KafkaConsumer.Close: %w", err)
+	k.log.Notice(ctx, "Consumer closer initiated for topic", k.topic)
+	commitErr := k.commit(ctx)
+	close(k.logCh)
+	if k.msgCh != nil {
+		close(k.msgCh)
 	}
+	closeErr := k.Consumer.Close()
+	k.wg.Wait()
 	k.log.Notice(ctx, "Consumer closed for topic", k.topic)
+	if commitErr != nil || closeErr != nil {
+		k.log.Error(ctx, fmt.Sprintf("Consumer closed with error for topic : %v", k.topic), closeErr)
+		return fmt.Errorf("KafkaConsumer.Close: %w, %w", commitErr, closeErr)
+	}
 	return nil
 }
 

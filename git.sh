@@ -1,5 +1,5 @@
-export message="Test config fix"
-export version="v3.1.1.ddtrace"
+export message="Trace fixs"
+export version="v3.2.1.ddtrace"
 export branch="ddtrace"
 git add .
 git commit -m "$message"

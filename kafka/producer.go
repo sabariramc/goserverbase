@@ -1,15 +1,14 @@
 package kafka
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
+	"sync"
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/sabariramc/goserverbase/v3/errors"
 	"github.com/sabariramc/goserverbase/v3/log"
 	"github.com/sabariramc/goserverbase/v3/utils"
 	kafkatrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/confluentinc/confluent-kafka-go/kafka"
@@ -17,38 +16,132 @@ import (
 
 type Producer struct {
 	*kafkatrace.Producer
-	config *KafkaProducerConfig
-	log    *log.Logger
-	topic  string
+	config       *KafkaProducerConfig
+	log          *log.Logger
+	topic        string
+	deliveryCh   chan kafka.Event
+	logCh        chan kafka.LogEvent
+	serviceName  string
+	resourceName string
+	wg           sync.WaitGroup
+	notifier     errors.ErrorNotifier
 }
 
-func NewProducer(ctx context.Context, log *log.Logger, config *KafkaProducerConfig, topic string) (*Producer, error) {
+func NewProducer(ctx context.Context, log *log.Logger, config *KafkaProducerConfig, serviceName, topic string, notifier errors.ErrorNotifier) (*Producer, error) {
+	return NewProducerResource(ctx, log, config, serviceName, "KAFKA_PRODUCER", topic, notifier)
+}
+
+func NewProducerResource(ctx context.Context, log *log.Logger, config *KafkaProducerConfig, serviceName, resourceName, topic string, notifier errors.ErrorNotifier) (*Producer, error) {
+	if notifier != nil {
+		_, ok := notifier.GetProcessor().(*Producer)
+		if ok {
+			return nil, fmt.Errorf("kafka.NewProducer: notifier cannot be of same type")
+		}
+	}
+	if config.MaxBuffer == 0 {
+		config.MaxBuffer = 1000
+	}
 	parsedConfig := &kafka.ConfigMap{}
 	utils.StrictJsonTransformer(config, parsedConfig)
+	ch := make(chan kafka.LogEvent, 10000)
+	(*parsedConfig)["go.logs.channel.enable"] = true
+	(*parsedConfig)["go.logs.channel"] = ch
 	p, err := kafkatrace.NewProducer(parsedConfig)
-
 	if err != nil {
 		log.Error(ctx, "Failed to create kafka producer", err)
-		return nil, fmt.Errorf("kafka.NewKafkaProducer.CreateProducer: %w", err)
+		return nil, fmt.Errorf("kafka.createProducer: %w", err)
 	}
 	k := &Producer{
-		config:   config,
-		log:      log,
-		Producer: p,
-		topic:    topic,
+		serviceName:  serviceName,
+		resourceName: resourceName,
+		log:          log.NewResourceLogger(resourceName),
+		config:       config,
+		Producer:     p,
+		topic:        topic,
+		logCh:        ch,
+		deliveryCh:   make(chan kafka.Event, config.MaxBuffer+100),
 	}
+	if err != nil {
+		return nil, fmt.Errorf("kafka.NewProducer: %w", err)
+	}
+	k.wg.Add(2)
+	go func() {
+		k.deliveryReport()
+		k.wg.Done()
+	}()
+	go func() {
+		k.printKafkaLog()
+		k.wg.Done()
+	}()
 	return k, nil
 }
 
-func (k *Producer) Produce(ctx context.Context, key string, message *utils.Message, headers map[string]string) (m *kafka.Message, err error) {
-	var buf bytes.Buffer
-	deliveryChannel := make(chan kafka.Event)
-	defer close(deliveryChannel)
-	err = json.NewEncoder(&buf).Encode(message)
+func (k *Producer) ProduceMessage(ctx context.Context, key string, message *utils.Message, headers map[string]string) (err error) {
+	blob, err := json.Marshal(message)
 	if err != nil {
 		k.log.Error(ctx, "Failed to encode message", err)
 		k.log.Error(ctx, "Message", message)
-		return nil, fmt.Errorf("KafkaProducer.Send.EncodeMessage: %w", err)
+		return fmt.Errorf("kafka.Producer.ProduceMessage.EncodeMessage: %w", err)
+	}
+	return k.Produce(ctx, key, blob, headers)
+}
+
+func (k *Producer) handleEvent(defaultCtx context.Context, ev kafka.Event) (context.Context, error) {
+	switch e := ev.(type) {
+	case *kafka.Message:
+		logMsg := &Message{
+			Message: e,
+		}
+		headers := logMsg.GetHeaders()
+		ctx := defaultCtx
+		if len(headers) > 0 {
+			corr := &log.CorrelationParam{}
+			data, _ := json.Marshal(headers)
+			err := utils.HeaderJson.Unmarshal(data, corr)
+			if err != nil || corr.CorrelationId == "" {
+				k.log.Error(defaultCtx, "Error extracting header", headers)
+			} else {
+				ctx = log.GetContextWithCorrelation(context.Background(), corr)
+			}
+		}
+		err := e.TopicPartition.Error
+		if err != nil {
+			k.log.Error(ctx, "Error in publishing message", err)
+			k.log.Error(ctx, "Error Meta", logMsg.GetMeta())
+			k.log.Debug(ctx, "Error Body", logMsg.GetBody)
+			return ctx, err
+		}
+		k.log.Info(ctx, "Send success for topic - meta: "+k.topic, logMsg.GetMeta())
+		k.log.Debug(ctx, "Send success for topic - body: "+k.topic, logMsg.GetBody)
+	case kafka.Error:
+		k.log.Error(defaultCtx, "Produce Error", e)
+		return defaultCtx, e
+	default:
+		k.log.Notice(defaultCtx, "KafkaProducer: Event", e.String())
+	}
+	return nil, nil
+}
+
+func (k *Producer) deliveryReport() {
+	defaultCtx := log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(k.serviceName+k.resourceName))
+	for ev := range k.deliveryCh {
+		ctx, err := k.handleEvent(defaultCtx, ev)
+		if err != nil && k.notifier != nil {
+			k.notifier.Send5XX(ctx, fmt.Sprintf("com.%v.kafka.Producer.error", k.serviceName), err, "", ev.String())
+		}
+	}
+}
+
+func (k *Producer) printKafkaLog() {
+	defaultCtx := log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(k.serviceName+k.resourceName))
+	for kLog := range k.logCh {
+		k.log.Log(defaultCtx, kLog.Level, kLog.Message, kLog, fmt.Errorf("%v", kLog.Message))
+	}
+}
+
+func (k *Producer) Produce(ctx context.Context, key string, message []byte, headers map[string]string) (err error) {
+	if k.Producer.Len() >= k.config.MaxBuffer {
+		k.Producer.Flush(1000)
 	}
 	if headers == nil {
 		headers = make(map[string]string, 0)
@@ -64,88 +157,28 @@ func (k *Producer) Produce(ctx context.Context, key string, message *utils.Messa
 			Value: []byte(v),
 		})
 	}
-	k.log.Debug(ctx, "Message payload", map[string]any{"body": message, "key": key, "headers": headers})
-	k.Producer.Produce(&kafka.Message{
+	k.log.Debug(ctx, "Message - meta", map[string]any{"key": key, "headers": headers})
+	k.log.Debug(ctx, "Message - body", func() string { return string(message) })
+	err = k.Producer.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{Topic: &k.topic, Partition: kafka.PartitionAny},
 		Key:            []byte(key),
-		Value:          buf.Bytes(),
+		Value:          message,
 		Headers:        messageHeader,
 		Timestamp:      time.Now(),
-	}, deliveryChannel)
-	e := <-deliveryChannel
-	m = e.(*kafka.Message)
-	err = m.TopicPartition.Error
+	}, k.deliveryCh)
 	if err != nil {
-		k.log.Error(ctx, "Send failed for topic: "+k.topic, err)
-		return nil, fmt.Errorf("KafkaProducer.Send.ProduceMessage: %w", err)
+		k.log.Error(ctx, "Failed to enqueue message: "+k.topic, err)
+		return fmt.Errorf("kafka.Producer.Produce: %w", err)
 	}
-	logMsg := &Message{
-		Message: m,
-	}
-	k.log.Info(ctx, "Send success for topic: "+k.topic, logMsg.GetMeta())
-	k.log.Debug(ctx, "Send success for topic - body: "+k.topic, logMsg.GetBody)
-	return m, nil
+	return nil
 }
 
-type HTTPProducer struct {
-	baseUrl    string
-	log        *log.Logger
-	topicName  string
-	httpClient *http.Client
-}
-
-func NewHTTPProducer(ctx context.Context, log *log.Logger, baseURL, topicName string, timeout time.Duration) *HTTPProducer {
-	return &HTTPProducer{baseUrl: baseURL, topicName: topicName, log: log, httpClient: &http.Client{Timeout: timeout}}
-}
-
-func (k HTTPProducer) Produce(ctx context.Context, key string, message *utils.Message, headers map[string]string) (*kafka.Message, error) {
-	url := k.baseUrl + "/" + k.topicName
-	data := map[string]any{
-		"records": []map[string]any{{
-			"value": message,
-			"key":   key,
-		},
-		},
-	}
-
-	var reqBodyBlob bytes.Buffer
-	err := json.NewEncoder(&reqBodyBlob).Encode(&data)
-	if err != nil {
-		k.log.Error(ctx, "KafkaHTTPProducer.Send.PayloadEncoding", err)
-		return nil, fmt.Errorf("KafkaHTTPProducer.Send.PayloadEncoding: %w", err)
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, &reqBodyBlob)
-	if err != nil {
-		k.log.Error(ctx, "KafkaHTTPProducer.Send.RequestCreation", err)
-		return nil, fmt.Errorf("KafkaHTTPProducer.Send.RequestCreation: %w", err)
-	}
-	log.SetCorrelationHeader(ctx, req)
-	req.Header.Add("Content-Type", "application/vnd.kafka.json.v2+json")
-	for key, val := range headers {
-		req.Header.Add(key, val)
-	}
-	k.log.Debug(ctx, "Request payload", data)
-	k.log.Debug(ctx, "Request header", req.Header)
-	k.log.Debug(ctx, "Request url", req.URL)
-	res, err := k.httpClient.Do(req)
-	if err != nil {
-		k.log.Error(ctx, "Error in sending kafka message", err)
-		return nil, fmt.Errorf("KafkaHTTPProducer.Send.HTTPCall: %w", err)
-	}
-	defer res.Body.Close()
-	blobBody, _ := io.ReadAll(res.Body)
-	var resBody any
-	resBody = make(map[string]any)
-	err = json.Unmarshal(blobBody, &resBody)
-	if err != nil {
-		k.log.Error(ctx, "KafkaHTTPProducer : Error in JSON Marshal", err)
-		resBody = string(blobBody)
-	}
-	if res.StatusCode > 299 {
-		err = fmt.Errorf("KafkaHTTPProducer.Send.HTTPCall.statusCode: %v", res.StatusCode)
-		k.log.Error(ctx, fmt.Sprintf("KAFKA HTTP response -%v", res.StatusCode), resBody)
-	} else {
-		k.log.Debug(ctx, fmt.Sprintf("KAFKA HTTP response -%v", res.StatusCode), resBody)
-	}
-	return nil, err
+func (k *Producer) Close(ctx context.Context) {
+	k.log.Notice(ctx, "Producer closer initiated for topic", k.topic)
+	k.Producer.Flush(10000)
+	close(k.deliveryCh)
+	close(k.logCh)
+	k.wg.Wait()
+	k.Producer.Close()
+	k.log.Notice(ctx, "Producer closed for topic", k.topic)
 }
