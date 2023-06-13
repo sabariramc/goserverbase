@@ -24,6 +24,7 @@ type Producer struct {
 	resourceName string
 	wg           sync.WaitGroup
 	notifier     errors.ErrorNotifier
+	lock         sync.Mutex
 }
 
 func NewProducer(ctx context.Context, log *log.Logger, config *KafkaProducerConfig, serviceName, topic string, notifier errors.ErrorNotifier) (*Producer, error) {
@@ -139,10 +140,11 @@ func (k *Producer) printKafkaLog() {
 }
 
 func (k *Producer) Produce(ctx context.Context, key string, message []byte, headers map[string]string) (err error) {
-	return k.ProduceToTopic(ctx, k.topic, key, message, headers)
+	return k.produceToTopic(ctx, k.topic, key, message, headers)
 }
 
-func (k *Producer) ProduceToTopic(ctx context.Context, topicName, key string, message []byte, headers map[string]string) (err error) {
+func (k *Producer) produceToTopic(ctx context.Context, topicName, key string, message []byte, headers map[string]string) (err error) {
+	k.lock.Lock()
 	if k.Producer.Len() >= k.config.MaxBuffer {
 		k.Producer.Flush(1000)
 	}
@@ -169,6 +171,7 @@ func (k *Producer) ProduceToTopic(ctx context.Context, topicName, key string, me
 		Headers:        messageHeader,
 		Timestamp:      time.Now(),
 	}, k.deliveryCh)
+	k.lock.Unlock()
 	if err != nil {
 		k.log.Error(ctx, "Failed to enqueue message: "+k.topic, err)
 		return fmt.Errorf("kafka.Producer.Produce: %w", err)
