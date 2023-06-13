@@ -42,3 +42,13 @@ func TestRandomStringGenerator(t *testing.T) {
 	wg.Wait()
 	assert.Equal(t, duplicateCount, 0)
 }
+
+var benchmarkRes string
+
+func BenchmarkRandomStringGenerator(b *testing.B) {
+	var r string
+	for i := 0; i < b.N; i++ {
+		r = utils.GenerateId(20, "sch_")
+	}
+	benchmarkRes = r
+}

@@ -59,13 +59,23 @@ func TestKafkaProducer(t *testing.T) {
 	defer pr.Close(ctx)
 	assert.NilError(t, err)
 	uuidVal := uuid.NewString()
-	for i := 0; i < 1000; i++ {
-		ctx := GetCorrelationContext()
-		err = pr.ProduceMessage(ctx, strconv.Itoa(i), &utils.Message{
-			Event: uuidVal,
-		}, nil)
-		assert.NilError(t, err)
+	totalNoOfMessage := 100000
+	connFac := 100
+	var wg sync.WaitGroup
+	for i := 0; i < connFac; i++ {
+		wg.Add(1)
+		go func() {
+			for i := 0; i < totalNoOfMessage/connFac; i++ {
+				ctx := GetCorrelationContext()
+				err = pr.ProduceMessage(ctx, strconv.Itoa(i), &utils.Message{
+					Event: uuidVal,
+				}, nil)
+				assert.NilError(t, err)
+			}
+			wg.Done()
+		}()
 	}
+	wg.Wait()
 }
 
 func TestKafkaMessage(t *testing.T) {
