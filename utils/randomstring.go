@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"math/rand"
+	"sync"
 	"time"
 )
 
@@ -13,10 +14,12 @@ const (
 	letterIdxMax  = 63 / letterIdxBits   // # of letter indices fitting in 63 bits
 )
 
-var src = rand.NewSource(time.Now().UnixNano())
+var src = rand.New(rand.NewSource(time.Now().UnixNano()))
+var mu sync.Mutex
 
-func GetRandomString(n int, prefix string) string {
+func GenerateRandomString(n int) string {
 	b := make([]byte, n)
+	mu.Lock()
 	// A src.Int63() generates 63 random bits, enough for letterIdxMax characters!
 	for i, cache, remain := n-1, src.Int63(), letterIdxMax; i >= 0; {
 		if remain == 0 {
@@ -29,14 +32,11 @@ func GetRandomString(n int, prefix string) string {
 		cache >>= letterIdxBits
 		remain--
 	}
-	randStr := string(b)
-	if prefix != "" {
-		randStr = fmt.Sprintf("%v%v", prefix, randStr)
-	}
-	return randStr
+	mu.Unlock()
+	return string(b)
 }
 
 func GenerateId(totalLength int, prefix string) string {
 	n := totalLength - len(prefix)
-	return GetRandomString(n, prefix)
+	return fmt.Sprintf("%v%v", prefix, GenerateRandomString(n))
 }

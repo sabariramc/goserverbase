@@ -9,8 +9,8 @@ import (
 )
 
 func TestGenerateId(t *testing.T) {
-	for i := 0; i < 50; i++ {
-		x := utils.GenerateId(50, "abc")
+	for i := 0; i < 5000; i++ {
+		x := utils.GenerateId(50, "abc_")
 		assert.Equal(t, len(x), 50)
 		fmt.Println(x)
 	}
