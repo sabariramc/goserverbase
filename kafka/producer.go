@@ -161,7 +161,7 @@ func (k *Producer) ProduceToTopic(ctx context.Context, topicName, key string, me
 			Value: []byte(v),
 		})
 	}
-	k.log.Debug(ctx, "Message - meta", map[string]any{"key": key, "headers": headers})
+	k.log.Debug(ctx, "Message - meta", map[string]any{"key": key, "headers": headers, "topic": k.topic})
 	k.log.Debug(ctx, "Message - body", func() string { return string(message) })
 	err = k.Producer.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{Topic: &k.topic, Partition: kafka.PartitionAny},
