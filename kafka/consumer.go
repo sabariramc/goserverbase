@@ -76,7 +76,7 @@ func (k *Consumer) commit(ctx context.Context) error {
 	offset, err := k.Consumer.Commit()
 	if err != nil {
 		if err.Error() == "Local: No offset stored" {
-			k.log.Info(ctx, "No offset to commit", err)
+			k.log.Debug(ctx, "No offset to commit", err)
 			err = nil
 		} else {
 			k.log.Error(ctx, "Error on commit", err)
