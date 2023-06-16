@@ -181,6 +181,10 @@ outer:
 			case msg, ok := <-k.msgCh:
 				if msg != nil {
 					ch <- msg
+					consumerLag := time.Since(msg.Timestamp)
+					if consumerLag > time.Second {
+						k.log.Notice(ctx, "consumer lag", consumerLag)
+					}
 					k.Consumer.StoreMessage(msg)
 				}
 				if !ok {

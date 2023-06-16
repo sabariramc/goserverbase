@@ -1,5 +1,5 @@
 export message="Trace merge"
-export version="v3.3.1.ddtrace"
+export version="v3.4.0.ddtrace"
 export branch="ddtrace"
 git add .
 git commit -m "$message"

@@ -13,32 +13,26 @@ import (
 	"gotest.tools/assert"
 )
 
-var KafkaTestConfig *testutils.TestConfig
-var KafkaTestLogger *log.Logger
+var TestConfig *testutils.TestConfig
+var TestLogger *log.Logger
 
 func init() {
 	testutils.Initialize()
 	testutils.LoadEnv("../../../.env")
-	KafkaTestConfig = testutils.NewConfig()
-	hostParams := log.HostParams{
-		Version:     KafkaTestConfig.Logger.Version,
-		Host:        KafkaTestConfig.Http.Host,
-		ServiceName: KafkaTestConfig.App.ServiceName,
-	}
-	consoleLogWriter := logwriter.NewConsoleWriter(hostParams)
-
+	TestConfig = testutils.NewConfig()
+	consoleLogWriter := logwriter.NewConsoleWriter(TestConfig.Logger.HostParams)
 	lMux := log.NewDefaultLogMux(consoleLogWriter)
-	KafkaTestLogger = log.NewLogger(context.TODO(), KafkaTestConfig.Logger, "KafkaTest", lMux, nil)
+	TestLogger = log.NewLogger(context.TODO(), TestConfig.Logger, "KafkaTest", lMux, nil)
 }
 
 func GetCorrelationContext() context.Context {
-	ctx := context.WithValue(context.Background(), log.ContextKeyCorrelation, log.GetDefaultCorrelationParam(KafkaTestConfig.App.ServiceName))
+	ctx := context.WithValue(context.Background(), log.ContextKeyCorrelation, log.GetDefaultCorrelationParam(TestConfig.App.ServiceName))
 	return ctx
 }
 
 func TestErrorNotification(t *testing.T) {
-	p, _ := pKafka.NewProducer(context.TODO(), KafkaTestLogger, KafkaTestConfig.KafkaProducerConfig, KafkaTestConfig.App.ServiceName, KafkaTestConfig.KafkaTestTopic, nil)
-	notifier := kafka.New(context.TODO(), KafkaTestLogger, "Test", p)
+	p, _ := pKafka.NewProducer(context.TODO(), TestLogger, TestConfig.KafkaProducer, TestConfig.App.ServiceName, TestConfig.KafkaTestTopic, nil)
+	notifier := kafka.New(context.TODO(), TestLogger, "Test", p)
 	ctx := GetCorrelationContext()
 	err := notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{CustomerId: "customer_id_test"}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
 	assert.NilError(t, err)
@@ -49,8 +43,8 @@ func TestErrorNotification(t *testing.T) {
 }
 
 func TestErrorNotification2(t *testing.T) {
-	p := pKafka.NewHTTPProducer(context.TODO(), KafkaTestLogger, KafkaTestConfig.KafkaHTTPProxyURL, KafkaTestConfig.KafkaTestTopic, time.Second)
-	notifier := kafka.New(context.TODO(), KafkaTestLogger, "Test", p)
+	p := pKafka.NewHTTPProducer(context.TODO(), TestLogger, TestConfig.KafkaHTTPProxyURL, TestConfig.KafkaTestTopic, time.Second)
+	notifier := kafka.New(context.TODO(), TestLogger, "Test", p)
 	ctx := GetCorrelationContext()
 	err := notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{CustomerId: "customer_id_test"}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
 	assert.NilError(t, err)

@@ -8,6 +8,7 @@ import (
 	"github.com/sabariramc/goserverbase/v3/db/mongo"
 	"github.com/sabariramc/goserverbase/v3/kafka"
 	"github.com/sabariramc/goserverbase/v3/log"
+	"github.com/sabariramc/goserverbase/v3/log/logwriter"
 	"github.com/sabariramc/goserverbase/v3/utils"
 )
 
@@ -21,16 +22,17 @@ type AWSConfig struct {
 }
 
 type TestConfig struct {
-	Logger              *log.Config
-	App                 *baseapp.ServerConfig
-	Http                *httpserver.HttpServerConfig
-	Kafka               *kafkaconsumer.KafkaConsumerServerConfig
-	Mongo               *mongo.Config
-	AWS                 *AWSConfig
-	KafkaConsumerConfig *kafka.KafkaConsumerConfig
-	KafkaProducerConfig *kafka.KafkaProducerConfig
-	KafkaTestTopic      string
-	KafkaHTTPProxyURL   string
+	Logger            *log.Config
+	App               *baseapp.ServerConfig
+	Http              *httpserver.HttpServerConfig
+	Kafka             *kafkaconsumer.KafkaConsumerServerConfig
+	Mongo             *mongo.Config
+	AWS               *AWSConfig
+	KafkaConsumer     *kafka.KafkaConsumerConfig
+	KafkaProducer     *kafka.KafkaProducerConfig
+	KafkaTestTopic    string
+	KafkaHTTPProxyURL string
+	Graylog           logwriter.GraylogConfig
 }
 
 func (t *TestConfig) GetLoggerConfig() *log.Config {
@@ -69,11 +71,13 @@ func NewConfig() *TestConfig {
 	return &TestConfig{
 
 		Logger: &log.Config{
-			Version:     utils.GetEnv("LOG_VERSION", "1.1"),
-			Host:        utils.GetEnv("HOST", utils.GetHostName()),
-			ServiceName: serviceName,
-			LogLevel:    utils.GetEnvInt("LOG_LEVEL", 6),
-			BufferSize:  utils.GetEnvInt("LOG_BUFFER_SIZE", 1),
+			HostParams: log.HostParams{
+				Version:     utils.GetEnv("LOG_VERSION", "1.1"),
+				Host:        utils.GetEnv("HOST", utils.GetHostName()),
+				ServiceName: serviceName,
+			},
+			LogLevel:   utils.GetEnvInt("LOG_LEVEL", 6),
+			BufferSize: utils.GetEnvInt("LOG_BUFFER_SIZE", 1),
 		},
 		App: appConfig,
 		Http: &httpserver.HttpServerConfig{
@@ -99,13 +103,17 @@ func NewConfig() *TestConfig {
 			SQS_URL:      utils.GetEnv("SQS_URL", ""),
 			FIFO_SQS_URL: utils.GetEnv("FIFO_SQS_URL", ""),
 		},
-		KafkaProducerConfig: &kafka.KafkaProducerConfig{
+		KafkaProducer: &kafka.KafkaProducerConfig{
 			KafkaCred:   &kafkaBaseConfig,
 			Acknowledge: "all",
 			MaxBuffer:   utils.GetEnvInt("KAFKA_PRODUCER_MAX_BUFFER", 1000),
 		},
-		KafkaConsumerConfig: consumer,
-		KafkaTestTopic:      utils.GetEnvMust("KAFKA_TEST_TOPIC"),
-		KafkaHTTPProxyURL:   utils.GetEnvMust("KAFKA_HTTP_PROXY"),
+		KafkaConsumer:     consumer,
+		KafkaTestTopic:    utils.GetEnvMust("KAFKA_TEST_TOPIC"),
+		KafkaHTTPProxyURL: utils.GetEnvMust("KAFKA_HTTP_PROXY"),
+		Graylog: logwriter.GraylogConfig{
+			Address: utils.GetEnv("GRAYLOG_URL", ""),
+			Port:    utils.GetEnvInt("GRAYLOG_PORT", 12001),
+		},
 	}
 }
