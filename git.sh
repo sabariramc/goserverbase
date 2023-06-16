@@ -1,5 +1,5 @@
-export message="Added graylog"
-export version="v3.4.0"
+export message="Removed redundant test "
+export version="v3.4.1"
 export branch="master"
 git add .
 git commit -m "$message"

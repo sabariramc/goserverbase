@@ -229,36 +229,6 @@ func TestKafkaPollWithDelay(t *testing.T) {
 	assert.Equal(t, 50, count)
 
 }
-
-func TestKafkaPollWithDelayExtended(t *testing.T) {
-	ctx := GetCorrelationContext()
-	co, err := kafka.NewConsumer(ctx, KafkaTestConfig.App.ServiceName, KafkaTestLogger, KafkaTestConfig.KafkaConsumer, nil, KafkaTestConfig.KafkaTestTopic)
-	defer co.Close(ctx)
-	assert.NilError(t, err)
-	pr, err := kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducer, KafkaTestConfig.App.ServiceName, KafkaTestConfig.KafkaTestTopic, nil)
-	defer pr.Close(ctx)
-	assert.NilError(t, err)
-	tCtx, cancel := context.WithTimeout(ctx, time.Second*10)
-	defer cancel()
-	ch := make(chan *cKafka.Message, 100)
-	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		co.Poll(tCtx, 2000, ch)
-	}()
-	uuidVal := uuid.NewString()
-	time.Sleep(time.Second * 3)
-	for i := 0; i < 10; i++ {
-		ctx := GetCorrelationContext()
-		err = pr.ProduceMessage(ctx, strconv.Itoa(i), &utils.Message{
-			Event: uuidVal,
-		}, nil)
-		assert.NilError(t, err)
-	}
-	wg.Wait()
-}
-
 func TestKafkaPollHTTPProducer(t *testing.T) {
 	ctx := GetCorrelationContext()
 	co, err := kafka.NewConsumer(ctx, "TEST", KafkaTestLogger, KafkaTestConfig.KafkaConsumer, nil, KafkaTestConfig.KafkaTestTopic)
