@@ -1,5 +1,5 @@
-export message="Version change"
-export version="v3.3.1"
+export message="Added graylog"
+export version="v3.4.0"
 export branch="master"
 git add .
 git commit -m "$message"
