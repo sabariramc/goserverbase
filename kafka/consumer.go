@@ -46,6 +46,9 @@ func NewConsumerResource(ctx context.Context, serviceName, resourceName string, 
 	if config.AutoCommitIntervalInMs <= 0 {
 		config.AutoCommitIntervalInMs = 1000 * 10
 	}
+	if config.ConsumerLagToleranceInMs <= 0 {
+		config.ConsumerLagToleranceInMs = 1000 * 3
+	}
 	if err != nil {
 		log.Error(ctx, "Failed to create kafka consumer", err)
 		return nil, fmt.Errorf("kafka.NewKafkaConsumer.CreateConsumer: %w", err)
@@ -95,7 +98,7 @@ func (k *Consumer) logReBalance(consumer *kafka.Consumer, e kafka.Event) error {
 }
 
 func (k *Consumer) printKafkaLog() {
-	defaultCtx := log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(k.serviceName+k.resourceName))
+	defaultCtx := log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(k.serviceName+"--"+k.resourceName))
 	for kLog := range k.logCh {
 		k.log.Log(defaultCtx, kLog.Level, kLog.Message, kLog, fmt.Errorf("%v", kLog.Message))
 	}
@@ -162,9 +165,12 @@ func (k *Consumer) Poll(ctx context.Context, timeout int, ch chan *kafka.Message
 	defer wg.Wait()
 	k.log.Info(ctx, fmt.Sprintf("Polling started for topic : %v", k.topic), nil)
 	commitTimeout, _ := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(k.config.AutoCommitIntervalInMs))
+	infoConsumerLag := time.Millisecond * time.Duration(k.config.ConsumerLagToleranceInMs)
+	noticeConsumerLag := 2 * infoConsumerLag
+	warningConsumerLag := 2 * noticeConsumerLag
 outer:
 	for {
-		for i := 0; i < k.config.MaxBuffer; i++ {
+		for i := uint64(0); i < k.config.MaxBuffer; i++ {
 			select {
 			case <-ctx.Done():
 				cancelPoll()
@@ -182,8 +188,12 @@ outer:
 				if msg != nil {
 					ch <- msg
 					consumerLag := time.Since(msg.Timestamp)
-					if consumerLag > time.Second {
-						k.log.Notice(ctx, "consumer lag", consumerLag)
+					if consumerLag > infoConsumerLag {
+						k.log.Info(ctx, "consumer lag in ms", consumerLag.Milliseconds())
+					} else if consumerLag > noticeConsumerLag {
+						k.log.Notice(ctx, "consumer lag in ms", consumerLag.Milliseconds())
+					} else if consumerLag > warningConsumerLag {
+						k.log.Warning(ctx, "consumer lag in ms", consumerLag.Milliseconds())
 					}
 					k.Consumer.StoreMessage(msg)
 				}
