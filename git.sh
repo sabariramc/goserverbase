@@ -1,5 +1,5 @@
-export message="Removed redundant test "
-export version="v3.4.1"
+export message="Kafka producer and consumer config changes"
+export version="v3.5.0"
 export branch="master"
 git add .
 git commit -m "$message"

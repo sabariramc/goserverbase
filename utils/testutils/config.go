@@ -66,7 +66,7 @@ func NewConfig() *TestConfig {
 		GoEventChannel: false,
 		GroupID:        utils.GetEnvMust("KAFKA_CONSUMER_ID"),
 		OffsetReset:    "latest",
-		MaxBuffer:      utils.GetEnvInt("KAFKA_CONSUMER_MAX_BUFFER", 1000),
+		MaxBuffer:      uint64(utils.GetEnvInt("KAFKA_CONSUMER_MAX_BUFFER", 1000)),
 	}
 	return &TestConfig{
 

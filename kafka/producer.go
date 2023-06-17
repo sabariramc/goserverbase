@@ -123,7 +123,7 @@ func (k *Producer) handleEvent(defaultCtx context.Context, ev kafka.Event) (cont
 }
 
 func (k *Producer) deliveryReport() {
-	defaultCtx := log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(k.serviceName+k.resourceName))
+	defaultCtx := log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(k.serviceName+"--"+k.resourceName))
 	for ev := range k.deliveryCh {
 		ctx, err := k.handleEvent(defaultCtx, ev)
 		if err != nil && k.notifier != nil {
@@ -133,7 +133,7 @@ func (k *Producer) deliveryReport() {
 }
 
 func (k *Producer) printKafkaLog() {
-	defaultCtx := log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(k.serviceName+k.resourceName))
+	defaultCtx := log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(k.serviceName+"--"+k.resourceName))
 	for kLog := range k.logCh {
 		k.log.Log(defaultCtx, kLog.Level, kLog.Message, kLog, fmt.Errorf("%v", kLog.Message))
 	}
@@ -181,10 +181,10 @@ func (k *Producer) produceToTopic(ctx context.Context, topicName, key string, me
 
 func (k *Producer) Close(ctx context.Context) {
 	k.log.Notice(ctx, "Producer closer initiated for topic", k.topic)
-	k.Producer.Flush(10000)
+	k.Flush(10000)
+	k.Producer.Close()
 	close(k.deliveryCh)
 	close(k.logCh)
 	k.wg.Wait()
-	k.Producer.Close()
 	k.log.Notice(ctx, "Producer closed for topic", k.topic)
 }
