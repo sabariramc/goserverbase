@@ -2,30 +2,33 @@ package httpserver
 
 import (
 	"context"
-	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
-func (h *HttpServer) SetContextMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (h *HttpServer) SetContextMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		r := c.Request
 		ctx := h.GetContextWithCorrelation(r.Context(), h.GetCorrelationParams(r))
 		ctx = h.GetContextWithCustomerId(ctx, h.GetCustomerId(r))
-		r = r.WithContext(ctx)
-		next.ServeHTTP(w, r)
-	})
+		c.Request = r.WithContext(ctx)
+		c.Next()
+	}
 }
 
-func (h *HttpServer) RequestTimerMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (h *HttpServer) RequestTimerMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		r := c.Request
 		st := time.Now()
-		next.ServeHTTP(w, r)
+		c.Next()
 		h.Log.Info(r.Context(), "Request processing time in ms", time.Since(st).Milliseconds())
-	})
-
+	}
 }
 
-func (h *HttpServer) LogRequestResponseMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (h *HttpServer) LogRequestResponseMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		w, r := c.Writer, c.Request
 		loggingW := &loggingResponseWriter{
 			ResponseWriter: w,
 		}
@@ -34,7 +37,9 @@ func (h *HttpServer) LogRequestResponseMiddleware(next http.Handler) http.Handle
 		ctx = context.WithValue(ctx, ContextKeyRequestBody, &body)
 		r = r.WithContext(ctx)
 		h.PrintRequest(r.Context(), r)
-		next.ServeHTTP(loggingW, r)
+		c.Writer = loggingW
+		c.Request = r
+		c.Next()
 		if loggingW.status < 500 {
 			h.Log.Info(r.Context(), "Response", map[string]any{"statusCode": loggingW.status, "headers": loggingW.Header()})
 			h.Log.Debug(r.Context(), "Response-Body", loggingW.body)
@@ -43,11 +48,12 @@ func (h *HttpServer) LogRequestResponseMiddleware(next http.Handler) http.Handle
 			h.Log.Error(r.Context(), "Response-Body", loggingW.body)
 		}
 
-	})
+	}
 }
 
-func (h *HttpServer) HandleExceptionMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (h *HttpServer) HandleExceptionMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		w, r := c.Writer, c.Request
 		req := h.ExtractRequestMetadata(r)
 		req["Body"] = h.GetRequestBody(r)
 		defer func() {
@@ -59,11 +65,11 @@ func (h *HttpServer) HandleExceptionMiddleware(next http.Handler) http.Handler {
 		ctx := r.Context()
 		var handlerError error
 		ctx = context.WithValue(ctx, ContextKeyHandlerError, func(err error) { handlerError = err })
-		r = r.WithContext(ctx)
-		next.ServeHTTP(w, r)
+		c.Request = r.WithContext(ctx)
+		c.Next()
 		if handlerError != nil {
 			statusCode, body := h.ProcessError(ctx, "", handlerError, req)
 			h.WriteJsonWithStatusCode(r.Context(), w, statusCode, body)
 		}
-	})
+	}
 }

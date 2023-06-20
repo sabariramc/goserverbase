@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/sabariramc/goserverbase/v3/errors"
 )
 
@@ -62,8 +63,9 @@ func HealthCheck(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *HttpServer) SetupRouter(ctx context.Context) {
-	h.handler.Use(h.SetContextMiddleware, h.RequestTimerMiddleware, h.LogRequestResponseMiddleware, h.HandleExceptionMiddleware)
-	h.handler.NotFound(NotFound())
-	h.handler.MethodNotAllowed(MethodNotAllowed())
-	h.handler.Get("/meta/health", HealthCheck)
+	h.handler.NoRoute(gin.WrapF(NotFound()))
+	h.handler.NoMethod(gin.WrapF(MethodNotAllowed()))
+	h.handler.GET("/meta/health", gin.WrapF(HealthCheck))
+	h.handler.HandleMethodNotAllowed = true
+	h.handler.Use(h.SetContextMiddleware(), h.RequestTimerMiddleware(), h.LogRequestResponseMiddleware(), h.HandleExceptionMiddleware())
 }
