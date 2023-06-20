@@ -56,7 +56,6 @@ func TestKafkaConsumer(t *testing.T) {
 
 func TestKafkaProducer(t *testing.T) {
 	ctx := GetCorrelationContext()
-
 	uuidVal := uuid.NewString()
 	totalNoOfMessage := 1000
 	connFac := 100

@@ -21,6 +21,7 @@ type KafkaConsumerConfig struct {
 
 type KafkaProducerConfig struct {
 	*KafkaCred
-	Acknowledge interface{} `json:"acks,omitempty"`
-	MaxBuffer   int         `json:"-"`
+	Acknowledge           interface{} `json:"acks,omitempty"`
+	MaxBuffer             int         `json:"-"`
+	AutoFlushIntervalInMs uint64      `json:"-"`
 }
