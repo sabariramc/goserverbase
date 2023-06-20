@@ -6,7 +6,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/gin-gonic/gin"
 	"github.com/sabariramc/goserverbase/v3/app/server/httpserver"
 	"github.com/sabariramc/goserverbase/v3/errors"
 	"github.com/sabariramc/goserverbase/v3/log"
@@ -49,8 +49,9 @@ func (s *server) Func1(w http.ResponseWriter, r *http.Request) {
 	s.WriteJsonWithStatusCode(r.Context(), w, 200, map[string]string{"body": string(data)})
 }
 
-func (s *server) Func2(w http.ResponseWriter, r *http.Request) {
-	fmt.Println(chi.URLParam(r, "tenantId"))
+func (s *server) Func2(c *gin.Context) {
+	w := c.Writer
+	fmt.Println(c.Param("tenantId"))
 	w.WriteHeader(200)
 	w.Write([]byte("World"))
 }
@@ -71,24 +72,14 @@ func NewServer() *server {
 	srv := &server{
 		HttpServer: httpserver.New(*ServerTestConfig.Http, *ServerTestConfig.Logger, ServerTestLMux, nil, nil),
 	}
-	r := chi.NewRouter()
-	r.Route(
-		"/tenant", func(r chi.Router) {
-			r.Get("/", srv.Func1)
-			r.Post("/", srv.Func1)
-
-			r.Route("/{tenantId}", func(r chi.Router) {
-				r.Get("/", srv.Func2)
-			})
-		},
-	)
-	r.Route(
-		"/error", func(r chi.Router) {
-			r.Get("/error1", srv.Func3)
-			r.Get("/error2", srv.Func4)
-			r.Get("/error3", srv.Func5)
-		},
-	)
-	srv.GetRouter().Mount("/service/v1", r)
+	r := srv.GetRouter().Group("/service/v1")
+	tenant := r.Group("/tenant")
+	tenant.GET("", gin.WrapF(srv.Func1))
+	tenant.POST("", gin.WrapF(srv.Func1))
+	tenant.GET("/:tenantId", srv.Func2)
+	errorRoute := r.Group("/error")
+	errorRoute.GET("/error1", gin.WrapF(srv.Func3))
+	errorRoute.GET("/error2", gin.WrapF(srv.Func4))
+	errorRoute.GET("/error3", gin.WrapF(srv.Func5))
 	return srv
 }

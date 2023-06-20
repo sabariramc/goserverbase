@@ -16,16 +16,18 @@ import (
 
 type Producer struct {
 	*kafkatrace.Producer
-	config       *KafkaProducerConfig
-	log          *log.Logger
-	topic        string
-	deliveryCh   chan kafka.Event
-	logCh        chan kafka.LogEvent
-	serviceName  string
-	resourceName string
-	wg           sync.WaitGroup
-	notifier     errors.ErrorNotifier
-	lock         sync.Mutex
+	config          *KafkaProducerConfig
+	log             *log.Logger
+	topic           string
+	deliveryCh      chan kafka.Event
+	logCh           chan kafka.LogEvent
+	serviceName     string
+	resourceName    string
+	wg              sync.WaitGroup
+	notifier        errors.ErrorNotifier
+	produceLock     sync.Mutex
+	flushLock       sync.Mutex
+	autoFlushCancel context.CancelFunc
 }
 
 func NewProducer(ctx context.Context, log *log.Logger, config *KafkaProducerConfig, serviceName, topic string, notifier errors.ErrorNotifier) (*Producer, error) {
@@ -41,6 +43,9 @@ func NewProducerResource(ctx context.Context, log *log.Logger, config *KafkaProd
 	}
 	if config.MaxBuffer == 0 {
 		config.MaxBuffer = 1000
+	}
+	if config.AutoFlushIntervalInMs == 0 {
+		config.AutoFlushIntervalInMs = 1000 * 10
 	}
 	parsedConfig := &kafka.ConfigMap{}
 	utils.StrictJsonTransformer(config, parsedConfig)
@@ -66,6 +71,13 @@ func NewProducerResource(ctx context.Context, log *log.Logger, config *KafkaProd
 		return nil, fmt.Errorf("kafka.NewProducer: %w", err)
 	}
 	k.wg.Add(2)
+	// flushCtx, flushCancel := context.WithCancel(context.Background())
+	// k.autoFlushCancel = flushCancel
+	//
+	// go func() {
+	// 	k.autoFlush(flushCtx)
+	// 	k.wg.Done()
+	// }()
 	go func() {
 		k.deliveryReport()
 		k.wg.Done()
@@ -145,9 +157,9 @@ func (k *Producer) Produce(ctx context.Context, key string, message []byte, head
 }
 
 func (k *Producer) produceToTopic(ctx context.Context, topicName, key string, message []byte, headers map[string]string) (err error) {
-	k.lock.Lock()
-	if k.Producer.Len() >= k.config.MaxBuffer {
-		k.Producer.Flush(1000)
+	k.produceLock.Lock()
+	if k.Len() >= k.config.MaxBuffer {
+		k.Flush(1000)
 	}
 	if headers == nil {
 		headers = make(map[string]string, 0)
@@ -172,7 +184,7 @@ func (k *Producer) produceToTopic(ctx context.Context, topicName, key string, me
 		Headers:        messageHeader,
 		Timestamp:      time.Now(),
 	}, k.deliveryCh)
-	k.lock.Unlock()
+	k.produceLock.Unlock()
 	if err != nil {
 		k.log.Error(ctx, "Failed to enqueue message: "+k.topic, err)
 		return fmt.Errorf("kafka.Producer.Produce: %w", err)
@@ -180,8 +192,30 @@ func (k *Producer) produceToTopic(ctx context.Context, topicName, key string, me
 	return nil
 }
 
+func (k *Producer) autoFlush(ctx context.Context) {
+	timeout := time.Millisecond * time.Duration(k.config.AutoFlushIntervalInMs)
+	timeoutCtx, _ := context.WithTimeout(context.Background(), timeout)
+	for {
+		select {
+		case <-ctx.Done():
+			k.Flush(1000)
+			return
+		case <-timeoutCtx.Done():
+			k.Flush(1000)
+			timeoutCtx, _ = context.WithTimeout(context.Background(), timeout)
+		}
+	}
+}
+
+func (k *Producer) Flush(timeoutMs int) {
+	k.flushLock.Lock()
+	k.Producer.Flush(timeoutMs)
+	k.flushLock.Unlock()
+}
+
 func (k *Producer) Close(ctx context.Context) {
 	k.log.Notice(ctx, "Producer closer initiated for topic", k.topic)
+	// k.autoFlushCancel()
 	k.Flush(10000)
 	k.Producer.Close()
 	close(k.deliveryCh)

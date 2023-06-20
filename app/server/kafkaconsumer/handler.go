@@ -13,6 +13,9 @@ func (k *KafkaConsumerServer) AddHandler(ctx context.Context, topicName string, 
 	if handler == nil {
 		k.Log.Emergency(ctx, "missing handler for topic - "+topicName, nil, fmt.Errorf("handler parameter cannot be nil"))
 	}
+	if _, ok := k.handler[topicName]; ok {
+		k.Log.Emergency(ctx, "duplicate handler for topic - "+topicName, nil, fmt.Errorf("handler for topic exist"))
+	}
 	k.handler[topicName] = handler
 }
 

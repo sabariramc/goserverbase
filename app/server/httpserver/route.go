@@ -4,8 +4,9 @@ import (
 	"context"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/sabariramc/goserverbase/v3/errors"
-	chitrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/go-chi/chi.v5"
+	gintrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/gin-gonic/gin"
 )
 
 type APIDocumentation struct {
@@ -63,9 +64,10 @@ func HealthCheck(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *HttpServer) SetupRouter(ctx context.Context) {
-	h.handler.Use(chitrace.Middleware())
-	h.handler.Use(h.SetContextMiddleware, h.RequestTimerMiddleware, h.LogRequestResponseMiddleware, h.HandleExceptionMiddleware)
-	h.handler.NotFound(NotFound())
-	h.handler.MethodNotAllowed(MethodNotAllowed())
-	h.handler.Get("/meta/health", HealthCheck)
+	h.handler.NoRoute(gin.WrapF(NotFound()))
+	h.handler.NoMethod(gin.WrapF(MethodNotAllowed()))
+	h.handler.GET("/meta/health", gin.WrapF(HealthCheck))
+	h.handler.HandleMethodNotAllowed = true
+	h.handler.Use(gintrace.Middleware(h.c.ServiceName))
+	h.handler.Use(h.SetContextMiddleware(), h.RequestTimerMiddleware(), h.LogRequestResponseMiddleware(), h.HandleExceptionMiddleware())
 }

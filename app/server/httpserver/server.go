@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
+	"github.com/gin-gonic/gin"
 	baseapp "github.com/sabariramc/goserverbase/v3/app"
 	"github.com/sabariramc/goserverbase/v3/errors"
 	"github.com/sabariramc/goserverbase/v3/log"
@@ -14,7 +14,7 @@ import (
 
 type HttpServer struct {
 	*baseapp.BaseApp
-	handler *chi.Mux
+	handler *gin.Engine
 	docMeta APIDocumentation
 	Log     *log.Logger
 	c       *HttpServerConfig
@@ -27,7 +27,7 @@ func New(appConfig HttpServerConfig, loggerConfig log.Config, lMux log.LogMux, e
 	}
 	h := &HttpServer{
 		BaseApp: b,
-		handler: chi.NewRouter(),
+		handler: gin.New(),
 		docMeta: APIDocumentation{
 			Server: make([]DocumentServer, 0),
 			Routes: make(APIRoute, 0),
@@ -48,7 +48,7 @@ func (h *HttpServer) GetAPIDocument() APIDocumentation {
 	return h.docMeta
 }
 
-func (h *HttpServer) GetRouter() *chi.Mux {
+func (h *HttpServer) GetRouter() *gin.Engine {
 	return h.handler
 }
 

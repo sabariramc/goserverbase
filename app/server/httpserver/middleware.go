@@ -3,48 +3,53 @@ package httpserver
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"time"
+
+	"github.com/gin-gonic/gin"
 
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
-func (h *HttpServer) SetContextMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (h *HttpServer) SetContextMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		r := c.Request
 		corr := h.GetCorrelationParams(r)
 		id := h.GetCustomerId(r)
 		ctx := h.GetContextWithCorrelation(r.Context(), corr)
 		ctx = h.GetContextWithCustomerId(ctx, id)
-		r = r.WithContext(ctx)
+		c.Request = r.WithContext(ctx)
 		if span, ok := tracer.SpanFromContext(r.Context()); ok {
 			span.SetTag("http.headers.x-correlation-id", corr.CorrelationId)
 			span.SetTag("http.headers.x-app-user-id", id.AppUserId)
 			span.SetTag("http.headers.x-customer-id", id.CustomerId)
 			span.SetTag("http.headers.x-entity-id", id.Id)
 		}
-		next.ServeHTTP(w, r)
-	})
+		c.Next()
+	}
 }
 
-func (h *HttpServer) RequestTimerMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (h *HttpServer) RequestTimerMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		r := c.Request
 		st := time.Now()
-		next.ServeHTTP(w, r)
+		c.Next()
 		h.Log.Info(r.Context(), "Request processing time in ms", time.Since(st).Milliseconds())
-	})
-
+	}
 }
 
-func (h *HttpServer) LogRequestResponseMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (h *HttpServer) LogRequestResponseMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		w, r := c.Writer, c.Request
 		loggingW := &loggingResponseWriter{
 			ResponseWriter: w,
 		}
 		var body string
 		r = r.WithContext(context.WithValue(r.Context(), ContextKeyRequestBody, &body))
 		h.PrintRequest(r.Context(), r)
-		next.ServeHTTP(loggingW, r)
+		c.Writer = loggingW
+		c.Request = r
+		c.Next()
 		if loggingW.status < 500 {
 			h.Log.Info(r.Context(), "Response", map[string]any{"statusCode": loggingW.status, "headers": loggingW.Header()})
 			h.Log.Debug(r.Context(), "Response-Body", loggingW.body)
@@ -53,11 +58,12 @@ func (h *HttpServer) LogRequestResponseMiddleware(next http.Handler) http.Handle
 			h.Log.Error(r.Context(), "Response-Body", loggingW.body)
 		}
 
-	})
+	}
 }
 
-func (h *HttpServer) HandleExceptionMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (h *HttpServer) HandleExceptionMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		w, r := c.Writer, c.Request
 		req := h.ExtractRequestMetadata(r)
 		req["Body"] = h.GetRequestBody(r)
 		span, spanOk := tracer.SpanFromContext(r.Context())
@@ -77,8 +83,8 @@ func (h *HttpServer) HandleExceptionMiddleware(next http.Handler) http.Handler {
 		ctx := r.Context()
 		var handlerError error
 		ctx = context.WithValue(ctx, ContextKeyHandlerError, func(err error) { handlerError = err })
-		r = r.WithContext(ctx)
-		next.ServeHTTP(w, r)
+		c.Request = r.WithContext(ctx)
+		c.Next()
 		if handlerError != nil {
 			statusCode, body := h.ProcessError(ctx, "", handlerError, req)
 			h.WriteJsonWithStatusCode(r.Context(), w, statusCode, body)
@@ -86,5 +92,5 @@ func (h *HttpServer) HandleExceptionMiddleware(next http.Handler) http.Handler {
 				span.SetTag(ext.Error, handlerError)
 			}
 		}
-	})
+	}
 }

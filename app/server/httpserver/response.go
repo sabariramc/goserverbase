@@ -6,13 +6,14 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/sabariramc/goserverbase/v3/utils"
 )
 
 type loggingResponseWriter struct {
 	status int
 	body   string
-	http.ResponseWriter
+	gin.ResponseWriter
 }
 
 func (w *loggingResponseWriter) WriteHeader(code int) {
