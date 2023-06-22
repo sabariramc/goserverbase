@@ -153,10 +153,10 @@ func (k *Producer) printKafkaLog() {
 }
 
 func (k *Producer) Produce(ctx context.Context, key string, message []byte, headers map[string]string) (err error) {
-	return k.produceToTopic(ctx, k.topic, key, message, headers)
+	return k.ProduceToTopic(ctx, kafka.TopicPartition{Topic: &k.topic, Partition: kafka.PartitionAny}, key, message, headers)
 }
 
-func (k *Producer) produceToTopic(ctx context.Context, topicName, key string, message []byte, headers map[string]string) (err error) {
+func (k *Producer) ProduceToTopic(ctx context.Context, topicPartition kafka.TopicPartition, key string, message []byte, headers map[string]string) (err error) {
 	k.produceLock.Lock()
 	if k.Len() >= k.config.MaxBuffer {
 		k.Flush(1000)
@@ -175,10 +175,10 @@ func (k *Producer) produceToTopic(ctx context.Context, topicName, key string, me
 			Value: []byte(v),
 		})
 	}
-	k.log.Debug(ctx, "Message - meta", map[string]any{"key": key, "headers": headers, "topic": k.topic})
+	k.log.Debug(ctx, "Message - meta", map[string]any{"key": key, "headers": headers, "topic": topicPartition})
 	k.log.Debug(ctx, "Message - body", func() string { return string(message) })
 	err = k.Producer.Produce(&kafka.Message{
-		TopicPartition: kafka.TopicPartition{Topic: &k.topic, Partition: kafka.PartitionAny},
+		TopicPartition: topicPartition,
 		Key:            []byte(key),
 		Value:          message,
 		Headers:        messageHeader,
