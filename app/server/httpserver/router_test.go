@@ -1,6 +1,7 @@
 package httpserver_test
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -93,4 +94,21 @@ func TestRouterHealthCheck(t *testing.T) {
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
 	assert.Equal(t, w.Result().StatusCode, 204)
+}
+
+func TestPost(t *testing.T) {
+	srv := server.NewServer()
+	payload, _ := json.Marshal(map[string]string{"fasdfas": "FASDFASf"})
+	buff := bytes.NewBuffer(payload)
+	req := httptest.NewRequest(http.MethodPost, "/service/v1/tenant", buff)
+	w := httptest.NewRecorder()
+	srv.ServeHTTP(w, req)
+	blob, _ := io.ReadAll(w.Body)
+	expectedResponse := map[string]any{
+		"body": "{\"fasdfas\":\"FASDFASf\"}",
+	}
+	res := make(map[string]any)
+	json.Unmarshal(blob, &res)
+	assert.Equal(t, w.Result().StatusCode, http.StatusOK)
+	assert.DeepEqual(t, res, expectedResponse)
 }

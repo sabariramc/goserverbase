@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -94,17 +95,45 @@ func (h *HttpServer) ExtractRequestMetadata(r *http.Request) map[string]any {
 
 func (h *HttpServer) GetRequestBody(r *http.Request) string {
 	ctx := r.Context()
-	ctxBody := ctx.Value(ContextKeyRequestBody)
+	ctxBody := ctx.Value(ContextKeyRequestBodyString)
 	if ctxBody != nil {
 		body, ok := ctxBody.(*string)
-		if ok {
-			if *body == "" {
-				val := string(h.CopyRequestBody(r))
-				*body = val
-			}
-			return *body
+		if !ok {
+			h.Log.Emergency(ctx, "Invalid type for ContextKeyRequestBodyString context variable", ctxBody, fmt.Errorf("GetRequestBody: invalid type for context body reference"))
 		}
+		if *body == "" {
+			*body = string(h.GetBody(r))
+		}
+		return *body
 	}
 	val := string(h.CopyRequestBody(r))
 	return val
+}
+
+func (h *HttpServer) GetBody(r *http.Request) []byte {
+	ctx := r.Context()
+	ctxBody := ctx.Value(ContextKeyRequestBodyRaw)
+	if ctxBody != nil {
+		body, ok := ctxBody.(**[]byte)
+		if !ok {
+			h.Log.Emergency(ctx, "Invalid type for ContextKeyRequestBodyRaw context variable", ctxBody, fmt.Errorf("GetBody: invalid type for context body reference"))
+		}
+		if body == nil {
+			return h.CopyRequestBody(r)
+		}
+		if *body == nil {
+			data := h.CopyRequestBody(r)
+			*body = &data
+		}
+		return **body
+	}
+	return h.CopyRequestBody(r)
+}
+
+func (h *HttpServer) GetJSONBody(r *http.Request, body any) error {
+	blob := h.GetBody(r)
+	if blob == nil {
+		return fmt.Errorf("GetJSONBody.empty body")
+	}
+	return json.Unmarshal(blob, body)
 }
