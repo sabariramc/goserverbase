@@ -44,8 +44,12 @@ func (h *HttpServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 		loggingW := &loggingResponseWriter{
 			ResponseWriter: w,
 		}
-		var body string
-		r = r.WithContext(context.WithValue(r.Context(), ContextKeyRequestBody, &body))
+		var bodyBlob *[]byte
+		var bodyStr string
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, ContextKeyRequestBodyRaw, &bodyBlob)
+		ctx = context.WithValue(ctx, ContextKeyRequestBodyString, &bodyStr)
+		r = r.WithContext(ctx)
 		h.PrintRequest(r.Context(), r)
 		c.Writer = loggingW
 		c.Request = r

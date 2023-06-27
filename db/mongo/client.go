@@ -21,6 +21,13 @@ type Mongo struct {
 
 var ErrNoDocuments = mongo.ErrNoDocuments
 
+func NewWithAWSRoleAuth(ctx context.Context, logger *log.Logger, c Config, opts ...*options.ClientOptions) (*Mongo, error) {
+	opts = append(opts, options.Client().SetAuth(options.Credential{
+		AuthMechanism: "MONGODB-AWS",
+	}))
+	return New(ctx, logger, c, opts...)
+}
+
 func New(ctx context.Context, logger *log.Logger, c Config, opts ...*options.ClientOptions) (*Mongo, error) {
 	var client *mongo.Client
 	var err error
@@ -31,10 +38,10 @@ func New(ctx context.Context, logger *log.Logger, c Config, opts ...*options.Cli
 	if err != nil {
 		return nil, fmt.Errorf("mongo.NewMongo : %w", err)
 	}
-	return NewWithClient(ctx, logger, c, client), nil
+	return NewWrapper(ctx, logger, c, client), nil
 }
 
-func NewWithClient(ctx context.Context, logger *log.Logger, c Config, client *mongo.Client) *Mongo {
+func NewWrapper(ctx context.Context, logger *log.Logger, c Config, client *mongo.Client) *Mongo {
 	return &Mongo{Client: client, log: logger, c: &c}
 }
 

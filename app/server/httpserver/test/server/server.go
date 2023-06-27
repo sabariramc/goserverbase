@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -45,7 +44,7 @@ func (s *server) Func1(w http.ResponseWriter, r *http.Request) {
 	corr := log.GetCorrelationParam(r.Context())
 	s.Log.Info(r.Context(), "identity", id)
 	s.Log.Info(r.Context(), "correlation", corr)
-	data, _ := io.ReadAll(r.Body)
+	data := s.GetBody(r)
 	s.WriteJsonWithStatusCode(r.Context(), w, 200, map[string]string{"body": string(data)})
 }
 

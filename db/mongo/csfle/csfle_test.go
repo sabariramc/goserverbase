@@ -66,7 +66,7 @@ func TestCollectionPII(t *testing.T) {
 		t.Fatal(err)
 	}
 	csfleMongoClient, err := csfle.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo, keyNamespace, mongoScheme, kmsProvider)
-	csfleClient := mongo.NewWithClient(ctx, MongoTestLogger, *MongoTestConfig.Mongo, csfleMongoClient)
+	csfleClient := mongo.NewWrapper(ctx, MongoTestLogger, *MongoTestConfig.Mongo, csfleMongoClient)
 	piicoll := csfleClient.Database("GOTEST").Collection("PII")
 	piicoll.SetHashList([]string{"pan", "email"})
 	if err != nil {

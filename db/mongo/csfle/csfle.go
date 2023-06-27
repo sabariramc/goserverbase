@@ -20,7 +20,7 @@ import (
 
 var tmp = "/tmp/mongocryptd"
 
-func New(ctx context.Context, logger *log.Logger, c m.Config, keyVaultNamespace string, schemaMap map[string]interface{}, provider MasterKeyProvider) (*mongo.Client, error) {
+func New(ctx context.Context, logger *log.Logger, c m.Config, keyVaultNamespace string, schemaMap map[string]interface{}, provider MasterKeyProvider, opts ...*options.ClientOptions) (*mongo.Client, error) {
 	// extra options that can be specified
 	// see https://github.com/mongodb/specifications/blob/master/source/client-side-encryption/client-side-encryption.rst#extraoptions
 
@@ -43,7 +43,8 @@ func New(ctx context.Context, logger *log.Logger, c m.Config, keyVaultNamespace 
 	connectionOptions.SetAutoEncryptionOptions(autoEncryptionOpts)
 	connectionOptions.SetMinPoolSize(c.MinConnectionPool)
 	connectionOptions.SetMaxPoolSize(c.MaxConnectionPool)
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(c.ConnectionString).SetAutoEncryptionOptions(autoEncryptionOpts))
+	opts = append(opts, connectionOptions)
+	client, err := mongo.Connect(ctx, opts...)
 	if err != nil {
 		logger.Error(ctx, "connect error for Mongo CSLFE client", err)
 		return nil, fmt.Errorf("csfle.NewCSFLEClient : %w", err)
