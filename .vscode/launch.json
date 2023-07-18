@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Launch HTTP Server",
+            "name": "HTTP Server",
             "type": "go",
             "request": "launch",
             "mode": "debug",
@@ -11,7 +11,7 @@
             "envFile": "${workspaceFolder}/.env"
         },
         {
-            "name": "Launch Kafka Consumer",
+            "name": "Kafka Consumer",
             "type": "go",
             "request": "launch",
             "mode": "debug",

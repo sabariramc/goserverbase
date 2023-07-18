@@ -158,8 +158,9 @@ func (k *Consumer) Poll(ctx context.Context, timeout int, ch chan *kafka.Message
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
+		defer close(k.msgCh)
+		defer wg.Done()
 		pollErr = k.poll(pollCtx, timeout)
-		wg.Done()
 	}()
 	defer close(ch)
 	defer wg.Wait()
@@ -241,7 +242,10 @@ func (k *Consumer) Close(ctx context.Context) error {
 	commitErr := k.commit(ctx)
 	close(k.logCh)
 	if k.msgCh != nil {
-		close(k.msgCh)
+		_, ok := <-k.msgCh
+		if ok {
+			close(k.msgCh)
+		}
 	}
 	closeErr := k.Consumer.Close()
 	k.wg.Wait()
