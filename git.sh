@@ -1,5 +1,5 @@
 export message="CSFLE with options"
-export version="v3.7.0"
+export version="v3.7.1"
 export branch="master"
 git add .
 git commit -m "$message"
