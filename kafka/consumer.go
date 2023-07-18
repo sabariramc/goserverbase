@@ -241,7 +241,10 @@ func (k *Consumer) Close(ctx context.Context) error {
 	commitErr := k.commit(ctx)
 	close(k.logCh)
 	if k.msgCh != nil {
-		close(k.msgCh)
+		_, ok := <-k.msgCh
+		if ok {
+			close(k.msgCh)
+		}
 	}
 	closeErr := k.Consumer.Close()
 	k.wg.Wait()

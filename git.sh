@@ -1,5 +1,5 @@
-export message="CSFLE with options"
-export version="v3.7.1"
+export message="Consumer channel closure"
+export version="v3.7.2"
 export branch="master"
 git add .
 git commit -m "$message"
