@@ -157,8 +157,9 @@ func (k *Consumer) Poll(ctx context.Context, timeout int, ch chan *kafka.Message
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
+		defer close(k.msgCh)
+		defer wg.Done()
 		pollErr = k.poll(pollCtx, timeout)
-		wg.Done()
 	}()
 	defer close(ch)
 	defer wg.Wait()
