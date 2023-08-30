@@ -1,4 +1,4 @@
-export message="AWS sdk migration"
+export message="Version tagging"
 export version="v3.10.0"
 export branch="master"
 git add .
