@@ -20,13 +20,7 @@ import (
 var tmp = "/tmp/mongocryptd"
 
 func New(ctx context.Context, logger *log.Logger, c m.Config, keyVaultNamespace string, schemaMap map[string]interface{}, provider MasterKeyProvider, opts ...*options.ClientOptions) (*mongo.Client, error) {
-	// extra options that can be specified
-	// see https://github.com/mongodb/specifications/blob/master/source/client-side-encryption/client-side-encryption.rst#extraoptions
-
 	extraOptions := map[string]interface{}{
-		// "mongocryptdURI":, defaults to "mongodb://localhost:27020"
-		// "mongocryptdBypassSpawn":, defaults to false
-		// "mongocryptdSpawnPath": mongocryptPath + "/bin/mongocryptd",
 		"mongocryptdSpawnArgs": []string{fmt.Sprintf("--pidfilepath=%v/mongocryptd.pid", tmp)},
 	}
 	autoEncryptionOpts := options.AutoEncryption().
