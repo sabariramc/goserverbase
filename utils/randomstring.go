@@ -20,7 +20,7 @@ var mu sync.Mutex
 func GenerateRandomString(n int) string {
 	b := make([]byte, n)
 	mu.Lock()
-	// A src.Int63() generates 63 random bits, enough for letterIdxMax characters!
+	// A src.Int63() generates 63 random biGenerts, enough for letterIdxMax characters!
 	for i, cache, remain := n-1, src.Int63(), letterIdxMax; i >= 0; {
 		if remain == 0 {
 			cache, remain = src.Int63(), letterIdxMax
@@ -36,7 +36,7 @@ func GenerateRandomString(n int) string {
 	return string(b)
 }
 
-func GenerateId(totalLength int, prefix string) string {
+func GenerateID(totalLength int, prefix string) string {
 	n := totalLength - len(prefix)
 	return fmt.Sprintf("%v%v", prefix, GenerateRandomString(n))
 }

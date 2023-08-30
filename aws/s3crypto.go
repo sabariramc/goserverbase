@@ -3,26 +3,33 @@ package aws
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3crypto"
+	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/google/uuid"
+	"github.com/sabariramc/goserverbase/v3/crypto/aes"
 	"github.com/sabariramc/goserverbase/v3/log"
+	"github.com/sabariramc/goserverbase/v3/utils"
+)
+
+const (
+	ConstMetadataKMSARN              = "x-kms-arn"
+	ConstMetadataEncryptionAlgorithm = "x-encryption-algorithm"
+	ConstMetadataContentKey          = "x-content-key"
+	ConstEncryptionAlgorithm         = "AES-GCM-256"
 )
 
 type S3PII struct {
 	_ struct{}
-	*s3crypto.EncryptionClientV2
-	*s3crypto.DecryptionClient
 	*S3
+	kms *KMS
 	log *log.Logger
 }
 
@@ -34,47 +41,48 @@ type urlCache struct {
 
 var piiFileCache = make(map[string]*urlCache)
 
-var defaultS3EncryptionClient *s3crypto.EncryptionClientV2
-var defaultS3DecryptionClient *s3crypto.DecryptionClient
-
-func NewS3EncryptionClient(awsSession *session.Session, keyArn string) (*s3crypto.EncryptionClientV2, error) {
-	var desc s3crypto.MaterialDescription
-	keyWrap := s3crypto.NewKMSContextKeyGenerator(kms.New(awsSession), keyArn, desc)
-	builder := s3crypto.AESGCMContentCipherBuilderV2(keyWrap)
-	return s3crypto.NewEncryptionClientV2(awsSession, builder)
+func GetDefaultS3PIIClient(logger *log.Logger, keyArn string) *S3PII {
+	return NewS3PIIClient(GetDefaultS3Client(logger), GetDefaultKMSClient(logger, keyArn), logger)
 }
 
-func NewS3DecryptionClient(awsSession *session.Session) *s3crypto.DecryptionClient {
-	return s3crypto.NewDecryptionClient(awsSession)
+func NewS3PIIClient(s3Client *S3, kms *KMS, logger *log.Logger) *S3PII {
+	return &S3PII{kms: kms, log: logger, S3: s3Client}
 }
 
-func GetDefaultS3PIIClient(logger *log.Logger, keyArn string) (*S3PII, error) {
-	if defaultS3EncryptionClient == nil {
-		client, err := NewS3EncryptionClient(defaultAWSSession, keyArn)
-		if err != nil {
-			return nil, err
-		}
-		defaultS3EncryptionClient = client
-	}
-	if defaultS3DecryptionClient == nil {
-		defaultS3DecryptionClient = NewS3DecryptionClient(defaultAWSSession)
-	}
-	return NewS3PIIClient(defaultS3EncryptionClient, defaultS3DecryptionClient, GetDefaultS3Client(logger), logger), nil
-}
-
-func NewS3PIIClient(encryptionClient *s3crypto.EncryptionClientV2, decryptionClient *s3crypto.DecryptionClient, s3Client *S3, logger *log.Logger) *S3PII {
-	return &S3PII{EncryptionClientV2: encryptionClient, DecryptionClient: decryptionClient, log: logger, S3: s3Client}
-}
-
-func (s *S3PII) PutObjectWithContext(ctx context.Context, s3Bucket, s3Key string, body io.ReadSeeker, mimeType string) error {
-	req := &s3.PutObjectInput{Bucket: &s3Bucket, Key: &s3Key, Body: body, ContentType: &mimeType}
-	s.log.Debug(ctx, "S3crypto put object request", req)
-	res, err := s.EncryptionClientV2.PutObjectWithContext(ctx, req)
+func (s *S3PII) encrypt(ctx context.Context, body io.Reader) (io.Reader, map[string]string, error) {
+	key := utils.GenerateRandomString(32)
+	encryptedKey, err := s.kms.Encrypt(ctx, []byte(key))
 	if err != nil {
-		s.log.Error(ctx, "S3crypto put object error", err)
+		return nil, nil, fmt.Errorf("S3PII.encrypt:error on encrypting content key:%w", err)
+	}
+	data, err := io.ReadAll(body)
+	if err != nil {
+		return nil, nil, fmt.Errorf("S3PII.encrypt:error on reading content:%w", err)
+	}
+	cipher, err := aes.NewAESGCM(ctx, s.log, key)
+	if err != nil {
+		return nil, nil, fmt.Errorf("S3PII.encrypt:error on creating cipher:%w", err)
+	}
+	data, err = cipher.Encrypt(ctx, data)
+	if err != nil {
+		return nil, nil, fmt.Errorf("S3PII.encrypt:error on encrypting content:%w", err)
+	}
+	return bytes.NewReader(data), map[string]string{
+		ConstMetadataKMSARN:              *s.kms.keyArn,
+		ConstMetadataEncryptionAlgorithm: ConstEncryptionAlgorithm,
+		ConstMetadataContentKey:          hex.EncodeToString(encryptedKey),
+	}, nil
+}
+
+func (s *S3PII) PutObject(ctx context.Context, s3Bucket, s3Key string, body io.Reader, mimeType string) error {
+	body, metadata, err := s.encrypt(ctx, body)
+	if err != nil {
 		return fmt.Errorf("S3PII.PutObject: %w", err)
 	}
-	s.log.Debug(ctx, "S3crypto put object response", res)
+	_, err = s.S3.PutObject(ctx, s3Bucket, s3Key, body, mimeType, metadata)
+	if err != nil {
+		return fmt.Errorf("S3PII.PutObject: error on uploading file: %w", err)
+	}
 	return nil
 }
 
@@ -90,28 +98,52 @@ func (s *S3PII) PutFile(ctx context.Context, s3Bucket, s3Key, localFilPath strin
 	}
 	s.log.Debug(ctx, "File mimetype", mime)
 	defer fp.Close()
-	return s.PutObjectWithContext(ctx, s3Bucket, s3Key, fp, mime.String())
+	return s.PutObject(ctx, s3Bucket, s3Key, fp, mime.String())
 }
 
-func (s *S3PII) GetObjectWithContext(ctx context.Context, s3Bucket, s3Key string) ([]byte, error) {
-	req := &s3.GetObjectInput{Bucket: &s3Bucket, Key: &s3Key}
-	s.log.Debug(ctx, "S3crypto get object request", req)
-	res, err := s.DecryptionClient.GetObjectWithContext(ctx, req)
+func (s *S3PII) decrypt(ctx context.Context, res *s3.GetObjectOutput) ([]byte, error) {
+	for _, key := range []string{ConstMetadataKMSARN, ConstMetadataContentKey, ConstMetadataEncryptionAlgorithm} {
+		if _, ok := res.Metadata[key]; !ok {
+			return nil, fmt.Errorf(fmt.Sprintf("S3PII.decrypt: missing metadata %s", key))
+		}
+	}
+	if res.Metadata[ConstMetadataEncryptionAlgorithm] != ConstEncryptionAlgorithm {
+		return nil, fmt.Errorf("S3PII.decrypt: algorithm not supported :%s", res.Metadata[ConstMetadataEncryptionAlgorithm])
+	}
+	encryptedKey, err := hex.DecodeString(res.Metadata[ConstMetadataContentKey])
 	if err != nil {
-		s.log.Error(ctx, "S3crypto get object error", err)
+		return nil, fmt.Errorf("S3PII.decrypt:error on decoding content key:%w", err)
+	}
+	decryptKMS := NewKMSClient(s.log, s.kms.Client, res.Metadata[ConstMetadataKMSARN])
+	key, err := decryptKMS.Decrypt(ctx, encryptedKey)
+	if err != nil {
+		return nil, fmt.Errorf("S3PII.decrypt:error on decrypting content key:%w", err)
+	}
+	data, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, fmt.Errorf("S3PII.decrypt:error on reading content:%w", err)
+	}
+	cipher, err := aes.NewAESGCM(ctx, s.log, string(key))
+	if err != nil {
+		return nil, fmt.Errorf("S3PII.decrypt:error on creating cipher:%w", err)
+	}
+	data, err = cipher.Decrypt(ctx, data)
+	if err != nil {
+		return nil, fmt.Errorf("S3PII.decrypt:error on decrypting content:%w", err)
+	}
+	return data, nil
+}
+
+func (s *S3PII) GetObject(ctx context.Context, s3Bucket, s3Key string) ([]byte, error) {
+	res, err := s.S3.GetObject(ctx, s3Bucket, s3Key)
+	if err != nil {
 		return nil, fmt.Errorf("S3PII.GetObject: %w", err)
 	}
-	s.log.Debug(ctx, "S3crypto get object response", res)
-	blob, err := io.ReadAll(res.Body)
-	if err != nil {
-		s.log.Error(ctx, "S3crypto get object read error", err)
-		return nil, fmt.Errorf("S3PII.GetObject: %w", err)
-	}
-	return blob, nil
+	return s.decrypt(ctx, res)
 }
 
 func (s *S3PII) GetFile(ctx context.Context, s3Bucket, s3Key, localFilePath string) error {
-	blob, err := s.GetObjectWithContext(ctx, s3Bucket, s3Key)
+	blob, err := s.GetObject(ctx, s3Bucket, s3Key)
 	if err != nil {
 		return err
 	}
@@ -135,34 +167,34 @@ func (s *S3PII) GetFile(ctx context.Context, s3Bucket, s3Key, localFilePath stri
 }
 
 type PIITempFile struct {
-	URL         *string   `json:"url"`
-	ExpiresAt   time.Time `json:"expiresAt"`
-	ContentType *string   `json:"contentType"`
+	Request     *v4.PresignedHTTPRequest `json:"req"`
+	ExpiresAt   time.Time                `json:"expiresAt"`
+	ContentType *string                  `json:"contentType"`
 }
 
-func (s *S3PII) GetFileCache(ctx context.Context, s3Bucket, s3Key, stage, tempPathPart string) (*PIITempFile, error) {
+func (s *S3PII) GetFileCache(ctx context.Context, s3Bucket, s3Key, tempPathPart string) (*PIITempFile, error) {
 	fullPath := s3Bucket + "/" + s3Key
 	fileCache, ok := piiFileCache[fullPath]
 	if ok && time.Now().Before(fileCache.expireTime) {
 		s.log.Info(ctx, "File fetched from cache", nil)
 	} else {
-		blob, err := s.GetObjectWithContext(ctx, s3Bucket, s3Key)
+		blob, err := s.GetObject(ctx, s3Bucket, s3Key)
 		if err != nil {
 			return nil, fmt.Errorf("S3PII.GetFileCache: %w", err)
 		}
 		filePath := strings.Split(s3Key, "/")
-		tempS3Key := fmt.Sprintf("/%v/temp/%v/%v-%v", stage, tempPathPart, uuid.NewString(), filePath[len(filePath)-1])
+		tempS3Key := fmt.Sprintf("/temp/%v/%v-%v", tempPathPart, uuid.NewString(), filePath[len(filePath)-1])
 		mime := mimetype.Detect(blob)
-		err = s.PutObjectWithContext(ctx, s3Bucket, tempS3Key, bytes.NewReader(blob), mime.String())
+		_, err = s.S3.PutObject(ctx, s3Bucket, tempS3Key, bytes.NewReader(blob), mime.String(), nil)
 		if err != nil {
 			return nil, fmt.Errorf("S3PII.GetFileCache: %w", err)
 		}
 		fileCache = &urlCache{expireTime: time.Now().Add(time.Hour * 20), key: tempS3Key, contentType: mime.String()}
 		piiFileCache[fullPath] = fileCache
 	}
-	url, err := s.CreatePresignedUrlGET(ctx, s3Bucket, fileCache.key, 30*60)
+	url, err := s.PresignGetObject(ctx, s3Bucket, fileCache.key, 30*60)
 	if err != nil {
 		return nil, fmt.Errorf("S3PII.GetFileCache: %w", err)
 	}
-	return &PIITempFile{URL: url, ContentType: &fileCache.contentType, ExpiresAt: time.Now().Add(time.Minute * 30)}, nil
+	return &PIITempFile{Request: url, ContentType: &fileCache.contentType, ExpiresAt: time.Now().Add(time.Minute * 30)}, nil
 }

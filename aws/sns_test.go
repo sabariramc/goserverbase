@@ -29,7 +29,7 @@ func TestSNSClient(t *testing.T) {
 			"id": "cust_fasdfsa",
 		},
 	})
-	err := snsClient.PublishWithContext(ctx, &arn, nil, message, nil)
+	err := snsClient.Publish(ctx, &arn, nil, message, nil)
 	if err != nil {
 		t.Fatal(err)
 	}

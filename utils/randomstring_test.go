@@ -17,7 +17,7 @@ func TestRandomStringGenerator(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			for j := 0; j < totalN/conncurrencyFactor; j++ {
-				ch <- utils.GenerateId(20, "sch_")
+				ch <- utils.GenerateID(20, "sch_")
 			}
 			wg.Done()
 		}()
@@ -48,7 +48,7 @@ var benchmarkRes string
 func BenchmarkRandomStringGenerator(b *testing.B) {
 	var r string
 	for i := 0; i < b.N; i++ {
-		r = utils.GenerateId(20, "sch_")
+		r = utils.GenerateID(20, "sch_")
 	}
 	benchmarkRes = r
 }

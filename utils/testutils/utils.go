@@ -1,25 +1,26 @@
 package testutils
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/config"
 	base "github.com/sabariramc/goserverbase/v3/aws"
 
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/joho/godotenv"
 )
 
 func setAWSSession() {
 	// stsToken := getSTSToken()
-	// awsSession := session.Must(session.NewSessionWithOptions(session.Options{
+	// awsConfig := session.Must(session.NewSessionWithOptions(session.Options{
 	// 	SharedConfigState: session.SharedConfigEnable,
 	// }))
-	awsSession := session.Must(session.NewSession())
+	defaultConfig, _ := config.LoadDefaultConfig(context.TODO())
 	// awsSession := session.Must(session.NewSession(&aws.Config{
 	// 	Region:      aws.String(os.Getenv("region")),
 	// 	Credentials: credentials.NewStaticCredentials(stsToken["AccessKeyId"], stsToken["SecretAccessKey"], stsToken["SessionToken"]),
 	// }))
-	base.SetDefaultAWSSession(awsSession)
+	base.SetDefaultAWSConfig(defaultConfig)
 }
 
 func LoadEnv(path string) {

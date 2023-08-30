@@ -1,5 +1,4 @@
 {
-    // "go.buildTags": "cse"
     "go.testTimeout": "60s",
     "cSpell.words": [
         "AWSSQS",
@@ -12,5 +11,6 @@
         "logwriter",
         "sabariramc",
         "testutils"
-    ]
+    ],
+    "go.buildTags": "cse"
 }

@@ -61,7 +61,7 @@ func TestCollectionPII(t *testing.T) {
 		t.Fatal(err)
 	}
 	coll := client.Database("GOTEST").Collection("PII")
-	mongoScheme, err := csfle.CreateBSONSchema(&scheme, "GOLANGTEST", "PII")
+	mongoScheme, err := csfle.CreateBSONSchema(&scheme, "GOTEST", "PII")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -74,7 +74,7 @@ func TestCollectionPII(t *testing.T) {
 	}
 	_, err = piicoll.InsertOneWithHash(ctx, map[string]interface{}{
 		"dob":   "1991-08-02",
-		"name":  "Vamshi Krishna",
+		"name":  "Sabariram",
 		"pan":   "ABCDE1234F",
 		"email": "sab@sabariram.com",
 		"address": map[string]string{
