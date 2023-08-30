@@ -7,52 +7,53 @@ import (
 	"os"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/sabariramc/goserverbase/v3/log"
 )
 
 type S3 struct {
 	_ struct{}
-	*s3.S3
+	*s3.Client
+	*s3.PresignClient
 	log *log.Logger
 }
 
-var defaultS3Client *s3.S3
+var defaultS3Client *s3.Client
 
-func NewS3ClientWithSession(awsSession *session.Session) *s3.S3 {
-	return s3.New(awsSession)
+func NewS3ClientWithConfig(awsConfig aws.Config) *s3.Client {
+	return s3.NewFromConfig(awsConfig)
 }
 
 func GetDefaultS3Client(logger *log.Logger) *S3 {
 	if defaultS3Client == nil {
-		defaultS3Client = NewS3ClientWithSession(defaultAWSSession)
+		defaultS3Client = NewS3ClientWithConfig(*defaultAWSConfig)
 	}
 	return NewS3Client(defaultS3Client, logger)
 }
 
-func NewS3Client(client *s3.S3, logger *log.Logger) *S3 {
-	return &S3{S3: client, log: logger}
+func NewS3Client(client *s3.Client, logger *log.Logger) *S3 {
+	return &S3{Client: client, log: logger, PresignClient: s3.NewPresignClient(client)}
 }
 
-func (s *S3) PutObjectWithContext(ctx context.Context, s3Bucket, s3Key string, body io.ReadSeeker, mimeType string) error {
-	req := &s3.PutObjectInput{Bucket: &s3Bucket, Key: &s3Key, Body: body, ContentType: &mimeType}
+func (s *S3) PutObject(ctx context.Context, s3Bucket, s3Key string, body io.Reader, mimeType string, metadata map[string]string) (*s3.PutObjectOutput, error) {
+	req := &s3.PutObjectInput{Bucket: &s3Bucket, Key: &s3Key, Body: body, ContentType: &mimeType, Metadata: metadata}
 	s.log.Debug(ctx, "S3 put object request", req)
-	res, err := s.S3.PutObjectWithContext(ctx, req)
+	res, err := s.Client.PutObject(ctx, req)
 	if err != nil {
-		s.log.Error(ctx, "S3 put object error", err)
-		return fmt.Errorf("S3.PutObject: %w", err)
+		return nil, fmt.Errorf("S3.PutObject: %w", err)
 	}
 	s.log.Debug(ctx, "S3 put object response", res)
-	return nil
+	return res, nil
 }
 
-func (s *S3) PutFile(ctx context.Context, s3Bucket, s3Key, localFilPath string) error {
+func (s *S3) PutFile(ctx context.Context, s3Bucket, s3Key, localFilPath string) (*s3.PutObjectOutput, error) {
 	fp, err := os.Open(localFilPath)
 	if err != nil {
 		s.log.Error(ctx, "Error opening file", localFilPath)
-		return fmt.Errorf("S3.PutFile: %w", err)
+		return nil, fmt.Errorf("S3.PutFile: %w", err)
 	}
 	mime, err := mimetype.DetectFile(localFilPath)
 	if err != nil {
@@ -60,30 +61,28 @@ func (s *S3) PutFile(ctx context.Context, s3Bucket, s3Key, localFilPath string) 
 	}
 	s.log.Debug(ctx, "File mimetype", mime)
 	defer fp.Close()
-	return s.PutObjectWithContext(ctx, s3Bucket, s3Key, fp, mime.String())
+	return s.PutObject(ctx, s3Bucket, s3Key, fp, mime.String(), nil)
 }
 
-func (s *S3) GetObjectWithContext(ctx context.Context, s3Bucket, s3Key string) ([]byte, error) {
+func (s *S3) GetObject(ctx context.Context, s3Bucket, s3Key string) (*s3.GetObjectOutput, error) {
 	req := &s3.GetObjectInput{Bucket: &s3Bucket, Key: &s3Key}
 	s.log.Debug(ctx, "S3 get object request", req)
-	res, err := s.S3.GetObjectWithContext(ctx, req)
+	res, err := s.Client.GetObject(ctx, req)
 	if err != nil {
-		s.log.Error(ctx, "S3 get object error", err)
 		return nil, fmt.Errorf("S3.GetObject: %w", err)
 	}
 	s.log.Debug(ctx, "S3 get object response", res)
-	blob, err := io.ReadAll(res.Body)
-	if err != nil {
-		s.log.Error(ctx, "S3 get object read error", err)
-		return nil, fmt.Errorf("S3.GetObject: %w", err)
-	}
-	return blob, nil
+	return res, nil
 }
 
 func (s *S3) GetFile(ctx context.Context, s3Bucket, s3Key, localFilePath string) error {
-	blob, err := s.GetObjectWithContext(ctx, s3Bucket, s3Key)
+	res, err := s.GetObject(ctx, s3Bucket, s3Key)
 	if err != nil {
 		return fmt.Errorf("S3.GetFile: %w", err)
+	}
+	blob, err := io.ReadAll(res.Body)
+	if err != nil {
+		return fmt.Errorf("S3.GetFile: error occurred while reading data: %w", err)
 	}
 	fp, err := os.Create(localFilePath)
 	if err != nil {
@@ -104,30 +103,32 @@ func (s *S3) GetFile(ctx context.Context, s3Bucket, s3Key, localFilePath string)
 	return nil
 }
 
-func (s *S3) CreatePresignedUrlGET(ctx context.Context, s3Bucket, s3Key string, expireTimeInSeconds int) (*string, error) {
-	req, _ := s.GetObjectRequest(&s3.GetObjectInput{
-		Bucket: &s3Bucket,
-		Key:    &s3Key,
+func (s *S3) PresignGetObject(ctx context.Context, s3Bucket, s3Key string, expireTimeInSeconds int64) (*v4.PresignedHTTPRequest, error) {
+	request, err := s.PresignClient.PresignGetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(s3Bucket),
+		Key:    aws.String(s3Key),
+	}, func(opts *s3.PresignOptions) {
+		opts.Expires = time.Duration(expireTimeInSeconds * int64(time.Second))
 	})
-	urlStr, err := req.Presign(time.Duration(expireTimeInSeconds) * time.Second)
 	if err != nil {
 		s.log.Error(ctx, "S3 failed to sign GET request", err)
 		return nil, fmt.Errorf("S3.CreatePresignedUrlGET: %w", err)
 	}
-	s.log.Debug(ctx, "S3 presigned GET url", urlStr)
-	return &urlStr, nil
+	s.log.Debug(ctx, "S3 presigned GET url", request)
+	return request, nil
 }
 
-func (s *S3) CreatePresignedUrlPUT(ctx context.Context, s3Bucket, s3Key string, expireTimeInSeconds int) (*string, error) {
-	req, _ := s.PutObjectRequest(&s3.PutObjectInput{
-		Bucket: &s3Bucket,
-		Key:    &s3Key,
+func (s *S3) PresignPutObject(ctx context.Context, s3Bucket, s3Key string, expireTimeInSeconds int64) (*v4.PresignedHTTPRequest, error) {
+	request, err := s.PresignClient.PresignPutObject(ctx, &s3.PutObjectInput{
+		Bucket: aws.String(s3Bucket),
+		Key:    aws.String(s3Key),
+	}, func(opts *s3.PresignOptions) {
+		opts.Expires = time.Duration(expireTimeInSeconds * int64(time.Second))
 	})
-	urlStr, err := req.Presign(time.Duration(expireTimeInSeconds) * time.Second)
 	if err != nil {
 		s.log.Error(ctx, "S3 failed to sign PUT request", err)
 		return nil, fmt.Errorf("S3.CreatePresignedUrlPUT: %w", err)
 	}
-	s.log.Debug(ctx, "S3 presigned PUT url", urlStr)
-	return &urlStr, nil
+	s.log.Debug(ctx, "S3 presigned PUT url", request)
+	return request, nil
 }

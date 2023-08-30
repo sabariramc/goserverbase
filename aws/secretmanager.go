@@ -6,42 +6,40 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/sabariramc/goserverbase/v3/log"
 )
 
 type SecretManager struct {
 	_ struct{}
-	*secretsmanager.SecretsManager
+	*secretsmanager.Client
 	log *log.Logger
 }
 
 type secretManagerCache struct {
-	//TODO: maybe data field should be encrypted
-	data secretsmanager.GetSecretValueOutput
-
+	data       secretsmanager.GetSecretValueOutput
 	expireTime time.Time
 }
 
 var secretCache = make(map[string]secretManagerCache)
 
-var defaultSecretManagerClient *secretsmanager.SecretsManager
+var defaultSecretManagerClient *secretsmanager.Client
 
-func NewSecretManagerClientWithSession(awsSession *session.Session) *secretsmanager.SecretsManager {
-	client := secretsmanager.New(awsSession)
+func NewSecretManagerClientWithSession(awsConfig aws.Config) *secretsmanager.Client {
+	client := secretsmanager.NewFromConfig(awsConfig)
 	return client
 }
 
 func GetDefaultSecretManagerClient(logger *log.Logger) *SecretManager {
 	if defaultSecretManagerClient == nil {
-		defaultSecretManagerClient = NewSecretManagerClientWithSession(defaultAWSSession)
+		defaultSecretManagerClient = NewSecretManagerClientWithSession(*defaultAWSConfig)
 	}
 	return NewSecretManagerClient(logger, defaultSecretManagerClient)
 }
 
-func NewSecretManagerClient(logger *log.Logger, client *secretsmanager.SecretsManager) *SecretManager {
-	return &SecretManager{SecretsManager: client, log: logger}
+func NewSecretManagerClient(logger *log.Logger, client *secretsmanager.Client) *SecretManager {
+	return &SecretManager{Client: client, log: logger}
 }
 
 func (s *SecretManager) GetSecret(ctx context.Context, secretArn string) (map[string]interface{}, error) {
@@ -49,7 +47,14 @@ func (s *SecretManager) GetSecret(ctx context.Context, secretArn string) (map[st
 	if ok && time.Now().Before(secretCacheData.expireTime) {
 		s.log.Info(ctx, "Secret fetched from cache", nil)
 	} else {
-		res, err := s.GetSecretValueWithContext(ctx, secretArn)
+		req := &secretsmanager.GetSecretValueInput{SecretId: &secretArn}
+		s.log.Debug(ctx, "Secret fetch request", req)
+		res, err := s.Client.GetSecretValue(ctx, req)
+		if err != nil {
+			s.log.Error(ctx, "Error in secret fetch", err)
+			return nil, fmt.Errorf("SecretManager.GetSecretNonCache: %w", err)
+		}
+		s.log.Debug(ctx, "Secret fetch response", res)
 		if err != nil {
 			return nil, fmt.Errorf("SecretManager.GetSecret: %w", err)
 		}
@@ -65,16 +70,4 @@ func (s *SecretManager) GetSecret(ctx context.Context, secretArn string) (map[st
 		return nil, fmt.Errorf("SecretManager.GetSecret: %w", err)
 	}
 	return data, nil
-}
-
-func (s *SecretManager) GetSecretValueWithContext(ctx context.Context, secretArn string) (*secretsmanager.GetSecretValueOutput, error) {
-	req := &secretsmanager.GetSecretValueInput{SecretId: &secretArn}
-	s.log.Debug(ctx, "Secret fetch request", req)
-	res, err := s.SecretsManager.GetSecretValueWithContext(ctx, req)
-	if err != nil {
-		s.log.Error(ctx, "Error in secret fetch", err)
-		return nil, fmt.Errorf("SecretManager.GetSecretNonCache: %w", err)
-	}
-	s.log.Debug(ctx, "Secret fetch response", res)
-	return res, nil
 }

@@ -26,7 +26,7 @@ func GetSampleData() *TestVal {
 	val1, _ := decimal.NewFromString("123.1232")
 	val2, _ := decimal.NewFromString("123.1232")
 	data := &TestVal{}
-	data.TestId = utils.GenerateId(10, "test_")
+	data.TestId = utils.GenerateID(10, "test_")
 	data.SetCreateParam("Random value")
 	data.StrVal = "value1"
 	data.IntVal = 123

@@ -5,11 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/sabariramc/goserverbase/v3/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	cuaws "github.com/sabariramc/goserverbase/v3/aws"
 	"github.com/sabariramc/goserverbase/v3/db/mongo"
 	"github.com/sabariramc/goserverbase/v3/log"
-
-	"github.com/aws/aws-sdk-go/aws/session"
 )
 
 type MasterKeyProvider interface {
@@ -30,18 +29,22 @@ type AWSKMSProvider struct {
 	name        string
 }
 
-func GetDefaultAWSProvider(ctx context.Context, logger *log.Logger) (*AWSKMSProvider, error) {
-	session := aws.GetDefaultAWSSession()
-	return GetAWSProvider(ctx, logger, session)
+func GetDefaultAWSProvider(ctx context.Context, logger *log.Logger, kmsARN string) (*AWSKMSProvider, error) {
+	awsConfig := cuaws.GetDefaultAWSConfig()
+	return GetAWSProvider(ctx, logger, awsConfig, kmsARN)
 }
 
-func GetAWSProvider(ctx context.Context, logger *log.Logger, session *session.Session) (provider *AWSKMSProvider, err error) {
-	cred, err := session.Config.Credentials.Get()
+func GetAWSProvider(ctx context.Context, logger *log.Logger, awsConfig *aws.Config, kmsARN string) (provider *AWSKMSProvider, err error) {
+	kms := cuaws.NewKMSClient(logger, cuaws.NewAWSKMSClientWithConfig(*awsConfig), kmsARN)
+	_, err = kms.Encrypt(ctx, []byte("test"))
 	if err != nil {
-		logger.Error(ctx, "AWS credential fetch", err)
-		return
+		return nil, fmt.Errorf("csfle.GetAWSProvider: KMS test flight error: %w", err)
 	}
-	provider = CreateAWSProvider(cred.AccessKeyID, cred.SecretAccessKey, cred.SessionToken, *session.Config.Region)
+	cred, err := awsConfig.Copy().Credentials.Retrieve(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("CSFLE.GetAWSProvider: AWS credential fetch: %w", err)
+	}
+	provider = CreateAWSProvider(cred.AccessKeyID, cred.SecretAccessKey, cred.SessionToken, awsConfig.Region)
 	logger.Debug(ctx, "Mongo AWS KMS provider", provider)
 	return provider, nil
 }
@@ -63,12 +66,12 @@ func CreateAWSProvider(awsAccessKeyID, awsSecretAccessKey, sessionToken, awsKeyR
 	}
 }
 
-func GetDefaultAWSKMSProvider(ctx context.Context, logger *log.Logger, KMSARN string) (MasterKeyProvider, error) {
-	provider, err := GetDefaultAWSProvider(ctx, logger)
+func GetDefaultAWSKMSProvider(ctx context.Context, logger *log.Logger, kmsARN string) (MasterKeyProvider, error) {
+	provider, err := GetDefaultAWSProvider(ctx, logger, kmsARN)
 	if err != nil {
-		return nil, fmt.Errorf("mongo.GetDefaultAWSKMSProvider : %w", err)
+		return nil, fmt.Errorf("csfle.GetDefaultAWSKMSProvider : %w", err)
 	}
-	provider.setARN(KMSARN)
+	provider.setARN(kmsARN)
 	return provider, nil
 }
 

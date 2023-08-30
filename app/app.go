@@ -7,8 +7,6 @@ import (
 	"runtime/debug"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/sabariramc/goserverbase/v3/aws"
 	"github.com/sabariramc/goserverbase/v3/errors"
 	"github.com/sabariramc/goserverbase/v3/log"
 )
@@ -27,7 +25,6 @@ func New(appConfig ServerConfig, loggerConfig log.Config, lMux log.LogMux, error
 	ctx := b.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(appConfig.ServiceName))
 	b.log = log.NewLogger(ctx, &loggerConfig, loggerConfig.ServiceName, lMux, auditLogger)
 	zone, _ := time.Now().Zone()
-	aws.SetDefaultAWSSession(session.Must(session.NewSession()))
 	b.log.Notice(ctx, "Timezone", zone)
 	return b
 }
