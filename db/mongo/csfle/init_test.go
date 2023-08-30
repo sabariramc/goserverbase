@@ -12,8 +12,8 @@ var MongoTestConfig *testutils.TestConfig
 var MongoTestLogger *log.Logger
 
 func init() {
-	testutils.Initialize()
 	testutils.LoadEnv("../../../.env")
+	testutils.Initialize()
 	MongoTestConfig = testutils.NewConfig()
 	hostParams := log.HostParams{
 		Version:     MongoTestConfig.Logger.Version,

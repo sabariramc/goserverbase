@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/sabariramc/goserverbase/v3/aws"
 	"github.com/sabariramc/goserverbase/v3/utils"
+	"gotest.tools/assert"
 )
 
 func GetMessage() *utils.Message {
@@ -32,53 +33,58 @@ func GetMessage() *utils.Message {
 }
 
 func TestSQSClient(t *testing.T) {
-	queueUrl := AWSTestConfig.AWS.SQS_URL
+	queueURL := AWSTestConfig.AWS.SQS_URL
 	ctx := GetCorrelationContext()
 
-	sqsClient := aws.GetDefaultSQSClient(AWSTestLogger, queueUrl)
+	sqsClient := aws.GetDefaultSQSClient(AWSTestLogger, queueURL)
 	message := GetMessage()
-	err := sqsClient.SendMessageWithContext(ctx, message, map[string]string{
-		"id": uuid.NewString(),
+	id := uuid.NewString()
+	err := sqsClient.SendMessage(ctx, message, map[string]string{
+		"id": id,
 	}, 1, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	messageList, err := sqsClient.ReceiveMessageWithContext(ctx, 10, 10, 3)
+	messageList, err := sqsClient.ReceiveMessage(ctx, 10, 10, 3)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = sqsClient.DeleteMessageWithContext(ctx, messageList[0].ReceiptHandle)
+	assert.Equal(t, id, *messageList[0].MessageAttributes["id"].StringValue)
+	err = sqsClient.DeleteMessage(ctx, messageList[0].ReceiptHandle)
 	if err != nil {
 		t.Fatal(err)
 	}
 	sqsMessageList := make([]*aws.BatchQueueMessage, 10)
-
+	idMap := map[string]bool{}
 	for i := 0; i < 10; i++ {
 		id := uuid.NewString()
+		idMap[id] = true
 		sqsMessageList[i] = &aws.BatchQueueMessage{
-			Id:      &id,
+			ID:      &id,
 			Message: message,
 			Attribute: map[string]string{
-				"id": uuid.NewString(),
+				"id": id,
 			},
 		}
 	}
-	out, err := sqsClient.SendMessageBatchWithContext(ctx, sqsMessageList, 1)
+	out, err := sqsClient.SendMessageBatch(ctx, sqsMessageList, 1)
 	fmt.Println(out)
 	if err != nil {
 		t.Fatal(err)
 	}
-	messageList, err = sqsClient.ReceiveMessageWithContext(ctx, 10, 10, 3)
+	messageList, err = sqsClient.ReceiveMessage(ctx, 10, 10, 3)
 	if err != nil {
 		t.Fatal(err)
 	}
 	deleteMap := make(map[string]*string, len(messageList))
 	fmt.Println(deleteMap)
 	for _, m := range messageList {
-		id := uuid.NewString()
+		id := *m.MessageAttributes["id"].StringValue
 		deleteMap[id] = m.ReceiptHandle
+		delete(idMap, id)
 	}
-	_, err = sqsClient.DeleteMessageBatchWithContext(ctx, deleteMap)
+	assert.Equal(t, len(idMap), 0)
+	_, err = sqsClient.DeleteMessageBatch(ctx, deleteMap)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -86,44 +92,44 @@ func TestSQSClient(t *testing.T) {
 }
 
 func TestSQSFIFOClient(t *testing.T) {
-	queueUrl := AWSTestConfig.AWS.FIFO_SQS_URL
-	sqsClient := aws.GetDefaultSQSClient(AWSTestLogger, queueUrl)
-	groupId, dedupeId := uuid.NewString(), uuid.NewString()
+	queueURL := AWSTestConfig.AWS.FIFO_SQS_URL
+	sqsClient := aws.GetDefaultSQSClient(AWSTestLogger, queueURL)
+	groupID, dedupeID := uuid.NewString(), uuid.NewString()
 	ctx := GetCorrelationContext()
 	message := GetMessage()
-	err := sqsClient.SendMessageWithContext(ctx, message, map[string]string{
+	err := sqsClient.SendMessage(ctx, message, map[string]string{
 		"id": uuid.NewString(),
-	}, 0, &groupId, &dedupeId)
+	}, 0, &groupID, &dedupeID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	messageList, err := sqsClient.ReceiveMessageWithContext(ctx, 10, 10, 3)
+	messageList, err := sqsClient.ReceiveMessage(ctx, 10, 10, 3)
 	if err != nil {
 		t.Fatal(err)
 	}
-	err = sqsClient.DeleteMessageWithContext(ctx, messageList[0].ReceiptHandle)
+	err = sqsClient.DeleteMessage(ctx, messageList[0].ReceiptHandle)
 	if err != nil {
 		t.Fatal(err)
 	}
 	sqsMessageList := make([]*aws.BatchQueueMessage, 10)
-	groupId = "data"
+	groupID = "data"
 	for i := 0; i < 10; i++ {
 		id := uuid.NewString()
 		sqsMessageList[i] = &aws.BatchQueueMessage{
-			Id:      &id,
+			ID:      &id,
 			Message: GetMessage(),
 			Attribute: map[string]string{
 				"id": uuid.NewString(),
 			},
-			MessageDeduplicationId: &id,
-			MessageGroupId:         &groupId,
+			MessageDeduplicationID: &id,
+			MessageGroupID:         &groupID,
 		}
 	}
-	_, err = sqsClient.SendMessageBatchWithContext(ctx, sqsMessageList, 0)
+	_, err = sqsClient.SendMessageBatch(ctx, sqsMessageList, 0)
 	if err != nil {
 		t.Fatal(err)
 	}
-	messageList, err = sqsClient.ReceiveMessageWithContext(ctx, 10, 10, 3)
+	messageList, err = sqsClient.ReceiveMessage(ctx, 10, 10, 3)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -132,7 +138,7 @@ func TestSQSFIFOClient(t *testing.T) {
 		id := uuid.NewString()
 		deleteMap[id] = m.ReceiptHandle
 	}
-	_, err = sqsClient.DeleteMessageBatchWithContext(ctx, deleteMap)
+	_, err = sqsClient.DeleteMessageBatch(ctx, deleteMap)
 	if err != nil {
 		t.Fatal(err)
 	}

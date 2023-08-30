@@ -2,74 +2,66 @@ package aws
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/kms"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/sabariramc/goserverbase/v3/log"
 )
 
 type KMS struct {
 	_ struct{}
-	*kms.KMS
+	*kms.Client
 	keyArn *string
 	log    *log.Logger
 }
 
-var defaultKMSClient *kms.KMS
+var defaultKMSClient *kms.Client
 
-func NewKMSClientWithSession(awsSession *session.Session) *kms.KMS {
-	client := kms.New(awsSession)
+func NewAWSKMSClientWithConfig(awsConfig aws.Config) *kms.Client {
+	client := kms.NewFromConfig(awsConfig)
 	return client
 }
 
 func GetDefaultKMSClient(logger *log.Logger, keyArn string) *KMS {
 	if defaultKMSClient == nil {
-		defaultKMSClient = NewKMSClientWithSession(defaultAWSSession)
+		defaultKMSClient = NewAWSKMSClientWithConfig(*defaultAWSConfig)
 	}
 	return NewKMSClient(logger, defaultKMSClient, keyArn)
 }
 
-func NewKMSClient(logger *log.Logger, client *kms.KMS, keyArn string) *KMS {
-	return &KMS{KMS: client, keyArn: &keyArn, log: logger}
+func NewKMSClient(logger *log.Logger, client *kms.Client, keyArn string) *KMS {
+	return &KMS{Client: client, keyArn: &keyArn, log: logger}
 }
 
-func (k *KMS) EncryptWithContext(ctx context.Context, plainText *string) (cipherTextBlob []byte, b64EncodedText string, err error) {
+func (k *KMS) Encrypt(ctx context.Context, plainText []byte) (cipherBlob []byte, err error) {
 	req := &kms.EncryptInput{
 		KeyId:     k.keyArn,
-		Plaintext: []byte(*plainText),
+		Plaintext: plainText,
 	}
 	k.log.Debug(ctx, "KMS encryption request", req)
-	res, err := k.KMS.EncryptWithContext(ctx, req)
+	res, err := k.Client.Encrypt(ctx, req)
 	if err != nil {
-		k.log.Error(ctx, "KMS encryption error", err)
 		err = fmt.Errorf("KMS.Encrypt: %w", err)
 		return
 	}
 	k.log.Debug(ctx, "KMS encryption response", res)
-	cipherTextBlob = res.CiphertextBlob
-	b64EncodedText = base64.StdEncoding.EncodeToString(cipherTextBlob)
+	cipherBlob = res.CiphertextBlob
 	return
 }
 
-func (k *KMS) DecryptWithContext(ctx context.Context, b64EncodedText *string) (plainText string, err error) {
-	data, err := base64.StdEncoding.DecodeString(*b64EncodedText)
-	if err != nil {
-		return
-	}
+func (k *KMS) Decrypt(ctx context.Context, cipherBlob []byte) (plainText []byte, err error) {
 	req := &kms.DecryptInput{
 		KeyId:          k.keyArn,
-		CiphertextBlob: []byte(data),
+		CiphertextBlob: cipherBlob,
 	}
 	k.log.Debug(ctx, "KMS decryption request", req)
-	res, err := k.KMS.DecryptWithContext(ctx, req)
+	res, err := k.Client.Decrypt(ctx, req)
 	if err != nil {
-		k.log.Error(ctx, "KMS decryption error", err)
 		err = fmt.Errorf("KMS.Decrypt: %w", err)
 		return
 	}
 	k.log.Debug(ctx, "KMS decryption response", res)
-	plainText = string(res.Plaintext)
+	plainText = res.Plaintext
 	return
 }

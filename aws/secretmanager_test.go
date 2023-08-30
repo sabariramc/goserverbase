@@ -19,7 +19,7 @@ func TestSecretManager(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = client.GetSecretValueWithContext(ctx, AWSTestConfig.AWS.SECRET_ARN)
+	_, err = client.GetSecret(ctx, AWSTestConfig.AWS.SECRET_ARN)
 	if err != nil {
 		t.Fatal(err)
 	}
