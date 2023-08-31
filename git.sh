@@ -1,5 +1,5 @@
-export message="Version tagging"
-export version="v3.10.0"
+export message="Added method to get current log level"
+export version="v3.10.1"
 export branch="master"
 git add .
 git commit -m "$message"

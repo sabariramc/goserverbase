@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log/syslog"
 	"reflect"
 	"time"
 )
@@ -99,6 +98,10 @@ func NewLogger(ctx context.Context, lc *Config, moduleName string, lMux LogMux, 
 	return l
 }
 
+func (l *Logger) GetLogLevel() LogLevel {
+	return GetLogLevelMap(l.logLevel)
+}
+
 func (l *Logger) SetModuleName(moduleName string) {
 	l.moduleName = moduleName
 }
@@ -144,8 +147,9 @@ func (l *Logger) Emergency(ctx context.Context, shortMessage string, fullMessage
 }
 
 func (l *Logger) Log(ctx context.Context, logLevel int, shortMessage string, fullMessage interface{}, err error) {
-	if logLevel == int(syslog.LOG_EMERG) {
+	if logLevel == int(EMERGENCY) {
 		l.Emergency(ctx, shortMessage, fullMessage, err)
+		return
 	}
 	level := GetLogLevelMap(LogLevelCode(logLevel))
 	l.print(ctx, &level, shortMessage, fullMessage)
