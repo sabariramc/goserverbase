@@ -16,5 +16,5 @@ var decimalHandlerOptions = options.Collection().SetRegistry(newCustomBsonRegist
 func (d *Database) Collection(name string, opts ...*options.CollectionOptions) *Collection {
 	opts = append(opts, decimalHandlerOptions)
 	coll := d.Database.Collection(name, opts...)
-	return &Collection{Collection: coll, log: d.log}
+	return &Collection{Collection: coll, log: d.log.NewResourceLogger("MongoCollection")}
 }

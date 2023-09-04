@@ -42,9 +42,8 @@ func NewAESCBC(ctx context.Context, log *log.Logger, key string, padder crypto.P
 		log.Error(ctx, "Error creating AES CBC", err)
 		return nil, fmt.Errorf("crypto.aes.NewAESCBC: %w", err)
 	}
-	return &AESCBC{key: keyByte, padder: padder, log: log}, nil
+	return &AESCBC{key: keyByte, padder: padder, log: log.NewResourceLogger("AESCBC")}, nil
 }
-
 
 func (a *AESCBC) Encrypt(ctx context.Context, plainBlob []byte) ([]byte, error) {
 	block, err := aes.NewCipher(a.key)

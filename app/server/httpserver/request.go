@@ -44,13 +44,13 @@ func (h *HttpServer) PrintRequest(ctx context.Context, r *http.Request) {
 		}
 	}
 	req := h.ExtractRequestMetadata(r)
-	h.Log.Info(ctx, "Request", req)
+	h.log.Info(ctx, "Request", req)
 	if h.c.Log.ContentLength >= r.ContentLength {
-		h.Log.Debug(ctx, "Request-Body", func() string {
+		h.log.Debug(ctx, "Request-Body", func() string {
 			return h.GetRequestBody(r)
 		})
 	} else if h.c.Log.ContentLength < r.ContentLength {
-		h.Log.Notice(ctx, "Request-Body", "Content length is too big to print check server log configuration")
+		h.log.Notice(ctx, "Request-Body", "Content length is too big to print check server log configuration")
 	}
 	for key, value := range popList {
 		header.Del(key)
@@ -99,7 +99,7 @@ func (h *HttpServer) GetRequestBody(r *http.Request) string {
 	if ctxBody != nil {
 		body, ok := ctxBody.(*string)
 		if !ok {
-			h.Log.Emergency(ctx, "Invalid type for ContextKeyRequestBodyString context variable", ctxBody, fmt.Errorf("GetRequestBody: invalid type for context body reference"))
+			h.log.Emergency(ctx, "Invalid type for ContextKeyRequestBodyString context variable", ctxBody, fmt.Errorf("GetRequestBody: invalid type for context body reference"))
 		}
 		if *body == "" {
 			*body = string(h.GetBody(r))
@@ -116,7 +116,7 @@ func (h *HttpServer) GetBody(r *http.Request) []byte {
 	if ctxBody != nil {
 		body, ok := ctxBody.(**[]byte)
 		if !ok {
-			h.Log.Emergency(ctx, "Invalid type for ContextKeyRequestBodyRaw context variable", ctxBody, fmt.Errorf("GetBody: invalid type for context body reference"))
+			h.log.Emergency(ctx, "Invalid type for ContextKeyRequestBodyRaw context variable", ctxBody, fmt.Errorf("GetBody: invalid type for context body reference"))
 		}
 		if body == nil {
 			return h.CopyRequestBody(r)

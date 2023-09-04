@@ -32,7 +32,7 @@ func (h *HttpServer) WriteJsonWithStatusCode(ctx context.Context, w http.Respons
 	if !ok {
 		blob, err = json.Marshal(responseBody)
 		if err != nil {
-			h.Log.Emergency(ctx, "Error in response json marshall", responseBody, fmt.Errorf("response marshal error: %w", err))
+			h.log.Emergency(ctx, "Error in response json marshall", responseBody, fmt.Errorf("response marshal error: %w", err))
 		}
 	}
 	w.Header().Set(HttpHeaderContentType, HttpContentTypeJSON)
@@ -51,7 +51,7 @@ func (h *HttpServer) WriteResponseWithStatusCode(ctx context.Context, w http.Res
 	if blob, ok = responseBody.([]byte); !ok {
 		blob, err = utils.GetBytes(responseBody)
 		if err != nil {
-			h.Log.Emergency(ctx, "response encoding error", responseBody, err)
+			h.log.Emergency(ctx, "response encoding error", responseBody, err)
 		}
 	}
 	w.Header().Set(HttpHeaderContentType, contentType)

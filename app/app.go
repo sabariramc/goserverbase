@@ -17,13 +17,13 @@ type BaseApp struct {
 	errorNotifier errors.ErrorNotifier
 }
 
-func New(appConfig ServerConfig, loggerConfig log.Config, lMux log.LogMux, errorNotifier errors.ErrorNotifier, auditLogger log.AuditLogWriter) *BaseApp {
+func New(appConfig ServerConfig, logger *log.Logger, errorNotifier errors.ErrorNotifier) *BaseApp {
 	b := &BaseApp{
 		c:             &appConfig,
 		errorNotifier: errorNotifier,
 	}
 	ctx := b.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(appConfig.ServiceName))
-	b.log = log.NewLogger(ctx, &loggerConfig, loggerConfig.ServiceName, lMux, auditLogger)
+	b.log = logger.NewResourceLogger("BaseApp")
 	zone, _ := time.Now().Zone()
 	b.log.Notice(ctx, "Timezone", zone)
 	return b

@@ -23,7 +23,7 @@ type ErrorNotifierKafka struct {
 }
 
 func New(ctx context.Context, log *log.Logger, serviceName string, producer Producer) *ErrorNotifierKafka {
-	return &ErrorNotifierKafka{producer: producer, log: log, serviceName: serviceName}
+	return &ErrorNotifierKafka{producer: producer, log: log.NewResourceLogger("ErrorNotifierKafka"), serviceName: serviceName}
 }
 
 func (e *ErrorNotifierKafka) Send5XX(ctx context.Context, errorCode string, err error, stackTrace string, errorData interface{}) error {

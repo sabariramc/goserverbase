@@ -31,7 +31,7 @@ func GetDefaultKMSClient(logger *log.Logger, keyArn string) *KMS {
 }
 
 func NewKMSClient(logger *log.Logger, client *kms.Client, keyArn string) *KMS {
-	return &KMS{Client: client, keyArn: &keyArn, log: logger}
+	return &KMS{Client: client, keyArn: &keyArn, log: logger.NewResourceLogger("KMS")}
 }
 
 func (k *KMS) Encrypt(ctx context.Context, plainText []byte) (cipherBlob []byte, err error) {

@@ -35,7 +35,7 @@ func TestS3(t *testing.T) {
 func TestS3PII(t *testing.T) {
 	ctx := GetCorrelationContext()
 	keyArn := AWSTestConfig.AWS.KMS_ARN
-	s3Client := aws.GetDefaultS3PIIClient(AWSTestLogger, keyArn)
+	s3Client := aws.GetDefaultS3CryptoClient(AWSTestLogger, keyArn)
 	path := fmt.Sprintf("dev/temp/goserverbasetest/%v.pdf", uuid.NewString())
 	s3Bucker := AWSTestConfig.AWS.S3_BUCKET
 	err := s3Client.PutFile(ctx, s3Bucker, path, "./testdata/sample_aadhaar.pdf")

@@ -33,7 +33,7 @@ func NewSNSClientWithConfig(awsConfig *aws.Config) *sns.Client {
 }
 
 func NewSNSClient(logger *log.Logger, client *sns.Client) *SNS {
-	return &SNS{Client: client, log: logger}
+	return &SNS{Client: client, log: logger.NewResourceLogger("SNS")}
 }
 
 func (s *SNS) Publish(ctx context.Context, topicArn, subject *string, payload *utils.Message, attributes map[string]string) error {

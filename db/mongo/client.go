@@ -37,7 +37,7 @@ func New(ctx context.Context, logger *log.Logger, c Config, opts ...*options.Cli
 }
 
 func NewWrapper(ctx context.Context, logger *log.Logger, c Config, client *mongo.Client) *Mongo {
-	return &Mongo{Client: client, log: logger, c: &c}
+	return &Mongo{Client: client, log: logger.NewResourceLogger("MongoClient"), c: &c}
 }
 
 func NewMongoClient(ctx context.Context, logger *log.Logger, c *Config, opts ...*options.ClientOptions) (*mongo.Client, error) {
@@ -70,5 +70,5 @@ func (m *Mongo) GetLogger() *log.Logger {
 
 func (m *Mongo) Database(name string, opts ...*options.DatabaseOptions) *Database {
 	db := m.Client.Database(name, opts...)
-	return &Database{Database: db, log: m.log}
+	return &Database{Database: db, log: m.log.NewResourceLogger("MongoDatabase")}
 }

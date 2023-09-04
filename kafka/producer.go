@@ -30,7 +30,7 @@ type Producer struct {
 }
 
 func NewProducer(ctx context.Context, log *log.Logger, config *KafkaProducerConfig, serviceName, topic string, notifier errors.ErrorNotifier) (*Producer, error) {
-	return NewProducerResource(ctx, log, config, serviceName, "KAFKA_PRODUCER", topic, notifier)
+	return NewProducerResource(ctx, log, config, serviceName, "KafkaProducer", topic, notifier)
 }
 
 func NewProducerResource(ctx context.Context, log *log.Logger, config *KafkaProducerConfig, serviceName, resourceName, topic string, notifier errors.ErrorNotifier) (*Producer, error) {

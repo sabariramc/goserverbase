@@ -18,16 +18,16 @@ type KafkaConsumerServer struct {
 	*baseapp.BaseApp
 	client  *kafka.Consumer
 	handler map[string]KafkaEventProcessor
-	Log     *log.Logger
+	log     *log.Logger
 	ch      chan *ckafka.Message
 	c       *KafkaConsumerServerConfig
 }
 
-func New(appConfig KafkaConsumerServerConfig, loggerConfig log.Config, lMux log.LogMux, errorNotifier errors.ErrorNotifier, auditLogger log.AuditLogWriter) *KafkaConsumerServer {
-	b := baseapp.New(*appConfig.ServerConfig, loggerConfig, lMux, errorNotifier, auditLogger)
+func New(appConfig KafkaConsumerServerConfig, logger *log.Logger, errorNotifier errors.ErrorNotifier) *KafkaConsumerServer {
+	b := baseapp.New(*appConfig.ServerConfig, logger, errorNotifier)
 	h := &KafkaConsumerServer{
 		BaseApp: b,
-		Log:     b.GetLogger(),
+		log:     logger.NewResourceLogger("KafkaConsumerServer"),
 		c:       &appConfig,
 		handler: make(map[string]KafkaEventProcessor),
 	}
@@ -41,9 +41,9 @@ func (k *KafkaConsumerServer) Subscribe(ctx context.Context) {
 	}
 	ch := make(chan *ckafka.Message)
 	k.ch = ch
-	client, err := kafka.NewConsumer(ctx, k.c.ServiceName, k.Log, k.c.KafkaConsumerConfig, k.GetErrorNotifier(), topicList...)
+	client, err := kafka.NewConsumer(ctx, k.c.ServiceName, k.log, k.c.KafkaConsumerConfig, k.GetErrorNotifier(), topicList...)
 	if err != nil {
-		k.Log.Emergency(ctx, "Error occurred during client creation", map[string]any{
+		k.log.Emergency(ctx, "Error occurred during client creation", map[string]any{
 			"topicList": topicList,
 			"config":    k.c.KafkaConsumerConfig,
 		}, err)
@@ -55,7 +55,7 @@ func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 	corr := &log.CorrelationParam{CorrelationId: fmt.Sprintf("%v-KAFKA-CONSUMER", k.c.ServiceName)}
 	ctx = log.GetContextWithCorrelation(ctx, corr)
 	pollCtx, cancelPoll := context.WithCancel(log.GetContextWithCorrelation(context.Background(), corr))
-	k.Log.Notice(pollCtx, "Starting kafka consumer", nil)
+	k.log.Notice(pollCtx, "Starting kafka consumer", nil)
 	defer func() {
 		if rec := recover(); rec != nil {
 			k.PanicRecovery(pollCtx, rec, nil)
@@ -70,9 +70,9 @@ func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 	go func() {
 		defer wg.Done()
 		err := k.client.Poll(pollCtx, 1, k.ch)
-		k.Log.Emergency(pollCtx, "Kafka consumer exited", nil, fmt.Errorf("KafkaConsumerServer.StartConsumer: process exit %w", err))
+		k.log.Emergency(pollCtx, "Kafka consumer exited", nil, fmt.Errorf("KafkaConsumerServer.StartConsumer: process exit %w", err))
 	}()
-	k.Log.Notice(pollCtx, "Kafka consumer started", nil)
+	k.log.Notice(pollCtx, "Kafka consumer started", nil)
 	for {
 		select {
 		case <-ctx.Done():
@@ -84,7 +84,7 @@ func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 			topicName := *msg.TopicPartition.Topic
 			handler := k.handler[topicName]
 			if handler == nil {
-				k.Log.Emergency(pollCtx, "missing handler for topic - "+topicName, nil, fmt.Errorf("missing handler for topic - %v", topicName))
+				k.log.Emergency(pollCtx, "missing handler for topic - "+topicName, nil, fmt.Errorf("missing handler for topic - %v", topicName))
 			}
 			emMsg := &kafka.Message{Message: msg}
 			msgCtx := context.Background()

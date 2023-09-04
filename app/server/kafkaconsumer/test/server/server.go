@@ -45,7 +45,7 @@ func (s *server) Func1(ctx context.Context, msg *kafka.Message) error {
 
 func NewServer() *server {
 	srv := &server{
-		KafkaConsumerServer: kafkaconsumer.New(*ServerTestConfig.Kafka, *ServerTestConfig.Logger, ServerTestLMux, nil, nil),
+		KafkaConsumerServer: kafkaconsumer.New(*ServerTestConfig.Kafka, ServerTestLogger, nil),
 	}
 	srv.log = srv.GetLogger()
 	srv.AddHandler(GetCorrelationContext(), ServerTestConfig.KafkaTestTopic, srv.Func1)
