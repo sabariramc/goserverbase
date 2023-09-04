@@ -22,7 +22,7 @@ type HTTPProducer struct {
 }
 
 func NewHTTPProducer(ctx context.Context, log *log.Logger, baseURL, topicName string, timeout time.Duration) *HTTPProducer {
-	return NewHTTPProducerResource(ctx, log, "KAFKA_PRODUCER_HTTP", baseURL, topicName, timeout)
+	return NewHTTPProducerResource(ctx, log, "KafkaProducerHttp", baseURL, topicName, timeout)
 }
 
 func NewHTTPProducerResource(ctx context.Context, log *log.Logger, resourceName, baseURL, topicName string, timeout time.Duration) *HTTPProducer {

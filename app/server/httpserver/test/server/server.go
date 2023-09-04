@@ -37,13 +37,14 @@ func GetCorrelationContext() context.Context {
 
 type server struct {
 	*httpserver.HttpServer
+	log *log.Logger
 }
 
 func (s *server) Func1(w http.ResponseWriter, r *http.Request) {
 	id := log.GetCustomerIdentifier(r.Context())
 	corr := log.GetCorrelationParam(r.Context())
-	s.Log.Info(r.Context(), "identity", id)
-	s.Log.Info(r.Context(), "correlation", corr)
+	s.log.Info(r.Context(), "identity", id)
+	s.log.Info(r.Context(), "correlation", corr)
 	data := s.GetBody(r)
 	s.WriteJsonWithStatusCode(r.Context(), w, 200, map[string]string{"body": string(data)})
 }
@@ -60,7 +61,7 @@ func (s *server) Func3(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) Func4(w http.ResponseWriter, r *http.Request) {
-	s.Log.Emergency(r.Context(), "random panic at Func4", nil, nil)
+	s.log.Emergency(r.Context(), "random panic at Func4", nil, nil)
 }
 
 func (s *server) Func5(w http.ResponseWriter, r *http.Request) {
@@ -69,7 +70,7 @@ func (s *server) Func5(w http.ResponseWriter, r *http.Request) {
 
 func NewServer() *server {
 	srv := &server{
-		HttpServer: httpserver.New(*ServerTestConfig.Http, *ServerTestConfig.Logger, ServerTestLMux, nil, nil),
+		HttpServer: httpserver.New(*ServerTestConfig.Http, ServerTestLogger, nil), log: ServerTestLogger,
 	}
 	r := srv.GetRouter().Group("/service/v1")
 	tenant := r.Group("/tenant")

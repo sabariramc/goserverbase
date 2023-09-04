@@ -49,7 +49,7 @@ func NewHttpClient(log *log.Logger, logConfig LogConfig, retryMax int, retryWait
 	t.MaxIdleConns = 100
 	t.MaxConnsPerHost = 100
 	t.MaxIdleConnsPerHost = 100
-	c := &HttpClient{Client: ddtrace.WrapClient(&http.Client{Transport: t}), log: log, LogConfig: logConfig, RetryMax: retryMax, RetryWaitMin: retryWaitMin, RetryWaitMax: retryWaitMax, CheckRetry: retryablehttp.DefaultRetryPolicy, Backoff: retryablehttp.DefaultBackoff}
+	c := &HttpClient{Client: ddtrace.WrapClient(&http.Client{Transport: t}), log: log.NewResourceLogger("HttpClient"), LogConfig: logConfig, RetryMax: retryMax, RetryWaitMin: retryWaitMin, RetryWaitMax: retryWaitMax, CheckRetry: retryablehttp.DefaultRetryPolicy, Backoff: retryablehttp.DefaultBackoff}
 	return c
 }
 

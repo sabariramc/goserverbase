@@ -24,8 +24,7 @@ type AESCBCV2 struct {
 func NewAESCBCV2PKCS7(ctx context.Context, log *log.Logger, key string, iv []byte) (*AESCBCV2, error) {
 	keyByte, err := getKey(key)
 	if err != nil {
-		log.Error(ctx, "Error creating AES CBC V2", err)
-		return nil, fmt.Errorf("crypto.aes.NewAESCBCV2PKCS7ConstantIV: %w", err)
+		return nil, fmt.Errorf("crypto.aes.NewAESCBCV2PKCS7ConstantIV: key creation error: %w", err)
 	}
 	block, err := aes.NewCipher(keyByte)
 	if err != nil {
@@ -40,10 +39,9 @@ func NewAESCBCV2PKCS7(ctx context.Context, log *log.Logger, key string, iv []byt
 func NewAESCBCV2(ctx context.Context, log *log.Logger, key string, iv []byte, padder crypto.Padder) (*AESCBCV2, error) {
 	keyByte, err := getKey(key)
 	if err != nil {
-		log.Error(ctx, "Error creating AES CBC V2", err)
 		return nil, fmt.Errorf("crypto.aes.NewAESCBCV2ConstantIV: %w", err)
 	}
-	return &AESCBCV2{key: keyByte, padder: padder, log: log, iv: iv}, nil
+	return &AESCBCV2{key: keyByte, padder: padder, log: log.NewResourceLogger("AESCBCV2"), iv: iv}, nil
 }
 
 func (a *AESCBCV2) Encrypt(ctx context.Context, plainBlob []byte) ([]byte, error) {

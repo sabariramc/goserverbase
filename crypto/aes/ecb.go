@@ -42,6 +42,7 @@ func NewAESECB(key []byte, log *log.Logger, padder crypto.Padder) (*AESECB, erro
 		key:       key,
 		blockSize: cipher.BlockSize(),
 		padder:    padder,
+		log:       log.NewResourceLogger("AESECB"),
 	}, nil
 }
 

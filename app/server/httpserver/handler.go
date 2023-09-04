@@ -12,7 +12,7 @@ func (h *HttpServer) SetHandlerErrorInContext(ctx context.Context, err error) {
 	}
 	setter, ok := iSetter.(func(error))
 	if !ok {
-		h.Log.Emergency(ctx, "Unable to set context error", nil, fmt.Errorf("context error handler corrupted, error to handle: %w", err))
+		h.log.Emergency(ctx, "Unable to set context error", nil, fmt.Errorf("context error handler corrupted, error to handle: %w", err))
 	}
 	setter(err)
 }

@@ -39,7 +39,7 @@ func GetDefaultSecretManagerClient(logger *log.Logger) *SecretManager {
 }
 
 func NewSecretManagerClient(logger *log.Logger, client *secretsmanager.Client) *SecretManager {
-	return &SecretManager{Client: client, log: logger}
+	return &SecretManager{Client: client, log: logger.NewResourceLogger("SecretManager")}
 }
 
 func (s *SecretManager) GetSecret(ctx context.Context, secretArn string) (map[string]interface{}, error) {

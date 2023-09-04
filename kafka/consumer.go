@@ -29,7 +29,7 @@ type Consumer struct {
 }
 
 func NewConsumer(ctx context.Context, serviceName string, log *log.Logger, config *KafkaConsumerConfig, notifier errors.ErrorNotifier, topic ...string) (*Consumer, error) {
-	return NewConsumerResource(ctx, serviceName, "KAFKA_CONSUMER", log, config, notifier, topic...)
+	return NewConsumerResource(ctx, serviceName, "KafkaConsumer", log, config, notifier, topic...)
 }
 
 func NewConsumerResource(ctx context.Context, serviceName, resourceName string, log *log.Logger, config *KafkaConsumerConfig, notifier errors.ErrorNotifier, topic ...string) (*Consumer, error) {

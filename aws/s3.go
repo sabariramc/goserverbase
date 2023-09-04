@@ -35,7 +35,7 @@ func GetDefaultS3Client(logger *log.Logger) *S3 {
 }
 
 func NewS3Client(client *s3.Client, logger *log.Logger) *S3 {
-	return &S3{Client: client, log: logger, PresignClient: s3.NewPresignClient(client)}
+	return &S3{Client: client, log: logger.NewResourceLogger("S3"), PresignClient: s3.NewPresignClient(client)}
 }
 
 func (s *S3) PutObject(ctx context.Context, s3Bucket, s3Key string, body io.Reader, mimeType string, metadata map[string]string) (*s3.PutObjectOutput, error) {

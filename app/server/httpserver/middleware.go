@@ -34,7 +34,7 @@ func (h *HttpServer) RequestTimerMiddleware() gin.HandlerFunc {
 		r := c.Request
 		st := time.Now()
 		c.Next()
-		h.Log.Info(r.Context(), "Request processing time in ms", time.Since(st).Milliseconds())
+		h.log.Info(r.Context(), "Request processing time in ms", time.Since(st).Milliseconds())
 	}
 }
 
@@ -55,11 +55,11 @@ func (h *HttpServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 		c.Request = r
 		c.Next()
 		if loggingW.status < 500 {
-			h.Log.Info(r.Context(), "Response", map[string]any{"statusCode": loggingW.status, "headers": loggingW.Header()})
-			h.Log.Debug(r.Context(), "Response-Body", loggingW.body)
+			h.log.Info(r.Context(), "Response", map[string]any{"statusCode": loggingW.status, "headers": loggingW.Header()})
+			h.log.Debug(r.Context(), "Response-Body", loggingW.body)
 		} else {
-			h.Log.Error(r.Context(), "Response", map[string]any{"statusCode": loggingW.status, "headers": loggingW.Header()})
-			h.Log.Error(r.Context(), "Response-Body", loggingW.body)
+			h.log.Error(r.Context(), "Response", map[string]any{"statusCode": loggingW.status, "headers": loggingW.Header()})
+			h.log.Error(r.Context(), "Response-Body", loggingW.body)
 		}
 
 	}

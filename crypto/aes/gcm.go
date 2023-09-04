@@ -22,7 +22,7 @@ func NewAESGCM(ctx context.Context, log *log.Logger, key string) (*AESGCM, error
 		log.Error(ctx, "Error creating AES CBC", err)
 		return nil, fmt.Errorf("crypto.aes.NewAESGCM: %w", err)
 	}
-	return &AESGCM{key: keyByte, log: log}, nil
+	return &AESGCM{key: keyByte, log: log.NewResourceLogger("AESGCM")}, nil
 }
 
 func (a *AESGCM) Encrypt(ctx context.Context, plainBlob []byte) ([]byte, error) {

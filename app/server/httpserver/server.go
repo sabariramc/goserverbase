@@ -16,12 +16,12 @@ type HttpServer struct {
 	*baseapp.BaseApp
 	handler *gin.Engine
 	docMeta APIDocumentation
-	Log     *log.Logger
+	log     *log.Logger
 	c       *HttpServerConfig
 }
 
-func New(appConfig HttpServerConfig, loggerConfig log.Config, lMux log.LogMux, errorNotifier errors.ErrorNotifier, auditLogger log.AuditLogWriter) *HttpServer {
-	b := baseapp.New(*appConfig.ServerConfig, loggerConfig, lMux, errorNotifier, auditLogger)
+func New(appConfig HttpServerConfig, logger *log.Logger, errorNotifier errors.ErrorNotifier) *HttpServer {
+	b := baseapp.New(*appConfig.ServerConfig, logger, errorNotifier)
 	if appConfig.Log.ContentLength <= 0 {
 		appConfig.Log.ContentLength = 1024
 	}
@@ -32,7 +32,7 @@ func New(appConfig HttpServerConfig, loggerConfig log.Config, lMux log.LogMux, e
 			Server: make([]DocumentServer, 0),
 			Routes: make(APIRoute, 0),
 		},
-		Log: b.GetLogger(),
+		log: b.GetLogger().NewResourceLogger("HttpServer"),
 		c:   &appConfig,
 	}
 	ctx := b.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(appConfig.ServiceName))
@@ -55,9 +55,9 @@ func (h *HttpServer) GetRouter() *gin.Engine {
 func (h *HttpServer) StartServer() {
 	tracer.Start()
 	defer tracer.Stop()
-	h.Log.Notice(context.TODO(), fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
+	h.log.Notice(context.TODO(), fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
 	err := http.ListenAndServe(h.GetPort(), h)
-	h.Log.Emergency(context.Background(), "Server crashed", nil, err)
+	h.log.Emergency(context.Background(), "Server crashed", nil, err)
 }
 
 func (h *HttpServer) GetPort() string {
