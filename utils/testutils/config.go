@@ -57,7 +57,6 @@ func NewConfig() *TestConfig {
 		}
 	}
 	appConfig := &baseapp.ServerConfig{
-
 		ServiceName: serviceName,
 		Debug:       utils.GetEnvBool("DEBUG", false),
 	}
@@ -67,6 +66,7 @@ func NewConfig() *TestConfig {
 		GroupID:        utils.GetEnvMust("KAFKA_CONSUMER_ID"),
 		OffsetReset:    "latest",
 		MaxBuffer:      uint64(utils.GetEnvInt("KAFKA_CONSUMER_MAX_BUFFER", 1000)),
+		CodeAutoCommit: true,
 	}
 	return &TestConfig{
 

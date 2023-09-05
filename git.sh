@@ -1,5 +1,5 @@
-export message="Logger reference changes"
-export version="v3.15.1"
+export message="Kafka auto commit changes"
+export version="v3.16.0"
 export branch="master"
 git add .
 git commit -m "$message"
