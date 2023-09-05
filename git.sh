@@ -1,5 +1,5 @@
 export message="Kafka auto commit changes"
-export version="v3.16.0"
+export version="v3.16.1"
 export branch="master"
 git add .
 git commit -m "$message"
