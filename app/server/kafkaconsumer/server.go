@@ -98,3 +98,7 @@ func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 func (k *KafkaConsumerServer) Commit(ctx context.Context) error {
 	return k.client.Commit(ctx)
 }
+
+func (k *KafkaConsumerServer) StoreMessage(ctx context.Context, msg *kafka.Message) ([]ckafka.TopicPartition, error) {
+	return k.client.StoreMessage(msg.Message)
+}
