@@ -97,3 +97,7 @@ func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 		}
 	}
 }
+
+func (k *KafkaConsumerServer) Commit(ctx context.Context) error {
+	return k.client.Commit(ctx)
+}

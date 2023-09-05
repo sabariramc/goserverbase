@@ -37,7 +37,6 @@ func NewConsumerResource(ctx context.Context, serviceName, resourceName string, 
 	ch := make(chan kafka.LogEvent, 10000)
 	(*parsedConfig)["go.logs.channel.enable"] = true
 	(*parsedConfig)["go.logs.channel"] = ch
-	(*parsedConfig)["enable.auto.commit"] = false
 	utils.StrictJsonTransformer(config, parsedConfig)
 	c, err := kafkatrace.NewConsumer(parsedConfig)
 	if config.MaxBuffer <= 0 {
@@ -76,7 +75,7 @@ func NewConsumerResource(ctx context.Context, serviceName, resourceName string, 
 	return k, nil
 }
 
-func (k *Consumer) commit(ctx context.Context) error {
+func (k *Consumer) Commit(ctx context.Context) error {
 	offset, err := k.Consumer.Commit()
 	if err != nil {
 		if err.Error() == "Local: No offset stored" {
@@ -165,50 +164,52 @@ func (k *Consumer) Poll(ctx context.Context, timeout int, ch chan *kafka.Message
 	defer close(ch)
 	defer wg.Wait()
 	k.log.Info(ctx, fmt.Sprintf("Polling started for topic : %v", k.topic), nil)
-	commitTimeout, _ := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(k.config.AutoCommitIntervalInMs))
+	commitTimeout, commitCancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(k.config.AutoCommitIntervalInMs))
 	infoConsumerLag := time.Millisecond * time.Duration(k.config.ConsumerLagToleranceInMs)
 	noticeConsumerLag := 2 * infoConsumerLag
 	warningConsumerLag := 2 * noticeConsumerLag
+	var count uint64
+	count = 0
 outer:
 	for {
-		for i := uint64(0); i < k.config.MaxBuffer; i++ {
-			select {
-			case <-ctx.Done():
-				cancelPoll()
-				commitErr = k.commit(ctx)
-				k.log.Notice(ctx, "Polling Timeout/cancelled", nil)
-				break outer
-			case <-commitTimeout.Done():
-				commitErr = k.commit(ctx)
+		select {
+		case <-ctx.Done():
+			cancelPoll()
+			commitErr = k.Commit(ctx)
+			k.log.Notice(ctx, "Polling Timeout/cancelled", nil)
+			break outer
+		case <-commitTimeout.Done():
+			if k.config.CodeAutoCommit {
+				commitErr = k.Commit(ctx)
 				if commitErr != nil {
 					cancelPoll()
 					break outer
 				}
-				commitTimeout, _ = context.WithTimeout(context.Background(), time.Millisecond*time.Duration(k.config.AutoCommitIntervalInMs))
-			case msg, ok := <-k.msgCh:
-				if msg != nil {
-					ch <- msg
-					consumerLag := time.Since(msg.Timestamp)
-					if consumerLag > infoConsumerLag {
-						k.log.Info(ctx, "consumer lag in ms", consumerLag.Milliseconds())
-					} else if consumerLag > noticeConsumerLag {
-						k.log.Notice(ctx, "consumer lag in ms", consumerLag.Milliseconds())
-					} else if consumerLag > warningConsumerLag {
-						k.log.Warning(ctx, "consumer lag in ms", consumerLag.Milliseconds())
-					}
-					k.Consumer.StoreMessage(msg)
+			}
+			count = 0
+			commitTimeout, commitCancel = context.WithTimeout(context.Background(), time.Millisecond*time.Duration(k.config.AutoCommitIntervalInMs))
+		case msg, ok := <-k.msgCh:
+			if msg != nil {
+				count++
+				ch <- msg
+				consumerLag := time.Since(msg.Timestamp)
+				if consumerLag > infoConsumerLag {
+					k.log.Info(ctx, "consumer lag in ms", consumerLag.Milliseconds())
+				} else if consumerLag > noticeConsumerLag {
+					k.log.Notice(ctx, "consumer lag in ms", consumerLag.Milliseconds())
+				} else if consumerLag > warningConsumerLag {
+					k.log.Warning(ctx, "consumer lag in ms", consumerLag.Milliseconds())
 				}
-				if !ok {
-					cancelPoll()
-					commitErr = k.commit(ctx)
-					break outer
+				k.Consumer.StoreMessage(msg)
+				if count >= k.config.MaxBuffer {
+					commitCancel()
 				}
 			}
-		}
-		commitErr = k.commit(ctx)
-		if commitErr != nil {
-			cancelPoll()
-			break
+			if !ok {
+				cancelPoll()
+				commitErr = k.Commit(ctx)
+				break outer
+			}
 		}
 	}
 	if commitErr != nil {
@@ -233,13 +234,13 @@ func (k *Consumer) ReadMessage(ctx context.Context, timeout time.Duration) (*kaf
 		k.log.Error(ctx, "error storing offset", err)
 	}
 	k.log.Info(ctx, "stored offset", offset)
-	err = k.commit(ctx)
+	err = k.Commit(ctx)
 	return ev, err
 }
 
 func (k *Consumer) Close(ctx context.Context) error {
 	k.log.Notice(ctx, "Consumer closer initiated for topic", k.topic)
-	commitErr := k.commit(ctx)
+	commitErr := k.Commit(ctx)
 	close(k.logCh)
 	if k.msgCh != nil {
 		_, ok := <-k.msgCh

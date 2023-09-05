@@ -14,9 +14,11 @@ type KafkaConsumerConfig struct {
 	GroupID                  interface{} `json:"group.id,omitempty"`
 	GoEventChannel           bool        `json:"go.events.channel.enable,omitempty"`
 	OffsetReset              interface{} `json:"auto.offset.reset,omitempty"`
+	AutoCommit               bool        `json:"enable.auto.commit"`
 	MaxBuffer                uint64      `json:"-"`
 	AutoCommitIntervalInMs   uint64      `json:"-"`
 	ConsumerLagToleranceInMs uint64      `json:"-"`
+	CodeAutoCommit           bool        `json:"-"`
 }
 
 type KafkaProducerConfig struct {
