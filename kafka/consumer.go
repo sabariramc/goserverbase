@@ -200,7 +200,9 @@ outer:
 				} else if consumerLag > warningConsumerLag {
 					k.log.Warning(ctx, "consumer lag in ms", consumerLag.Milliseconds())
 				}
-				k.Consumer.StoreMessage(msg)
+				if k.config.CodeAutoCommit {
+					k.Consumer.StoreMessage(msg)
+				}
 				if count >= k.config.MaxBuffer {
 					commitCancel()
 				}
