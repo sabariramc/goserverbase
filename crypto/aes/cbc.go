@@ -26,8 +26,7 @@ type AESCBC struct {
 func NewAESCBCPKCS7(ctx context.Context, log *log.Logger, key string) (*AESCBC, error) {
 	keyByte, err := getKey(key)
 	if err != nil {
-		log.Error(ctx, "Error creating AES CBC", err)
-		return nil, fmt.Errorf("crypto.aes.NewAESCBCPKCS7: %w", err)
+		return nil, fmt.Errorf("crypto.aes.NewAESCBCPKCS7: error creating key: %w", err)
 	}
 	block, err := aes.NewCipher(keyByte)
 	if err != nil {
@@ -39,8 +38,7 @@ func NewAESCBCPKCS7(ctx context.Context, log *log.Logger, key string) (*AESCBC, 
 func NewAESCBC(ctx context.Context, log *log.Logger, key string, padder crypto.Padder) (*AESCBC, error) {
 	keyByte, err := getKey(key)
 	if err != nil {
-		log.Error(ctx, "Error creating AES CBC", err)
-		return nil, fmt.Errorf("crypto.aes.NewAESCBC: %w", err)
+		return nil, fmt.Errorf("crypto.aes.NewAESCBC: error creating aes cbc: %w", err)
 	}
 	return &AESCBC{key: keyByte, padder: padder, log: log.NewResourceLogger("AESCBC")}, nil
 }

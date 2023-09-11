@@ -92,12 +92,11 @@ func (s *S3) GetFile(ctx context.Context, s3Bucket, s3Key, localFilePath string)
 	defer fp.Close()
 	n, err := fp.Write(blob)
 	if err != nil {
-		s.log.Error(ctx, "S3 get file - file writing error", err)
-		return fmt.Errorf("S3.GetFile: %w", err)
+		s.log.Error(ctx, "S3 get file - ", err)
+		return fmt.Errorf("S3.GetFile: error writing file: %w", err)
 	}
 	if n != len(blob) {
 		err := fmt.Errorf("total bytes %v, written bytes %v", len(blob), n)
-		s.log.Error(ctx, "S3 get file - file writing error", err)
 		return fmt.Errorf("S3.GetFile: %w", err)
 	}
 	return nil
@@ -111,8 +110,7 @@ func (s *S3) PresignGetObject(ctx context.Context, s3Bucket, s3Key string, expir
 		opts.Expires = time.Duration(expireTimeInSeconds * int64(time.Second))
 	})
 	if err != nil {
-		s.log.Error(ctx, "S3 failed to sign GET request", err)
-		return nil, fmt.Errorf("S3.CreatePresignedUrlGET: %w", err)
+		return nil, fmt.Errorf("S3.CreatePresignedUrlGET: error signing get request: %w", err)
 	}
 	s.log.Debug(ctx, "S3 presigned GET url", request)
 	return request, nil
@@ -127,7 +125,7 @@ func (s *S3) PresignPutObject(ctx context.Context, s3Bucket, s3Key string, expir
 	})
 	if err != nil {
 		s.log.Error(ctx, "S3 failed to sign PUT request", err)
-		return nil, fmt.Errorf("S3.CreatePresignedUrlPUT: %w", err)
+		return nil, fmt.Errorf("S3.CreatePresignedUrlPUT: error signing put request: %w", err)
 	}
 	s.log.Debug(ctx, "S3 presigned PUT url", request)
 	return request, nil

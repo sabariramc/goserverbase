@@ -50,13 +50,11 @@ func NewMongoClient(ctx context.Context, logger *log.Logger, c *Config, opts ...
 	opts = append(opts, connectionOptions)
 	client, err := mongo.Connect(ctx, opts...)
 	if err != nil {
-		logger.Error(ctx, "Error creating mongo connection", err)
-		return nil, fmt.Errorf("mongo.NewMongoClient : %w", err)
+		return nil, fmt.Errorf("mongo.NewMongoClient: error creating mongo connection: %w", err)
 	}
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		logger.Error(ctx, "Error pinging mongo server", err)
-		return nil, fmt.Errorf("mongo.NewMongoClient : %w", err)
+		return nil, fmt.Errorf("mongo.NewMongoClient: error pinging mongo server: %w", err)
 	}
 	return client, nil
 }

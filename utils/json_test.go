@@ -1,16 +1,16 @@
 package utils_test
 
 import (
-	"fmt"
 	"testing"
 	"time"
 
 	"github.com/sabariramc/goserverbase/v3/utils"
 	"github.com/shopspring/decimal"
+	"gotest.tools/assert"
 )
 
 type TestVal struct {
-	IntVal       int64           `json:"intVal"`
+	IntVal       int             `json:"intVal"`
 	DecimalVal   decimal.Decimal `json:"decimalVal"`
 	StrVal       string          `json:"strVal"`
 	BoolVal      bool            `json:"boolVal"`
@@ -26,13 +26,10 @@ func TestJsonDecoding(t *testing.T) {
 	}
 	toData := &TestVal{}
 	err := utils.StrictJsonTransformer(data, toData)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.NilError(t, err)
+	assert.Equal(t, 10, toData.IntVal)
+	assert.DeepEqual(t, val, toData.DecimalVal)
 	data["newField"] = "random value"
 	err = utils.StrictJsonTransformer(data, toData)
-	if err == nil {
-		t.Fatal(fmt.Errorf("Json should throw an error"))
-	}
-	fmt.Println(err.Error())
+	assert.Error(t, err, "StrictJsonTransformer decoding: json: unknown field \"newField\"")
 }

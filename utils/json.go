@@ -21,11 +21,11 @@ func Serialize(val interface{}) (*string, error) {
 func LenientJsonTransformer(src interface{}, dest interface{}) error {
 	blob, err := json.Marshal(src)
 	if err != nil {
-		return fmt.Errorf("LenientJsonTransformer encoding: %w", err)
+		return fmt.Errorf("LenientJsonTransformer: error in encoding from source: %w", err)
 	}
 	err = json.Unmarshal(blob, dest)
 	if err != nil {
-		return fmt.Errorf("LenientJsonTransformer decoding: %w", err)
+		return fmt.Errorf("LenientJsonTransformer: error in decoding to destination: %w", err)
 	}
 	return nil
 }
@@ -34,13 +34,13 @@ func StrictJsonTransformer(src interface{}, dest interface{}) error {
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(src)
 	if err != nil {
-		return fmt.Errorf("StrictJsonTransformer encoding: %w", err)
+		return fmt.Errorf("StrictJsonTransformer: error in encoding from source: %w", err)
 	}
 	decoder := json.NewDecoder(&buf)
 	decoder.DisallowUnknownFields()
 	err = decoder.Decode(dest)
 	if err != nil {
-		return fmt.Errorf("StrictJsonTransformer decoding: %w", err)
+		return fmt.Errorf("StrictJsonTransformer: error in decoding to destination: %w", err)
 	}
 	return nil
 }

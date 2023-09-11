@@ -51,8 +51,7 @@ func (s *SecretManager) GetSecret(ctx context.Context, secretArn string) (map[st
 		s.log.Debug(ctx, "Secret fetch request", req)
 		res, err := s.Client.GetSecretValue(ctx, req)
 		if err != nil {
-			s.log.Error(ctx, "Error in secret fetch", err)
-			return nil, fmt.Errorf("SecretManager.GetSecretNonCache: %w", err)
+			return nil, fmt.Errorf("SecretManager.GetSecretNonCache: error in fetching secret: %w", err)
 		}
 		s.log.Debug(ctx, "Secret fetch response", res)
 		if err != nil {
@@ -67,7 +66,7 @@ func (s *SecretManager) GetSecret(ctx context.Context, secretArn string) (map[st
 	if err != nil {
 		s.log.Error(ctx, "Secret un-marshall error", err)
 		s.log.Debug(ctx, "Secret data", secretCacheData.data.SecretString)
-		return nil, fmt.Errorf("SecretManager.GetSecret: %w", err)
+		return nil, fmt.Errorf("SecretManager.GetSecret: error un-marshalling secret data: %w", err)
 	}
 	return data, nil
 }

@@ -89,8 +89,7 @@ func (h *HttpClient) Encode(ctx context.Context, data interface{}) (interface{},
 			buff := &bytes.Buffer{}
 			err := json.NewEncoder(buff).Encode(&data)
 			if err != nil {
-				h.log.Error(ctx, "Http.Do.PayloadEncoding", err)
-				return nil, nil, fmt.Errorf("http.do.PayloadEncoding: %w", err)
+				return nil, nil, fmt.Errorf("HttpClient.Encode: error in encoding payload: %w", err)
 			}
 			body = buff
 		}
@@ -109,8 +108,7 @@ func (h *HttpClient) Decode(ctx context.Context, body []byte, data interface{}) 
 			err := json.Unmarshal(body, data)
 			if err != nil {
 				newBuff := io.NopCloser(bytes.NewReader(body))
-				h.log.Error(ctx, "http.Do.responseBodyMarshall", err)
-				return newBuff, fmt.Errorf("%w : %w", ErrResponseUnmarshal, err)
+				return newBuff, fmt.Errorf("HttpClient:Decode: %w : %w", ErrResponseUnmarshal, err)
 			}
 		}
 		return nil, nil
@@ -151,8 +149,7 @@ func (h *HttpClient) Call(ctx context.Context, method, url string, reqBody, resB
 	}
 	req, err = http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
-		h.log.Error(ctx, "Http.Do.RequestCreation", err)
-		return nil, fmt.Errorf("http.do.requestCreation: %w", err)
+		return nil, fmt.Errorf("HttpClient.Call: error in request creation: %w", err)
 	}
 	log.SetCorrelationHeader(ctx, req)
 	for key, val := range headers {
@@ -169,8 +166,7 @@ func (h *HttpClient) Call(ctx context.Context, method, url string, reqBody, resB
 	})
 	r, err := h.Do(req)
 	if err != nil {
-		h.log.Error(ctx, "http.do.networkCall", err)
-		return r, fmt.Errorf("http.do.networkCall: %w", err)
+		return r, fmt.Errorf("HttpClient.Call: error in network call: %w", err)
 	} else if r == nil {
 		return r, err
 	}
@@ -199,7 +195,6 @@ func (h *HttpClient) Call(ctx context.Context, method, url string, reqBody, resB
 }
 
 func (h *HttpClient) Do(req *http.Request) (*http.Response, error) {
-
 	var resp *http.Response
 	var attempt int
 	var shouldRetry bool

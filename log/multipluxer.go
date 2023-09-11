@@ -14,6 +14,7 @@ type LogWriter interface {
 
 type LogMux interface {
 	Print(context.Context, *LogMessage)
+	AddLogWriter(context.Context, LogWriter)
 }
 
 type MuxLogMessage struct {
@@ -70,4 +71,8 @@ func (ls *DefaultLogMux) Print(ctx context.Context, msg *LogMessage) {
 	for _, w := range ls.writer {
 		_ = w.WriteMessage(ctx, msg)
 	}
+}
+
+func (ls *DefaultLogMux) AddLogWriter(ctx context.Context, writer LogWriter) {
+	ls.writer = append(ls.writer, writer)
 }

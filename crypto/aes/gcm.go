@@ -19,8 +19,7 @@ type AESGCM struct {
 func NewAESGCM(ctx context.Context, log *log.Logger, key string) (*AESGCM, error) {
 	keyByte, err := getKey(key)
 	if err != nil {
-		log.Error(ctx, "Error creating AES CBC", err)
-		return nil, fmt.Errorf("crypto.aes.NewAESGCM: %w", err)
+		return nil, fmt.Errorf("crypto.aes.NewAESGCM: error creating aes gcm: %w", err)
 	}
 	return &AESGCM{key: keyByte, log: log.NewResourceLogger("AESGCM")}, nil
 }
