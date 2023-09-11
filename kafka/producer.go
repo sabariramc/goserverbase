@@ -70,13 +70,15 @@ func NewProducerResource(ctx context.Context, log *log.Logger, config *KafkaProd
 		return nil, fmt.Errorf("kafka.NewProducer: %w", err)
 	}
 	k.wg.Add(2)
-	// flushCtx, flushCancel := context.WithCancel(context.Background())
-	// k.autoFlushCancel = flushCancel
-	//
-	// go func() {
-	// 	k.autoFlush(flushCtx)
-	// 	k.wg.Done()
-	// }()
+	if k.config.CodeAutoFlush {
+		// flushCtx, flushCancel := context.WithCancel(context.Background())
+		// k.autoFlushCancel = flushCancel
+		//
+		// go func() {
+		// 	k.autoFlush(flushCtx)
+		// 	k.wg.Done()
+		// }()
+	}
 	go func() {
 		k.deliveryReport()
 		k.wg.Done()
@@ -121,13 +123,13 @@ func (k *Producer) handleEvent(defaultCtx context.Context, ev kafka.Event) (cont
 			k.log.Error(ctx, "Error in publishing message", err)
 			k.log.Error(ctx, "Error Meta", logMsg.GetMeta())
 			k.log.Debug(ctx, "Error Body", logMsg.GetBody)
-			return ctx, err
+			return ctx, fmt.Errorf("kafka.Producer.handleEvent: partition error: %w", err)
 		}
 		k.log.Info(ctx, "Send success for topic - meta: "+k.topic, logMsg.GetMeta())
 		k.log.Debug(ctx, "Send success for topic - body: "+k.topic, logMsg.GetBody)
 	case kafka.Error:
 		k.log.Error(defaultCtx, "Produce Error", e)
-		return defaultCtx, e
+		return defaultCtx, fmt.Errorf("kafka.Producer.handleEvent: produce error: %w", e)
 	default:
 		k.log.Notice(defaultCtx, "KafkaProducer: Event", e.String())
 	}
@@ -157,7 +159,7 @@ func (k *Producer) Produce(ctx context.Context, key string, message []byte, head
 
 func (k *Producer) ProduceToTopic(ctx context.Context, topicPartition kafka.TopicPartition, key string, message []byte, headers map[string]string) (err error) {
 	k.produceLock.Lock()
-	if k.Len() >= k.config.MaxBuffer {
+	if k.Len() >= k.config.MaxBuffer && k.config.CodeAutoFlush {
 		k.Flush(1000)
 	}
 	if headers == nil {
@@ -185,8 +187,7 @@ func (k *Producer) ProduceToTopic(ctx context.Context, topicPartition kafka.Topi
 	}, k.deliveryCh)
 	k.produceLock.Unlock()
 	if err != nil {
-		k.log.Error(ctx, "Failed to enqueue message: "+k.topic, err)
-		return fmt.Errorf("kafka.Producer.Produce: %w", err)
+		return fmt.Errorf("kafka.Producer.Produce: failed to enqueue message: topic - %v: %w", k.topic, err)
 	}
 	return nil
 }

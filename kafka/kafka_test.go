@@ -253,7 +253,6 @@ func TestKafkaPollHTTPProducer(t *testing.T) {
 		if err != nil {
 			KafkaTestLogger.Error(ctx, "parse error", err)
 		}
-		KafkaTestLogger.Info(ctx, "Kafka message", i)
 	}
 	KafkaTestLogger.Info(ctx, "Total matched", count)
 	KafkaTestLogger.Info(ctx, "Total received", msgCount)

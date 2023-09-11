@@ -44,13 +44,11 @@ func (k HTTPProducer) ProduceMessage(ctx context.Context, key string, message *u
 	var reqBodyBlob bytes.Buffer
 	err := json.NewEncoder(&reqBodyBlob).Encode(&data)
 	if err != nil {
-		k.log.Error(ctx, "KafkaHTTPProducer.Send.PayloadEncoding", err)
-		return fmt.Errorf("KafkaHTTPProducer.Send.PayloadEncoding: %w", err)
+		return fmt.Errorf("kafka.HTTPProducer.ProduceMessage: error in payload encoding: %w", err)
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, &reqBodyBlob)
 	if err != nil {
-		k.log.Error(ctx, "KafkaHTTPProducer.Send.RequestCreation", err)
-		return fmt.Errorf("KafkaHTTPProducer.Send.RequestCreation: %w", err)
+		return fmt.Errorf("kafka.HTTPProducer.ProduceMessage: error in request creation: %w", err)
 	}
 	log.SetCorrelationHeader(ctx, req)
 	req.Header.Add("Content-Type", "application/vnd.kafka.json.v2+json")
@@ -62,8 +60,7 @@ func (k HTTPProducer) ProduceMessage(ctx context.Context, key string, message *u
 	k.log.Debug(ctx, "Request url", req.URL)
 	res, err := k.httpClient.Do(req)
 	if err != nil {
-		k.log.Error(ctx, "Error in sending kafka message", err)
-		return fmt.Errorf("KafkaHTTPProducer.Send.HTTPCall: %w", err)
+		return fmt.Errorf("kafka.HTTPProducer.ProduceMessage: error in network call: %w", err)
 	}
 	defer res.Body.Close()
 	blobBody, _ := io.ReadAll(res.Body)
@@ -71,11 +68,11 @@ func (k HTTPProducer) ProduceMessage(ctx context.Context, key string, message *u
 	resBody = make(map[string]any)
 	err = json.Unmarshal(blobBody, &resBody)
 	if err != nil {
-		k.log.Error(ctx, "KafkaHTTPProducer : Error in JSON Marshal", err)
+		k.log.Error(ctx, "kafka.HTTPProducer.ProduceMessage: error response body JSON unmarshal", err)
 		resBody = string(blobBody)
 	}
 	if res.StatusCode > 299 {
-		err = fmt.Errorf("KafkaHTTPProducer.Send.HTTPCall.statusCode: %v", res.StatusCode)
+		err = fmt.Errorf("kafka.HTTPProducer.ProduceMessage: http error with statusCode %v", res.StatusCode)
 		k.log.Error(ctx, fmt.Sprintf("KAFKA HTTP response -%v", res.StatusCode), resBody)
 	} else {
 		k.log.Debug(ctx, fmt.Sprintf("KAFKA HTTP response -%v", res.StatusCode), resBody)

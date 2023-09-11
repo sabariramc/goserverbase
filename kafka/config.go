@@ -26,4 +26,5 @@ type KafkaProducerConfig struct {
 	Acknowledge           interface{} `json:"acks,omitempty"`
 	MaxBuffer             int         `json:"-"`
 	AutoFlushIntervalInMs uint64      `json:"-"`
+	CodeAutoFlush         bool        `json:"-"`
 }
