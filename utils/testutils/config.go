@@ -104,9 +104,10 @@ func NewConfig() *TestConfig {
 			FIFO_SQS_URL: utils.GetEnv("FIFO_SQS_URL", ""),
 		},
 		KafkaProducer: &kafka.KafkaProducerConfig{
-			KafkaCred:   &kafkaBaseConfig,
-			Acknowledge: "all",
-			MaxBuffer:   utils.GetEnvInt("KAFKA_PRODUCER_MAX_BUFFER", 1000),
+			KafkaCred:     &kafkaBaseConfig,
+			Acknowledge:   "all",
+			MaxBuffer:     utils.GetEnvInt("KAFKA_PRODUCER_MAX_BUFFER", 1000),
+			CodeAutoFlush: true,
 		},
 		KafkaConsumer:     consumer,
 		KafkaTestTopic:    utils.GetEnvMust("KAFKA_TEST_TOPIC"),

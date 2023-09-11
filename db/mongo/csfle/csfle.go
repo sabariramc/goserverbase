@@ -40,13 +40,11 @@ func New(ctx context.Context, logger *log.Logger, c m.Config, keyVaultNamespace 
 	opts = append(opts, connectionOptions)
 	client, err := mongo.Connect(ctx, opts...)
 	if err != nil {
-		logger.Error(ctx, "connect error for Mongo CSLFE client", err)
-		return nil, fmt.Errorf("csfle.NewCSFLEClient : %w", err)
+		return nil, fmt.Errorf("csfle.NewCSFLEClient: error creating Mongo CSLFE client: %w", err)
 	}
 	err = client.Ping(ctx, nil)
 	if err != nil {
-		logger.Error(ctx, "Error pinging mongo server", err)
-		return nil, fmt.Errorf("csfle.NewCSFLEClient : %w", err)
+		return nil, fmt.Errorf("csfle.NewCSFLEClient: error pinging mongo server: %w", err)
 	}
 	return client, nil
 }
@@ -69,8 +67,9 @@ func GetDataKey(ctx context.Context, m *m.Mongo, keyVaultNamespace, keyAltName s
 		Decode(&dataKey)
 	if err != nil {
 		if err != mongo.ErrNoDocuments {
-			m.GetLogger().Error(ctx, "error encountered while attempting to find key", err)
+			err = fmt.Errorf("csfle.GetDataKey: error encountered while attempting to find data key: %w", err)
 			return
+
 		}
 		var data *string
 		data, err = CreateDataKey(ctx, m, keyVaultNamespace, keyAltName, provider)
@@ -93,16 +92,14 @@ func CreateDataKey(ctx context.Context, m *m.Mongo, keyVaultNamespace, keyAltNam
 	clientEncryptionOpts := options.ClientEncryption().SetKeyVaultNamespace(keyVaultNamespace).SetKmsProviders(provider.Credentials())
 	clientEnc, err := mongo.NewClientEncryption(m.GetClient(), clientEncryptionOpts)
 	if err != nil {
-		m.GetLogger().Error(ctx, "Error creating encryption client", err)
-		return nil, fmt.Errorf("csfle.CreateDataKey : %w", err)
+		return nil, fmt.Errorf("csfle.CreateDataKey: error creating encryption client: %w", err)
 	}
 	dataKeyOpts := options.DataKey().
 		SetMasterKey(provider.DataKeyOpts()).
 		SetKeyAltNames([]string{keyAltName})
 	dataKeyID, err := clientEnc.CreateDataKey(ctx, provider.Name(), dataKeyOpts)
 	if err != nil {
-		m.GetLogger().Error(ctx, "Error creating data key", err)
-		return nil, fmt.Errorf("csfle.CreateDataKey : %w", err)
+		return nil, fmt.Errorf("csfle.CreateDataKey: error creating data key: %w", err)
 	}
 	res := base64.StdEncoding.EncodeToString(dataKeyID.Data)
 	return &res, nil

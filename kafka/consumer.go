@@ -49,8 +49,7 @@ func NewConsumerResource(ctx context.Context, serviceName, resourceName string, 
 		config.ConsumerLagToleranceInMs = 1000 * 3
 	}
 	if err != nil {
-		log.Error(ctx, "Failed to create kafka consumer", err)
-		return nil, fmt.Errorf("kafka.NewKafkaConsumer.CreateConsumer: %w", err)
+		return nil, fmt.Errorf("kafka.NewKafkaConsumer.CreateConsumer: failed to create kafka consumer:%w", err)
 	}
 	k := &Consumer{
 		log:          log.NewResourceLogger(resourceName),
@@ -64,8 +63,7 @@ func NewConsumerResource(ctx context.Context, serviceName, resourceName string, 
 	}
 	err = k.SubscribeTopics(topic, k.logReBalance)
 	if err != nil {
-		k.log.Error(ctx, "Failed to create kafka consumer subscription", err)
-		return nil, fmt.Errorf("kafka.NewKafkaConsumer.SubscribeTopics: %w", err)
+		return nil, fmt.Errorf("kafka.NewKafkaConsumer.SubscribeTopics: failed to create kafka consumer subscription: %w", err)
 	}
 	k.wg.Add(1)
 	go func() {
@@ -77,16 +75,16 @@ func NewConsumerResource(ctx context.Context, serviceName, resourceName string, 
 
 func (k *Consumer) Commit(ctx context.Context) error {
 	offset, err := k.Consumer.Commit()
+	if len(offset) > 0 {
+		k.log.Notice(ctx, "Committed offsets", offset)
+	}
 	if err != nil {
 		if err.Error() == "Local: No offset stored" {
 			k.log.Debug(ctx, "No offset to commit", err)
 			err = nil
 		} else {
-			k.log.Error(ctx, "Error on commit", err)
+			err = fmt.Errorf("kafka.Consumer.Commit: error during commit %w", err)
 		}
-	}
-	if len(offset) > 0 {
-		k.log.Notice(ctx, "Committed offsets", offset)
 	}
 	return err
 }
@@ -140,7 +138,7 @@ func (k *Consumer) poll(ctx context.Context, timeout int) error {
 					k.log.Notice(ctx, "KafkaConsumer.Poll: Offset Committed", e.Offsets)
 					if e.Error != nil {
 						k.log.Error(ctx, "Poll Offset Committed error", e.Error)
-						return fmt.Errorf("KafkaConsumer.Poll: Offset Committed Error: %w", e.Error)
+						return fmt.Errorf("KafkaConsumer.Poll: offset Committed Error: %w", e.Error)
 					}
 				default:
 					k.log.Notice(ctx, "KafkaConsumer.Poll: Event", e.String())
@@ -228,16 +226,27 @@ outer:
 func (k *Consumer) ReadMessage(ctx context.Context, timeout time.Duration) (*kafka.Message, error) {
 	ev, err := k.Consumer.ReadMessage(timeout)
 	if err != nil {
-		k.log.Error(ctx, fmt.Sprintf("Read message error for topic : %v", k.topic), err)
-		return nil, fmt.Errorf("KafkaConsumer.ReadMessage: %w", err)
+		return nil, fmt.Errorf("kafka.Consumer.ReadMessage: error reading message: %w", err)
 	}
+	if !k.config.CodeAutoCommit {
+		return ev, nil
+	}
+	if _, err = k.StoreMessage(ctx, ev); err != nil {
+		err = k.Commit(ctx)
+		if err != nil {
+			err = fmt.Errorf("kafka.Consumer.ReadMessage: error on commit %w", err)
+		}
+	}
+	return ev, err
+}
+
+func (k *Consumer) StoreMessage(ctx context.Context, ev *kafka.Message) ([]kafka.TopicPartition, error) {
 	offset, err := k.Consumer.StoreMessage(ev)
 	if err != nil {
-		k.log.Error(ctx, "error storing offset", err)
+		return offset, fmt.Errorf("kafka.Consumer.StoreMessage: %w", err)
 	}
-	k.log.Info(ctx, "stored offset", offset)
-	err = k.Commit(ctx)
-	return ev, err
+	k.log.Debug(ctx, "stored offset", offset)
+	return offset, nil
 }
 
 func (k *Consumer) Close(ctx context.Context) error {

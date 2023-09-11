@@ -26,8 +26,7 @@ type AESECB struct {
 func NewAESECBPKC5(ctx context.Context, key []byte, log *log.Logger) (*AESECB, error) {
 	cipher, err := NewAESECB(key, log, padding.NewPKCS7(len(key)))
 	if err != nil {
-		log.Error(ctx, "Error creating AES CBC", err)
-		return nil, fmt.Errorf("crypto.aes.NewAESGCM: %w", err)
+		return nil, fmt.Errorf("crypto.aes.NewAESGCM: error creating aes ecb: %w", err)
 	}
 	return cipher, nil
 }

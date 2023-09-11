@@ -38,11 +38,11 @@ func GetAWSProvider(ctx context.Context, logger *log.Logger, awsConfig *aws.Conf
 	kms := cuaws.NewKMSClient(logger, cuaws.NewAWSKMSClientWithConfig(*awsConfig), kmsARN)
 	_, err = kms.Encrypt(ctx, []byte("test"))
 	if err != nil {
-		return nil, fmt.Errorf("csfle.GetAWSProvider: KMS test flight error: %w", err)
+		return nil, fmt.Errorf("csfle.GetAWSProvider: error in kms test flight: %w", err)
 	}
 	cred, err := awsConfig.Copy().Credentials.Retrieve(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("CSFLE.GetAWSProvider: AWS credential fetch: %w", err)
+		return nil, fmt.Errorf("CSFLE.GetAWSProvider: error in aws credential fetch: %w", err)
 	}
 	provider = CreateAWSProvider(cred.AccessKeyID, cred.SecretAccessKey, cred.SessionToken, awsConfig.Region)
 	logger.Debug(ctx, "Mongo AWS KMS provider", provider)
@@ -69,7 +69,7 @@ func CreateAWSProvider(awsAccessKeyID, awsSecretAccessKey, sessionToken, awsKeyR
 func GetDefaultAWSKMSProvider(ctx context.Context, logger *log.Logger, kmsARN string) (MasterKeyProvider, error) {
 	provider, err := GetDefaultAWSProvider(ctx, logger, kmsARN)
 	if err != nil {
-		return nil, fmt.Errorf("csfle.GetDefaultAWSKMSProvider : %w", err)
+		return nil, fmt.Errorf("csfle.GetDefaultAWSKMSProvider: %w", err)
 	}
 	provider.setARN(kmsARN)
 	return provider, nil
@@ -95,8 +95,7 @@ func SetEncryptionKey(ctx context.Context, logger *log.Logger, encryptionSchema 
 	schema := make(map[string]interface{})
 	err := json.Unmarshal([]byte(*encryptionSchema), &schema)
 	if err != nil {
-		logger.Error(ctx, "CSFLE Schema unmarshal error", err)
-		return err
+		return fmt.Errorf("csfle.SetEncryptionKey: csfle schema unmarshal error: %w", err)
 	}
 	client, err := mongo.New(ctx, logger, c)
 	if err != nil {
@@ -115,7 +114,7 @@ func SetEncryptionKey(ctx context.Context, logger *log.Logger, encryptionSchema 
 		if !ok {
 			errorMsg := "key `encryptMetadata` should be a compatible with `map[string]interface{}` in param `encryptionSchema`"
 			logger.Error(ctx, errorMsg, schema)
-			return fmt.Errorf(errorMsg)
+			return fmt.Errorf("csfle.SetEncryptionKey: %v", errorMsg)
 		}
 		encryptMetadata["keyId"] = encryptionKeyID
 	} else {
@@ -125,8 +124,7 @@ func SetEncryptionKey(ctx context.Context, logger *log.Logger, encryptionSchema 
 	}
 	blob, err := json.Marshal(schema)
 	if err != nil {
-		logger.Error(ctx, "CSFLE Schema marshal error", err)
-		return err
+		return fmt.Errorf("csfle.SetEncryptionKey: error in marshaling csfle scheme: %w", err)
 	}
 	*encryptionSchema = string(blob)
 	return nil
