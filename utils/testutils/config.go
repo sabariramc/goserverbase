@@ -66,7 +66,6 @@ func NewConfig() *TestConfig {
 		GroupID:        utils.GetEnvMust("KAFKA_CONSUMER_ID"),
 		OffsetReset:    "latest",
 		MaxBuffer:      uint64(utils.GetEnvInt("KAFKA_CONSUMER_MAX_BUFFER", 1000)),
-		CodeAutoCommit: true,
 	}
 	return &TestConfig{
 
@@ -104,10 +103,9 @@ func NewConfig() *TestConfig {
 			FIFO_SQS_URL: utils.GetEnv("FIFO_SQS_URL", ""),
 		},
 		KafkaProducer: &kafka.KafkaProducerConfig{
-			KafkaCred:     &kafkaBaseConfig,
-			Acknowledge:   "all",
-			MaxBuffer:     utils.GetEnvInt("KAFKA_PRODUCER_MAX_BUFFER", 1000),
-			CodeAutoFlush: true,
+			KafkaCred:   &kafkaBaseConfig,
+			Acknowledge: "all",
+			MaxBuffer:   utils.GetEnvInt("KAFKA_PRODUCER_MAX_BUFFER", 1000),
 		},
 		KafkaConsumer:     consumer,
 		KafkaTestTopic:    utils.GetEnvMust("KAFKA_TEST_TOPIC"),

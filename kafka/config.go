@@ -18,7 +18,7 @@ type KafkaConsumerConfig struct {
 	MaxBuffer                uint64      `json:"-"`
 	AutoCommitIntervalInMs   uint64      `json:"-"`
 	ConsumerLagToleranceInMs uint64      `json:"-"`
-	CodeAutoCommit           bool        `json:"-"`
+	Batch                    bool        `json:"-"`
 }
 
 type KafkaProducerConfig struct {
@@ -26,5 +26,5 @@ type KafkaProducerConfig struct {
 	Acknowledge           interface{} `json:"acks,omitempty"`
 	MaxBuffer             int         `json:"-"`
 	AutoFlushIntervalInMs uint64      `json:"-"`
-	CodeAutoFlush         bool        `json:"-"`
+	Batch                 bool        `json:"-"`
 }

@@ -71,7 +71,7 @@ func NewProducerResource(ctx context.Context, log *log.Logger, config *KafkaProd
 		return nil, fmt.Errorf("kafka.NewProducer: %w", err)
 	}
 	k.wg.Add(2)
-	if k.config.CodeAutoFlush {
+	if !k.config.Batch {
 		// flushCtx, flushCancel := context.WithCancel(context.Background())
 		// k.autoFlushCancel = flushCancel
 		//
@@ -160,7 +160,7 @@ func (k *Producer) Produce(ctx context.Context, key string, message []byte, head
 
 func (k *Producer) ProduceToTopic(ctx context.Context, topicPartition kafka.TopicPartition, key string, message []byte, headers map[string]string) (err error) {
 	k.produceLock.Lock()
-	if k.Len() >= k.config.MaxBuffer && k.config.CodeAutoFlush {
+	if k.Len() >= k.config.MaxBuffer && !k.config.Batch {
 		k.Flush(1000)
 	}
 	if headers == nil {
