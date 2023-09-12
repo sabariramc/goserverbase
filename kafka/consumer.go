@@ -176,7 +176,7 @@ outer:
 			k.log.Notice(ctx, "Polling Timeout/cancelled", nil)
 			break outer
 		case <-commitTimeout.Done():
-			if k.config.CodeAutoCommit {
+			if !k.config.Batch {
 				commitErr = k.Commit(ctx)
 				if commitErr != nil {
 					cancelPoll()
@@ -197,7 +197,7 @@ outer:
 				} else if consumerLag > warningConsumerLag {
 					k.log.Warning(ctx, "consumer lag in ms", consumerLag.Milliseconds())
 				}
-				if k.config.CodeAutoCommit {
+				if !k.config.Batch {
 					k.Consumer.StoreMessage(msg)
 				}
 				if count >= k.config.MaxBuffer {
@@ -227,7 +227,7 @@ func (k *Consumer) ReadMessage(ctx context.Context, timeout time.Duration) (*kaf
 	if err != nil {
 		return nil, fmt.Errorf("kafka.Consumer.ReadMessage: error reading message: %w", err)
 	}
-	if !k.config.CodeAutoCommit {
+	if k.config.Batch {
 		return ev, nil
 	}
 	if _, err = k.StoreMessage(ctx, ev); err != nil {

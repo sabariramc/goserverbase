@@ -1,5 +1,5 @@
-export message="Kafka auto commit changes"
-export version="v3.16.2"
+export message="Renamed kafka config variable"
+export version="v3.17.0"
 export branch="master"
 git add .
 git commit -m "$message"
