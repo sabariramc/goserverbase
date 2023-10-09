@@ -1,5 +1,5 @@
-export message="Renamed kafka config variable"
-export version="v3.17.0"
+export message="Error handling update"
+export version="v3.17.1"
 export branch="master"
 git add .
 git commit -m "$message"
