@@ -137,8 +137,7 @@ func (k *Consumer) poll(ctx context.Context, timeout int) error {
 				case kafka.OffsetsCommitted:
 					k.log.Notice(ctx, "KafkaConsumer.Poll: Offset Committed", e.Offsets)
 					if e.Error != nil {
-						k.log.Error(ctx, "Poll Offset Committed error", e.Error)
-						return fmt.Errorf("KafkaConsumer.Poll: offset Committed Error: %w", e.Error)
+						return fmt.Errorf("KafkaConsumer.poll: offset commit Error: %w", e.Error)
 					}
 				default:
 					k.log.Notice(ctx, "KafkaConsumer.Poll: Event", e.String())
