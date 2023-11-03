@@ -10,6 +10,7 @@ import (
 	"github.com/sabariramc/goserverbase/v3/log"
 	"github.com/sabariramc/goserverbase/v3/log/logwriter"
 	"github.com/sabariramc/goserverbase/v3/utils"
+	"github.com/segmentio/kafka-go/sasl/plain"
 )
 
 type AWSConfig struct {
@@ -22,17 +23,18 @@ type AWSConfig struct {
 }
 
 type TestConfig struct {
-	Logger            *log.Config
-	App               *baseapp.ServerConfig
-	Http              *httpserver.HttpServerConfig
-	Kafka             *kafkaconsumer.KafkaConsumerServerConfig
-	Mongo             *mongo.Config
-	AWS               *AWSConfig
-	KafkaConsumer     *kafka.KafkaConsumerConfig
-	KafkaProducer     *kafka.KafkaProducerConfig
-	KafkaTestTopic    string
-	KafkaHTTPProxyURL string
-	Graylog           logwriter.GraylogConfig
+	Logger              *log.Config
+	App                 *baseapp.ServerConfig
+	Http                *httpserver.HttpServerConfig
+	Kafka               *kafkaconsumer.KafkaConsumerServerConfig
+	KafkaSASLCredential *kafka.SASLCredential
+	Mongo               *mongo.Config
+	AWS                 *AWSConfig
+	KafkaConsumer       *kafka.KafkaConsumerConfig
+	KafkaProducer       *kafka.KafkaProducerConfig
+	KafkaTestTopic      string
+	KafkaHTTPProxyURL   string
+	Graylog             logwriter.GraylogConfig
 }
 
 func (t *TestConfig) GetLoggerConfig() *log.Config {
@@ -44,31 +46,29 @@ func (t *TestConfig) GetAppConfig() *baseapp.ServerConfig {
 
 func NewConfig() *TestConfig {
 	serviceName := utils.GetEnv("SERVICE_NAME", "go-base")
-	kafkaBaseConfig := kafka.KafkaCred{Brokers: utils.GetEnv("KAFKA_BROKER", ""),
-		ClientID: serviceName + "-" + uuid.NewString(),
-	}
-	if utils.GetEnv("KAFKA_USERNAME", "") != "" {
-		kafkaBaseConfig = kafka.KafkaCred{Brokers: utils.GetEnv("KAFKA_BROKER", ""),
-			Username:      utils.GetEnv("KAFKA_USERNAME", ""),
-			Password:      utils.GetEnv("KAFKA_PASSWORD", ""),
-			SASLMechanism: "PLAIN",
-			SASLProtocol:  "SASL_SSL",
-			ClientID:      serviceName + "-" + uuid.NewString(),
-		}
+	kafkaBaseConfig := kafka.KafkaCredConfig{Brokers: []string{utils.GetEnv("KAFKA_BROKER", "")},
+		ClientID:    serviceName + "-" + uuid.NewString(),
+		ServiceName: serviceName,
 	}
 	appConfig := &baseapp.ServerConfig{
 		ServiceName: serviceName,
 		Debug:       utils.GetEnvBool("DEBUG", false),
 	}
 	consumer := &kafka.KafkaConsumerConfig{
-		KafkaCred:      &kafkaBaseConfig,
-		GoEventChannel: false,
-		GroupID:        utils.GetEnvMust("KAFKA_CONSUMER_ID"),
-		OffsetReset:    "latest",
-		MaxBuffer:      uint64(utils.GetEnvInt("KAFKA_CONSUMER_MAX_BUFFER", 1000)),
+		KafkaCredConfig: &kafkaBaseConfig,
+		GroupID:         utils.GetEnvMust("KAFKA_CONSUMER_ID"),
+		MaxBuffer:       uint64(utils.GetEnvInt("KAFKA_CONSUMER_MAX_BUFFER", 1000)),
+	}
+	saslConfig := &kafka.SASLCredential{
+		SASLMechanism: utils.GetEnvMust("SASL_MECHANISM"),
+	}
+	if saslConfig.SASLMechanism == kafka.SASL_PLAIN {
+		saslConfig.SASLCredential = &plain.Mechanism{
+			Username: utils.GetEnv("KAFKA_USERNAME", ""),
+			Password: utils.GetEnv("KAFKA_PASSWORD", ""),
+		}
 	}
 	return &TestConfig{
-
 		Logger: &log.Config{
 			HostParams: log.HostParams{
 				Version:     utils.GetEnv("LOG_VERSION", "1.1"),
@@ -89,6 +89,7 @@ func NewConfig() *TestConfig {
 			ServerConfig:        appConfig,
 			KafkaConsumerConfig: consumer,
 		},
+		KafkaSASLCredential: saslConfig,
 		Mongo: &mongo.Config{
 			ConnectionString:  utils.GetEnv("MONGO_URL", "mongodb://localhost:60001"),
 			MinConnectionPool: uint64(utils.GetEnvInt("MONGO_MIN_CONNECTION_POOL", 10)),
@@ -103,9 +104,9 @@ func NewConfig() *TestConfig {
 			FIFO_SQS_URL: utils.GetEnv("FIFO_SQS_URL", ""),
 		},
 		KafkaProducer: &kafka.KafkaProducerConfig{
-			KafkaCred:   &kafkaBaseConfig,
-			Acknowledge: "all",
-			MaxBuffer:   utils.GetEnvInt("KAFKA_PRODUCER_MAX_BUFFER", 1000),
+			KafkaCredConfig: &kafkaBaseConfig,
+			Acknowledge:     -1,
+			MaxBuffer:       utils.GetEnvInt("KAFKA_PRODUCER_MAX_BUFFER", 1000),
 		},
 		KafkaConsumer:     consumer,
 		KafkaTestTopic:    utils.GetEnvMust("KAFKA_TEST_TOPIC"),

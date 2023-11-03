@@ -7,26 +7,19 @@ import (
 	"testing"
 	"time"
 
-	cKafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	"github.com/google/uuid"
-	eKafka "github.com/sabariramc/goserverbase/v3/errors/notifier/kafka"
 	"github.com/sabariramc/goserverbase/v3/kafka"
 	"github.com/sabariramc/goserverbase/v3/utils"
+	cKafka "github.com/segmentio/kafka-go"
 	"gotest.tools/assert"
 )
 
 func newProducer(ctx context.Context) (*kafka.Producer, error) {
-	log := KafkaTestLogger
-	hProducer := kafka.NewHTTPProducer(ctx, log, KafkaTestConfig.KafkaHTTPProxyURL, KafkaTestConfig.KafkaTestTopic, time.Second)
-	notifier := eKafka.New(ctx, log, KafkaTestConfig.App.ServiceName, hProducer)
-	return kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducer, KafkaTestConfig.App.ServiceName, KafkaTestConfig.KafkaTestTopic, notifier)
+	return kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducer, KafkaTestConfig.App.ServiceName, KafkaTestConfig.KafkaTestTopic)
 }
 
 func newConsumer(ctx context.Context) (*kafka.Consumer, error) {
-	log := KafkaTestLogger
-	hProducer := kafka.NewHTTPProducer(ctx, log, KafkaTestConfig.KafkaHTTPProxyURL, KafkaTestConfig.KafkaTestTopic, time.Second)
-	notifier := eKafka.New(ctx, log, KafkaTestConfig.App.ServiceName, hProducer)
-	return kafka.NewConsumer(ctx, KafkaTestConfig.App.ServiceName, KafkaTestLogger, KafkaTestConfig.KafkaConsumer, notifier, KafkaTestConfig.KafkaTestTopic)
+	return kafka.NewConsumer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaConsumer, KafkaTestConfig.App.ServiceName, KafkaTestConfig.KafkaTestTopic)
 }
 
 func TestKafkaConsumer(t *testing.T) {
@@ -77,34 +70,6 @@ func TestKafkaProducer(t *testing.T) {
 		}()
 	}
 	wg.Wait()
-}
-
-func TestKafkaMessage(t *testing.T) {
-	ctx := GetCorrelationContext()
-	co, err := newConsumer(ctx)
-	assert.NilError(t, err)
-	defer co.Close(ctx)
-	assert.NilError(t, err)
-	var s sync.WaitGroup
-	s.Add(1)
-	go func() {
-		msg, err := co.ReadMessage(ctx, time.Second*10)
-		assert.NilError(t, err)
-		kMsg := kafka.Message{
-			Message: msg,
-		}
-		KafkaTestLogger.Info(ctx, "Kafka message", kMsg.GetBody())
-		s.Done()
-	}()
-	time.Sleep(time.Second * 5)
-	pr, err := newProducer(ctx)
-	assert.NilError(t, err)
-	defer pr.Close(ctx)
-	err = pr.ProduceMessage(ctx, "test", &utils.Message{
-		Event: "random event:" + uuid.NewString(),
-	}, nil)
-	assert.NilError(t, err)
-	s.Wait()
 }
 
 func TestKafkaPoll(t *testing.T) {
@@ -161,10 +126,10 @@ func TestKafkaPoll(t *testing.T) {
 
 func TestKafkaPollWithDelay(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := kafka.NewConsumer(ctx, KafkaTestConfig.App.ServiceName, KafkaTestLogger, KafkaTestConfig.KafkaConsumer, nil, KafkaTestConfig.KafkaTestTopic)
+	co, err := newConsumer(ctx)
 	assert.NilError(t, err)
 	defer co.Close(ctx)
-	pr, err := kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducer, KafkaTestConfig.App.ServiceName, KafkaTestConfig.KafkaTestTopic, nil)
+	pr, err := newProducer(ctx)
 	assert.NilError(t, err)
 	defer pr.Close(ctx)
 	ch := make(chan *cKafka.Message)
@@ -219,7 +184,7 @@ func TestKafkaPollWithDelay(t *testing.T) {
 }
 func TestKafkaPollHTTPProducer(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := kafka.NewConsumer(ctx, "TEST", KafkaTestLogger, KafkaTestConfig.KafkaConsumer, nil, KafkaTestConfig.KafkaTestTopic)
+	co, err := newConsumer(ctx)
 	assert.NilError(t, err)
 	defer co.Close(ctx)
 	pr := kafka.NewHTTPProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaHTTPProxyURL, KafkaTestConfig.KafkaTestTopic, time.Minute)

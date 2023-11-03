@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"sync"
 
-	ckafka "github.com/confluentinc/confluent-kafka-go/kafka"
 	baseapp "github.com/sabariramc/goserverbase/v3/app"
 	"github.com/sabariramc/goserverbase/v3/errors"
 	"github.com/sabariramc/goserverbase/v3/kafka"
 	"github.com/sabariramc/goserverbase/v3/log"
+	ckafka "github.com/segmentio/kafka-go"
 )
 
 type KafkaEventProcessor func(context.Context, *kafka.Message) error
@@ -41,7 +41,7 @@ func (k *KafkaConsumerServer) Subscribe(ctx context.Context) {
 	}
 	ch := make(chan *ckafka.Message)
 	k.ch = ch
-	client, err := kafka.NewConsumer(ctx, k.c.ServiceName, k.log, k.c.KafkaConsumerConfig, k.GetErrorNotifier(), topicList...)
+	client, err := kafka.NewConsumer(ctx, k.log, k.c.KafkaConsumerConfig, "KAFKA_CONSUMER", topicList...)
 	if err != nil {
 		k.log.Emergency(ctx, "Error occurred during client creation", map[string]any{
 			"topicList": topicList,
@@ -81,7 +81,7 @@ func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 			if !ok {
 				return
 			}
-			topicName := *msg.TopicPartition.Topic
+			topicName := (*msg).Topic
 			handler := k.handler[topicName]
 			if handler == nil {
 				k.log.Emergency(pollCtx, "missing handler for topic - "+topicName, nil, fmt.Errorf("missing handler for topic - %v", topicName))
@@ -99,6 +99,6 @@ func (k *KafkaConsumerServer) Commit(ctx context.Context) error {
 	return k.client.Commit(ctx)
 }
 
-func (k *KafkaConsumerServer) StoreMessage(ctx context.Context, msg *kafka.Message) ([]ckafka.TopicPartition, error) {
-	return k.client.StoreMessage(ctx, msg.Message)
+func (k *KafkaConsumerServer) StoreMessage(ctx context.Context, msg *kafka.Message) {
+	k.client.StoreMessage(ctx, msg.Message)
 }
