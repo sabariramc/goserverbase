@@ -36,6 +36,7 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerC
 	if config.ConsumerLagToleranceInMs <= 0 {
 		config.ConsumerLagToleranceInMs = 1000
 	}
+	logger = logger.NewResourceLogger(resourceName)
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:           config.Brokers,
 		GroupID:           config.GroupID,
@@ -56,6 +57,7 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerC
 			Timeout:       10 * time.Second,
 			DualStack:     true,
 			SASLMechanism: config.SASLMechanism,
+			TLS:           config.TLSConfig,
 		},
 	})
 	k := &Consumer{
@@ -74,6 +76,10 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerC
 func (k *Consumer) Commit(ctx context.Context) error {
 	k.commitLock.Lock()
 	defer k.commitLock.Unlock()
+	if len(k.consumedMessages) == 0 {
+		return nil
+	}
+	k.log.Debug(ctx, "committing messages", k.consumedMessages)
 	err := k.CommitMessages(ctx, k.consumedMessages...)
 	if err != nil {
 		return fmt.Errorf("kafka.Consumer.Commit: error during commit : %w", err)
@@ -97,7 +103,7 @@ func (k *Consumer) poll(ctx context.Context) error {
 	}
 }
 
-func (k *Consumer) Poll(ctx context.Context, timeout int, ch chan *kafka.Message) error {
+func (k *Consumer) Poll(ctx context.Context, ch chan *kafka.Message) error {
 	k.msgCh = make(chan *kafka.Message, k.config.MaxBuffer)
 	pollCtx, cancelPoll := context.WithCancel(ctx)
 	var pollErr, commitErr error

@@ -1,6 +1,8 @@
 package kafka
 
 import (
+	"crypto/tls"
+
 	"github.com/segmentio/kafka-go/sasl"
 )
 
@@ -14,6 +16,7 @@ type KafkaCredConfig struct {
 	ClientID      string
 	ServiceName   string
 	SASLMechanism sasl.Mechanism
+	TLSConfig     *tls.Config
 }
 
 type KafkaConsumerConfig struct {

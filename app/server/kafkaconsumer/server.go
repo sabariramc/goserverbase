@@ -69,7 +69,7 @@ func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		err := k.client.Poll(pollCtx, 1, k.ch)
+		err := k.client.Poll(pollCtx, k.ch)
 		k.log.Emergency(pollCtx, "Kafka consumer exited", nil, fmt.Errorf("KafkaConsumerServer.StartConsumer: process exit %w", err))
 	}()
 	k.log.Notice(pollCtx, "Kafka consumer started", nil)

@@ -1,6 +1,8 @@
 package testutils
 
 import (
+	"crypto/tls"
+
 	"github.com/google/uuid"
 	baseapp "github.com/sabariramc/goserverbase/v3/app"
 	"github.com/sabariramc/goserverbase/v3/app/server/httpserver"
@@ -58,6 +60,7 @@ func NewConfig() *TestConfig {
 		KafkaCredConfig: &kafkaBaseConfig,
 		GroupID:         utils.GetEnvMust("KAFKA_CONSUMER_ID"),
 		MaxBuffer:       uint64(utils.GetEnvInt("KAFKA_CONSUMER_MAX_BUFFER", 1000)),
+		AutoCommit:      true,
 	}
 	saslConfig := &kafka.SASLCredential{
 		SASLMechanism: utils.GetEnvMust("SASL_MECHANISM"),
@@ -66,6 +69,9 @@ func NewConfig() *TestConfig {
 		kafkaBaseConfig.SASLMechanism = &plain.Mechanism{
 			Username: utils.GetEnv("KAFKA_USERNAME", ""),
 			Password: utils.GetEnv("KAFKA_PASSWORD", ""),
+		}
+		kafkaBaseConfig.TLSConfig = &tls.Config{
+			MinVersion: tls.VersionTLS12,
 		}
 
 	}

@@ -43,6 +43,7 @@ func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerC
 		Balancer: &kafka.Hash{},
 		Transport: &kafka.Transport{
 			SASL: config.SASLMechanism,
+			TLS:  config.TLSConfig,
 		},
 		Logger: kLog,
 		ErrorLogger: &kafkaLogger{
@@ -115,7 +116,9 @@ func (k *Producer) autoFlush(ctx context.Context) {
 	select {
 	case <-timeout.Done():
 		err := k.Flush(ctx)
-		k.log.Error(ctx, "Error while writing kafka message", err)
+		if err != nil {
+			k.log.Error(ctx, "Error while writing kafka message", err)
+		}
 		timeout, _ = context.WithTimeout(context.Background(), time.Duration(k.config.AutoFlushIntervalInMs*uint64(time.Millisecond)))
 	case <-ctx.Done():
 		return
@@ -124,10 +127,11 @@ func (k *Producer) autoFlush(ctx context.Context) {
 
 func (k *Producer) Flush(ctx context.Context) error {
 	k.produceLock.Lock()
+	defer k.produceLock.Unlock()
 	if len(k.messageList) == 0 {
 		return nil
 	}
-	defer k.produceLock.Unlock()
+	k.log.Debug(ctx, "Flushing messages", nil)
 	err := k.WriteMessages(context.Background(), k.messageList...)
 	k.messageList = make([]kafka.Message, 0, k.config.MaxBuffer)
 	if err != nil {

@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/sabariramc/goserverbase/v3/log"
 	"github.com/segmentio/kafka-go"
@@ -14,10 +15,11 @@ type kafkaLogger struct {
 }
 
 func (k *kafkaLogger) Printf(shortMessage string, logMessage ...interface{}) {
+	message := fmt.Sprintf(shortMessage, logMessage...)
 	if k.isError {
-		k.Error(k.ctx, shortMessage, logMessage)
+		k.Error(k.ctx, message, nil)
 	} else {
-		k.Debug(k.ctx, shortMessage, logMessage)
+		k.Debug(k.ctx, message, nil)
 	}
 }
 
