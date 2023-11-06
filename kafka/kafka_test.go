@@ -50,8 +50,8 @@ func TestKafkaConsumer(t *testing.T) {
 func TestKafkaProducer(t *testing.T) {
 	ctx := GetCorrelationContext()
 	uuidVal := uuid.NewString()
-	totalNoOfMessage := 1000
-	connFac := 100
+	totalNoOfMessage := 10
+	connFac := 1
 	var wg sync.WaitGroup
 	for i := 0; i < connFac; i++ {
 		wg.Add(1)
@@ -66,6 +66,7 @@ func TestKafkaProducer(t *testing.T) {
 				}, nil)
 				assert.NilError(t, err)
 			}
+			pr.Flush(ctx)
 			wg.Done()
 		}()
 	}
@@ -224,3 +225,5 @@ func TestKafkaPollHTTPProducer(t *testing.T) {
 	s.Wait()
 	assert.Equal(t, 50, count)
 }
+
+

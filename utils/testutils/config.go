@@ -63,10 +63,11 @@ func NewConfig() *TestConfig {
 		SASLMechanism: utils.GetEnvMust("SASL_MECHANISM"),
 	}
 	if saslConfig.SASLMechanism == kafka.SASL_PLAIN {
-		saslConfig.SASLCredential = &plain.Mechanism{
+		kafkaBaseConfig.SASLMechanism = &plain.Mechanism{
 			Username: utils.GetEnv("KAFKA_USERNAME", ""),
 			Password: utils.GetEnv("KAFKA_PASSWORD", ""),
 		}
+
 	}
 	return &TestConfig{
 		Logger: &log.Config{
