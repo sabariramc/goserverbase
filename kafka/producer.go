@@ -135,7 +135,7 @@ func (k *Producer) Flush(ctx context.Context) error {
 	err := k.WriteMessages(context.Background(), k.messageList...)
 	k.messageList = make([]kafka.Message, 0, k.config.MaxBuffer)
 	if err != nil {
-		k.log.Error(ctx, "Failed to encode message", err)
+		k.log.Error(ctx, "Failed to flush message", err)
 		return fmt.Errorf("kafka.Producer.Flush: %w", err)
 	}
 	return nil

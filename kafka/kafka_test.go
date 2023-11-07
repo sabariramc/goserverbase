@@ -56,6 +56,7 @@ func TestKafkaProducer(t *testing.T) {
 	for i := 0; i < connFac; i++ {
 		wg.Add(1)
 		go func() {
+			defer wg.Done()
 			pr, err := newProducer(ctx)
 			assert.NilError(t, err)
 			defer pr.Close(ctx)
@@ -66,8 +67,8 @@ func TestKafkaProducer(t *testing.T) {
 				}, nil)
 				assert.NilError(t, err)
 			}
-			pr.Flush(ctx)
-			wg.Done()
+			err = pr.Flush(ctx)
+			assert.NilError(t, err)
 		}()
 	}
 	wg.Wait()
