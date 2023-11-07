@@ -187,6 +187,7 @@ func TestKafkaPollWithDelay(t *testing.T) {
 	s.Wait()
 	assert.Equal(t, totalCount, count)
 }
+
 func TestKafkaPollHTTPProducer(t *testing.T) {
 	ctx := GetCorrelationContext()
 	co, err := newConsumer(ctx)
