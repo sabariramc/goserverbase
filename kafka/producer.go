@@ -4,23 +4,21 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sync"
 	"time"
 
+	"github.com/sabariramc/goserverbase/v3/kafka/api"
 	"github.com/sabariramc/goserverbase/v3/log"
 	"github.com/sabariramc/goserverbase/v3/utils"
 	"github.com/segmentio/kafka-go"
 )
 
 type Producer struct {
-	*Writer
+	*api.Writer
 	config          KafkaProducerConfig
 	log             *log.Logger
 	topic           string
 	serviceName     string
 	resourceName    string
-	messageList     []kafka.Message
-	produceLock     sync.Mutex
 	autoFlushCancel context.CancelFunc
 }
 
@@ -60,9 +58,8 @@ func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerC
 		resourceName: resourceName,
 		log:          logger,
 		config:       *config,
-		Writer:       NewWriter(ctx, p, config.MaxBuffer, *logger),
+		Writer:       api.NewWriter(ctx, p, config.MaxBuffer, *logger),
 		topic:        topic,
-		messageList:  make([]kafka.Message, 0, config.MaxBuffer),
 	}
 	autoFlushContext, cancel := context.WithCancel(log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(config.ServiceName+"--"+resourceName)))
 	k.autoFlushCancel = cancel
