@@ -1,5 +1,5 @@
 export message="Error handling update"
-export version="v3.18.0.segmentio"
+export version="v3.18.1.segmentio"
 export branch="segmentio"
 git add .
 git commit -m "$message"
