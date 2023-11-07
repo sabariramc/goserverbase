@@ -1,6 +1,9 @@
 package kafkaconsumer
 
 import (
+	"context"
+
+	"github.com/sabariramc/goserverbase/v3/kafka"
 	"github.com/sabariramc/goserverbase/v3/log"
 )
 
@@ -23,4 +26,11 @@ func (k *KafkaConsumerServer) GetCustomerId(headers map[string]string) *log.Cust
 		CustomerId: headers["x-customer-id"],
 		Id:         headers["x-entity-id"],
 	}
+}
+
+func (k *KafkaConsumerServer) GetMessageContext(msg *kafka.Message) context.Context {
+	msgCtx := context.Background()
+	msgCtx = k.GetContextWithCorrelation(msgCtx, k.GetCorrelationParams(msg.GetHeaders()))
+	msgCtx = k.GetContextWithCustomerId(msgCtx, k.GetCustomerId(msg.GetHeaders()))
+	return msgCtx
 }
