@@ -70,6 +70,7 @@ func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 	defer wg.Wait()
 	defer cancelPoll()
 	wg.Add(1)
+	tracer.ContextWithSpan()
 	go func() {
 		defer wg.Done()
 		err := k.client.Poll(pollCtx, k.ch)
