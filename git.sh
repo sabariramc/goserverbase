@@ -1,5 +1,5 @@
-export message="Error handling update"
-export version="v3.18.1.segmentio"
+export message="Added abstraction for kafka writer"
+export version="v3.18.2.segmentio"
 export branch="segmentio"
 git add .
 git commit -m "$message"

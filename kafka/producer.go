@@ -13,7 +13,7 @@ import (
 )
 
 type Producer struct {
-	*kafka.Writer
+	*Writer
 	config          KafkaProducerConfig
 	log             *log.Logger
 	topic           string
@@ -60,7 +60,7 @@ func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerC
 		resourceName: resourceName,
 		log:          logger,
 		config:       *config,
-		Writer:       p,
+		Writer:       NewWriter(ctx, p, config.MaxBuffer, *logger),
 		topic:        topic,
 		messageList:  make([]kafka.Message, 0, config.MaxBuffer),
 	}
@@ -97,18 +97,7 @@ func (k *Producer) Produce(ctx context.Context, key string, message []byte, head
 	}
 	k.log.Info(ctx, "Message", map[string]any{"key": key, "headers": headers, "topic": k.topic})
 	k.log.Debug(ctx, "Message Body", func() string { return string(message) })
-	k.produceLock.Lock()
-	k.messageList = append(k.messageList, kafka.Message{
-		Key:     []byte(key),
-		Value:   message,
-		Headers: messageHeader,
-		Time:    time.Now(),
-	})
-	k.produceLock.Unlock()
-	if len(k.messageList) >= k.config.MaxBuffer {
-		return k.Flush(ctx)
-	}
-	return nil
+	return k.Send(ctx, key, message, messageHeader)
 }
 
 func (k *Producer) autoFlush(ctx context.Context) {
@@ -123,22 +112,6 @@ func (k *Producer) autoFlush(ctx context.Context) {
 	case <-ctx.Done():
 		return
 	}
-}
-
-func (k *Producer) Flush(ctx context.Context) error {
-	k.produceLock.Lock()
-	defer k.produceLock.Unlock()
-	if len(k.messageList) == 0 {
-		return nil
-	}
-	k.log.Debug(ctx, "Flushing messages", nil)
-	err := k.WriteMessages(context.Background(), k.messageList...)
-	k.messageList = make([]kafka.Message, 0, k.config.MaxBuffer)
-	if err != nil {
-		k.log.Error(ctx, "Failed to flush message", err)
-		return fmt.Errorf("kafka.Producer.Flush: %w", err)
-	}
-	return nil
 }
 
 func (k *Producer) Close(ctx context.Context) {
