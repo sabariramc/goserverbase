@@ -8,13 +8,14 @@ import (
 	"sync"
 	"time"
 
+	"github.com/sabariramc/goserverbase/v3/kafka/api"
 	"github.com/sabariramc/goserverbase/v3/log"
 	"github.com/sabariramc/goserverbase/v3/utils"
 	"github.com/segmentio/kafka-go"
 )
 
 type Consumer struct {
-	*kafka.Reader
+	*api.Reader
 	config           KafkaConsumerConfig
 	log              *log.Logger
 	topics           []string
@@ -64,7 +65,7 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerC
 		log:              logger.NewResourceLogger(resourceName),
 		resourceName:     resourceName,
 		config:           *config,
-		Reader:           r,
+		Reader:           api.NewReader(ctx, r, *logger),
 		topics:           topics,
 		serviceName:      config.ServiceName,
 		msgCh:            make(chan *kafka.Message, config.MaxBuffer),
@@ -93,7 +94,7 @@ func (k *Consumer) poll(ctx context.Context) error {
 		case <-ctx.Done():
 			return nil
 		default:
-			m, err := k.Reader.FetchMessage(ctx)
+			m, err := k.FetchMessage(ctx)
 			if err != nil {
 				k.log.Error(ctx, "Poll error", err)
 				return fmt.Errorf("kafka.Consumer.poll: Error: %w", err)
