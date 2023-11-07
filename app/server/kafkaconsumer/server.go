@@ -90,9 +90,7 @@ func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 				k.log.Emergency(pollCtx, "missing handler for topic - "+topicName, nil, fmt.Errorf("missing handler for topic - %v", topicName))
 			}
 			emMsg := &kafka.Message{Message: msg}
-			msgCtx := context.Background()
-			msgCtx = k.GetContextWithCorrelation(msgCtx, k.GetCorrelationParams(emMsg.GetHeaders()))
-			msgCtx = k.GetContextWithCustomerId(msgCtx, k.GetCustomerId(emMsg.GetHeaders()))
+			msgCtx := k.GetMessageContext(emMsg)
 			k.ProcessEvent(msgCtx, emMsg, handler)
 		}
 	}
