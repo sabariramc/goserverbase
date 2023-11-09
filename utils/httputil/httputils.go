@@ -176,11 +176,14 @@ func (h *HttpClient) Call(ctx context.Context, method, url string, reqBody, resB
 		"headers":    r.Header,
 	}
 	defer r.Body.Close()
-	if r.StatusCode == http.StatusNoContent || r.ContentLength <= 0 || r.StatusCode > 299 {
+	resBlob, _ := io.ReadAll(r.Body)
+	if r.StatusCode == http.StatusNoContent || len(resBlob) == 0 {
 		h.log.Debug(ctx, "Response", logRes)
 		return r, nil
 	}
-	resBlob, _ := io.ReadAll(r.Body)
+	if r.StatusCode > 299 {
+		return r, fmt.Errorf("HttpClient.Call: Non 2xx status: %v", r.StatusCode)
+	}
 	r.Body, err = h.Decode(ctx, resBlob, resBody)
 	if r.ContentLength > h.LogConfig.MaxContentLength {
 		h.log.Debug(ctx, "Response payload is not printed - violets MaxContentLength config", nil)
