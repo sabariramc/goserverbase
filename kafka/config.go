@@ -13,7 +13,6 @@ type SASLCredential struct {
 
 type KafkaCredConfig struct {
 	Brokers       []string
-	ClientID      string
 	ServiceName   string
 	SASLMechanism sasl.Mechanism
 	TLSConfig     *tls.Config
