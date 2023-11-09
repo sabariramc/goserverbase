@@ -1,5 +1,5 @@
-export message="fixed "
-export version="v3.18.6.segmentio"
+export message="removed unused clientid"
+export version="v3.18.7.segmentio"
 export branch="segmentio"
 git add .
 git commit -m "$message"

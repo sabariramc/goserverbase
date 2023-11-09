@@ -3,7 +3,6 @@ package testutils
 import (
 	"crypto/tls"
 
-	"github.com/google/uuid"
 	baseapp "github.com/sabariramc/goserverbase/v3/app"
 	"github.com/sabariramc/goserverbase/v3/app/server/httpserver"
 	"github.com/sabariramc/goserverbase/v3/app/server/kafkaconsumer"
@@ -49,7 +48,6 @@ func (t *TestConfig) GetAppConfig() *baseapp.ServerConfig {
 func NewConfig() *TestConfig {
 	serviceName := utils.GetEnv("SERVICE_NAME", "go-base")
 	kafkaBaseConfig := kafka.KafkaCredConfig{Brokers: []string{utils.GetEnv("KAFKA_BROKER", "")},
-		ClientID:    serviceName + "-" + uuid.NewString(),
 		ServiceName: serviceName,
 	}
 	appConfig := &baseapp.ServerConfig{
