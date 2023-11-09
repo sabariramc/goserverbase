@@ -1,5 +1,5 @@
-export message="Error handling update"
-export version="v3.17.1"
+export message="Http util not to relay on content length header"
+export version="v3.17.2"
 export branch="master"
 git add .
 git commit -m "$message"
