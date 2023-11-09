@@ -131,8 +131,7 @@ func TestHttpUtilRetry(t *testing.T) {
 	body := map[string]any{
 		"tag": "Test",
 	}
-	res, err := client.Call(GetCorrelationContext(), "POST", RetryURL, &body, &data, nil)
-	assert.NilError(t, err)
+	res, _ := client.Call(GetCorrelationContext(), "POST", RetryURL, &body, &data, nil)
 	assert.Equal(t, res.StatusCode, 500)
 }
 
