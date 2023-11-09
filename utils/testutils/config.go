@@ -65,16 +65,16 @@ func NewConfig() *TestConfig {
 	saslConfig := &kafka.SASLCredential{
 		SASLMechanism: utils.GetEnvMust("SASL_MECHANISM"),
 	}
-	if saslConfig.SASLMechanism == kafka.SASL_PLAIN {
+	if saslConfig.SASLMechanism == "PLAIN" {
 		kafkaBaseConfig.SASLMechanism = &plain.Mechanism{
 			Username: utils.GetEnv("KAFKA_USERNAME", ""),
 			Password: utils.GetEnv("KAFKA_PASSWORD", ""),
 		}
-		kafkaBaseConfig.TLSConfig = &tls.Config{
+		kafkaBaseConfig.TLSConfig = &tls.Config{ //For Confluent kafka
 			MinVersion: tls.VersionTLS12,
 		}
-
 	}
+
 	return &TestConfig{
 		Logger: &log.Config{
 			HostParams: log.HostParams{
