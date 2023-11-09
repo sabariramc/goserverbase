@@ -21,7 +21,7 @@ type Writer struct {
 func NewWriter(ctx context.Context, w *kafka.Writer, bufferLen int, log log.Logger) *Writer {
 	return &Writer{
 		Writer:      w,
-		messageList: make([]kafka.Message, bufferLen),
+		messageList: make([]kafka.Message, 0, bufferLen),
 		bufferLen:   bufferLen,
 		log:         log,
 	}

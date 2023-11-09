@@ -1,5 +1,5 @@
-export message="removed sasl config from kafka client"
-export version="v3.18.5.segmentio"
+export message="fixed "
+export version="v3.18.6.segmentio"
 export branch="segmentio"
 git add .
 git commit -m "$message"
