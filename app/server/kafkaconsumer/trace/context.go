@@ -13,10 +13,13 @@ import (
 func StartSpan(ctx context.Context, serviceName string, msg *kafka.Message) ddtrace.Span {
 	opts := []tracer.StartSpanOption{
 		tracer.ServiceName(serviceName),
-		tracer.ResourceName("Consume Topic " + msg.Topic),
+		tracer.ResourceName(msg.Topic),
 		tracer.SpanType(ext.SpanTypeMessageConsumer),
+		tracer.Tag("messaging.kafka.topic", msg.Message.Topic),
 		tracer.Tag(ext.MessagingKafkaPartition, msg.Message.Partition),
-		tracer.Tag("offset", msg.Message.Offset),
+		tracer.Tag("messaging.kafka.offset", msg.Message.Offset),
+		tracer.Tag("messaging.kafka.key", msg.GetKey()),
+		tracer.Tag("messaging.kafka.timestamp", msg.Message.Time.UnixMilli()),
 		tracer.Tag(ext.Component, "kafka"),
 		tracer.Tag(ext.SpanKind, ext.SpanKindConsumer),
 		tracer.Tag(ext.MessagingSystem, "kafka"),

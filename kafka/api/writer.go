@@ -8,6 +8,8 @@ import (
 
 	"github.com/sabariramc/goserverbase/v3/log"
 	"github.com/segmentio/kafka-go"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
 type Writer struct {
@@ -28,6 +30,16 @@ func NewWriter(ctx context.Context, w *kafka.Writer, bufferLen int, log log.Logg
 }
 
 func (w *Writer) Send(ctx context.Context, key string, message []byte, messageHeader []kafka.Header) error {
+	opts := []tracer.StartSpanOption{
+		tracer.Tag("messaging.kafka.topic", w.Topic),
+		tracer.Tag("messaging.kafka.key", key),
+		tracer.Tag("messaging.kafka.timestamp", time.Now().UnixMilli()),
+		tracer.Tag(ext.SpanKind, ext.SpanKindProducer),
+		tracer.Tag(ext.MessagingSystem, "kafka"),
+		tracer.Measured(),
+	}
+	span, ctx := tracer.StartSpanFromContext(ctx, "kafka.produce", opts...)
+	defer span.Finish()
 	w.produceLock.Lock()
 	w.messageList = append(w.messageList, kafka.Message{
 		Key:     []byte(key),
@@ -43,6 +55,13 @@ func (w *Writer) Send(ctx context.Context, key string, message []byte, messageHe
 }
 
 func (w *Writer) Flush(ctx context.Context) error {
+	opts := []tracer.StartSpanOption{
+		tracer.Tag("messaging.kafka.topic", w.Topic),
+		tracer.Tag(ext.SpanKind, ext.SpanKindInternal),
+		tracer.Measured(),
+	}
+	span, ctx := tracer.StartSpanFromContext(ctx, "kafka.flush", opts...)
+	defer span.Finish()
 	w.produceLock.Lock()
 	defer w.produceLock.Unlock()
 	if len(w.messageList) == 0 {
@@ -52,6 +71,7 @@ func (w *Writer) Flush(ctx context.Context) error {
 	err := w.WriteMessages(context.Background(), w.messageList...)
 	w.messageList = make([]kafka.Message, 0, w.bufferLen)
 	if err != nil {
+		span.SetTag(ext.Error, err)
 		w.log.Error(ctx, "Failed to flush message", err)
 		return fmt.Errorf("kafka.Producer.Flush: %w", err)
 	}
