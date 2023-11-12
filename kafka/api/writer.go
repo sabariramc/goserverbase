@@ -60,7 +60,7 @@ func (w *Writer) Flush(ctx context.Context) error {
 		tracer.Tag(ext.SpanKind, ext.SpanKindInternal),
 		tracer.Measured(),
 	}
-	span, ctx := tracer.StartSpanFromContext(ctx, "kafka.flush", opts...)
+	span, ctx := tracer.StartSpanFromContext(ctx, "kafka.produce.flush", opts...)
 	defer span.Finish()
 	w.produceLock.Lock()
 	defer w.produceLock.Unlock()

@@ -12,6 +12,8 @@ import (
 	"github.com/sabariramc/goserverbase/v3/log"
 	"github.com/sabariramc/goserverbase/v3/utils"
 	"github.com/segmentio/kafka-go"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
 type Consumer struct {
@@ -80,6 +82,13 @@ func (k *Consumer) Commit(ctx context.Context) error {
 	if len(k.consumedMessages) == 0 {
 		return nil
 	}
+	opts := []tracer.StartSpanOption{
+		tracer.Tag("messaging.kafka.topics", k.topics),
+		tracer.Tag(ext.SpanKind, ext.SpanKindInternal),
+		tracer.Measured(),
+	}
+	span, ctx := tracer.StartSpanFromContext(ctx, "kafka.consume.commit", opts...)
+	defer span.Finish()
 	k.log.Debug(ctx, "committing messages", k.consumedMessages)
 	err := k.CommitMessages(ctx, k.consumedMessages...)
 	if err != nil {
