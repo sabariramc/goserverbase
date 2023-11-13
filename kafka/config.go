@@ -1,30 +1,36 @@
 package kafka
 
-type KafkaCred struct {
-	Brokers       interface{} `json:"bootstrap.servers,omitempty"`
-	Username      interface{} `json:"sasl.username,omitempty"`
-	Password      interface{} `json:"sasl.password,omitempty"`
-	SASLMechanism interface{} `json:"sasl.mechanisms,omitempty"`
-	SASLProtocol  interface{} `json:"security.protocol,omitempty"`
-	ClientID      interface{} `json:"client.id,omitempty"`
+import (
+	"crypto/tls"
+
+	"github.com/segmentio/kafka-go/sasl"
+)
+
+type SASLCredential struct {
+	SASLMechanism  string
+	SASLCredential interface{}
+}
+
+type KafkaCredConfig struct {
+	Brokers       []string
+	ServiceName   string
+	SASLMechanism sasl.Mechanism
+	TLSConfig     *tls.Config
 }
 
 type KafkaConsumerConfig struct {
-	*KafkaCred
-	GroupID                  interface{} `json:"group.id,omitempty"`
-	GoEventChannel           bool        `json:"go.events.channel.enable,omitempty"`
-	OffsetReset              interface{} `json:"auto.offset.reset,omitempty"`
-	AutoCommit               bool        `json:"enable.auto.commit"`
-	MaxBuffer                uint64      `json:"-"`
-	AutoCommitIntervalInMs   uint64      `json:"-"`
-	ConsumerLagToleranceInMs uint64      `json:"-"`
-	Batch                    bool        `json:"-"`
+	*KafkaCredConfig
+	GroupID                  string
+	OffsetReset              bool
+	AutoCommit               bool
+	MaxBuffer                uint64
+	AutoCommitIntervalInMs   uint64
+	ConsumerLagToleranceInMs uint64
 }
 
 type KafkaProducerConfig struct {
-	*KafkaCred
-	Acknowledge           interface{} `json:"acks,omitempty"`
-	MaxBuffer             int         `json:"-"`
-	AutoFlushIntervalInMs uint64      `json:"-"`
-	Batch                 bool        `json:"-"`
+	*KafkaCredConfig
+	Acknowledge           int
+	MaxBuffer             int
+	AutoFlushIntervalInMs uint64
 }

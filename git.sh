@@ -1,6 +1,6 @@
-export message="Http util not to relay on content length header"
-export version="v3.17.2"
-export branch="master"
+export message="removed unused clientid"
+export version="v3.18.7.segmentio"
+export branch="segmentio"
 git add .
 git commit -m "$message"
 git tag $version
