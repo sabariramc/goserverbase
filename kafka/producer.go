@@ -4,90 +4,66 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sync"
 	"time"
 
-	"github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/sabariramc/goserverbase/v3/errors"
+	"github.com/sabariramc/goserverbase/v3/kafka/api"
 	"github.com/sabariramc/goserverbase/v3/log"
 	"github.com/sabariramc/goserverbase/v3/utils"
-	kafkatrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/confluentinc/confluent-kafka-go/kafka"
+	"github.com/segmentio/kafka-go"
 )
 
 type Producer struct {
-	*kafkatrace.Producer
-	config          *KafkaProducerConfig
+	*api.Writer
+	config          KafkaProducerConfig
 	log             *log.Logger
 	topic           string
-	deliveryCh      chan kafka.Event
-	logCh           chan kafka.LogEvent
 	serviceName     string
 	resourceName    string
-	wg              sync.WaitGroup
-	notifier        errors.ErrorNotifier
-	produceLock     sync.Mutex
-	flushLock       sync.Mutex
 	autoFlushCancel context.CancelFunc
 }
 
-func NewProducer(ctx context.Context, log *log.Logger, config *KafkaProducerConfig, serviceName, topic string, notifier errors.ErrorNotifier) (*Producer, error) {
-	return NewProducerResource(ctx, log, config, serviceName, "KafkaProducer", topic, notifier)
-}
-
-func NewProducerResource(ctx context.Context, log *log.Logger, config *KafkaProducerConfig, serviceName, resourceName, topic string, notifier errors.ErrorNotifier) (*Producer, error) {
-	if notifier != nil {
-		_, ok := notifier.GetProcessor().(*Producer)
-		if ok {
-			return nil, fmt.Errorf("kafka.NewProducer: notifier cannot be of same type")
-		}
-	}
+func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerConfig, resourceName, topic string) (*Producer, error) {
 	if config.MaxBuffer == 0 {
-		config.MaxBuffer = 1000
+		config.MaxBuffer = 100
 	}
 	if config.AutoFlushIntervalInMs == 0 {
-		config.AutoFlushIntervalInMs = 1000 * 10
+		config.AutoFlushIntervalInMs = 1000
 	}
-	parsedConfig := &kafka.ConfigMap{}
-	utils.StrictJsonTransformer(config, parsedConfig)
-	ch := make(chan kafka.LogEvent, 10000)
-	(*parsedConfig)["go.logs.channel.enable"] = true
-	(*parsedConfig)["go.logs.channel"] = ch
-	p, err := kafkatrace.NewProducer(parsedConfig)
-	if err != nil {
-		log.Error(ctx, "Failed to create kafka producer", err)
-		return nil, fmt.Errorf("kafka.createProducer: %w", err)
+	logger = logger.NewResourceLogger(resourceName)
+	kLog := &kafkaLogger{
+		Logger:  logger,
+		ctx:     log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(config.ServiceName+"--"+resourceName)),
+		isError: false,
+	}
+	p := &kafka.Writer{
+		Addr:     kafka.TCP(config.Brokers...),
+		Topic:    topic,
+		Balancer: &kafka.Hash{},
+		Transport: &kafka.Transport{
+			SASL: config.SASLMechanism,
+			TLS:  config.TLSConfig,
+		},
+		Logger: kLog,
+		ErrorLogger: &kafkaLogger{
+			isError: true,
+			Logger:  logger,
+			ctx:     log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(config.ServiceName+"--"+resourceName)),
+		},
+		Completion:   kLog.DeliveryReport,
+		BatchSize:    config.MaxBuffer,
+		RequiredAcks: kafka.RequiredAcks(config.Acknowledge),
 	}
 	k := &Producer{
-		serviceName:  serviceName,
+		serviceName:  config.ServiceName,
 		resourceName: resourceName,
-		log:          log.NewResourceLogger(resourceName),
-		config:       config,
-		Producer:     p,
+		log:          logger,
+		config:       *config,
+		Writer:       api.NewWriter(ctx, p, config.MaxBuffer, *logger),
 		topic:        topic,
-		logCh:        ch,
-		deliveryCh:   make(chan kafka.Event, config.MaxBuffer+100),
 	}
-	if err != nil {
-		return nil, fmt.Errorf("kafka.NewProducer: %w", err)
-	}
-	k.wg.Add(2)
-	if !k.config.Batch {
-		// flushCtx, flushCancel := context.WithCancel(context.Background())
-		// k.autoFlushCancel = flushCancel
-		//
-		// go func() {
-		// 	k.autoFlush(flushCtx)
-		// 	k.wg.Done()
-		// }()
-	}
-	go func() {
-		k.deliveryReport()
-		k.wg.Done()
-	}()
-	go func() {
-		k.printKafkaLog()
-		k.wg.Done()
-	}()
+	autoFlushContext, cancel := context.WithCancel(log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(config.ServiceName+"--"+resourceName)))
+	k.autoFlushCancel = cancel
+	go k.autoFlush(autoFlushContext)
 	return k, nil
 }
 
@@ -96,73 +72,12 @@ func (k *Producer) ProduceMessage(ctx context.Context, key string, message *util
 	if err != nil {
 		k.log.Error(ctx, "Failed to encode message", err)
 		k.log.Error(ctx, "Message", message)
-		return fmt.Errorf("kafka.Producer.ProduceMessage.EncodeMessage: %w", err)
+		return fmt.Errorf("kafka.Producer.ProduceMessage: %w", err)
 	}
 	return k.Produce(ctx, key, blob, headers)
 }
 
-func (k *Producer) handleEvent(defaultCtx context.Context, ev kafka.Event) (context.Context, error) {
-	switch e := ev.(type) {
-	case *kafka.Message:
-		logMsg := &Message{
-			Message: e,
-		}
-		headers := logMsg.GetHeaders()
-		ctx := defaultCtx
-		if len(headers) > 0 {
-			corr := &log.CorrelationParam{}
-			data, _ := json.Marshal(headers)
-			err := utils.HeaderJson.Unmarshal(data, corr)
-			if err != nil || corr.CorrelationId == "" {
-				k.log.Error(defaultCtx, "Error extracting header", headers)
-			} else {
-				ctx = log.GetContextWithCorrelation(context.Background(), corr)
-			}
-		}
-		err := e.TopicPartition.Error
-		if err != nil {
-			k.log.Error(ctx, "Error in publishing message", err)
-			k.log.Error(ctx, "Error Meta", logMsg.GetMeta())
-			k.log.Debug(ctx, "Error Body", logMsg.GetBody)
-			return ctx, fmt.Errorf("kafka.Producer.handleEvent: partition error: %w", err)
-		}
-		k.log.Info(ctx, "Send success for topic - meta: "+k.topic, logMsg.GetMeta())
-		k.log.Debug(ctx, "Send success for topic - body: "+k.topic, logMsg.GetBody)
-	case kafka.Error:
-		k.log.Error(defaultCtx, "Produce Error", e)
-		return defaultCtx, fmt.Errorf("kafka.Producer.handleEvent: produce error: %w", e)
-	default:
-		k.log.Notice(defaultCtx, "KafkaProducer: Event", e.String())
-	}
-	return nil, nil
-}
-
-func (k *Producer) deliveryReport() {
-	defaultCtx := log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(k.serviceName+"--"+k.resourceName))
-	for ev := range k.deliveryCh {
-		ctx, err := k.handleEvent(defaultCtx, ev)
-		if err != nil && k.notifier != nil {
-			k.notifier.Send5XX(ctx, fmt.Sprintf("com.%v.kafka.Producer.error", k.serviceName), err, "", ev.String())
-		}
-	}
-}
-
-func (k *Producer) printKafkaLog() {
-	defaultCtx := log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(k.serviceName+"--"+k.resourceName))
-	for kLog := range k.logCh {
-		k.log.Log(defaultCtx, kLog.Level, kLog.Message, kLog, fmt.Errorf("%v", kLog.Message))
-	}
-}
-
 func (k *Producer) Produce(ctx context.Context, key string, message []byte, headers map[string]string) (err error) {
-	return k.ProduceToTopic(ctx, kafka.TopicPartition{Topic: &k.topic, Partition: kafka.PartitionAny}, key, message, headers)
-}
-
-func (k *Producer) ProduceToTopic(ctx context.Context, topicPartition kafka.TopicPartition, key string, message []byte, headers map[string]string) (err error) {
-	k.produceLock.Lock()
-	if k.Len() >= k.config.MaxBuffer && !k.config.Batch {
-		k.Flush(1000)
-	}
 	if headers == nil {
 		headers = make(map[string]string, 0)
 	}
@@ -177,50 +92,29 @@ func (k *Producer) ProduceToTopic(ctx context.Context, topicPartition kafka.Topi
 			Value: []byte(v),
 		})
 	}
-	k.log.Debug(ctx, "Message - meta", map[string]any{"key": key, "headers": headers, "topic": topicPartition})
-	k.log.Debug(ctx, "Message - body", func() string { return string(message) })
-	err = k.Producer.Produce(&kafka.Message{
-		TopicPartition: topicPartition,
-		Key:            []byte(key),
-		Value:          message,
-		Headers:        messageHeader,
-		Timestamp:      time.Now(),
-	}, k.deliveryCh)
-	k.produceLock.Unlock()
-	if err != nil {
-		return fmt.Errorf("kafka.Producer.Produce: failed to enqueue message: topic - %v: %w", k.topic, err)
-	}
-	return nil
+	k.log.Info(ctx, "Message", map[string]any{"key": key, "headers": headers, "topic": k.topic})
+	k.log.Debug(ctx, "Message Body", func() string { return string(message) })
+	return k.Send(ctx, key, message, messageHeader)
 }
 
 func (k *Producer) autoFlush(ctx context.Context) {
-	timeout := time.Millisecond * time.Duration(k.config.AutoFlushIntervalInMs)
-	timeoutCtx, _ := context.WithTimeout(context.Background(), timeout)
-	for {
-		select {
-		case <-ctx.Done():
-			k.Flush(1000)
-			return
-		case <-timeoutCtx.Done():
-			k.Flush(1000)
-			timeoutCtx, _ = context.WithTimeout(context.Background(), timeout)
+	timeout, _ := context.WithTimeout(context.Background(), time.Duration(k.config.AutoFlushIntervalInMs*uint64(time.Millisecond)))
+	select {
+	case <-timeout.Done():
+		err := k.Flush(ctx)
+		if err != nil {
+			k.log.Error(ctx, "Error while writing kafka message", err)
 		}
+		timeout, _ = context.WithTimeout(context.Background(), time.Duration(k.config.AutoFlushIntervalInMs*uint64(time.Millisecond)))
+	case <-ctx.Done():
+		return
 	}
-}
-
-func (k *Producer) Flush(timeoutMs int) {
-	k.flushLock.Lock()
-	k.Producer.Flush(timeoutMs)
-	k.flushLock.Unlock()
 }
 
 func (k *Producer) Close(ctx context.Context) {
 	k.log.Notice(ctx, "Producer closer initiated for topic", k.topic)
-	// k.autoFlushCancel()
-	k.Flush(10000)
-	k.Producer.Close()
-	close(k.deliveryCh)
-	close(k.logCh)
-	k.wg.Wait()
+	k.autoFlushCancel()
+	k.Flush(ctx)
+	k.Writer.Close()
 	k.log.Notice(ctx, "Producer closed for topic", k.topic)
 }

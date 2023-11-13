@@ -3,7 +3,7 @@ package kafka
 import (
 	"encoding/json"
 
-	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/segmentio/kafka-go"
 )
 
 type Message struct {
@@ -40,9 +40,10 @@ func (m *Message) GetBody() string {
 
 func (m *Message) GetMeta() map[string]any {
 	return map[string]any{
-		"Key":            m.GetKey(),
-		"Headers":        m.GetHeaders(),
-		"TopicPartition": m.TopicPartition,
-		"Timestamp":      m.Timestamp,
+		"Key":       m.GetKey(),
+		"Headers":   m.GetHeaders(),
+		"Partition": m.Partition,
+		"Topic":     m.Topic,
+		"Times":     m.Time,
 	}
 }

@@ -8,159 +8,124 @@ import (
 	"sync"
 	"time"
 
-	"github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/sabariramc/goserverbase/v3/errors"
+	"github.com/sabariramc/goserverbase/v3/kafka/api"
 	"github.com/sabariramc/goserverbase/v3/log"
 	"github.com/sabariramc/goserverbase/v3/utils"
-	kafkatrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/confluentinc/confluent-kafka-go/kafka"
+	"github.com/segmentio/kafka-go"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
 type Consumer struct {
-	*kafkatrace.Consumer
-	config       *KafkaConsumerConfig
-	log          *log.Logger
-	notifier     errors.ErrorNotifier
-	topic        []string
-	serviceName  string
-	resourceName string
-	logCh        chan kafka.LogEvent
-	msgCh        chan *kafka.Message
-	wg           sync.WaitGroup
+	*api.Reader
+	config           KafkaConsumerConfig
+	log              *log.Logger
+	topics           []string
+	serviceName      string
+	resourceName     string
+	wg               sync.WaitGroup
+	msgCh            chan *kafka.Message
+	commitLock       sync.Mutex
+	consumedMessages []kafka.Message
 }
 
-func NewConsumer(ctx context.Context, serviceName string, log *log.Logger, config *KafkaConsumerConfig, notifier errors.ErrorNotifier, topic ...string) (*Consumer, error) {
-	return NewConsumerResource(ctx, serviceName, "KafkaConsumer", log, config, notifier, topic...)
-}
-
-func NewConsumerResource(ctx context.Context, serviceName, resourceName string, log *log.Logger, config *KafkaConsumerConfig, notifier errors.ErrorNotifier, topic ...string) (*Consumer, error) {
-	parsedConfig := &kafka.ConfigMap{}
-	ch := make(chan kafka.LogEvent, 10000)
-	(*parsedConfig)["go.logs.channel.enable"] = true
-	(*parsedConfig)["go.logs.channel"] = ch
-	utils.StrictJsonTransformer(config, parsedConfig)
-	c, err := kafkatrace.NewConsumer(parsedConfig)
+func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerConfig, resourceName string, topics ...string) (*Consumer, error) {
 	if config.MaxBuffer <= 0 {
-		config.MaxBuffer = 1000
+		config.MaxBuffer = 100
 	}
 	if config.AutoCommitIntervalInMs <= 0 {
-		config.AutoCommitIntervalInMs = 1000 * 10
+		config.AutoCommitIntervalInMs = 1000
 	}
 	if config.ConsumerLagToleranceInMs <= 0 {
-		config.ConsumerLagToleranceInMs = 1000 * 3
+		config.ConsumerLagToleranceInMs = 1000
 	}
-	if err != nil {
-		return nil, fmt.Errorf("kafka.NewKafkaConsumer.CreateConsumer: failed to create kafka consumer:%w", err)
-	}
+	logger = logger.NewResourceLogger(resourceName)
+	r := kafka.NewReader(kafka.ReaderConfig{
+		Brokers:           config.Brokers,
+		GroupID:           config.GroupID,
+		GroupTopics:       topics,
+		HeartbeatInterval: time.Second,
+		MaxBytes:          10e6, // 10MB,
+		Logger: &kafkaLogger{
+			Logger:  logger,
+			ctx:     log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(config.ServiceName+"--"+resourceName)),
+			isError: false,
+		},
+		ErrorLogger: &kafkaLogger{
+			Logger:  logger,
+			ctx:     log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(config.ServiceName+"--"+resourceName)),
+			isError: true,
+		},
+		Dialer: &kafka.Dialer{
+			Timeout:       10 * time.Second,
+			DualStack:     true,
+			SASLMechanism: config.SASLMechanism,
+			TLS:           config.TLSConfig,
+		},
+	})
 	k := &Consumer{
-		log:          log.NewResourceLogger(resourceName),
-		resourceName: resourceName,
-		config:       config,
-		Consumer:     c,
-		topic:        topic,
-		logCh:        ch,
-		notifier:     notifier,
-		serviceName:  serviceName,
+		log:              logger.NewResourceLogger(resourceName),
+		resourceName:     resourceName,
+		config:           *config,
+		Reader:           api.NewReader(ctx, r, *logger),
+		topics:           topics,
+		serviceName:      config.ServiceName,
+		msgCh:            make(chan *kafka.Message, config.MaxBuffer),
+		consumedMessages: make([]kafka.Message, 0, config.MaxBuffer),
 	}
-	err = k.SubscribeTopics(topic, k.logReBalance)
-	if err != nil {
-		return nil, fmt.Errorf("kafka.NewKafkaConsumer.SubscribeTopics: failed to create kafka consumer subscription: %w", err)
-	}
-	k.wg.Add(1)
-	go func() {
-		k.printKafkaLog()
-		k.wg.Done()
-	}()
 	return k, nil
 }
 
 func (k *Consumer) Commit(ctx context.Context) error {
-	offset, err := k.Consumer.Commit()
-	if len(offset) > 0 {
-		k.log.Notice(ctx, "Committed offsets", offset)
+	k.commitLock.Lock()
+	defer k.commitLock.Unlock()
+	if len(k.consumedMessages) == 0 {
+		return nil
 	}
+	opts := []tracer.StartSpanOption{
+		tracer.Tag("messaging.kafka.topics", k.topics),
+		tracer.Tag(ext.SpanKind, ext.SpanKindInternal),
+		tracer.Measured(),
+	}
+	span, ctx := tracer.StartSpanFromContext(ctx, "kafka.consume.commit", opts...)
+	defer span.Finish()
+	k.log.Debug(ctx, "committing messages", k.consumedMessages)
+	err := k.CommitMessages(ctx, k.consumedMessages...)
 	if err != nil {
-		if err.Error() == "Local: No offset stored" {
-			k.log.Debug(ctx, "No offset to commit", err)
-			err = nil
-		} else {
-			err = fmt.Errorf("kafka.Consumer.Commit: error during commit %w", err)
-		}
+		return fmt.Errorf("kafka.Consumer.Commit: error during commit : %w", err)
 	}
-	return err
-}
-
-func (k *Consumer) logReBalance(consumer *kafka.Consumer, e kafka.Event) error {
-	k.log.Notice(context.Background(), fmt.Sprintf("Re-balance Event for topic %v", k.topic), e.String())
 	return nil
 }
 
-func (k *Consumer) printKafkaLog() {
-	defaultCtx := log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(k.serviceName+"--"+k.resourceName))
-	for kLog := range k.logCh {
-		k.log.Log(defaultCtx, kLog.Level, kLog.Message, kLog, fmt.Errorf("%v", kLog.Message))
-	}
-}
-
-func (k *Consumer) poll(ctx context.Context, timeout int) error {
+func (k *Consumer) poll(ctx context.Context) error {
 	for {
 		select {
 		case <-ctx.Done():
 			return nil
 		default:
-			ev := k.Consumer.Poll(timeout)
-			if ev != nil {
-				switch e := ev.(type) {
-				case *kafka.Message:
-					if e.TopicPartition.Error != nil {
-						return e.TopicPartition.Error
-					}
-					if e.TopicPartition.Offset < 0 {
-						return fmt.Errorf("KafkaConsumer.Poll: offset is less than zero: topic - %v, partition- %v", e.TopicPartition.Topic, e.TopicPartition.Partition)
-					}
-					k.msgCh <- e
-				case kafka.PartitionEOF:
-					k.log.Error(ctx, "Reached EOF, Ending poll", e)
-					return fmt.Errorf("KafkaConsumer.Poll: EOF: %v", e)
-				case kafka.Error:
-					k.log.Error(ctx, "Poll error", e)
-					return fmt.Errorf("KafkaConsumer.Poll: Error: %w", e)
-				case kafka.RevokedPartitions:
-					k.log.Notice(ctx, "Partition revoked", e.Partitions)
-					if k.notifier != nil {
-						k.notifier.Send4XX(ctx, fmt.Sprintf("com.error.%v.kafka.partition.revoked", k.serviceName), nil, "", nil)
-					}
-				case kafka.AssignedPartitions:
-					k.log.Notice(ctx, "Partition assigned", e.Partitions)
-					if k.notifier != nil {
-						k.notifier.Send4XX(ctx, fmt.Sprintf("com.notice.%v.kafka.partition.assigned", k.serviceName), nil, "", nil)
-					}
-				case kafka.OffsetsCommitted:
-					k.log.Notice(ctx, "KafkaConsumer.Poll: Offset Committed", e.Offsets)
-					if e.Error != nil {
-						return fmt.Errorf("KafkaConsumer.poll: offset commit Error: %w", e.Error)
-					}
-				default:
-					k.log.Notice(ctx, "KafkaConsumer.Poll: Event", e.String())
-				}
+			m, err := k.FetchMessage(ctx)
+			if err != nil {
+				k.log.Error(ctx, "Poll error", err)
+				return fmt.Errorf("kafka.Consumer.poll: Error: %w", err)
 			}
+			k.msgCh <- &m
 		}
 	}
 }
 
-func (k *Consumer) Poll(ctx context.Context, timeout int, ch chan *kafka.Message) error {
+func (k *Consumer) Poll(ctx context.Context, ch chan *kafka.Message) error {
 	k.msgCh = make(chan *kafka.Message, k.config.MaxBuffer)
 	pollCtx, cancelPoll := context.WithCancel(ctx)
 	var pollErr, commitErr error
-	var wg sync.WaitGroup
-	wg.Add(1)
+	k.wg.Add(1)
 	go func() {
 		defer close(k.msgCh)
-		defer wg.Done()
-		pollErr = k.poll(pollCtx, timeout)
+		defer k.wg.Done()
+		pollErr = k.poll(pollCtx)
 	}()
 	defer close(ch)
-	defer wg.Wait()
-	k.log.Info(ctx, fmt.Sprintf("Polling started for topic : %v", k.topic), nil)
+	defer k.wg.Wait()
+	k.log.Info(ctx, fmt.Sprintf("Polling started for topics : %v", k.topics), nil)
 	commitTimeout, commitCancel := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(k.config.AutoCommitIntervalInMs))
 	infoConsumerLag := time.Millisecond * time.Duration(k.config.ConsumerLagToleranceInMs)
 	noticeConsumerLag := 2 * infoConsumerLag
@@ -176,7 +141,7 @@ outer:
 			k.log.Notice(ctx, "Polling Timeout/cancelled", nil)
 			break outer
 		case <-commitTimeout.Done():
-			if !k.config.Batch {
+			if k.config.AutoCommit {
 				commitErr = k.Commit(ctx)
 				if commitErr != nil {
 					cancelPoll()
@@ -186,28 +151,26 @@ outer:
 			count = 0
 			commitTimeout, commitCancel = context.WithTimeout(context.Background(), time.Millisecond*time.Duration(k.config.AutoCommitIntervalInMs))
 		case msg, ok := <-k.msgCh:
-			if msg != nil {
-				count++
-				ch <- msg
-				consumerLag := time.Since(msg.Timestamp)
-				if consumerLag > infoConsumerLag {
-					k.log.Info(ctx, "consumer lag in ms", consumerLag.Milliseconds())
-				} else if consumerLag > noticeConsumerLag {
-					k.log.Notice(ctx, "consumer lag in ms", consumerLag.Milliseconds())
-				} else if consumerLag > warningConsumerLag {
-					k.log.Warning(ctx, "consumer lag in ms", consumerLag.Milliseconds())
-				}
-				if !k.config.Batch {
-					k.Consumer.StoreMessage(msg)
-				}
-				if count >= k.config.MaxBuffer {
-					commitCancel()
-				}
-			}
 			if !ok {
 				cancelPoll()
 				commitErr = k.Commit(ctx)
 				break outer
+			}
+			count++
+			ch <- msg
+			consumerLag := time.Since(msg.Time)
+			if consumerLag > infoConsumerLag {
+				k.log.Info(ctx, "consumer lag in ms", consumerLag.Milliseconds())
+			} else if consumerLag > noticeConsumerLag {
+				k.log.Notice(ctx, "consumer lag in ms", consumerLag.Milliseconds())
+			} else if consumerLag > warningConsumerLag {
+				k.log.Warning(ctx, "consumer lag in ms", consumerLag.Milliseconds())
+			}
+			if k.config.AutoCommit {
+				k.StoreMessage(ctx, msg)
+			}
+			if count >= k.config.MaxBuffer {
+				commitCancel()
 			}
 		}
 	}
@@ -215,54 +178,33 @@ outer:
 		if pollErr == nil {
 			pollErr = commitErr
 		} else {
-			pollErr = fmt.Errorf("kafka.Poll.Error: %w, %w", pollErr, commitErr)
+			pollErr = fmt.Errorf("kafka.Consumer.Poll.Error: %w, %w", pollErr, commitErr)
 		}
 	}
-	k.log.Notice(ctx, fmt.Sprintf("Polling ended for topic : %v", k.topic), nil)
+	k.log.Notice(ctx, fmt.Sprintf("Polling ended for topic : %v", k.topics), nil)
 	return pollErr
 }
 
-func (k *Consumer) ReadMessage(ctx context.Context, timeout time.Duration) (*kafka.Message, error) {
-	ev, err := k.Consumer.ReadMessage(timeout)
-	if err != nil {
-		return nil, fmt.Errorf("kafka.Consumer.ReadMessage: error reading message: %w", err)
-	}
-	if k.config.Batch {
-		return ev, nil
-	}
-	if _, err = k.StoreMessage(ctx, ev); err != nil {
-		err = k.Commit(ctx)
-		if err != nil {
-			err = fmt.Errorf("kafka.Consumer.ReadMessage: error on commit %w", err)
-		}
-	}
-	return ev, err
-}
-
-func (k *Consumer) StoreMessage(ctx context.Context, ev *kafka.Message) ([]kafka.TopicPartition, error) {
-	offset, err := k.Consumer.StoreMessage(ev)
-	if err != nil {
-		return offset, fmt.Errorf("kafka.Consumer.StoreMessage: %w", err)
-	}
-	k.log.Debug(ctx, "stored offset", offset)
-	return offset, nil
+func (k *Consumer) StoreMessage(ctx context.Context, msg *kafka.Message) {
+	k.commitLock.Lock()
+	k.consumedMessages = append(k.consumedMessages, *msg)
+	k.commitLock.Unlock()
 }
 
 func (k *Consumer) Close(ctx context.Context) error {
-	k.log.Notice(ctx, "Consumer closer initiated for topic", k.topic)
+	k.log.Notice(ctx, "Consumer closer initiated for topic", k.topics)
 	commitErr := k.Commit(ctx)
-	close(k.logCh)
 	if k.msgCh != nil {
 		_, ok := <-k.msgCh
 		if ok {
 			close(k.msgCh)
 		}
 	}
-	closeErr := k.Consumer.Close()
+	closeErr := k.Reader.Close()
 	k.wg.Wait()
-	k.log.Notice(ctx, "Consumer closed for topic", k.topic)
+	k.log.Notice(ctx, "Consumer closed for topic", k.topics)
 	if commitErr != nil || closeErr != nil {
-		k.log.Error(ctx, fmt.Sprintf("Consumer closed with error for topic : %v", k.topic), closeErr)
+		k.log.Error(ctx, fmt.Sprintf("Consumer closed with error for topic : %v", k.topics), closeErr)
 		return fmt.Errorf("KafkaConsumer.Close: %w, %w", commitErr, closeErr)
 	}
 	return nil

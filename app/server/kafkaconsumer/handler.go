@@ -38,9 +38,6 @@ func (k *KafkaConsumerServer) ProcessEvent(ctx context.Context, msg *kafka.Messa
 			}
 		}
 	}()
-	if spanOk {
-		span.SetTag("topic.key", msg.GetKey())
-	}
 	err := handler(ctx, msg)
 	if err != nil {
 		statusCode, _ := k.ProcessError(ctx, "", err, msg)
