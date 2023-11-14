@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/sabariramc/goserverbase/v3/log"
+	"github.com/sabariramc/goserverbase/v4/log"
 )
 
 type logIgMessage struct {
@@ -14,7 +14,7 @@ type logIgMessage struct {
 	*log.CustomerIdentifier
 	AppName       string `json:"appName"`
 	AppNamespace  string `json:"appNamespace"`
-	CorrelationId string `json:"correlationId"`
+	CorrelationID string `json:"correlationId"`
 	Level         string `json:"level"`
 	Message       string `json:"message"`
 }
@@ -39,9 +39,9 @@ func (c *LogIqConsoleWriter) WriteMessage(ctx context.Context, l *log.LogMessage
 		CustomerIdentifier: log.GetCustomerIdentifier(ctx),
 		AppName:            l.ServiceName,
 		AppNamespace:       c.appNamespace,
-		CorrelationId:      cr.CorrelationId,
+		CorrelationID:      cr.CorrelationId,
 		Level:              l.LogLevelName,
-		Message:            l.ShortMessage + " :: " + l.FullMessage,
+		Message:            l.ShortMessage + " :: " + ParseLogObject(l.FullMessage, false),
 	}
 	blob, _ := json.Marshal(msg)
 	fmt.Println(string(blob))

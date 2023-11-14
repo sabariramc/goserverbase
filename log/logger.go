@@ -2,13 +2,9 @@ package log
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"reflect"
 	"time"
 )
-
-const ParseErrorMsg = "******************ERROR DURING MARSHAL OF FULL MESSAGE*******************"
 
 type LogLevel struct {
 	Level        LogLevelCode
@@ -49,12 +45,11 @@ func GetLogLevelMap(level LogLevelCode) LogLevel {
 
 type LogMessage struct {
 	LogLevel
-	ShortMessage    string
-	FullMessage     string
-	FullMessageType string
-	Timestamp       time.Time
-	ModuleName      string
-	ServiceName     string
+	ShortMessage string
+	FullMessage  interface{}
+	Timestamp    time.Time
+	ModuleName   string
+	ServiceName  string
 }
 
 type Logger struct {
@@ -65,7 +60,6 @@ type Logger struct {
 	serviceName string
 	config      *Config
 	audit       AuditLogWriter
-	PrintIndent bool
 }
 
 func (l *Logger) NewResourceLogger(resourceName string) *Logger {
@@ -86,8 +80,7 @@ func NewLogger(ctx context.Context, lc *Config, moduleName string, lMux LogMux, 
 			Host:        lc.Host,
 			ServiceName: lc.ServiceName,
 		},
-		audit:       audit,
-		PrintIndent: true,
+		audit: audit,
 	}
 	logLevel := lc.LogLevel
 	if logLevel > int(DEBUG) || logLevel < int(EMERGENCY) {
@@ -159,45 +152,13 @@ func (l *Logger) print(ctx context.Context, level *LogLevel, shortMessage string
 	if level.Level > l.logLevel {
 		return
 	}
-	var msg string
-	var msgType string
-	if fullMessage == nil {
-		msg = shortMessage
-		msgType = "nil"
-	} else {
-		msgType = reflect.TypeOf(fullMessage).String()
-		switch v := fullMessage.(type) {
-		case string:
-			msg = v
-		case error:
-			msg = v.Error()
-		case func() string:
-			msg = v()
-		case []byte:
-			msg = string(v)
-		default:
-			var blob []byte
-			var err error
-			if l.PrintIndent {
-				blob, err = json.MarshalIndent(v, "", "    ")
-			} else {
-				blob, err = json.Marshal(v)
-			}
-			if err != nil {
-				msg = fmt.Sprintf("%v - %v", ParseErrorMsg, err)
-			} else {
-				msg = string(blob)
-			}
-		}
-	}
 	message := &LogMessage{
-		LogLevel:        *level,
-		ShortMessage:    shortMessage,
-		FullMessage:     msg,
-		FullMessageType: msgType,
-		Timestamp:       time.Now(),
-		ModuleName:      l.moduleName,
-		ServiceName:     l.serviceName,
+		LogLevel:     *level,
+		ShortMessage: shortMessage,
+		FullMessage:  fullMessage,
+		Timestamp:    time.Now(),
+		ModuleName:   l.moduleName,
+		ServiceName:  l.serviceName,
 	}
 	l.lMux.Print(ctx, message)
 }
