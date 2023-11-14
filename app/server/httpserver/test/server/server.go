@@ -57,7 +57,7 @@ func (s *server) Func2(c *gin.Context) {
 }
 
 func (s *server) Func3(w http.ResponseWriter, r *http.Request) {
-	s.SetHandlerErrorInContext(r.Context(), errors.NewCustomError("hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, true))
+	s.SetHandlerErrorInContext(r.Context(), errors.NewCustomError("hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, true, nil))
 }
 
 func (s *server) Func4(w http.ResponseWriter, r *http.Request) {
@@ -65,7 +65,7 @@ func (s *server) Func4(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) Func5(w http.ResponseWriter, r *http.Request) {
-	s.SetHandlerErrorInContext(r.Context(), errors.NewHTTPClientError(403, "hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil))
+	s.SetHandlerErrorInContext(r.Context(), errors.NewHTTPClientError(403, "hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, nil))
 }
 
 func NewServer() *server {

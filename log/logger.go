@@ -14,6 +14,7 @@ type LogLevel struct {
 type LogLevelCode uint8
 
 const (
+	TRACE     LogLevelCode = 8
 	DEBUG     LogLevelCode = 7
 	INFO      LogLevelCode = 6
 	NOTICE    LogLevelCode = 5

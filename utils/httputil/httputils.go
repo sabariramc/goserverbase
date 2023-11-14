@@ -156,7 +156,7 @@ func (h *HttpClient) Call(ctx context.Context, method, url string, reqBody, resB
 		req.Header.Add(key, val)
 	}
 	if reqBody != nil && reqPrint == nil {
-		h.log.Debug(ctx, "Request payload is not printed : either it is a interface or violates MaxContentLength", err)
+		h.log.Debug(ctx, "Request payload is not printed : either it is a io.Reader or violates MaxContentLength", err)
 	}
 	h.log.Debug(ctx, "Request", map[string]interface{}{
 		"method":  method,
