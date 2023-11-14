@@ -5,7 +5,7 @@ import (
 	e "errors"
 	"net/http"
 
-	"github.com/sabariramc/goserverbase/v3/errors"
+	"github.com/sabariramc/goserverbase/v4/errors"
 )
 
 func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error, requestData any) (int, []byte) {

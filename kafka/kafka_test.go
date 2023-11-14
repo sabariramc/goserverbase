@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/v3/kafka"
-	"github.com/sabariramc/goserverbase/v3/utils"
+	"github.com/sabariramc/goserverbase/v4/kafka"
+	"github.com/sabariramc/goserverbase/v4/utils"
 	cKafka "github.com/segmentio/kafka-go"
 	"gotest.tools/assert"
 )

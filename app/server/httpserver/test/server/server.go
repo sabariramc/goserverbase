@@ -6,11 +6,11 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sabariramc/goserverbase/v3/app/server/httpserver"
-	"github.com/sabariramc/goserverbase/v3/errors"
-	"github.com/sabariramc/goserverbase/v3/log"
-	"github.com/sabariramc/goserverbase/v3/log/logwriter"
-	"github.com/sabariramc/goserverbase/v3/utils/testutils"
+	"github.com/sabariramc/goserverbase/v4/app/server/httpserver"
+	"github.com/sabariramc/goserverbase/v4/errors"
+	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v4/log/logwriter"
+	"github.com/sabariramc/goserverbase/v4/utils/testutils"
 )
 
 var ServerTestConfig *testutils.TestConfig

@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/sabariramc/goserverbase/v3/log"
+	"github.com/sabariramc/goserverbase/v4/log"
 )
 
 func (h *HttpServer) GetCorrelationParams(r *http.Request) *log.CorrelationParam {

@@ -3,11 +3,11 @@ package server
 import (
 	"context"
 
-	"github.com/sabariramc/goserverbase/v3/app/server/kafkaconsumer"
-	"github.com/sabariramc/goserverbase/v3/kafka"
-	"github.com/sabariramc/goserverbase/v3/log"
-	"github.com/sabariramc/goserverbase/v3/log/logwriter"
-	"github.com/sabariramc/goserverbase/v3/utils/testutils"
+	"github.com/sabariramc/goserverbase/v4/app/server/kafkaconsumer"
+	"github.com/sabariramc/goserverbase/v4/kafka"
+	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v4/log/logwriter"
+	"github.com/sabariramc/goserverbase/v4/utils/testutils"
 )
 
 var ServerTestConfig *testutils.TestConfig

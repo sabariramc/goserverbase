@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/config"
-	base "github.com/sabariramc/goserverbase/v3/aws"
+	base "github.com/sabariramc/goserverbase/v4/aws"
 
 	"github.com/joho/godotenv"
 )

@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v3/log"
+	"github.com/sabariramc/goserverbase/v4/log"
 	"github.com/segmentio/kafka-go"
 )
 

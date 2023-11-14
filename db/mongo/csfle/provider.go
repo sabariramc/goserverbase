@@ -6,9 +6,9 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	cuaws "github.com/sabariramc/goserverbase/v3/aws"
-	"github.com/sabariramc/goserverbase/v3/db/mongo"
-	"github.com/sabariramc/goserverbase/v3/log"
+	cuaws "github.com/sabariramc/goserverbase/v4/aws"
+	"github.com/sabariramc/goserverbase/v4/db/mongo"
+	"github.com/sabariramc/goserverbase/v4/log"
 )
 
 type MasterKeyProvider interface {

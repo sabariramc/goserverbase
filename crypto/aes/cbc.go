@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/v3/crypto"
-	"github.com/sabariramc/goserverbase/v3/crypto/padding"
-	"github.com/sabariramc/goserverbase/v3/log"
+	"github.com/sabariramc/goserverbase/v4/crypto"
+	"github.com/sabariramc/goserverbase/v4/crypto/padding"
+	"github.com/sabariramc/goserverbase/v4/log"
 )
 
 var ErrBlockError = fmt.Errorf("cipher text is not a multiple of the block size")
