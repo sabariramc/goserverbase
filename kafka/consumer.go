@@ -85,6 +85,7 @@ func (k *Consumer) Commit(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("kafka.Consumer.Commit: error during commit : %w", err)
 	}
+	k.consumedMessages = make([]kafka.Message, 0, k.config.MaxBuffer)
 	return nil
 }
 

@@ -1,5 +1,5 @@
-export message="removed unused clientid"
-export version="v3.18.7.segmentio"
+export message="kafka buffer overflow"
+export version="v3.18.8.segmentio"
 export branch="segmentio"
 git add .
 git commit -m "$message"
