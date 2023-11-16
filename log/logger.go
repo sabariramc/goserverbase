@@ -107,6 +107,10 @@ func (l *Logger) Audit(ctx context.Context, msg interface{}) error {
 	return l.audit.WriteMessage(ctx, msg)
 }
 
+func (l *Logger) Trace(ctx context.Context, message string, logObject interface{}) {
+	l.print(ctx, logLevelMap[TRACE], message, logObject)
+}
+
 func (l *Logger) Debug(ctx context.Context, message string, logObject interface{}) {
 	l.print(ctx, logLevelMap[DEBUG], message, logObject)
 }
