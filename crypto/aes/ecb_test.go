@@ -12,7 +12,7 @@ import (
 func TestAESECBPKC5(t *testing.T) {
 	key, err := base64.StdEncoding.DecodeString("pVH68zuXerD+SvkGhJFQGw==")
 	assert.NilError(t, err)
-	cip, err := aes.NewAESECBPKC5(GetCorrelationContext(), key, ServerTestLogger)
+	cip, err := aes.NewECBPKC5(GetCorrelationContext(), key, ServerTestLogger)
 	assert.NilError(t, err)
 	data := "fasdfasdasffasdfas fasdfasdfa sfasdf asd fasd fasdf"
 	res, _ := cip.Encrypt(context.TODO(), []byte(data))

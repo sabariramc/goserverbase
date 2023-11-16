@@ -15,7 +15,7 @@ import (
 	"github.com/sabariramc/goserverbase/v4/log"
 )
 
-type AESECB struct {
+type ECB struct {
 	b         cipher.Block
 	key       []byte
 	blockSize int
@@ -23,20 +23,20 @@ type AESECB struct {
 	log       *log.Logger
 }
 
-func NewAESECBPKC5(ctx context.Context, key []byte, log *log.Logger) (*AESECB, error) {
-	cipher, err := NewAESECB(key, log, padding.NewPKCS7(len(key)))
+func NewECBPKC5(ctx context.Context, key []byte, log *log.Logger) (*ECB, error) {
+	cipher, err := NewECB(key, log, padding.NewPKCS7(len(key)))
 	if err != nil {
 		return nil, fmt.Errorf("crypto.aes.NewAESGCM: error creating aes ecb: %w", err)
 	}
 	return cipher, nil
 }
 
-func NewAESECB(key []byte, log *log.Logger, padder crypto.Padder) (*AESECB, error) {
+func NewECB(key []byte, log *log.Logger, padder crypto.Padder) (*ECB, error) {
 	cipher, err := aes.NewCipher(key)
 	if err != nil {
 		return nil, fmt.Errorf("AESECBCipher: key error: key - %v, error - %w", key, err)
 	}
-	return &AESECB{
+	return &ECB{
 		b:         cipher,
 		key:       key,
 		blockSize: cipher.BlockSize(),
@@ -45,7 +45,7 @@ func NewAESECB(key []byte, log *log.Logger, padder crypto.Padder) (*AESECB, erro
 	}, nil
 }
 
-func (a *AESECB) Encrypt(ctx context.Context, data []byte) ([]byte, error) {
+func (a *ECB) Encrypt(ctx context.Context, data []byte) ([]byte, error) {
 	data = a.padder.Pad(data)
 	encrypted := make([]byte, len(data))
 	size := a.blockSize
@@ -55,7 +55,7 @@ func (a *AESECB) Encrypt(ctx context.Context, data []byte) ([]byte, error) {
 	return encrypted, nil
 }
 
-func (a *AESECB) EncryptString(ctx context.Context, plainText string) (string, error) {
+func (a *ECB) EncryptString(ctx context.Context, plainText string) (string, error) {
 	a.log.Debug(ctx, "Plain Text", plainText)
 	blobRes, err := a.Encrypt(ctx, []byte(plainText))
 	if err != nil {
@@ -66,7 +66,7 @@ func (a *AESECB) EncryptString(ctx context.Context, plainText string) (string, e
 	return res, nil
 }
 
-func (a *AESECB) Decrypt(ctx context.Context, data []byte) ([]byte, error) {
+func (a *ECB) Decrypt(ctx context.Context, data []byte) ([]byte, error) {
 	decrypted := make([]byte, len(data))
 	size := a.blockSize
 	for bs, be := 0, size; bs < len(data); bs, be = bs+size, be+size {

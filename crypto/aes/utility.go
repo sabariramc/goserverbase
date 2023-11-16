@@ -1,6 +1,6 @@
 package aes
 
-func getKey(key string) ([]byte, error) {
+func getKeyBytes(key string) ([]byte, error) {
 	keyByte := []byte(key)
 	keyLen := len(keyByte)
 	switch keyLen {

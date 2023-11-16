@@ -59,7 +59,7 @@ func (s *S3Crypto) encrypt(ctx context.Context, body io.Reader) (io.Reader, map[
 	if err != nil {
 		return nil, nil, fmt.Errorf("S3Crypto.encrypt:error on reading content:%w", err)
 	}
-	cipher, err := aes.NewAESGCM(ctx, s.log, key)
+	cipher, err := aes.NewGCM(ctx, s.log, key)
 	if err != nil {
 		return nil, nil, fmt.Errorf("S3Crypto.encrypt:error on creating cipher:%w", err)
 	}
@@ -123,7 +123,7 @@ func (s *S3Crypto) decrypt(ctx context.Context, res *s3.GetObjectOutput) ([]byte
 	if err != nil {
 		return nil, fmt.Errorf("S3Crypto.decrypt:error on reading content:%w", err)
 	}
-	cipher, err := aes.NewAESGCM(ctx, s.log, string(key))
+	cipher, err := aes.NewGCM(ctx, s.log, string(key))
 	if err != nil {
 		return nil, fmt.Errorf("S3Crypto.decrypt:error on creating cipher:%w", err)
 	}

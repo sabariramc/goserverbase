@@ -11,20 +11,20 @@ import (
 	"github.com/sabariramc/goserverbase/v4/utils"
 )
 
-type AESGCM struct {
+type GCM struct {
 	key []byte
 	log *log.Logger
 }
 
-func NewAESGCM(ctx context.Context, log *log.Logger, key string) (*AESGCM, error) {
-	keyByte, err := getKey(key)
+func NewGCM(ctx context.Context, log *log.Logger, key string) (*GCM, error) {
+	keyByte, err := getKeyBytes(key)
 	if err != nil {
 		return nil, fmt.Errorf("crypto.aes.NewAESGCM: error creating aes gcm: %w", err)
 	}
-	return &AESGCM{key: keyByte, log: log.NewResourceLogger("AESGCM")}, nil
+	return &GCM{key: keyByte, log: log.NewResourceLogger("AESGCM")}, nil
 }
 
-func (a *AESGCM) Encrypt(ctx context.Context, plainBlob []byte) ([]byte, error) {
+func (a *GCM) Encrypt(ctx context.Context, plainBlob []byte) ([]byte, error) {
 	block, err := aes.NewCipher(a.key)
 	if err != nil {
 		return nil, fmt.Errorf("AESGCM.Encrypt: %w", err)
@@ -38,7 +38,7 @@ func (a *AESGCM) Encrypt(ctx context.Context, plainBlob []byte) ([]byte, error) 
 	return append(nonce, cipherBlob...), nil
 }
 
-func (a *AESGCM) EncryptString(ctx context.Context, plainText string) (string, error) {
+func (a *GCM) EncryptString(ctx context.Context, plainText string) (string, error) {
 	a.log.Debug(ctx, "Plain Text", plainText)
 	blobRes, err := a.Encrypt(ctx, []byte(plainText))
 	if err != nil {
@@ -49,7 +49,7 @@ func (a *AESGCM) EncryptString(ctx context.Context, plainText string) (string, e
 	return res, nil
 }
 
-func (a *AESGCM) Decrypt(ctx context.Context, encryptedData []byte) (plainData []byte, err error) {
+func (a *GCM) Decrypt(ctx context.Context, encryptedData []byte) (plainData []byte, err error) {
 	block, err := aes.NewCipher(a.key)
 	if err != nil {
 		return nil, fmt.Errorf("AESGCM.Decrypt: %w", err)
@@ -67,7 +67,7 @@ func (a *AESGCM) Decrypt(ctx context.Context, encryptedData []byte) (plainData [
 	return plainData, nil
 }
 
-func (a *AESGCM) DecryptString(ctx context.Context, encryptedText string) (string, error) {
+func (a *GCM) DecryptString(ctx context.Context, encryptedText string) (string, error) {
 	a.log.Debug(ctx, "EncryptedString", encryptedText)
 	decoded, err := base64.StdEncoding.DecodeString(encryptedText)
 	if err != nil {
