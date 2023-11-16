@@ -41,7 +41,7 @@ func (c *LogIqConsoleWriter) WriteMessage(ctx context.Context, l *log.LogMessage
 		AppNamespace:       c.appNamespace,
 		CorrelationID:      cr.CorrelationId,
 		Level:              l.LogLevelName,
-		Message:            l.ShortMessage + " :: " + ParseLogObject(l.FullMessage, false),
+		Message:            l.Message + " :: " + ParseLogObject(l.LogObject, false),
 	}
 	blob, _ := json.Marshal(msg)
 	fmt.Println(string(blob))

@@ -46,11 +46,11 @@ func GetLogLevelMap(level LogLevelCode) LogLevel {
 
 type LogMessage struct {
 	LogLevel
-	ShortMessage string
-	FullMessage  interface{}
-	Timestamp    time.Time
-	ModuleName   string
-	ServiceName  string
+	Message     string
+	LogObject   interface{}
+	Timestamp   time.Time
+	ModuleName  string
+	ServiceName string
 }
 
 type Logger struct {
@@ -107,59 +107,59 @@ func (l *Logger) Audit(ctx context.Context, msg interface{}) error {
 	return l.audit.WriteMessage(ctx, msg)
 }
 
-func (l *Logger) Debug(ctx context.Context, shortMessage string, fullMessage interface{}) {
-	l.print(ctx, logLevelMap[DEBUG], shortMessage, fullMessage)
+func (l *Logger) Debug(ctx context.Context, message string, logObject interface{}) {
+	l.print(ctx, logLevelMap[DEBUG], message, logObject)
 }
 
-func (l *Logger) Info(ctx context.Context, shortMessage string, fullMessage interface{}) {
-	l.print(ctx, logLevelMap[INFO], shortMessage, fullMessage)
+func (l *Logger) Info(ctx context.Context, message string, logObject interface{}) {
+	l.print(ctx, logLevelMap[INFO], message, logObject)
 }
 
-func (l *Logger) Notice(ctx context.Context, shortMessage string, fullMessage interface{}) {
-	l.print(ctx, logLevelMap[NOTICE], shortMessage, fullMessage)
+func (l *Logger) Notice(ctx context.Context, message string, logObject interface{}) {
+	l.print(ctx, logLevelMap[NOTICE], message, logObject)
 }
 
-func (l *Logger) Warning(ctx context.Context, shortMessage string, fullMessage interface{}) {
-	l.print(ctx, logLevelMap[WARNING], shortMessage, fullMessage)
+func (l *Logger) Warning(ctx context.Context, message string, logObject interface{}) {
+	l.print(ctx, logLevelMap[WARNING], message, logObject)
 }
 
-func (l *Logger) Error(ctx context.Context, shortMessage string, fullMessage interface{}) {
-	l.print(ctx, logLevelMap[ERROR], shortMessage, fullMessage)
+func (l *Logger) Error(ctx context.Context, message string, logObject interface{}) {
+	l.print(ctx, logLevelMap[ERROR], message, logObject)
 }
 
-func (l *Logger) Critical(ctx context.Context, shortMessage string, fullMessage interface{}) {
-	l.print(ctx, logLevelMap[CRITICAL], shortMessage, fullMessage)
+func (l *Logger) Critical(ctx context.Context, message string, logObject interface{}) {
+	l.print(ctx, logLevelMap[CRITICAL], message, logObject)
 }
 
-func (l *Logger) Alert(ctx context.Context, shortMessage string, fullMessage interface{}) {
-	l.print(ctx, logLevelMap[ALERT], shortMessage, fullMessage)
+func (l *Logger) Alert(ctx context.Context, message string, logObject interface{}) {
+	l.print(ctx, logLevelMap[ALERT], message, logObject)
 }
 
-func (l *Logger) Emergency(ctx context.Context, shortMessage string, fullMessage interface{}, err error) {
-	l.print(ctx, logLevelMap[EMERGENCY], shortMessage, fullMessage)
-	panic(fmt.Errorf("%v : %w", shortMessage, err))
+func (l *Logger) Emergency(ctx context.Context, message string, err error, logObject interface{}) {
+	l.print(ctx, logLevelMap[EMERGENCY], message, logObject)
+	panic(fmt.Errorf("%v : %w", message, err))
 }
 
-func (l *Logger) Log(ctx context.Context, logLevel int, shortMessage string, fullMessage interface{}, err error) {
+func (l *Logger) Log(ctx context.Context, logLevel int, message string, err error, logObject interface{}) {
 	if logLevel == int(EMERGENCY) {
-		l.Emergency(ctx, shortMessage, fullMessage, err)
+		l.Emergency(ctx, message, err, logObject)
 		return
 	}
 	level := GetLogLevelMap(LogLevelCode(logLevel))
-	l.print(ctx, &level, shortMessage, fullMessage)
+	l.print(ctx, &level, message, logObject)
 }
 
-func (l *Logger) print(ctx context.Context, level *LogLevel, shortMessage string, fullMessage interface{}) {
+func (l *Logger) print(ctx context.Context, level *LogLevel, message string, logObject interface{}) {
 	if level.Level > l.logLevel {
 		return
 	}
-	message := &LogMessage{
-		LogLevel:     *level,
-		ShortMessage: shortMessage,
-		FullMessage:  fullMessage,
-		Timestamp:    time.Now(),
-		ModuleName:   l.moduleName,
-		ServiceName:  l.serviceName,
+	msg := &LogMessage{
+		LogLevel:    *level,
+		Message:     message,
+		LogObject:   logObject,
+		Timestamp:   time.Now(),
+		ModuleName:  l.moduleName,
+		ServiceName: l.serviceName,
 	}
-	l.lMux.Print(ctx, message)
+	l.lMux.Print(ctx, msg)
 }
