@@ -18,12 +18,12 @@ type Reader struct {
 	bufferSize       uint64
 }
 
-func NewReader(ctx context.Context, log log.Logger, r *kafka.Reader, bufferSize uint64) *Reader {
+func NewReader(ctx context.Context, log log.Logger, r *kafka.Reader, bufferSize uint64, msgCh chan *kafka.Message) *Reader {
 	return &Reader{
 		Reader:           r,
 		log:              *log.NewResourceLogger("KafkaReader"),
 		consumedMessages: make([]kafka.Message, 0, bufferSize),
-		msgCh:            make(chan *kafka.Message, bufferSize),
+		msgCh:            msgCh,
 		bufferSize:       bufferSize,
 	}
 }
@@ -44,9 +44,11 @@ func (k *Reader) Commit(ctx context.Context) error {
 }
 
 func (k *Reader) Poll(ctx context.Context) error {
+	k.log.Debug(ctx, "Starting fetch message", nil)
 	for {
 		select {
 		case <-ctx.Done():
+			k.log.Notice(ctx, "Fetch message ended", nil)
 			return nil
 		default:
 			m, err := k.FetchMessage(ctx)
@@ -61,6 +63,6 @@ func (k *Reader) Poll(ctx context.Context) error {
 
 func (k *Reader) StoreMessage(ctx context.Context, msg *kafka.Message) {
 	k.commitLock.Lock()
+	defer k.commitLock.Unlock()
 	k.consumedMessages = append(k.consumedMessages, *msg)
-	k.commitLock.Unlock()
 }

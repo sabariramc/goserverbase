@@ -16,15 +16,13 @@ import (
 
 type Consumer struct {
 	*api.Reader
-	config           KafkaConsumerConfig
-	log              *log.Logger
-	topics           []string
-	serviceName      string
-	resourceName     string
-	wg               sync.WaitGroup
-	msgCh            chan *kafka.Message
-	commitLock       sync.Mutex
-	consumedMessages []kafka.Message
+	config       KafkaConsumerConfig
+	log          *log.Logger
+	topics       []string
+	serviceName  string
+	resourceName string
+	wg           sync.WaitGroup
+	msgCh        chan *kafka.Message
 }
 
 func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerConfig, resourceName string, topics ...string) (*Consumer, error) {
@@ -61,13 +59,15 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerC
 			TLS:           config.TLSConfig,
 		},
 	})
+	msgCh := make(chan *kafka.Message, config.MaxBuffer)
 	k := &Consumer{
 		log:          logger.NewResourceLogger(resourceName),
 		resourceName: resourceName,
 		config:       *config,
-		Reader:       api.NewReader(ctx, *logger, r, config.MaxBuffer),
+		Reader:       api.NewReader(ctx, *logger, r, config.MaxBuffer, msgCh),
 		topics:       topics,
 		serviceName:  config.ServiceName,
+		msgCh:        msgCh,
 	}
 	return k, nil
 }
@@ -85,7 +85,7 @@ func (k *Consumer) Poll(ctx context.Context, ch chan *kafka.Message) error {
 	defer close(ch)
 	defer k.wg.Wait()
 	k.log.Info(ctx, fmt.Sprintf("Polling started for topics : %v", k.topics), nil)
-	commitTimeout, commitNow := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(k.config.AutoCommitIntervalInMs))
+	commitNowTimeout, commitNow := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(k.config.AutoCommitIntervalInMs))
 	infoConsumerLag := time.Millisecond * time.Duration(k.config.ConsumerLagToleranceInMs)
 	noticeConsumerLag := 2 * infoConsumerLag
 	warningConsumerLag := 2 * noticeConsumerLag
@@ -99,7 +99,7 @@ outer:
 			commitErr = k.Commit(ctx)
 			k.log.Notice(ctx, "Polling Timeout/cancelled", nil)
 			break outer
-		case <-commitTimeout.Done():
+		case <-commitNowTimeout.Done():
 			if k.config.AutoCommit {
 				commitErr = k.Commit(ctx)
 				if commitErr != nil {
@@ -108,7 +108,7 @@ outer:
 				}
 			}
 			count = 0
-			commitTimeout, commitNow = context.WithTimeout(context.Background(), time.Millisecond*time.Duration(k.config.AutoCommitIntervalInMs))
+			commitNowTimeout, commitNow = context.WithTimeout(context.Background(), time.Millisecond*time.Duration(k.config.AutoCommitIntervalInMs))
 		case msg, ok := <-k.msgCh:
 			if !ok {
 				cancelPoll()
@@ -130,7 +130,6 @@ outer:
 			}
 			if count >= k.config.MaxBuffer {
 				commitNow()
-				count = 0
 			}
 		}
 	}
