@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sabariramc/goserverbase/v4/utils"
 )
 
 type loggingResponseWriter struct {
@@ -44,21 +43,12 @@ func (h *HttpServer) WriteJson(ctx context.Context, w http.ResponseWriter, respo
 	h.WriteJsonWithStatusCode(ctx, w, http.StatusOK, responseBody)
 }
 
-func (h *HttpServer) WriteResponseWithStatusCode(ctx context.Context, w http.ResponseWriter, statusCode int, contentType string, responseBody any) {
-	var blob []byte
-	var ok bool
-	var err error
-	if blob, ok = responseBody.([]byte); !ok {
-		blob, err = utils.GetBytes(responseBody)
-		if err != nil {
-			h.log.Emergency(ctx, "response encoding error", fmt.Errorf("HttpServer.WriteResponseWithStatusCode: error in encoding response :%w", err), responseBody)
-		}
-	}
+func (h *HttpServer) WriteResponseWithStatusCode(ctx context.Context, w http.ResponseWriter, statusCode int, contentType string, responseBody []byte) {
 	w.Header().Set(HttpHeaderContentType, contentType)
 	w.WriteHeader(statusCode)
-	w.Write(blob)
+	w.Write(responseBody)
 }
 
-func (h *HttpServer) WriteResponse(ctx context.Context, w http.ResponseWriter, statusCode int, contentType string, responseBody any) {
+func (h *HttpServer) WriteResponse(ctx context.Context, w http.ResponseWriter, statusCode int, contentType string, responseBody []byte) {
 	h.WriteResponseWithStatusCode(ctx, w, http.StatusOK, contentType, responseBody)
 }

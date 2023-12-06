@@ -198,6 +198,7 @@ func (h *HttpClient) Call(ctx context.Context, method, url string, reqBody, resB
 }
 
 func (h *HttpClient) Do(req *http.Request) (*http.Response, error) {
+	/*this is a modified version of go-retryablehttp*/
 	var resp *http.Response
 	var attempt int
 	var shouldRetry bool
