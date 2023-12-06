@@ -37,7 +37,7 @@ func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error
 		err = customError
 	}
 	if parseErr != nil {
-		b.log.Critical(ctx, "Error occurred during marshal of errors", parseErr)
+		b.log.Error(ctx, "Error occurred during marshal of errors", parseErr)
 	}
 	if errorData == nil {
 		errorData = requestData

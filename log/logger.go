@@ -3,6 +3,7 @@ package log
 import (
 	"context"
 	"fmt"
+	"os"
 	"time"
 )
 
@@ -20,9 +21,8 @@ const (
 	NOTICE    LogLevelCode = 5
 	WARNING   LogLevelCode = 4
 	ERROR     LogLevelCode = 3
-	CRITICAL  LogLevelCode = 2
-	ALERT     LogLevelCode = 1
-	EMERGENCY LogLevelCode = 0
+	EMERGENCY LogLevelCode = 2
+	FATAL     LogLevelCode = 0
 )
 
 var logLevelMap = map[LogLevelCode]*LogLevel{
@@ -31,9 +31,8 @@ var logLevelMap = map[LogLevelCode]*LogLevel{
 	NOTICE:    {Level: NOTICE, LogLevelName: "NOTICE"},
 	WARNING:   {Level: WARNING, LogLevelName: "WARNING"},
 	ERROR:     {Level: ERROR, LogLevelName: "ERROR"},
-	CRITICAL:  {Level: CRITICAL, LogLevelName: "CRITICAL"},
-	ALERT:     {Level: ALERT, LogLevelName: "ALERT"},
-	EMERGENCY: {Level: EMERGENCY, LogLevelName: "EMERGENCY"},
+	EMERGENCY: {Level: EMERGENCY, LogLevelName: "CRITICAL"},
+	FATAL:     {Level: FATAL, LogLevelName: "EMERGENCY"},
 }
 
 func GetLogLevelMap(level LogLevelCode) LogLevel {
@@ -84,7 +83,7 @@ func NewLogger(ctx context.Context, lc *Config, moduleName string, lMux LogMux, 
 		audit: audit,
 	}
 	logLevel := lc.LogLevel
-	if logLevel > int(DEBUG) || logLevel < int(EMERGENCY) {
+	if logLevel > int(DEBUG) || logLevel < int(FATAL) {
 		l.Warning(ctx, "Erroneous log level - log set to INFO", nil)
 		logLevel = int(INFO)
 	}
@@ -131,26 +130,15 @@ func (l *Logger) Error(ctx context.Context, message string, logObject interface{
 	l.print(ctx, logLevelMap[ERROR], message, logObject)
 }
 
-func (l *Logger) Critical(ctx context.Context, message string, logObject interface{}) {
-	l.print(ctx, logLevelMap[CRITICAL], message, logObject)
-}
-
-func (l *Logger) Alert(ctx context.Context, message string, logObject interface{}) {
-	l.print(ctx, logLevelMap[ALERT], message, logObject)
-}
-
 func (l *Logger) Emergency(ctx context.Context, message string, err error, logObject interface{}) {
 	l.print(ctx, logLevelMap[EMERGENCY], message, logObject)
 	panic(fmt.Errorf("%v : %w", message, err))
+
 }
 
-func (l *Logger) Log(ctx context.Context, logLevel int, message string, err error, logObject interface{}) {
-	if logLevel == int(EMERGENCY) {
-		l.Emergency(ctx, message, err, logObject)
-		return
-	}
-	level := GetLogLevelMap(LogLevelCode(logLevel))
-	l.print(ctx, &level, message, logObject)
+func (l *Logger) Fatal(ctx context.Context, message string, exitCode int, logObject interface{}) {
+	l.print(ctx, logLevelMap[FATAL], message, logObject)
+	os.Exit(exitCode)
 }
 
 func (l *Logger) print(ctx context.Context, level *LogLevel, message string, logObject interface{}) {
