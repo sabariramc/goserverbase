@@ -38,6 +38,7 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerC
 		config.ConsumerLagToleranceInMs = 1000
 	}
 	logger = logger.NewResourceLogger(resourceName)
+	defaultCorrelationParam := &log.CorrelationParam{CorrelationId: config.ServiceName + "--" + resourceName}
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:           config.Brokers,
 		GroupID:           config.GroupID,
@@ -46,12 +47,12 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerC
 		MaxBytes:          10e6, // 10MB,
 		Logger: &kafkaLogger{
 			Logger:  logger,
-			ctx:     log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(config.ServiceName+"--"+resourceName)),
+			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
 			isError: false,
 		},
 		ErrorLogger: &kafkaLogger{
 			Logger:  logger,
-			ctx:     log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(config.ServiceName+"--"+resourceName)),
+			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
 			isError: true,
 		},
 		Dialer: &kafka.Dialer{

@@ -30,9 +30,10 @@ func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerC
 		config.AutoFlushIntervalInMs = 1000
 	}
 	logger = logger.NewResourceLogger(resourceName)
+	defaultCorrelationParam := &log.CorrelationParam{CorrelationId: config.ServiceName + "--" + resourceName}
 	kLog := &kafkaLogger{
 		Logger:  logger,
-		ctx:     log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(config.ServiceName+"--"+resourceName)),
+		ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
 		isError: false,
 	}
 	p := &kafka.Writer{
@@ -47,7 +48,7 @@ func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerC
 		ErrorLogger: &kafkaLogger{
 			isError: true,
 			Logger:  logger,
-			ctx:     log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(config.ServiceName+"--"+resourceName)),
+			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
 		},
 		Completion:   kLog.DeliveryReport,
 		BatchSize:    config.MaxBuffer,
@@ -61,7 +62,7 @@ func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerC
 		Writer:       api.NewWriter(ctx, p, config.MaxBuffer, *logger),
 		topic:        topic,
 	}
-	autoFlushContext, cancel := context.WithCancel(log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(config.ServiceName+"--"+resourceName)))
+	autoFlushContext, cancel := context.WithCancel(log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam))
 	k.autoFlushCancel = cancel
 	go k.autoFlush(autoFlushContext)
 	return k, nil
@@ -111,10 +112,13 @@ func (k *Producer) autoFlush(ctx context.Context) {
 	}
 }
 
-func (k *Producer) Close(ctx context.Context) {
+func (k *Producer) Close(ctx context.Context) error {
 	k.log.Notice(ctx, "Producer closer initiated for topic", k.topic)
 	k.autoFlushCancel()
 	k.Flush(ctx)
-	k.Writer.Close()
-	k.log.Notice(ctx, "Producer closed for topic", k.topic)
+	err := k.Writer.Close()
+	if err == nil {
+		k.log.Notice(ctx, "Producer closed for topic", k.topic)
+	}
+	return err
 }
