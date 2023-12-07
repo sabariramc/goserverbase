@@ -8,8 +8,8 @@ import (
 
 type Message struct {
 	*kafka.Message
-	headers map[string]string
-	body    string
+	headers    map[string]string
+	stringBody string
 }
 
 func (m *Message) GetKey() string {
@@ -32,10 +32,10 @@ func (m *Message) LoadBody(v any) error {
 }
 
 func (m *Message) GetBody() string {
-	if m.body == "" {
-		m.body = string(m.Message.Value)
+	if m.stringBody == "" {
+		m.stringBody = string(m.Message.Value)
 	}
-	return m.body
+	return m.stringBody
 }
 
 func (m *Message) GetMeta() map[string]any {
@@ -44,6 +44,6 @@ func (m *Message) GetMeta() map[string]any {
 		"Headers":   m.GetHeaders(),
 		"Partition": m.Partition,
 		"Topic":     m.Topic,
-		"Times":     m.Time,
+		"Time":      m.Time,
 	}
 }

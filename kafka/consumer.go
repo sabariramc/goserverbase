@@ -22,7 +22,6 @@ type Consumer struct {
 	serviceName      string
 	resourceName     string
 	wg               sync.WaitGroup
-	msgCh            chan *kafka.Message
 	commitLock       sync.Mutex
 	consumedMessages []kafka.Message
 }
@@ -73,13 +72,11 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerC
 	return k, nil
 }
 
-func (k *Consumer) Poll(ctx context.Context, ch chan *kafka.Message) error {
-	k.msgCh = make(chan *kafka.Message, k.config.MaxBuffer)
+func (k *Consumer) Poll(ctx context.Context, ch chan<- *kafka.Message) error {
 	pollCtx, cancelPoll := context.WithCancel(ctx)
 	var pollErr, commitErr error
 	k.wg.Add(1)
 	go func() {
-		defer close(k.msgCh)
 		defer k.wg.Done()
 		pollErr = k.Reader.Poll(pollCtx)
 	}()
@@ -110,7 +107,7 @@ outer:
 			}
 			count = 0
 			commitTimeout, commitNow = context.WithTimeout(context.Background(), time.Millisecond*time.Duration(k.config.AutoCommitIntervalInMs))
-		case msg, ok := <-k.msgCh:
+		case msg, ok := <-k.GetEventChannel():
 			if !ok {
 				cancelPoll()
 				commitErr = k.Commit(ctx)
@@ -149,13 +146,7 @@ outer:
 func (k *Consumer) Close(ctx context.Context) error {
 	k.log.Notice(ctx, "Consumer closer initiated for topic", k.topics)
 	commitErr := k.Commit(ctx)
-	if k.msgCh != nil {
-		_, ok := <-k.msgCh
-		if ok {
-			close(k.msgCh)
-		}
-	}
-	closeErr := k.Reader.Close()
+	closeErr := k.Reader.Close(ctx)
 	k.wg.Wait()
 	k.log.Notice(ctx, "Consumer closed for topic", k.topics)
 	if commitErr != nil || closeErr != nil {

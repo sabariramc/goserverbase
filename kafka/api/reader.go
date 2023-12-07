@@ -16,6 +16,7 @@ type Reader struct {
 	consumedMessages []kafka.Message
 	msgCh            chan *kafka.Message
 	bufferSize       uint64
+	cancelPoll       context.CancelFunc
 }
 
 func NewReader(ctx context.Context, log log.Logger, r *kafka.Reader, bufferSize uint64) *Reader {
@@ -44,9 +45,13 @@ func (k *Reader) Commit(ctx context.Context) error {
 }
 
 func (k *Reader) Poll(ctx context.Context) error {
+	pollCtx, pollCancel := context.WithCancel(ctx)
+	k.cancelPoll = pollCancel
 	for {
 		select {
 		case <-ctx.Done():
+			return nil
+		case <-pollCtx.Done():
 			return nil
 		default:
 			m, err := k.FetchMessage(ctx)
@@ -59,8 +64,20 @@ func (k *Reader) Poll(ctx context.Context) error {
 	}
 }
 
+func (k *Reader) GetEventChannel() <-chan *kafka.Message {
+	return k.msgCh
+}
+
 func (k *Reader) StoreMessage(ctx context.Context, msg *kafka.Message) {
 	k.commitLock.Lock()
 	k.consumedMessages = append(k.consumedMessages, *msg)
 	k.commitLock.Unlock()
+}
+
+func (k *Reader) Close(ctx context.Context) error {
+	if k.cancelPoll != nil {
+		k.cancelPoll()
+	}
+	close(k.msgCh)
+	return k.Reader.Close()
 }
