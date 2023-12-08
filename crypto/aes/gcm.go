@@ -7,75 +7,82 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/sabariramc/goserverbase/v3/log"
-	"github.com/sabariramc/goserverbase/v3/utils"
+	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v4/utils"
 )
 
-type AESGCM struct {
+type GCM struct {
 	key []byte
 	log *log.Logger
 }
 
-func NewAESGCM(ctx context.Context, log *log.Logger, key string) (*AESGCM, error) {
-	keyByte, err := getKey(key)
+func NewGCM(ctx context.Context, log *log.Logger, key string) (*GCM, error) {
+	keyByte, err := getKeyBytes(key)
 	if err != nil {
-		return nil, fmt.Errorf("crypto.aes.NewAESGCM: error creating aes gcm: %w", err)
+		log.Error(ctx, "error in key", err)
+		return nil, fmt.Errorf("NewGCM: error in key: %w", err)
 	}
-	return &AESGCM{key: keyByte, log: log.NewResourceLogger("AESGCM")}, nil
+	return &GCM{key: keyByte, log: log.NewResourceLogger("GCM")}, nil
 }
 
-func (a *AESGCM) Encrypt(ctx context.Context, plainBlob []byte) ([]byte, error) {
+func (a *GCM) Encrypt(ctx context.Context, plainBlob []byte) ([]byte, error) {
 	block, err := aes.NewCipher(a.key)
 	if err != nil {
-		return nil, fmt.Errorf("AESGCM.Encrypt: %w", err)
+		a.log.Error(ctx, "error in creating cipher block", err)
+		return nil, fmt.Errorf("GCM.Encrypt: error in creating cipher block: %w", err)
 	}
 	cipher, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, fmt.Errorf("AESGCM.Encrypt: %w", err)
+		a.log.Error(ctx, "error in creating gcm cipher", err)
+		return nil, fmt.Errorf("GCM.Encrypt: error in creating gcm cipher: %w", err)
 	}
 	nonce := []byte(utils.GenerateRandomString(cipher.NonceSize()))
 	cipherBlob := cipher.Seal(nil, nonce, plainBlob, nil)
 	return append(nonce, cipherBlob...), nil
 }
 
-func (a *AESGCM) EncryptString(ctx context.Context, plainText string) (string, error) {
-	a.log.Debug(ctx, "Plain Text", plainText)
+func (a *GCM) EncryptString(ctx context.Context, plainText string) (string, error) {
 	blobRes, err := a.Encrypt(ctx, []byte(plainText))
 	if err != nil {
-		return "", fmt.Errorf("AESGCM.EncryptString: %w", err)
+		a.log.Error(ctx, "error in encrypting data", err)
+		return "", fmt.Errorf("GCM.EncryptString: error in encrypting data: %w", err)
 	}
 	res := base64.StdEncoding.EncodeToString(blobRes)
-	a.log.Debug(ctx, "EncryptedString", res)
 	return res, nil
 }
 
-func (a *AESGCM) Decrypt(ctx context.Context, encryptedData []byte) (plainData []byte, err error) {
+func (a *GCM) Decrypt(ctx context.Context, encryptedData []byte) (plainData []byte, err error) {
 	block, err := aes.NewCipher(a.key)
 	if err != nil {
-		return nil, fmt.Errorf("AESGCM.Decrypt: %w", err)
+		a.log.Error(ctx, "error in creating cipher block", err)
+		return nil, fmt.Errorf("GCM.Decrypt: error in creating cipher block: %w", err)
 	}
 	cipher, err := cipher.NewGCM(block)
 	if err != nil {
-		return nil, fmt.Errorf("AESGCM.Decrypt: %w", err)
+		a.log.Error(ctx, "error in creating gcm cipher", err)
+		return nil, fmt.Errorf("GCM.Decrypt: error in creating gcm cipher: %w", err)
 	}
 	nonce := encryptedData[:cipher.NonceSize()]
 	encryptedData = encryptedData[cipher.NonceSize():]
 	plainData, err = cipher.Open(nil, nonce, encryptedData, nil)
 	if err != nil {
-		return nil, fmt.Errorf("AESGCM.Decrypt: %w", err)
+		a.log.Error(ctx, "error during decrypting data", err)
+		return nil, fmt.Errorf("GCM.Decrypt: error during decrypting data: %w", err)
 	}
 	return plainData, nil
 }
 
-func (a *AESGCM) DecryptString(ctx context.Context, encryptedText string) (string, error) {
+func (a *GCM) DecryptString(ctx context.Context, encryptedText string) (string, error) {
 	a.log.Debug(ctx, "EncryptedString", encryptedText)
 	decoded, err := base64.StdEncoding.DecodeString(encryptedText)
 	if err != nil {
-		return "", fmt.Errorf("AESGCM.DecryptString.B64Decode: %w", err)
+		a.log.Error(ctx, "error in decoding encryptedData", err)
+		return "", fmt.Errorf("GCM.DecryptString: error in decoding encryptedData: %w", err)
 	}
 	blobRes, err := a.Decrypt(ctx, []byte(decoded))
 	if err != nil {
-		return "", fmt.Errorf("AESGCM.DecryptString: %w", err)
+		a.log.Error(ctx, "error in decrypting", err)
+		return "", fmt.Errorf("GCM.DecryptString: error in decrypting: %w", err)
 	}
 	res := string(blobRes)
 	a.log.Debug(ctx, "DecryptedString", res)

@@ -6,11 +6,11 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sabariramc/goserverbase/v3/app/server/httpserver"
-	"github.com/sabariramc/goserverbase/v3/errors"
-	"github.com/sabariramc/goserverbase/v3/log"
-	"github.com/sabariramc/goserverbase/v3/log/logwriter"
-	"github.com/sabariramc/goserverbase/v3/utils/testutils"
+	"github.com/sabariramc/goserverbase/v4/app/server/httpserver"
+	"github.com/sabariramc/goserverbase/v4/errors"
+	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v4/log/logwriter"
+	"github.com/sabariramc/goserverbase/v4/utils/testutils"
 )
 
 var ServerTestConfig *testutils.TestConfig
@@ -57,7 +57,7 @@ func (s *server) Func2(c *gin.Context) {
 }
 
 func (s *server) Func3(w http.ResponseWriter, r *http.Request) {
-	s.SetHandlerErrorInContext(r.Context(), errors.NewCustomError("hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, true))
+	s.SetErrorInContext(r.Context(), errors.NewCustomError("hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, true, nil))
 }
 
 func (s *server) Func4(w http.ResponseWriter, r *http.Request) {
@@ -65,7 +65,7 @@ func (s *server) Func4(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) Func5(w http.ResponseWriter, r *http.Request) {
-	s.SetHandlerErrorInContext(r.Context(), errors.NewHTTPClientError(403, "hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil))
+	s.SetErrorInContext(r.Context(), errors.NewHTTPClientError(403, "hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, nil))
 }
 
 func NewServer() *server {

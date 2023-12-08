@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/v3/crypto"
-	"github.com/sabariramc/goserverbase/v3/crypto/aes"
-	"github.com/sabariramc/goserverbase/v3/utils"
+	"github.com/sabariramc/goserverbase/v4/crypto"
+	"github.com/sabariramc/goserverbase/v4/crypto/aes"
+	"github.com/sabariramc/goserverbase/v4/utils"
 	"gotest.tools/assert"
 )
 
@@ -15,7 +15,7 @@ func TestAESGCM(t *testing.T) {
 	ctx := GetCorrelationContext()
 	key := utils.GenerateRandomString(32)
 	var chiper crypto.CipherText
-	chiper, err := aes.NewAESGCM(ctx, ServerTestLogger, key)
+	chiper, err := aes.NewGCM(ctx, ServerTestLogger, key)
 	assert.NilError(t, err)
 	data := "fasdfasdasffasdfas fasdfasdfa sfasdf asd fasd fasdf"
 	res, _ := chiper.Encrypt(context.TODO(), []byte(data))
@@ -27,7 +27,7 @@ func BenchmarkAESGCM(b *testing.B) {
 	ctx := GetCorrelationContext()
 	key := utils.GenerateRandomString(32)
 	var chiper crypto.CipherText
-	chiper, err := aes.NewAESGCM(ctx, ServerTestLogger, key)
+	chiper, err := aes.NewGCM(ctx, ServerTestLogger, key)
 	assert.NilError(b, err)
 	for i := 0; i < b.N; i++ {
 		data := uuid.NewString() + uuid.NewString()

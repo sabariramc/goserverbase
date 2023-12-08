@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/sabariramc/goserverbase/v3/errors"
+	"github.com/sabariramc/goserverbase/v4/errors"
 )
 
 func GetEnv(key string, defaultVal string) string {
@@ -58,7 +58,7 @@ func GetEnvAsSlice(name string, defaultVal []string, sep string) []string {
 func GetEnvMust(key string) string {
 	value := os.Getenv(key)
 	if value == "" {
-		panic(errors.NewCustomError("MANDATORY_KEY_MISSING", fmt.Sprintf("mandatory environment variable is not set %v", key), nil, nil, true))
+		panic(errors.NewCustomError("MANDATORY_KEY_MISSING", fmt.Sprintf("mandatory environment variable is not set %v", key), nil, nil, true, nil))
 	}
 	return value
 }

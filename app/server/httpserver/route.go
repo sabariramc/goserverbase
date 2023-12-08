@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sabariramc/goserverbase/v3/errors"
+	"github.com/sabariramc/goserverbase/v4/errors"
 )
 
 type APIDocumentation struct {
@@ -41,7 +41,7 @@ func NotFound() http.HandlerFunc {
 		w.WriteHeader(http.StatusNotFound)
 		body, _ := errors.NewHTTPClientError(http.StatusNotFound, "URL_NOT_FOUND", "Invalid path", nil, map[string]string{
 			"path": r.URL.Path,
-		}).GetErrorResponse()
+		}, nil).GetErrorResponse()
 		w.Write(body)
 	}
 }
@@ -53,7 +53,7 @@ func MethodNotAllowed() http.HandlerFunc {
 		body, _ := errors.NewHTTPClientError(http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "Invalid method", nil, map[string]string{
 			"path":   r.URL.Path,
 			"method": r.Method,
-		}).GetErrorResponse()
+		}, nil).GetErrorResponse()
 		w.Write(body)
 	}
 }

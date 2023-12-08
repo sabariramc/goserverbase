@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func (h *HttpServer) SetHandlerErrorInContext(ctx context.Context, err error) {
+func (h *HttpServer) SetErrorInContext(ctx context.Context, err error) {
 	iSetter := ctx.Value(ContextKeyHandlerError)
 	if iSetter == nil {
 		return

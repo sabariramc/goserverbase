@@ -3,8 +3,8 @@ package kafkaconsumer
 import (
 	"context"
 
-	"github.com/sabariramc/goserverbase/v3/kafka"
-	"github.com/sabariramc/goserverbase/v3/log"
+	"github.com/sabariramc/goserverbase/v4/kafka"
+	"github.com/sabariramc/goserverbase/v4/log"
 )
 
 func (k *KafkaConsumerServer) GetCorrelationParams(headers map[string]string) *log.CorrelationParam {
