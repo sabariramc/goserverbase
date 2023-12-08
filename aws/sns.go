@@ -36,7 +36,7 @@ func NewSNSClient(logger *log.Logger, client *sns.Client) *SNS {
 	return &SNS{Client: client, log: logger.NewResourceLogger("SNS")}
 }
 
-func (s *SNS) Publish(ctx context.Context, topicArn, subject *string, payload *utils.Message, attributes map[string]string) error {
+func (s *SNS) Publish(ctx context.Context, topicArn, subject *string, payload *utils.Message, attributes map[string]string) (*sns.PublishOutput, error) {
 	blob, _ := json.Marshal(payload)
 	message := string(blob)
 	req := &sns.PublishInput{
@@ -45,14 +45,12 @@ func (s *SNS) Publish(ctx context.Context, topicArn, subject *string, payload *u
 		Message:           &message,
 		MessageAttributes: s.GetAttribute(attributes),
 	}
-	s.log.Debug(ctx, "SNS publish request", req)
 	res, err := s.Client.Publish(ctx, req)
 	if err != nil {
 		s.log.Error(ctx, "SNS publish error", err)
-		return fmt.Errorf("SNS.Publish: %w", err)
+		return res, fmt.Errorf("SNS.Publish: error publishing event: %w", err)
 	}
-	s.log.Debug(ctx, "SNS publish response", res)
-	return nil
+	return res, nil
 }
 
 func (s *SNS) GetAttribute(attribute map[string]string) map[string]types.MessageAttributeValue {
