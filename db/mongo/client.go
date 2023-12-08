@@ -7,7 +7,7 @@ import (
 
 	mongotrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/go.mongodb.org/mongo-driver/mongo"
 
-	"github.com/sabariramc/goserverbase/v3/log"
+	"github.com/sabariramc/goserverbase/v4/log"
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -36,7 +36,7 @@ func New(ctx context.Context, logger *log.Logger, c Config, opts ...*options.Cli
 	opts = append(opts, mon)
 	client, err = NewMongoClient(ctx, logger, &c, opts...)
 	if err != nil {
-		return nil, fmt.Errorf("mongo.NewMongo : %w", err)
+		return nil, fmt.Errorf("mongo.NewMongo: %w", err)
 	}
 	return NewWrapper(ctx, logger, c, client), nil
 }
@@ -55,10 +55,12 @@ func NewMongoClient(ctx context.Context, logger *log.Logger, c *Config, opts ...
 	opts = append(opts, connectionOptions)
 	client, err := mongo.Connect(ctx, opts...)
 	if err != nil {
+		logger.Error(ctx, "error creating mongo connection", err)
 		return nil, fmt.Errorf("mongo.NewMongoClient: error creating mongo connection: %w", err)
 	}
 	err = client.Ping(ctx, nil)
 	if err != nil {
+		logger.Error(ctx, "error pinging mongo server", err)
 		return nil, fmt.Errorf("mongo.NewMongoClient: error pinging mongo server: %w", err)
 	}
 	return client, nil

@@ -3,9 +3,9 @@ package kafkaconsumer
 import (
 	"context"
 
-	"github.com/sabariramc/goserverbase/v3/app/server/kafkaconsumer/trace"
-	"github.com/sabariramc/goserverbase/v3/kafka"
-	"github.com/sabariramc/goserverbase/v3/log"
+	"github.com/sabariramc/goserverbase/v4/app/server/kafkaconsumer/trace"
+	"github.com/sabariramc/goserverbase/v4/kafka"
+	"github.com/sabariramc/goserverbase/v4/log"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 

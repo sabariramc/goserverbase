@@ -33,4 +33,5 @@ type KafkaProducerConfig struct {
 	Acknowledge           int
 	MaxBuffer             int
 	AutoFlushIntervalInMs uint64
+	Channeled             bool //Experimental
 }

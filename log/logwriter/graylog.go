@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v3/log"
+	"github.com/sabariramc/goserverbase/v4/log"
 
 	"gopkg.in/Graylog2/go-gelf.v2/gelf"
 )
@@ -77,15 +77,16 @@ func truncate(s *string, l uint) string {
 func (g *GraylogWriter) WriteMessage(ctx context.Context, msg *log.LogMessage) (err error) {
 	cr := log.GetCorrelationParam(ctx)
 	errorMessage := log.LogMessage{
-		LogLevel:     log.GetLogLevelMap(log.ERROR),
-		ShortMessage: msg.ShortMessage,
-		FullMessage:  msg.FullMessage,
-		Timestamp:    time.Now()}
+		LogLevel:  log.GetLogLevelMap(log.ERROR),
+		Message:   msg.Message,
+		LogObject: msg.LogObject,
+		Timestamp: time.Now()}
+	fullMessage := ParseLogObject(msg.LogObject, false)
 	err = g.writer.WriteMessage(&gelf.Message{
 		Version:  g.hostParam.Version,
 		Host:     g.hostParam.Host,
-		Short:    truncate(&msg.ShortMessage, g.c.ShortMessageLimit),
-		Full:     truncate(&msg.FullMessage, g.c.LongMessageLimit),
+		Short:    truncate(&msg.Message, g.c.ShortMessageLimit),
+		Full:     truncate(&fullMessage, g.c.LongMessageLimit),
 		TimeUnix: float64(msg.Timestamp.UnixMilli()) / 1000,
 		Level:    int32(msg.Level),
 		Extra: map[string]interface{}{
@@ -95,13 +96,13 @@ func (g *GraylogWriter) WriteMessage(ctx context.Context, msg *log.LogMessage) (
 			"x-scenario-name":     cr.ScenarioName,
 			"service-name":        msg.ServiceName,
 			"module-name":         msg.ModuleName,
-			"x-full-message-type": msg.FullMessageType,
+			"x-full-message-type": GetLogObjectType(msg.LogObject),
 		},
 	})
 	if err != nil {
 		_ = g.errorLog.WriteMessage(ctx, msg)
-		errorMessage.ShortMessage = "Error sending to graylog"
-		errorMessage.FullMessage = err.Error()
+		errorMessage.Message = "Error sending to graylog"
+		errorMessage.LogObject = err.Error()
 		_ = g.errorLog.WriteMessage(ctx, &errorMessage)
 		return fmt.Errorf("GraylogWriter.WriteMessage : %w", err)
 	}

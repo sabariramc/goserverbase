@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v3/db/mongo"
-	"github.com/sabariramc/goserverbase/v3/utils"
+	"github.com/sabariramc/goserverbase/v4/db/mongo"
+	"github.com/sabariramc/goserverbase/v4/utils"
 	"github.com/shopspring/decimal"
 	"gotest.tools/assert"
 )
@@ -40,13 +40,13 @@ func TestMongoCollectionInsertOne(t *testing.T) {
 	ctx := GetCorrelationContext()
 	client, err := mongo.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	coll := client.Database("GOTEST").Collection("Plain")
 	data := GetSampleData()
 	_, err = coll.InsertOne(ctx, data)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 }
 
@@ -54,7 +54,7 @@ func TestMongoCollection(t *testing.T) {
 	ctx := GetCorrelationContext()
 	client, err := mongo.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	coll := client.Database("GOTEST").Collection("Plain")
 	input := GetSampleData()
@@ -63,7 +63,7 @@ func TestMongoCollection(t *testing.T) {
 	res := &TestVal{}
 	err = cur.Decode(res)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	res.ID = nil
 	input.BaseMongoDocument = nil
@@ -74,7 +74,7 @@ func TestMongoCollection(t *testing.T) {
 	res = &TestVal{}
 	err = cur.Decode(res)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	coll.DeleteOne(ctx, map[string]string{"_id": res.ID.String()})
 	cur = coll.FindOne(ctx, map[string]string{"_id": res.ID.String()})
@@ -89,14 +89,14 @@ func TestMongoCollectionFindOne(t *testing.T) {
 	ctx := GetCorrelationContext()
 	client, err := mongo.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	coll := client.Database("GOTEST").Collection("Plain")
 	cur := coll.FindOne(ctx, map[string]string{"strVal": "value1"})
 	val := &TestVal{}
 	err = cur.Decode(val)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	fmt.Printf("%+v\n", val)
 }
@@ -105,7 +105,7 @@ func TestMongoCollectionFindFetch(t *testing.T) {
 	ctx := GetCorrelationContext()
 	client, err := mongo.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	coll := client.Database("GOTEST").Collection("Plain")
 	loader := func(count int) []interface{} {
@@ -117,7 +117,7 @@ func TestMongoCollectionFindFetch(t *testing.T) {
 	}
 	data, err := coll.FindFetch(ctx, loader, nil)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	for _, val := range data {
 		fmt.Printf("%+v\n", val)

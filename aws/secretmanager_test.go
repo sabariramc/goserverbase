@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/sabariramc/goserverbase/v3/aws"
+	"github.com/sabariramc/goserverbase/v4/aws"
+	"gotest.tools/assert"
 )
 
 func TestSecretManager(t *testing.T) {
@@ -13,14 +14,14 @@ func TestSecretManager(t *testing.T) {
 	secret, err := client.GetSecret(ctx, AWSTestConfig.AWS.SECRET_ARN)
 	fmt.Println(secret)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	_, err = client.GetSecret(ctx, AWSTestConfig.AWS.SECRET_ARN)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	_, err = client.GetSecret(ctx, AWSTestConfig.AWS.SECRET_ARN)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 }

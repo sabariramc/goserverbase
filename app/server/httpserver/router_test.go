@@ -9,7 +9,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/sabariramc/goserverbase/v3/app/server/httpserver/test/server"
+	"github.com/sabariramc/goserverbase/v4/app/server/httpserver/test/server"
 	"gotest.tools/assert"
 )
 

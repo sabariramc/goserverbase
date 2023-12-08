@@ -1,7 +1,7 @@
 package mongo
 
 import (
-	"github.com/sabariramc/goserverbase/v3/log"
+	"github.com/sabariramc/goserverbase/v4/log"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -11,7 +11,7 @@ type Database struct {
 	log *log.Logger
 }
 
-var decimalHandlerOptions = options.Collection().SetRegistry(newCustomBsonRegistry().Build())
+var decimalHandlerOptions = options.Collection().SetRegistry(newCustomBsonRegistry())
 
 func (d *Database) Collection(name string, opts ...*options.CollectionOptions) *Collection {
 	opts = append(opts, decimalHandlerOptions)

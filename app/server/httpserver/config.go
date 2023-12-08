@@ -1,6 +1,6 @@
 package httpserver
 
-import baseapp "github.com/sabariramc/goserverbase/v3/app"
+import baseapp "github.com/sabariramc/goserverbase/v4/app"
 
 type LogConfig struct {
 	AuthHeaderKeyList []string

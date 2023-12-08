@@ -6,9 +6,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	baseapp "github.com/sabariramc/goserverbase/v3/app"
-	"github.com/sabariramc/goserverbase/v3/errors"
-	"github.com/sabariramc/goserverbase/v3/log"
+	baseapp "github.com/sabariramc/goserverbase/v4/app"
+	"github.com/sabariramc/goserverbase/v4/errors"
+	"github.com/sabariramc/goserverbase/v4/log"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 

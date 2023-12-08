@@ -3,8 +3,9 @@ package aws_test
 import (
 	"testing"
 
-	"github.com/sabariramc/goserverbase/v3/aws"
-	"github.com/sabariramc/goserverbase/v3/utils"
+	"github.com/sabariramc/goserverbase/v4/aws"
+	"github.com/sabariramc/goserverbase/v4/utils"
+	"gotest.tools/assert"
 )
 
 func TestSNSClient(t *testing.T) {
@@ -29,9 +30,9 @@ func TestSNSClient(t *testing.T) {
 			"id": "cust_fasdfsa",
 		},
 	})
-	err := snsClient.Publish(ctx, &arn, nil, message, nil)
+	_, err := snsClient.Publish(ctx, &arn, nil, message, nil)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 
 }

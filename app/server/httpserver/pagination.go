@@ -3,14 +3,14 @@ package httpserver
 import (
 	"fmt"
 
-	"github.com/sabariramc/goserverbase/v3/utils"
+	"github.com/sabariramc/goserverbase/v4/utils"
 )
 
 type Filter struct {
 	PageNo int64  `json:"pageNo" schema:"pageNo"`
 	Limit  int64  `json:"limit" schema:"limit"`
 	SortBy string `json:"sortBy" schema:"sortBy"`
-	Asc    *bool  `json:"asc" schema:"asc"`
+	Asc    bool   `json:"asc" schema:"asc"`
 }
 
 func SetDefaultPagination(filter interface{}, defaultSortBy string) error {
@@ -27,10 +27,6 @@ func SetDefaultPagination(filter interface{}, defaultSortBy string) error {
 	}
 	if defaultFilter.SortBy == "" {
 		defaultFilter.SortBy = defaultSortBy
-	}
-	if defaultFilter.Asc == nil {
-		v := true
-		defaultFilter.Asc = &v
 	}
 	err = utils.StrictJsonTransformer(&defaultFilter, filter)
 	if err != nil {

@@ -1,17 +1,25 @@
 package utils
 
 import (
-	"bytes"
 	"encoding/gob"
 	"fmt"
+	"io"
 )
 
-func GetBytes(key interface{}) ([]byte, error) {
-	var buf bytes.Buffer
-	enc := gob.NewEncoder(&buf)
-	err := enc.Encode(key)
+func Encode(src interface{}, dest io.Writer) error {
+	enc := gob.NewEncoder(dest)
+	err := enc.Encode(src)
 	if err != nil {
-		return nil, fmt.Errorf("baseapp.GetBytes: %w", err)
+		return fmt.Errorf("utils.Encode: %w", err)
 	}
-	return buf.Bytes(), nil
+	return nil
+}
+
+func Decode(src io.Reader, dest interface{}) error {
+	enc := gob.NewDecoder(src)
+	err := enc.Decode(dest)
+	if err != nil {
+		return fmt.Errorf("utils.Decode: %w", err)
+	}
+	return nil
 }

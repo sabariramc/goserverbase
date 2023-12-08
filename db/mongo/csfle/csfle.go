@@ -14,8 +14,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	mongotrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/go.mongodb.org/mongo-driver/mongo"
 
-	m "github.com/sabariramc/goserverbase/v3/db/mongo"
-	"github.com/sabariramc/goserverbase/v3/log"
+	m "github.com/sabariramc/goserverbase/v4/db/mongo"
+	"github.com/sabariramc/goserverbase/v4/log"
 )
 
 var tmp = "/tmp/mongocryptd"

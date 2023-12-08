@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sabariramc/goserverbase/v3/kafka"
+	"github.com/sabariramc/goserverbase/v4/kafka"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )

@@ -5,7 +5,7 @@ import (
 	e "errors"
 	"net/http"
 
-	"github.com/sabariramc/goserverbase/v3/errors"
+	"github.com/sabariramc/goserverbase/v4/errors"
 )
 
 func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error, requestData any) (int, []byte) {
@@ -32,12 +32,12 @@ func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error
 		errorData = customError.ErrorData
 	} else {
 		statusCode = http.StatusInternalServerError
-		customError = errors.NewCustomError("UNKNOWN", "Unknown error", err, map[string]string{"error": "Internal error occurred, if persist contact technical team"}, true)
+		customError = errors.NewCustomError("UNKNOWN", "Unknown error", nil, map[string]string{"error": "Internal error occurred, if persist contact technical team"}, true, err)
 		body, parseErr = customError.GetErrorResponse()
 		err = customError
 	}
 	if parseErr != nil {
-		b.log.Alert(ctx, "Error occurred during marshal of errors", parseErr)
+		b.log.Error(ctx, "Error occurred during marshal of errors", parseErr)
 	}
 	if errorData == nil {
 		errorData = requestData

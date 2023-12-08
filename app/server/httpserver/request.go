@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/sabariramc/goserverbase/v3/log"
+	"github.com/sabariramc/goserverbase/v4/log"
 )
 
 func (h *HttpServer) GetCorrelationParams(r *http.Request) *log.CorrelationParam {
@@ -99,7 +99,7 @@ func (h *HttpServer) GetRequestBody(r *http.Request) string {
 	if ctxBody != nil {
 		body, ok := ctxBody.(*string)
 		if !ok {
-			h.log.Emergency(ctx, "Invalid type for ContextKeyRequestBodyString context variable", ctxBody, fmt.Errorf("GetRequestBody: invalid type for context body reference"))
+			h.log.Emergency(ctx, "Invalid type for ContextKeyRequestBodyString context variable", fmt.Errorf("HttpServer.GetRequestBody: invalid type for context body reference"), ctxBody)
 		}
 		if *body == "" {
 			*body = string(h.GetBody(r))
@@ -116,7 +116,7 @@ func (h *HttpServer) GetBody(r *http.Request) []byte {
 	if ctxBody != nil {
 		body, ok := ctxBody.(**[]byte)
 		if !ok {
-			h.log.Emergency(ctx, "Invalid type for ContextKeyRequestBodyRaw context variable", ctxBody, fmt.Errorf("GetBody: invalid type for context body reference"))
+			h.log.Emergency(ctx, "Invalid type for ContextKeyRequestBodyRaw context variable", fmt.Errorf("HttpServer.GetBody: invalid type for context body reference"), ctxBody)
 		}
 		if body == nil {
 			return h.CopyRequestBody(r)

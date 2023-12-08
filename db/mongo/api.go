@@ -4,13 +4,13 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sabariramc/goserverbase/v3/utils"
+	"github.com/sabariramc/goserverbase/v4/utils"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type NewLoadContainer func(count int) []interface{}
+type NewResponseObjectList func(count int) []interface{}
 
 func (m *Collection) FindWithHash(ctx context.Context, filter map[string]interface{}, opts ...*options.FindOptions) (cur *mongo.Cursor, err error) {
 	return m.Find(ctx, m.newHashFilter(ctx, filter), opts...)
@@ -20,7 +20,7 @@ func (m *Collection) FindOneWithHash(ctx context.Context, filter map[string]inte
 	return m.FindOne(ctx, m.newHashFilter(ctx, filter), opts...)
 }
 
-func (m *Collection) FindFetch(ctx context.Context, loader NewLoadContainer, filter interface{}, opts ...*options.FindOptions) (res []interface{}, err error) {
+func (m *Collection) FindFetch(ctx context.Context, loader NewResponseObjectList, filter interface{}, opts ...*options.FindOptions) (res []interface{}, err error) {
 	if filter == nil {
 		filter = bson.D{}
 	}
@@ -34,16 +34,16 @@ func (m *Collection) FindFetch(ctx context.Context, loader NewLoadContainer, fil
 	for cur.Next(ctx) {
 		err := cur.Decode(valList[i])
 		if err != nil {
+			m.log.Error(ctx, "Error during Collection.FindFetch", err)
 			return nil, fmt.Errorf("Collection.FindFetch : %w", err)
 		}
 		i++
 	}
 	res = valList
-	m.log.Debug(ctx, "Mongo find fetch response", res)
 	return
 }
 
-func (m *Collection) FindFetchWithHash(ctx context.Context, loader NewLoadContainer, filter map[string]interface{}, opts ...*options.FindOptions) (res []interface{}, err error) {
+func (m *Collection) FindFetchWithHash(ctx context.Context, loader NewResponseObjectList, filter map[string]interface{}, opts ...*options.FindOptions) (res []interface{}, err error) {
 	return m.FindFetch(ctx, loader, m.newHashFilter(ctx, filter), opts...)
 }
 

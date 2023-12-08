@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/sabariramc/goserverbase/v3/log"
+	"github.com/sabariramc/goserverbase/v4/log"
 	ddtrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/net/http"
 )
 
@@ -157,7 +157,7 @@ func (h *HttpClient) Call(ctx context.Context, method, url string, reqBody, resB
 		req.Header.Add(key, val)
 	}
 	if reqBody != nil && reqPrint == nil {
-		h.log.Debug(ctx, "Request payload is not printed : either it is a interface or violates MaxContentLength", err)
+		h.log.Debug(ctx, "Request payload is not printed : either it is a io.Reader or violates MaxContentLength", err)
 	}
 	h.log.Debug(ctx, "Request", map[string]interface{}{
 		"method":  method,
@@ -199,6 +199,7 @@ func (h *HttpClient) Call(ctx context.Context, method, url string, reqBody, resB
 }
 
 func (h *HttpClient) Do(req *http.Request) (*http.Response, error) {
+	/*this is a modified version of go-retryablehttp*/
 	var resp *http.Response
 	var attempt int
 	var shouldRetry bool
