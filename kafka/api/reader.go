@@ -38,7 +38,8 @@ func (k *Reader) Commit(ctx context.Context) error {
 	k.log.Debug(ctx, "committing messages", k.consumedMessages)
 	err := k.CommitMessages(ctx, k.consumedMessages...)
 	if err != nil {
-		return fmt.Errorf("kafka.Consumer.Commit: error during commit : %w", err)
+		k.log.Error(ctx, "Commit error", err)
+		return fmt.Errorf("kafka.Reader.Commit: error during commit: %w", err)
 	}
 	k.consumedMessages = make([]kafka.Message, 0, k.bufferSize)
 	return nil
@@ -57,7 +58,7 @@ func (k *Reader) Poll(ctx context.Context) error {
 			m, err := k.FetchMessage(ctx)
 			if err != nil {
 				k.log.Error(ctx, "Poll error", err)
-				return fmt.Errorf("kafka.Consumer.poll: Error: %w", err)
+				return fmt.Errorf("kafka.Reader.Poll: error in fetching message: %w", err)
 			}
 			k.msgCh <- &m
 		}
@@ -79,5 +80,9 @@ func (k *Reader) Close(ctx context.Context) error {
 		k.cancelPoll()
 	}
 	close(k.msgCh)
-	return k.Reader.Close()
+	err := k.Reader.Close()
+	if err != nil {
+		return fmt.Errorf("kafka.Reader.Close: error in closing reader: %w", err)
+	}
+	return nil
 }

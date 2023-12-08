@@ -54,12 +54,19 @@ func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerC
 		BatchSize:    config.MaxBuffer,
 		RequiredAcks: kafka.RequiredAcks(config.Acknowledge),
 	}
+	var writer *api.Writer
+	if config.Channeled {
+		writer = api.NewChanneledWriter(ctx, p, config.MaxBuffer, *logger)
+	} else {
+		writer = api.NewWriter(ctx, p, config.MaxBuffer, *logger)
+	}
+
 	k := &Producer{
 		serviceName:  config.ServiceName,
 		resourceName: resourceName,
 		log:          logger,
 		config:       *config,
-		Writer:       api.NewWriter(ctx, p, config.MaxBuffer, *logger),
+		Writer:       writer,
 		topic:        topic,
 	}
 	autoFlushContext, cancel := context.WithCancel(log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam))
@@ -116,7 +123,7 @@ func (k *Producer) Close(ctx context.Context) error {
 	k.log.Notice(ctx, "Producer closer initiated for topic", k.topic)
 	k.autoFlushCancel()
 	k.Flush(ctx)
-	err := k.Writer.Close()
+	err := k.Writer.Close(ctx)
 	if err == nil {
 		k.log.Notice(ctx, "Producer closed for topic", k.topic)
 	}

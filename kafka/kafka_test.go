@@ -18,6 +18,12 @@ func newProducer(ctx context.Context) (*kafka.Producer, error) {
 	return kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducer, "KafkaProducer", KafkaTestConfig.KafkaTestTopic)
 }
 
+func newChanneledProducer(ctx context.Context) (*kafka.Producer, error) {
+	config := *KafkaTestConfig.KafkaProducer
+	config.Channeled = true
+	return kafka.NewProducer(ctx, KafkaTestLogger, &config, "KafkaProducer", KafkaTestConfig.KafkaTestTopic)
+}
+
 func newConsumer(ctx context.Context) (*kafka.Consumer, error) {
 	return kafka.NewConsumer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaConsumer, "KafkaConsumer", KafkaTestConfig.KafkaTestTopic)
 }
@@ -33,16 +39,23 @@ func TestKafkaConsumer(t *testing.T) {
 	assert.NilError(t, err)
 	var s sync.WaitGroup
 	s.Add(1)
+	maxCount := 10000
 	go func() {
 		co.Poll(tCtx, ch)
 		s.Done()
 	}()
+	i := 0
 	for msg := range ch {
+		i++
 		kMsg := kafka.Message{
 			Message: msg,
 		}
-		KafkaTestLogger.Info(ctx, "Kafka message", kMsg.GetBody())
+		KafkaTestLogger.Debug(ctx, "Kafka message", kMsg.GetBody())
+		if i == maxCount {
+			break
+		}
 	}
+	cancel()
 	s.Wait()
 	assert.NilError(t, err)
 }
@@ -50,8 +63,8 @@ func TestKafkaConsumer(t *testing.T) {
 func TestKafkaProducer(t *testing.T) {
 	ctx := GetCorrelationContext()
 	uuidVal := uuid.NewString()
-	totalNoOfMessage := 10
-	connFac := 1
+	totalNoOfMessage := 10000
+	connFac := 10
 	var wg sync.WaitGroup
 	for i := 0; i < connFac; i++ {
 		wg.Add(1)
@@ -74,30 +87,22 @@ func TestKafkaProducer(t *testing.T) {
 	wg.Wait()
 }
 
-func TestKafkaPoll(t *testing.T) {
-	ctx := GetCorrelationContext()
-	co, err := newConsumer(ctx)
-	assert.NilError(t, err)
-	defer co.Close(ctx)
-	pr, err := newProducer(ctx)
-	assert.NilError(t, err)
-	defer pr.Close(ctx)
+func testKafkaPoll(ctx context.Context, t *testing.T, co *kafka.Consumer, pr *kafka.Producer, totalCount int) {
 	ch := make(chan *cKafka.Message, 100)
 	var wg sync.WaitGroup
 	wg.Add(1)
-	totalCount := 1000
 	uuidVal := "TestKafkaPoll" + uuid.NewString()
 	time.Sleep(time.Second * 5)
 	go func() {
 		defer wg.Done()
 		for i := 0; i < totalCount; i++ {
 			ctx := GetCorrelationContext()
-			err = pr.ProduceMessage(ctx, strconv.Itoa(i), &utils.Message{
+			err := pr.ProduceMessage(ctx, strconv.Itoa(i), &utils.Message{
 				Event: uuidVal,
 			}, nil)
 			assert.NilError(t, err)
 		}
-		err = pr.Flush(ctx)
+		err := pr.Flush(ctx)
 		assert.NilError(t, err)
 	}()
 	tCtx, cancel := context.WithTimeout(ctx, time.Second*45)
@@ -126,6 +131,28 @@ func TestKafkaPoll(t *testing.T) {
 	assert.Equal(t, totalCount, count)
 	et := time.Now()
 	KafkaTestLogger.Info(ctx, "Time taken in ms", et.Sub(st)/1000000)
+}
+
+func TestKafkaPoll(t *testing.T) {
+	ctx := GetCorrelationContext()
+	co, err := newConsumer(ctx)
+	assert.NilError(t, err)
+	defer co.Close(ctx)
+	pr, err := newProducer(ctx)
+	assert.NilError(t, err)
+	defer pr.Close(ctx)
+	testKafkaPoll(ctx, t, co, pr, 1000)
+}
+
+func TestKafkaPollChanneledWriter(t *testing.T) {
+	ctx := GetCorrelationContext()
+	co, err := newConsumer(ctx)
+	assert.NilError(t, err)
+	defer co.Close(ctx)
+	pr, err := newChanneledProducer(ctx)
+	assert.NilError(t, err)
+	defer pr.Close(ctx)
+	testKafkaPoll(ctx, t, co, pr, 10)
 }
 
 func TestKafkaPollWithDelay(t *testing.T) {
