@@ -34,6 +34,7 @@ func (m *Collection) FindFetch(ctx context.Context, loader NewResponseObjectList
 	for cur.Next(ctx) {
 		err := cur.Decode(valList[i])
 		if err != nil {
+			m.log.Error(ctx, "Error during Collection.FindFetch", err)
 			return nil, fmt.Errorf("Collection.FindFetch : %w", err)
 		}
 		i++
