@@ -6,7 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v3/log"
+	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v4/log/logwriter"
 	"github.com/shopspring/decimal"
 	"gotest.tools/assert"
 )
@@ -49,9 +50,9 @@ func NewLogWriter(ch chan []string) *LogWriter {
 
 func (c *LogWriter) WriteMessage(ctx context.Context, l *log.LogMessage) error {
 	cr := log.GetCorrelationParam(ctx)
-	fmt.Printf("[%v] [%v] [%v] [%v] [%v] [%v] [%v] [%v]\n", l.Timestamp, l.LogLevelName, cr.CorrelationId, l.ServiceName, l.ModuleName, l.ShortMessage, l.FullMessageType, l.FullMessage)
+	fmt.Printf("[%v] [%v] [%v] [%v] [%v] [%v] [%v] [%v]\n", l.Timestamp, l.LogLevelName, cr.CorrelationId, l.ServiceName, l.ModuleName, l.Message, logwriter.GetLogObjectType(l.LogObject), l.LogObject)
 	c.i++
-	c.ch <- []string{l.FullMessage, c.valueList[c.i]}
+	c.ch <- []string{logwriter.ParseLogObject(l.LogObject, false), c.valueList[c.i]}
 	return nil
 }
 
@@ -62,7 +63,6 @@ func TestLogWriter(t *testing.T) {
 	ch := make(chan []string, len(valueList))
 	lmux := log.NewDefaultLogMux(NewLogWriter(ch))
 	log := log.NewLogger(context.Background(), &log.Config{LogLevel: 7}, "Test Logger", lmux, nil)
-	log.PrintIndent = false
 	for _, v := range valueList {
 		log.Debug(context.Background(), "test", v)
 	}

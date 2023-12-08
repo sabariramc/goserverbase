@@ -5,7 +5,8 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/v3/aws"
+	"github.com/sabariramc/goserverbase/v4/aws"
+	"gotest.tools/assert"
 )
 
 func TestS3(t *testing.T) {
@@ -15,20 +16,20 @@ func TestS3(t *testing.T) {
 	s3Bucket := AWSTestConfig.AWS.S3_BUCKET
 	_, err := s3Client.PutFile(ctx, s3Bucket, path, "./testdata/sample_aadhaar.pdf")
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	err = s3Client.GetFile(ctx, s3Bucket, path, "./testdata/result/test.pdf")
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	_, err = s3Client.PresignGetObject(ctx, s3Bucket, path, 10*60)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	path = fmt.Sprintf("dev/temp/goserverbasetest/%v.pdf", uuid.NewString())
 	_, err = s3Client.PresignPutObject(ctx, s3Bucket, path, 10)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 }
 
@@ -40,14 +41,14 @@ func TestS3PII(t *testing.T) {
 	s3Bucker := AWSTestConfig.AWS.S3_BUCKET
 	err := s3Client.PutFile(ctx, s3Bucker, path, "./testdata/sample_aadhaar.pdf")
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	err = s3Client.GetFile(ctx, s3Bucker, path, "./testdata/result/testpii.pdf")
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	_, err = s3Client.GetFileCache(ctx, s3Bucker, path, "testCache")
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 }

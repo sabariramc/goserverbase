@@ -11,6 +11,7 @@ type CustomError struct {
 	ErrorDescription interface{} `json:"errorDescription"`
 	ErrorCode        string      `json:"errorCode"`
 	Notify           bool        `json:"-"`
+	OriginalError    error       `json:"error"`
 }
 
 func (e *CustomError) Error() string {
@@ -37,8 +38,8 @@ func (e *CustomError) GetErrorResponse() ([]byte, error) {
 	return blob, err
 }
 
-func NewCustomError(errorCode, errorMessage string, errorData interface{}, errorDescription interface{}, notify bool) *CustomError {
-	return &CustomError{ErrorCode: errorCode, ErrorMessage: errorMessage, ErrorData: errorData, Notify: notify, ErrorDescription: errorDescription}
+func NewCustomError(errorCode, errorMessage string, errorData interface{}, errorDescription interface{}, notify bool, err error) *CustomError {
+	return &CustomError{ErrorCode: errorCode, ErrorMessage: errorMessage, ErrorData: errorData, Notify: notify, ErrorDescription: errorDescription, OriginalError: err}
 }
 
 type HTTPError struct {
@@ -46,18 +47,18 @@ type HTTPError struct {
 	ErrorStatusCode int `json:"statusCode"`
 }
 
-func NewHTTPError(statusCode int, errorCode, errorMessage string, errorData interface{}, errorDescription interface{}, notify bool) *HTTPError {
+func NewHTTPError(statusCode int, errorCode, errorMessage string, errorData interface{}, errorDescription interface{}, notify bool, err error) *HTTPError {
 	if errorCode == "" {
 		errorCode = http.StatusText(statusCode)
 	}
-	err := NewCustomError(errorCode, errorMessage, errorData, errorDescription, notify)
-	return &HTTPError{CustomError: *err, ErrorStatusCode: statusCode}
+	custErr := NewCustomError(errorCode, errorMessage, errorData, errorDescription, notify, err)
+	return &HTTPError{CustomError: *custErr, ErrorStatusCode: statusCode}
 }
 
-func NewHTTPClientError(statusCode int, errorCode, errorMessage string, errorData interface{}, errorDescription interface{}) *HTTPError {
-	return NewHTTPError(statusCode, errorCode, errorMessage, errorData, errorDescription, false)
+func NewHTTPClientError(statusCode int, errorCode, errorMessage string, errorData interface{}, errorDescription interface{}, err error) *HTTPError {
+	return NewHTTPError(statusCode, errorCode, errorMessage, errorData, errorDescription, false, err)
 }
 
-func NewHTTPServerError(statusCode int, errorCode, errorMessage string, errorData interface{}, errorDescription interface{}) *HTTPError {
-	return NewHTTPError(statusCode, errorCode, errorMessage, errorData, errorDescription, true)
+func NewHTTPServerError(statusCode int, errorCode, errorMessage string, errorData interface{}, errorDescription interface{}, err error) *HTTPError {
+	return NewHTTPError(statusCode, errorCode, errorMessage, errorData, errorDescription, true, err)
 }

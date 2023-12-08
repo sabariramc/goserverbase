@@ -8,21 +8,22 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v3/kafka/api"
-	"github.com/sabariramc/goserverbase/v3/log"
-	"github.com/sabariramc/goserverbase/v3/utils"
+	"github.com/sabariramc/goserverbase/v4/kafka/api"
+	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v4/utils"
 	"github.com/segmentio/kafka-go"
 )
 
 type Consumer struct {
 	*api.Reader
-	config       KafkaConsumerConfig
-	log          *log.Logger
-	topics       []string
-	serviceName  string
-	resourceName string
-	wg           sync.WaitGroup
-	msgCh        chan *kafka.Message
+	config           KafkaConsumerConfig
+	log              *log.Logger
+	topics           []string
+	serviceName      string
+	resourceName     string
+	wg               sync.WaitGroup
+	commitLock       sync.Mutex
+	consumedMessages []kafka.Message
 }
 
 func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerConfig, resourceName string, topics ...string) (*Consumer, error) {
@@ -36,6 +37,7 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerC
 		config.ConsumerLagToleranceInMs = 1000
 	}
 	logger = logger.NewResourceLogger(resourceName)
+	defaultCorrelationParam := &log.CorrelationParam{CorrelationId: config.ServiceName + "--" + resourceName}
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:           config.Brokers,
 		GroupID:           config.GroupID,
@@ -44,12 +46,12 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerC
 		MaxBytes:          10e6, // 10MB,
 		Logger: &kafkaLogger{
 			Logger:  logger,
-			ctx:     log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(config.ServiceName+"--"+resourceName)),
+			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
 			isError: false,
 		},
 		ErrorLogger: &kafkaLogger{
 			Logger:  logger,
-			ctx:     log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(config.ServiceName+"--"+resourceName)),
+			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
 			isError: true,
 		},
 		Dialer: &kafka.Dialer{
@@ -59,33 +61,29 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerC
 			TLS:           config.TLSConfig,
 		},
 	})
-	msgCh := make(chan *kafka.Message, config.MaxBuffer)
 	k := &Consumer{
 		log:          logger.NewResourceLogger(resourceName),
 		resourceName: resourceName,
 		config:       *config,
-		Reader:       api.NewReader(ctx, *logger, r, config.MaxBuffer, msgCh),
+		Reader:       api.NewReader(ctx, *logger, r, config.MaxBuffer),
 		topics:       topics,
 		serviceName:  config.ServiceName,
-		msgCh:        msgCh,
 	}
 	return k, nil
 }
 
-func (k *Consumer) Poll(ctx context.Context, ch chan *kafka.Message) error {
-	k.msgCh = make(chan *kafka.Message, k.config.MaxBuffer)
+func (k *Consumer) Poll(ctx context.Context, ch chan<- *kafka.Message) error {
 	pollCtx, cancelPoll := context.WithCancel(ctx)
 	var pollErr, commitErr error
 	k.wg.Add(1)
 	go func() {
-		defer close(k.msgCh)
 		defer k.wg.Done()
 		pollErr = k.Reader.Poll(pollCtx)
 	}()
 	defer close(ch)
 	defer k.wg.Wait()
 	k.log.Info(ctx, fmt.Sprintf("Polling started for topics : %v", k.topics), nil)
-	commitNowTimeout, commitNow := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(k.config.AutoCommitIntervalInMs))
+	commitTimeout, commitNow := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(k.config.AutoCommitIntervalInMs))
 	infoConsumerLag := time.Millisecond * time.Duration(k.config.ConsumerLagToleranceInMs)
 	noticeConsumerLag := 2 * infoConsumerLag
 	warningConsumerLag := 2 * noticeConsumerLag
@@ -99,7 +97,7 @@ outer:
 			commitErr = k.Commit(ctx)
 			k.log.Notice(ctx, "Polling Timeout/cancelled", nil)
 			break outer
-		case <-commitNowTimeout.Done():
+		case <-commitTimeout.Done():
 			if k.config.AutoCommit {
 				commitErr = k.Commit(ctx)
 				if commitErr != nil {
@@ -108,8 +106,8 @@ outer:
 				}
 			}
 			count = 0
-			commitNowTimeout, commitNow = context.WithTimeout(context.Background(), time.Millisecond*time.Duration(k.config.AutoCommitIntervalInMs))
-		case msg, ok := <-k.msgCh:
+			commitTimeout, commitNow = context.WithTimeout(context.Background(), time.Millisecond*time.Duration(k.config.AutoCommitIntervalInMs))
+		case msg, ok := <-k.GetEventChannel():
 			if !ok {
 				cancelPoll()
 				commitErr = k.Commit(ctx)
@@ -130,6 +128,7 @@ outer:
 			}
 			if count >= k.config.MaxBuffer {
 				commitNow()
+				count = 0
 			}
 		}
 	}
@@ -147,13 +146,7 @@ outer:
 func (k *Consumer) Close(ctx context.Context) error {
 	k.log.Notice(ctx, "Consumer closer initiated for topic", k.topics)
 	commitErr := k.Commit(ctx)
-	if k.msgCh != nil {
-		_, ok := <-k.msgCh
-		if ok {
-			close(k.msgCh)
-		}
-	}
-	closeErr := k.Reader.Close()
+	closeErr := k.Reader.Close(ctx)
 	k.wg.Wait()
 	k.log.Notice(ctx, "Consumer closed for topic", k.topics)
 	if commitErr != nil || closeErr != nil {

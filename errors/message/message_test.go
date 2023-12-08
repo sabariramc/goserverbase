@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/sabariramc/goserverbase/v3/errors/message"
-	"github.com/sabariramc/goserverbase/v3/log"
+	"github.com/sabariramc/goserverbase/v4/errors/message"
+	"github.com/sabariramc/goserverbase/v4/log"
 )
 
 func TestMessage(t *testing.T) {

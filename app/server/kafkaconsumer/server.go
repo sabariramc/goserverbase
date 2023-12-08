@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"sync"
 
-	baseapp "github.com/sabariramc/goserverbase/v3/app"
-	"github.com/sabariramc/goserverbase/v3/errors"
-	"github.com/sabariramc/goserverbase/v3/kafka"
-	"github.com/sabariramc/goserverbase/v3/log"
+	baseapp "github.com/sabariramc/goserverbase/v4/app"
+	"github.com/sabariramc/goserverbase/v4/errors"
+	"github.com/sabariramc/goserverbase/v4/kafka"
+	"github.com/sabariramc/goserverbase/v4/log"
 	ckafka "github.com/segmentio/kafka-go"
 )
 
@@ -43,10 +43,10 @@ func (k *KafkaConsumerServer) Subscribe(ctx context.Context) {
 	k.ch = ch
 	client, err := kafka.NewConsumer(ctx, k.log, k.c.KafkaConsumerConfig, "KAFKA_CONSUMER", topicList...)
 	if err != nil {
-		k.log.Emergency(ctx, "Error occurred during client creation", map[string]any{
+		k.log.Emergency(ctx, "Error occurred during client creation", fmt.Errorf("KafkaConsumerServer. Subscribe: error on creating kafka consumer: %w", err), map[string]any{
 			"topicList": topicList,
 			"config":    k.c.KafkaConsumerConfig,
-		}, err)
+		})
 	}
 	k.client = client
 }

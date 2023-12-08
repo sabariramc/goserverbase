@@ -6,9 +6,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/sabariramc/goserverbase/v3/db/mongo"
-	"github.com/sabariramc/goserverbase/v3/db/mongo/csfle"
+	"github.com/sabariramc/goserverbase/v4/db/mongo"
+	"github.com/sabariramc/goserverbase/v4/db/mongo/csfle"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"gotest.tools/assert"
 )
 
 type Address struct {
@@ -33,44 +34,44 @@ func TestCollectionPII(t *testing.T) {
 	ctx := GetCorrelationContext()
 	file, err := os.Open("./sample/piischeme.json")
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	defer func() {
 		if err = file.Close(); err != nil {
-			t.Fatal(err)
+			assert.NilError(t, err)
 		}
 	}()
 	schemeByte, err := io.ReadAll(file)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	scheme := string(schemeByte)
 	kmsArn := MongoTestConfig.AWS.KMS_ARN
 	keyAltName := "MongoPIITestKey"
 	kmsProvider, err := csfle.GetDefaultAWSKMSProvider(ctx, MongoTestLogger, kmsArn)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	keyNamespace := "__TestNameSpace.__Coll"
 	err = csfle.SetEncryptionKey(ctx, MongoTestLogger, &scheme, *MongoTestConfig.Mongo, keyNamespace, keyAltName, kmsProvider)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	client, err := mongo.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	coll := client.Database("GOTEST").Collection("PII")
 	mongoScheme, err := csfle.CreateBSONSchema(&scheme, "GOTEST", "PII")
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	csfleMongoClient, err := csfle.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo, keyNamespace, mongoScheme, kmsProvider)
 	csfleClient := mongo.NewWrapper(ctx, MongoTestLogger, *MongoTestConfig.Mongo, csfleMongoClient)
 	piicoll := csfleClient.Database("GOTEST").Collection("PII")
 	piicoll.SetHashList([]string{"pan", "email"})
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	_, err = piicoll.InsertOneWithHash(ctx, map[string]interface{}{
 		"dob":   "1991-08-02",
@@ -88,13 +89,13 @@ func TestCollectionPII(t *testing.T) {
 		"UUID": "FAsdfasfsadfsdafs",
 	})
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	cur := piicoll.FindOneWithHash(ctx, map[string]interface{}{"email": "sab@sabariram.com"})
 	val := &PIITestVal{}
 	err = cur.Decode(val)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	fmt.Printf("%+v\n", val)
 	piicoll.UpdateByIDWithHash(ctx, val.ID, map[string]map[string]interface{}{"$set": {"email": "iam2@gosabariram.com"}})
@@ -102,18 +103,18 @@ func TestCollectionPII(t *testing.T) {
 	val = &PIITestVal{}
 	err = cur.Decode(val)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	fmt.Printf("%+v\n", val)
 	cur = piicoll.FindOne(ctx, map[string]interface{}{"_id": val.ID})
 	err = cur.Decode(val)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 
 	data, err := coll.Find(ctx, map[string]map[string]interface{}{"pan": {"$exists": true}})
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	for data.Next(ctx) {
 		decodeData := make(map[string]interface{})
@@ -122,7 +123,7 @@ func TestCollectionPII(t *testing.T) {
 	}
 	res, err := piicoll.DeleteOne(ctx, map[string]interface{}{"_id": val.ID})
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	if res.DeletedCount != 1 {
 		t.Fatal("Delete count is not matching")
@@ -151,7 +152,7 @@ func TestCollectionPII(t *testing.T) {
 		"UUID": "FAsdfasfsadfsdafs",
 	})
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 
 }

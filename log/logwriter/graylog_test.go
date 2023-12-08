@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/v3/log"
-	"github.com/sabariramc/goserverbase/v3/log/logwriter"
-	"github.com/sabariramc/goserverbase/v3/utils/testutils"
+	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v4/log/logwriter"
+	"github.com/sabariramc/goserverbase/v4/utils/testutils"
 	"gopkg.in/Graylog2/go-gelf.v2/gelf"
 	"gotest.tools/assert"
 )
@@ -62,6 +62,6 @@ func TestGraylogWrapper(t *testing.T) {
 	grey, err := logwriter.NewGraylogUDP(hostParams, logwriter.NewConsoleWriter(hostParams), config.Graylog)
 	assert.NilError(t, err)
 	grey.WriteMessage(context.Background(), &log.LogMessage{
-		ShortMessage: "Test Wrapper" + uuid.NewString(),
+		Message: "Test Wrapper" + uuid.NewString(),
 	})
 }

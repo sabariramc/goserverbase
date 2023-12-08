@@ -6,10 +6,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v3/errors"
-	"github.com/sabariramc/goserverbase/v3/errors/message"
-	"github.com/sabariramc/goserverbase/v3/log"
-	"github.com/sabariramc/goserverbase/v3/utils"
+	"github.com/sabariramc/goserverbase/v4/errors"
+	"github.com/sabariramc/goserverbase/v4/errors/message"
+	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v4/utils"
 )
 
 type Producer interface {

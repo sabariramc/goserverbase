@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
-	"github.com/sabariramc/goserverbase/v3/log"
-	"github.com/sabariramc/goserverbase/v3/utils"
+	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v4/utils"
 )
 
 type SQS struct {
@@ -57,10 +57,10 @@ func GetQueueURL(ctx context.Context, logger *log.Logger, queueName string, sqsC
 	return res.QueueUrl, nil
 }
 
-func (s *SQS) SendMessage(ctx context.Context, message *utils.Message, attribute map[string]string, delayInSeconds int32, messageDeduplicationID, messageGroupID *string) error {
+func (s *SQS) SendMessage(ctx context.Context, message *utils.Message, attribute map[string]string, delayInSeconds int32, messageDeduplicationID, messageGroupID *string) (*sqs.SendMessageOutput, error) {
 	body, err := utils.Serialize(message)
 	if err != nil {
-		return fmt.Errorf("SQS.SendMessage: %w", err)
+		return nil, fmt.Errorf("SQS.SendMessage: %w", err)
 	}
 	messageAttributes := s.GetAttribute(attribute)
 	req := &sqs.SendMessageInput{
@@ -73,14 +73,12 @@ func (s *SQS) SendMessage(ctx context.Context, message *utils.Message, attribute
 		req.MessageDeduplicationId = messageDeduplicationID
 		req.MessageGroupId = messageGroupID
 	}
-	s.log.Debug(ctx, "Queue send message request", req)
 	res, err := s.Client.SendMessage(ctx, req)
-	s.log.Debug(ctx, "Queue send message response", res)
 	if err != nil {
-		s.log.Error(ctx, "Error in sending message", err)
-		return fmt.Errorf("SQS.SendMessage: %w", err)
+		s.log.Error(ctx, "Error sending message", err)
+		return res, fmt.Errorf("SQS.SendMessage: error sending message: %w", err)
 	}
-	return nil
+	return res, nil
 }
 
 type BatchQueueMessage struct {
@@ -119,9 +117,8 @@ func (s *SQS) SendMessageBatch(ctx context.Context, messageList []*BatchQueueMes
 	res, err := s.Client.SendMessageBatch(ctx, req)
 	if err != nil {
 		s.log.Error(ctx, "Error in batch send message", err)
-		return res, fmt.Errorf("SQS.SendMessageBatch : %w", err)
+		return res, fmt.Errorf("SQS.SendMessageBatch: error sending message: %w", err)
 	}
-	s.log.Debug(ctx, "Queue send message batch message", res)
 	return res, nil
 }
 
@@ -139,7 +136,7 @@ func (s *SQS) GetAttribute(attribute map[string]string) map[string]types.Message
 	return messageAttributes
 }
 
-func (s *SQS) ReceiveMessage(ctx context.Context, timeoutInSeconds int32, maxNumberOfMessages int32, waitTimeInSeconds int32) ([]types.Message, error) {
+func (s *SQS) ReceiveMessage(ctx context.Context, timeoutInSeconds int32, maxNumberOfMessages int32, waitTimeInSeconds int32) (*sqs.ReceiveMessageOutput, error) {
 	req := &sqs.ReceiveMessageInput{
 		AttributeNames: []types.QueueAttributeName{
 			types.QueueAttributeName(types.MessageSystemAttributeNameSentTimestamp),
@@ -152,30 +149,25 @@ func (s *SQS) ReceiveMessage(ctx context.Context, timeoutInSeconds int32, maxNum
 		VisibilityTimeout:   timeoutInSeconds,
 		WaitTimeSeconds:     waitTimeInSeconds,
 	}
-	s.log.Debug(ctx, "Queue receive request", req)
 	msgResult, err := s.Client.ReceiveMessage(ctx, req)
 	if err != nil {
 		s.log.Error(ctx, "Error in fetching message", err)
-		return nil, fmt.Errorf("SQS.ReceiveMessage: %w", err)
+		return msgResult, fmt.Errorf("SQS.ReceiveMessage: error receiving message: %w", err)
 	}
-	s.log.Debug(ctx, "Queue receive response", msgResult)
-
-	return msgResult.Messages, nil
+	return msgResult, nil
 }
 
-func (s *SQS) DeleteMessage(ctx context.Context, receiptHandler *string) error {
+func (s *SQS) DeleteMessage(ctx context.Context, receiptHandler *string) (*sqs.DeleteMessageOutput, error) {
 	req := &sqs.DeleteMessageInput{
 		QueueUrl:      s.queueURL,
 		ReceiptHandle: receiptHandler,
 	}
-	s.log.Debug(ctx, "Queue delete request", req)
 	res, err := s.Client.DeleteMessage(ctx, req)
 	if err != nil {
 		s.log.Error(ctx, "Error in delete message", err)
-		return fmt.Errorf("SQS.DeleteMessage: %w", err)
+		return res, fmt.Errorf("SQS.DeleteMessage: %w", err)
 	}
-	s.log.Debug(ctx, "Queue delete response", res)
-	return nil
+	return res, nil
 }
 
 func (s *SQS) DeleteMessageBatch(ctx context.Context, receiptHandlerMap map[string]*string) (*sqs.DeleteMessageBatchOutput, error) {
@@ -196,12 +188,10 @@ func (s *SQS) DeleteMessageBatch(ctx context.Context, receiptHandlerMap map[stri
 		QueueUrl: s.queueURL,
 		Entries:  entries,
 	}
-	s.log.Debug(ctx, "Queue delete batch request", req)
 	res, err := s.Client.DeleteMessageBatch(ctx, req)
 	if err != nil {
 		s.log.Error(ctx, "Error in delete batch message", err)
 		return nil, fmt.Errorf("SQS.DeleteMessage: %w", err)
 	}
-	s.log.Debug(ctx, "Queue delete batch response", res)
 	return res, nil
 }

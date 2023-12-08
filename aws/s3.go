@@ -11,7 +11,7 @@ import (
 	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gabriel-vasile/mimetype"
-	"github.com/sabariramc/goserverbase/v3/log"
+	"github.com/sabariramc/goserverbase/v4/log"
 )
 
 type S3 struct {
@@ -40,12 +40,11 @@ func NewS3Client(client *s3.Client, logger *log.Logger) *S3 {
 
 func (s *S3) PutObject(ctx context.Context, s3Bucket, s3Key string, body io.Reader, mimeType string, metadata map[string]string) (*s3.PutObjectOutput, error) {
 	req := &s3.PutObjectInput{Bucket: &s3Bucket, Key: &s3Key, Body: body, ContentType: &mimeType, Metadata: metadata}
-	s.log.Debug(ctx, "S3 put object request", req)
 	res, err := s.Client.PutObject(ctx, req)
 	if err != nil {
-		return nil, fmt.Errorf("S3.PutObject: %w", err)
+		s.log.Error(ctx, "error uploading file", err)
+		return nil, fmt.Errorf("S3.PutObject: error uploading file:%w", err)
 	}
-	s.log.Debug(ctx, "S3 put object response", res)
 	return res, nil
 }
 
@@ -53,25 +52,24 @@ func (s *S3) PutFile(ctx context.Context, s3Bucket, s3Key, localFilPath string) 
 	fp, err := os.Open(localFilPath)
 	if err != nil {
 		s.log.Error(ctx, "Error opening file", localFilPath)
-		return nil, fmt.Errorf("S3.PutFile: %w", err)
+		return nil, fmt.Errorf("S3.PutFile: error opening file: %w", err)
 	}
+	defer fp.Close()
 	mime, err := mimetype.DetectFile(localFilPath)
 	if err != nil {
 		s.log.Notice(ctx, "Failed detecting mime type", err)
 	}
-	s.log.Debug(ctx, "File mimetype", mime)
-	defer fp.Close()
+	s.log.Notice(ctx, "File mimetype", mime)
 	return s.PutObject(ctx, s3Bucket, s3Key, fp, mime.String(), nil)
 }
 
 func (s *S3) GetObject(ctx context.Context, s3Bucket, s3Key string) (*s3.GetObjectOutput, error) {
 	req := &s3.GetObjectInput{Bucket: &s3Bucket, Key: &s3Key}
-	s.log.Debug(ctx, "S3 get object request", req)
 	res, err := s.Client.GetObject(ctx, req)
 	if err != nil {
-		return nil, fmt.Errorf("S3.GetObject: %w", err)
+		s.log.Error(ctx, "error downloading file", err)
+		return nil, fmt.Errorf("S3.GetObject: error downloading file: %w", err)
 	}
-	s.log.Debug(ctx, "S3 get object response", res)
 	return res, nil
 }
 
@@ -82,22 +80,23 @@ func (s *S3) GetFile(ctx context.Context, s3Bucket, s3Key, localFilePath string)
 	}
 	blob, err := io.ReadAll(res.Body)
 	if err != nil {
+		s.log.Error(ctx, "error occurred while reading data", err)
 		return fmt.Errorf("S3.GetFile: error occurred while reading data: %w", err)
 	}
 	fp, err := os.Create(localFilePath)
 	if err != nil {
-		s.log.Error(ctx, "S3 get file - file creation error", err)
-		return fmt.Errorf("S3.GetFile: %w", err)
+		s.log.Error(ctx, "error in creating local file", err)
+		return fmt.Errorf("S3.GetFile: error in creating local file: %w", err)
 	}
 	defer fp.Close()
 	n, err := fp.Write(blob)
 	if err != nil {
-		s.log.Error(ctx, "S3 get file - ", err)
-		return fmt.Errorf("S3.GetFile: error writing file: %w", err)
+		s.log.Error(ctx, "error in writing local file", err)
+		return fmt.Errorf("S3.GetFile: error in writing local file: %w", err)
 	}
 	if n != len(blob) {
-		err := fmt.Errorf("total bytes %v, written bytes %v", len(blob), n)
-		return fmt.Errorf("S3.GetFile: %w", err)
+		s.log.Error(ctx, fmt.Sprintf("total bytes %v, written bytes %v", len(blob), n), nil)
+		return fmt.Errorf("S3.GetFile: incomplete local write")
 	}
 	return nil
 }
@@ -110,9 +109,9 @@ func (s *S3) PresignGetObject(ctx context.Context, s3Bucket, s3Key string, expir
 		opts.Expires = time.Duration(expireTimeInSeconds * int64(time.Second))
 	})
 	if err != nil {
-		return nil, fmt.Errorf("S3.CreatePresignedUrlGET: error signing get request: %w", err)
+		s.log.Error(ctx, "error creating presigned get request", err)
+		return nil, fmt.Errorf("S3.CreatePresignedUrlGET: error creating presigned get request: %w", err)
 	}
-	s.log.Debug(ctx, "S3 presigned GET url", request)
 	return request, nil
 }
 
@@ -124,9 +123,8 @@ func (s *S3) PresignPutObject(ctx context.Context, s3Bucket, s3Key string, expir
 		opts.Expires = time.Duration(expireTimeInSeconds * int64(time.Second))
 	})
 	if err != nil {
-		s.log.Error(ctx, "S3 failed to sign PUT request", err)
-		return nil, fmt.Errorf("S3.CreatePresignedUrlPUT: error signing put request: %w", err)
+		s.log.Error(ctx, "error creating presigned put request", err)
+		return nil, fmt.Errorf("S3.CreatePresignedUrlPUT: error creating presigned put request: %w", err)
 	}
-	s.log.Debug(ctx, "S3 presigned PUT url", request)
 	return request, nil
 }
