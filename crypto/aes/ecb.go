@@ -24,24 +24,26 @@ type ECB struct {
 }
 
 func NewECBPKC5(ctx context.Context, key []byte, log *log.Logger) (*ECB, error) {
-	cipher, err := NewECB(key, log, padding.NewPKCS7(len(key)))
+	cipher, err := NewECB(ctx, key, log, padding.NewPKCS7(len(key)))
 	if err != nil {
-		return nil, fmt.Errorf("crypto.aes.NewAESGCM: error creating aes ecb: %w", err)
+		log.Error(ctx, "error in creating ECB", err)
+		return nil, fmt.Errorf("NewECBPKC5: error in creating ECB: %w", err)
 	}
 	return cipher, nil
 }
 
-func NewECB(key []byte, log *log.Logger, padder crypto.Padder) (*ECB, error) {
+func NewECB(ctx context.Context, key []byte, log *log.Logger, padder crypto.Padder) (*ECB, error) {
 	cipher, err := aes.NewCipher(key)
 	if err != nil {
-		return nil, fmt.Errorf("AESECBCipher: key error: key - %v, error - %w", key, err)
+		log.Error(ctx, "error in creating cipher", err)
+		return nil, fmt.Errorf("NewECB: error in creating cipher: %w", err)
 	}
 	return &ECB{
 		b:         cipher,
 		key:       key,
 		blockSize: cipher.BlockSize(),
 		padder:    padder,
-		log:       log.NewResourceLogger("AESECB"),
+		log:       log.NewResourceLogger("ECB"),
 	}, nil
 }
 
@@ -56,13 +58,12 @@ func (a *ECB) Encrypt(ctx context.Context, data []byte) ([]byte, error) {
 }
 
 func (a *ECB) EncryptString(ctx context.Context, plainText string) (string, error) {
-	a.log.Debug(ctx, "Plain Text", plainText)
 	blobRes, err := a.Encrypt(ctx, []byte(plainText))
 	if err != nil {
-		return "", fmt.Errorf("AESGCM.EncryptString: %w", err)
+		a.log.Error(ctx, "error during encryption", err)
+		return "", fmt.Errorf("ECB.EncryptString: %w", err)
 	}
 	res := base64.StdEncoding.EncodeToString(blobRes)
-	a.log.Debug(ctx, "EncryptedString", res)
 	return res, nil
 }
 
