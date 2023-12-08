@@ -52,7 +52,6 @@ func NewConfig() *TestConfig {
 	}
 	appConfig := &baseapp.ServerConfig{
 		ServiceName: serviceName,
-		Debug:       utils.GetEnvBool("DEBUG", false),
 	}
 	consumer := &kafka.KafkaConsumerConfig{
 		KafkaCredConfig: &kafkaBaseConfig,

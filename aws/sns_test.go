@@ -5,6 +5,7 @@ import (
 
 	"github.com/sabariramc/goserverbase/v4/aws"
 	"github.com/sabariramc/goserverbase/v4/utils"
+	"gotest.tools/assert"
 )
 
 func TestSNSClient(t *testing.T) {
@@ -31,7 +32,7 @@ func TestSNSClient(t *testing.T) {
 	})
 	_, err := snsClient.Publish(ctx, &arn, nil, message, nil)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 
 }

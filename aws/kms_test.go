@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/sabariramc/goserverbase/v4/aws"
+	"gotest.tools/assert"
 )
 
 func TestAWSKMS(t *testing.T) {
@@ -12,11 +13,11 @@ func TestAWSKMS(t *testing.T) {
 	text := "asfasdfsaf"
 	encryptedBlob, err := kms.Encrypt(ctx, []byte(text))
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	plainText, err := kms.Decrypt(ctx, encryptedBlob)
 	if err != nil {
-		t.Fatal(err)
+		assert.NilError(t, err)
 	}
 	if string(plainText) != text {
 		t.Fatalf("Texts are not matching %v, %v", text, plainText)
