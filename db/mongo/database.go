@@ -11,7 +11,7 @@ type Database struct {
 	log *log.Logger
 }
 
-var decimalHandlerOptions = options.Collection().SetRegistry(newCustomBsonRegistry().Build())
+var decimalHandlerOptions = options.Collection().SetRegistry(newCustomBsonRegistry())
 
 func (d *Database) Collection(name string, opts ...*options.CollectionOptions) *Collection {
 	opts = append(opts, decimalHandlerOptions)
