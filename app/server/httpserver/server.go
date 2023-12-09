@@ -57,6 +57,12 @@ func (h *HttpServer) StartServer() {
 	h.log.Emergency(context.Background(), "Server crashed", nil, err)
 }
 
+func (h *HttpServer) StartTLSServer(certFile, keyFile string) {
+	h.log.Notice(context.TODO(), fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
+	err := http.ListenAndServeTLS(h.GetPort(), certFile, keyFile, h)
+	h.log.Emergency(context.Background(), "Server crashed", nil, err)
+}
+
 func (h *HttpServer) GetPort() string {
 	return fmt.Sprintf("%v:%v", h.c.Host, h.c.Port)
 }
