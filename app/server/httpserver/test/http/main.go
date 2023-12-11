@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/sabariramc/goserverbase/v4/app/server/httpserver/test/server"
+	server "github.com/sabariramc/goserverbase/v4/app/server/httpserver/test"
 )
 
 func main() {

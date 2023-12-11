@@ -6,7 +6,16 @@
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "program": "${workspaceFolder}/app/server/httpserver/test/main.go",
+            "program": "${workspaceFolder}/app/server/httpserver/test/http/main.go",
+            "cwd": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env"
+        },
+        {
+            "name": "HTTP2 Server",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/app/server/httpserver/test/http2/main.go",
             "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env"
         },
