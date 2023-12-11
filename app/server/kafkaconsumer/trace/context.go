@@ -12,7 +12,6 @@ import (
 
 func StartSpan(ctx context.Context, serviceName string, msg *kafka.Message) ddtrace.Span {
 	opts := []tracer.StartSpanOption{
-		tracer.ServiceName(serviceName),
 		tracer.ResourceName(msg.Topic),
 		tracer.SpanType(ext.SpanTypeMessageConsumer),
 		tracer.Tag("messaging.kafka.topic", msg.Message.Topic),
