@@ -56,7 +56,7 @@ func (s *server) Func2(c *gin.Context) {
 }
 
 func (s *server) Func3(w http.ResponseWriter, r *http.Request) {
-	s.SetErrorInContext(r.Context(), errors.NewCustomError("hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, true, nil))
+	s.SetErrorInContext(r.Context(), errors.NewCustomError("hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, false, nil))
 }
 
 func (s *server) Func4(w http.ResponseWriter, r *http.Request) {

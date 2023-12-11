@@ -3,6 +3,7 @@ package httpserver
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -24,6 +25,7 @@ func (h *HttpServer) SetContextMiddleware() gin.HandlerFunc {
 			span.SetTag("http.headers.x-app-user-id", id.AppUserId)
 			span.SetTag("http.headers.x-customer-id", id.CustomerId)
 			span.SetTag("http.headers.x-entity-id", id.Id)
+			defer span.Finish()
 		}
 		c.Next()
 	}
@@ -76,6 +78,7 @@ func (h *HttpServer) HandleExceptionMiddleware() gin.HandlerFunc {
 				statusCode, body := h.PanicRecovery(r.Context(), rec, req)
 				h.WriteJsonWithStatusCode(r.Context(), w, statusCode, body)
 				if spanOk {
+					span.SetTag(ext.HTTPCode, strconv.Itoa(statusCode))
 					err, errOk := rec.(error)
 					if !errOk {
 						err = fmt.Errorf("panic during execution")
@@ -92,8 +95,11 @@ func (h *HttpServer) HandleExceptionMiddleware() gin.HandlerFunc {
 		if handlerError != nil {
 			statusCode, body := h.ProcessError(ctx, "", handlerError, req)
 			h.WriteJsonWithStatusCode(r.Context(), w, statusCode, body)
-			if statusCode >= 500 {
-				span.SetTag(ext.Error, handlerError)
+			if spanOk {
+				span.SetTag(ext.HTTPCode, strconv.Itoa(statusCode))
+				if statusCode > 299 {
+					span.SetTag(ext.Error, handlerError)
+				}
 			}
 		}
 	}
