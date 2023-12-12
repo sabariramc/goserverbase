@@ -34,22 +34,28 @@ func TestErrorNotification(t *testing.T) {
 	p, _ := pKafka.NewProducer(context.TODO(), TestLogger, TestConfig.KafkaProducer, TestConfig.KafkaTestTopic)
 	notifier := kafka.New(context.TODO(), TestLogger, "Test", p)
 	ctx := GetCorrelationContext()
-	err := notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{CustomerId: "customer_id_test"}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
+	custId := "cust_test_id"
+	err := notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{CustomerId: &custId}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
 	assert.NilError(t, err)
-	err = notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{AppUserId: "app_user_id"}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
+	custId = "app_user_id"
+	err = notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{AppUserId: &custId}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
 	assert.NilError(t, err)
-	err = notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{Id: "entity_id"}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
+	custId = "entity_id"
+	err = notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{Id: &custId}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
 	assert.NilError(t, err)
 }
 
 func TestErrorNotification2(t *testing.T) {
+	custId := "cust_test_id"
 	p := pKafka.NewHTTPProducer(context.TODO(), TestLogger, TestConfig.KafkaHTTPProxyURL, TestConfig.KafkaTestTopic, time.Second)
 	notifier := kafka.New(context.TODO(), TestLogger, "Test", p)
 	ctx := GetCorrelationContext()
-	err := notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{CustomerId: "customer_id_test"}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
+	err := notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{CustomerId: &custId}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
 	assert.NilError(t, err)
-	err = notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{AppUserId: "app_user_id"}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
+	custId = "app_user_id"
+	err = notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{AppUserId: &custId}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
 	assert.NilError(t, err)
-	err = notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{Id: "entity_id"}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
+	custId = "entity_id"
+	err = notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{Id: &custId}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
 	assert.NilError(t, err)
 }

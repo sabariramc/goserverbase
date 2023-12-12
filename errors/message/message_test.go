@@ -12,7 +12,8 @@ import (
 
 func TestMessage(t *testing.T) {
 	ctx := log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam("test_service"))
-	ctx = log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{CustomerId: "cust_test_id"})
+	custId := "cust_test_id"
+	ctx = log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{CustomerId: &custId})
 	msg := message.CreateErrorMessage(ctx, "test_service", "com.test.message", fmt.Errorf("test"), "fasdfafasdfasf", map[string]string{"test": "test"}, "5XX")
 	blob, _ := json.MarshalIndent(msg, "", "    ")
 	fmt.Println(string(blob))
