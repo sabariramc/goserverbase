@@ -154,7 +154,7 @@ func NewServer() *server {
 	tenant.GET("/:tenantId", srv.Func2)
 	resource := r.Group("/test")
 	resource.POST("/all", gin.WrapF(srv.testAll))
-	resource.POST("/kafka2", gin.WrapF(srv.testKafka))
+	resource.POST("/kafka", gin.WrapF(srv.testKafka))
 	errorRoute := r.Group("/error")
 	errorRoute.GET("/error1", gin.WrapF(srv.Func3))
 	errorRoute.GET("/error2", gin.WrapF(srv.Func4))

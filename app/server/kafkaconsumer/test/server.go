@@ -22,7 +22,7 @@ var ServerTestLogger *log.Logger
 var ServerTestLMux log.LogMux
 
 func init() {
-	testutils.LoadEnv("./app/server/kafkaconsumer/test/.env")
+	testutils.LoadEnv("./test/.env")
 	testutils.Initialize()
 	ServerTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter(log.HostParams{
