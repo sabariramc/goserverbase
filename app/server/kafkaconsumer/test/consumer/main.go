@@ -9,6 +9,6 @@ import (
 
 func main() {
 	s := server.NewServer()
-	ctx, _ := context.WithTimeout(context.Background(), time.Minute)
+	ctx, _ := context.WithTimeout(context.Background(), time.Minute*30)
 	s.StartConsumer(ctx)
 }
