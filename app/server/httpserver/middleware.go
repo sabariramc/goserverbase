@@ -46,6 +46,12 @@ func (h *HttpServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 		loggingW := &loggingResponseWriter{
 			ResponseWriter: w,
 		}
+		span, spanOk := tracer.SpanFromContext(r.Context())
+		defer func() {
+			if spanOk {
+				span.SetTag(ext.HTTPCode, strconv.Itoa(loggingW.status))
+			}
+		}()
 		var bodyBlob *[]byte
 		var bodyStr string
 		ctx := r.Context()
@@ -73,12 +79,12 @@ func (h *HttpServer) HandleExceptionMiddleware() gin.HandlerFunc {
 		req := h.ExtractRequestMetadata(r)
 		req["Body"] = h.GetTextBody(r)
 		span, spanOk := tracer.SpanFromContext(r.Context())
+
 		defer func() {
 			if rec := recover(); rec != nil {
 				statusCode, body := h.PanicRecovery(r.Context(), rec, req)
 				h.WriteJsonWithStatusCode(r.Context(), w, statusCode, body)
 				if spanOk {
-					span.SetTag(ext.HTTPCode, strconv.Itoa(statusCode))
 					err, errOk := rec.(error)
 					if !errOk {
 						err = fmt.Errorf("panic during execution")
@@ -95,11 +101,8 @@ func (h *HttpServer) HandleExceptionMiddleware() gin.HandlerFunc {
 		if handlerError != nil {
 			statusCode, body := h.ProcessError(ctx, "", handlerError, req)
 			h.WriteJsonWithStatusCode(r.Context(), w, statusCode, body)
-			if spanOk {
-				span.SetTag(ext.HTTPCode, strconv.Itoa(statusCode))
-				if statusCode > 299 {
-					span.SetTag(ext.Error, handlerError)
-				}
+			if spanOk && statusCode > 299 {
+				span.SetTag(ext.Error, handlerError)
 			}
 		}
 	}
