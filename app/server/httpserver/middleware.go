@@ -22,9 +22,6 @@ func (h *HttpServer) SetContextMiddleware() gin.HandlerFunc {
 		c.Request = r.WithContext(ctx)
 		if span, ok := tracer.SpanFromContext(r.Context()); ok {
 			span.SetTag("http.headers.x-correlation-id", corr.CorrelationId)
-			span.SetTag("http.headers.x-app-user-id", id.AppUserId)
-			span.SetTag("http.headers.x-customer-id", id.CustomerId)
-			span.SetTag("http.headers.x-entity-id", id.Id)
 			defer span.Finish()
 		}
 		c.Next()
