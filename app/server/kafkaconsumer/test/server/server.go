@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/sabariramc/goserverbase/v4/app/server/kafkaconsumer"
+	"github.com/sabariramc/goserverbase/v4/errors"
 	"github.com/sabariramc/goserverbase/v4/kafka"
 	"github.com/sabariramc/goserverbase/v4/log"
 	"github.com/sabariramc/goserverbase/v4/log/logwriter"
@@ -43,11 +44,18 @@ func (s *server) Func1(ctx context.Context, msg *kafka.Message) error {
 	return nil
 }
 
+func (s *server) Func2(ctx context.Context, msg *kafka.Message) error {
+	return errors.NewCustomError("hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, true, nil)
+}
+
 func NewServer() *server {
 	srv := &server{
 		KafkaConsumerServer: kafkaconsumer.New(*ServerTestConfig.Kafka, ServerTestLogger, nil),
 	}
-	srv.log = srv.GetLogger()
+	srv.log = srv.GetLogger().NewResourceLogger("KafkaTestServer")
+	ctx := GetCorrelationContext()
+	srv.log.Trace(ctx, "config", ServerTestConfig)
 	srv.AddHandler(GetCorrelationContext(), ServerTestConfig.KafkaTestTopic, srv.Func1)
+	srv.AddHandler(GetCorrelationContext(), ServerTestConfig.KafkaTestTopic2, srv.Func2)
 	return srv
 }

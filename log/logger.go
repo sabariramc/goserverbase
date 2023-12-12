@@ -26,6 +26,7 @@ const (
 )
 
 var logLevelMap = map[LogLevelCode]*LogLevel{
+	TRACE:     {Level: TRACE, LogLevelName: "TRACE"},
 	DEBUG:     {Level: DEBUG, LogLevelName: "DEBUG"},
 	INFO:      {Level: INFO, LogLevelName: "INFO"},
 	NOTICE:    {Level: NOTICE, LogLevelName: "NOTICE"},
@@ -83,7 +84,7 @@ func NewLogger(ctx context.Context, lc *Config, moduleName string, lMux LogMux, 
 		audit: audit,
 	}
 	logLevel := lc.LogLevel
-	if logLevel > int(DEBUG) || logLevel < int(FATAL) {
+	if logLevel > int(TRACE) || logLevel < int(FATAL) {
 		l.Warning(ctx, "Erroneous log level - log set to INFO", nil)
 		logLevel = int(INFO)
 	}

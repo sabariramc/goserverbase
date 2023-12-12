@@ -1,0 +1,36 @@
+version: '2'
+services:
+  http:
+    build:
+      context: .
+      target: http
+    container_name: gobase_http
+    env_file:
+      - .env
+    environment:
+      SERVICE_NAME: gobase_http
+      DD_SERVICE: gobase_http
+    ports:
+      - 60005:8080
+    networks:
+      - mongo_mongodb
+      - kafka_default
+  kafka:
+    build:
+      context: .
+      target: kafka
+    container_name: gobase_kafka
+    env_file:
+      - .env
+    environment:
+      SERVICE_NAME: gobase_kafka
+      DD_SERVICE: gobase_kafka
+      KAFKA_BROKER: broker:9092
+    networks:
+      - mongo_mongodb
+      - kafka_default
+networks:
+  mongo_mongodb:
+    external: true
+  kafka_default:
+    external: true
