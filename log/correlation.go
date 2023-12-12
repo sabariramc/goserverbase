@@ -37,6 +37,18 @@ func (c *CorrelationParam) GetHeader() map[string]string {
 	return res
 }
 
+func (c *CorrelationParam) LoadFromHeader(header map[string]string) error {
+	data, err := json.Marshal(header)
+	if err != nil {
+		return fmt.Errorf("CorrelationParam.LoadFromHeader: error marshalling header: %w", err)
+	}
+	err = utils.HeaderJson.Unmarshal(data, c)
+	if err != nil {
+		return fmt.Errorf("CorrelationParam.LoadFromHeader: error unmarshaling header: %w", err)
+	}
+	return nil
+}
+
 type CustomerIdentifier struct {
 	CustomerId *string `header:"x-customer-id,omitempty" body:"customerId,omitempty"`
 	AppUserId  *string `header:"x-app-user-id,omitempty" body:"appUserId,omitempty"`
@@ -55,6 +67,18 @@ func (c *CustomerIdentifier) GetHeader() map[string]string {
 	res := map[string]string{}
 	json.Unmarshal(encodedData, &res)
 	return res
+}
+
+func (c *CustomerIdentifier) LoadFromHeader(header map[string]string) error {
+	data, err := json.Marshal(header)
+	if err != nil {
+		return fmt.Errorf("CustomerIdentifier.LoadFromHeader: error marshalling header: %w", err)
+	}
+	err = utils.HeaderJson.Unmarshal(data, c)
+	if err != nil {
+		return fmt.Errorf("CustomerIdentifier.LoadFromHeader: error unmarshaling header: %w", err)
+	}
+	return nil
 }
 
 func GetDefaultCorrelationParam(serviceName string) *CorrelationParam {

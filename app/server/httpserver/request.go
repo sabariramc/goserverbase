@@ -12,25 +12,34 @@ import (
 	"github.com/sabariramc/goserverbase/v4/log"
 )
 
+func extractKeyValue(r *http.Request, keyList []string) map[string]string {
+	res := make(map[string]string, len(keyList))
+	for _, key := range keyList {
+		value := r.Header.Get(key)
+		if value != "" {
+			res[key] = value
+		}
+	}
+	return res
+}
+
 func (h *HttpServer) GetCorrelationParams(r *http.Request) *log.CorrelationParam {
-	correlationId := r.Header.Get("x-correlation-id")
-	if correlationId == "" {
+	keyList := []string{"x-correlation-id", "x-scenario-id", "x-scenario-name", "x-session-id"}
+	headers := extractKeyValue(r, keyList)
+	cr := &log.CorrelationParam{}
+	cr.LoadFromHeader(headers)
+	if cr.CorrelationId == "" {
 		return log.GetDefaultCorrelationParam(h.c.ServiceName)
 	}
-	return &log.CorrelationParam{
-		CorrelationId: correlationId,
-		ScenarioId:    r.Header.Get("x-scenario-id"),
-		ScenarioName:  r.Header.Get("x-scenario-name"),
-		SessionId:     r.Header.Get("x-session-id"),
-	}
+	return cr
 }
 
 func (h *HttpServer) GetCustomerId(r *http.Request) *log.CustomerIdentifier {
-	return &log.CustomerIdentifier{
-		AppUserId:  r.Header.Get("x-app-user-id"),
-		CustomerId: r.Header.Get("x-customer-id"),
-		Id:         r.Header.Get("x-entity-id"),
-	}
+	keyList := []string{"x-app-user-id", "x-customer-id", "x-entity-id"}
+	headers := extractKeyValue(r, keyList)
+	id := &log.CustomerIdentifier{}
+	id.LoadFromHeader(headers)
+	return id
 }
 
 func (h *HttpServer) PrintRequest(ctx context.Context, r *http.Request) {
