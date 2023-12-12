@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/sabariramc/goserverbase/v4/kafka/api/trace"
 	"github.com/sabariramc/goserverbase/v4/log"
 	"github.com/segmentio/kafka-go"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
@@ -64,6 +65,8 @@ func (w *Writer) Send(ctx context.Context, key string, message []byte, messageHe
 		Headers: messageHeader,
 		Time:    time.Now(),
 	}
+	traceMsg := trace.NewMessageCarrier(&msg)
+	tracer.Inject(span.Context(), traceMsg)
 	if w.isChannelWriter {
 		w.msgCh <- msg
 		return nil
