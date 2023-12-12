@@ -1,0 +1,31 @@
+version: '2'
+services:
+  # http:
+  #   build:
+  #     context: .
+  #     target: http
+  #   container_name: oa-lending-scheduler_http
+  #   env_file:
+  #     - ./tests/.env
+  #   environment:
+  #     OTEL_EXPORTER_OTLP_ENDPOINT: http://clickhouse-setup_otel-collector_1:4318
+
+  #   ports:
+  #     - 60005:3000
+  #   networks:
+  #     - clickhouse-setup_default
+  kafka:
+    build:
+      context: .
+      # target: kafka
+    env_file:
+      - .env
+    environment:
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://clickhouse-setup_otel-collector_1:4318
+    ports:
+      - 60006:3000
+    networks:
+      - clickhouse-setup_default
+networks:
+  clickhouse-setup_default:
+    external: true
