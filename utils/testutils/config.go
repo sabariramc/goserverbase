@@ -34,6 +34,7 @@ type TestConfig struct {
 	KafkaConsumer       *kafka.KafkaConsumerConfig
 	KafkaProducer       *kafka.KafkaProducerConfig
 	KafkaTestTopic      string
+	KafkaTestTopic2     string
 	KafkaHTTPProxyURL   string
 	Graylog             logwriter.GraylogConfig
 }
@@ -114,6 +115,7 @@ func NewConfig() *TestConfig {
 		},
 		KafkaConsumer:     consumer,
 		KafkaTestTopic:    utils.GetEnvMust("KAFKA_TEST_TOPIC"),
+		KafkaTestTopic2:   utils.GetEnvMust("KAFKA_TEST_TOPIC_2"),
 		KafkaHTTPProxyURL: utils.GetEnvMust("KAFKA_HTTP_PROXY"),
 		Graylog: logwriter.GraylogConfig{
 			Address: utils.GetEnv("GRAYLOG_URL", ""),

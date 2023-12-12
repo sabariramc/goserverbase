@@ -1,31 +1,36 @@
 version: '2'
 services:
-  # http:
-  #   build:
-  #     context: .
-  #     target: http
-  #   container_name: oa-lending-scheduler_http
-  #   env_file:
-  #     - ./tests/.env
-  #   environment:
-  #     OTEL_EXPORTER_OTLP_ENDPOINT: http://clickhouse-setup_otel-collector_1:4318
-
-  #   ports:
-  #     - 60005:3000
-  #   networks:
-  #     - clickhouse-setup_default
-  kafka:
+  http:
     build:
       context: .
-      # target: kafka
+      target: http
+    container_name: gobase_http
     env_file:
       - .env
     environment:
-      OTEL_EXPORTER_OTLP_ENDPOINT: http://clickhouse-setup_otel-collector_1:4318
+      SERVICE_NAME: gobase_http
+      DD_SERVICE: gobase_http
     ports:
-      - 60006:3000
+      - 60005:8080
     networks:
-      - clickhouse-setup_default
+      - mongo_mongodb
+      - kafka_default
+  kafka:
+    build:
+      context: .
+      target: kafka
+    container_name: gobase_kafka
+    env_file:
+      - .env
+    environment:
+      SERVICE_NAME: gobase_kafka
+      DD_SERVICE: gobase_kafka
+      KAFKA_BROKER: broker:9092
+    networks:
+      - mongo_mongodb
+      - kafka_default
 networks:
-  clickhouse-setup_default:
+  mongo_mongodb:
+    external: true
+  kafka_default:
     external: true

@@ -11,17 +11,17 @@ RUN apk --no-cache add tzdata bash
 
 
 FROM builder AS httpbuilder
-WORKDIR /myapp/src/app/httpserver/test/http
+WORKDIR /myapp/app/server/httpserver/test/http
 RUN go build -tags musl -o /app -ldflags '-linkmode external -w -extldflags "-static"'
     
 
 FROM builder AS http2builder
-WORKDIR /myapp/src/app/httpserver/test/http2
+WORKDIR /myapp/app/server/httpserver/test/http2
 RUN go build -tags musl -o /app -ldflags '-linkmode external -w -extldflags "-static"'
 
 
 FROM builder AS kafkabuilder
-WORKDIR /myapp/src/app/kafkaconsumer/test
+WORKDIR /myapp/app/server/kafkaconsumer/test
 RUN go build -tags musl -o /app -ldflags '-linkmode external -w -extldflags "-static"'
 
 
