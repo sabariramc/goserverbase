@@ -8,24 +8,18 @@ import (
 )
 
 func (k *KafkaConsumerServer) GetCorrelationParams(headers map[string]string) *log.CorrelationParam {
-	correlationId, ok := headers["x-correlation-id"]
-	if !ok {
+	cr := &log.CorrelationParam{}
+	cr.LoadFromHeader(headers)
+	if cr.CorrelationId == "" {
 		return log.GetDefaultCorrelationParam(k.c.ServiceName)
 	}
-	return &log.CorrelationParam{
-		CorrelationId: correlationId,
-		ScenarioId:    headers["x-scenario-id"],
-		ScenarioName:  headers["x-scenario-name"],
-		SessionId:     headers["x-session-id"],
-	}
+	return cr
 }
 
 func (k *KafkaConsumerServer) GetCustomerId(headers map[string]string) *log.CustomerIdentifier {
-	return &log.CustomerIdentifier{
-		AppUserId:  headers["x-app-user-id"],
-		CustomerId: headers["x-customer-id"],
-		Id:         headers["x-entity-id"],
-	}
+	id := &log.CustomerIdentifier{}
+	id.LoadFromHeader(headers)
+	return id
 }
 
 func (k *KafkaConsumerServer) GetMessageContext(msg *kafka.Message) context.Context {
