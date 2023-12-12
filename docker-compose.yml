@@ -10,11 +10,14 @@ services:
     environment:
       SERVICE_NAME: gobase_http
       DD_SERVICE: gobase_http
+      KAFKA_BROKER: broker:9092
+      DD_AGENT_HOST: dreamy_cannon:8126
     ports:
       - 60005:8080
     networks:
       - mongo_mongodb
       - kafka_default
+      - common
   kafka:
     build:
       context: .
@@ -26,11 +29,15 @@ services:
       SERVICE_NAME: gobase_kafka
       DD_SERVICE: gobase_kafka
       KAFKA_BROKER: broker:9092
+      DD_AGENT_HOST: dreamy_cannon:8126
     networks:
       - mongo_mongodb
       - kafka_default
+      - common
 networks:
   mongo_mongodb:
     external: true
   kafka_default:
+    external: true
+  common:
     external: true

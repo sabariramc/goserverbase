@@ -16,17 +16,14 @@ import (
 
 type Consumer struct {
 	*api.Reader
-	config           KafkaConsumerConfig
-	log              *log.Logger
-	topics           []string
-	serviceName      string
-	resourceName     string
-	wg               sync.WaitGroup
-	commitLock       sync.Mutex
-	consumedMessages []kafka.Message
+	config      KafkaConsumerConfig
+	log         *log.Logger
+	topics      []string
+	serviceName string
+	wg          sync.WaitGroup
 }
 
-func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerConfig, resourceName string, topics ...string) (*Consumer, error) {
+func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerConfig, topics ...string) (*Consumer, error) {
 	if config.MaxBuffer <= 0 {
 		config.MaxBuffer = 100
 	}
@@ -36,8 +33,8 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerC
 	if config.ConsumerLagToleranceInMs <= 0 {
 		config.ConsumerLagToleranceInMs = 1000
 	}
-	logger = logger.NewResourceLogger(resourceName)
-	defaultCorrelationParam := &log.CorrelationParam{CorrelationId: config.ServiceName + "--" + resourceName}
+	logger = logger.NewResourceLogger("KafkaConsumer")
+	defaultCorrelationParam := &log.CorrelationParam{CorrelationId: config.ServiceName + ":KafkaConsumer"}
 	r := kafka.NewReader(kafka.ReaderConfig{
 		Brokers:           config.Brokers,
 		GroupID:           config.GroupID,
@@ -62,12 +59,11 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerC
 		},
 	})
 	k := &Consumer{
-		log:          logger.NewResourceLogger(resourceName),
-		resourceName: resourceName,
-		config:       *config,
-		Reader:       api.NewReader(ctx, *logger, r, config.MaxBuffer),
-		topics:       topics,
-		serviceName:  config.ServiceName,
+		log:         logger.NewResourceLogger("KafkaConsumer"),
+		config:      *config,
+		Reader:      api.NewReader(ctx, *logger, r, config.MaxBuffer),
+		topics:      topics,
+		serviceName: config.ServiceName,
 	}
 	return k, nil
 }

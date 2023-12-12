@@ -48,7 +48,6 @@ func (s *SecretManager) GetSecret(ctx context.Context, secretArn string) (map[st
 		s.log.Notice(ctx, "Secret fetched from cache", nil)
 	} else {
 		req := &secretsmanager.GetSecretValueInput{SecretId: &secretArn}
-		s.log.Debug(ctx, "Secret fetch request", req)
 		res, err := s.Client.GetSecretValue(ctx, req)
 		if err != nil {
 			s.log.Error(ctx, "error in fetching secret", err)

@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v4/app/server/kafkaconsumer/test/server"
+	server "github.com/sabariramc/goserverbase/v4/app/server/kafkaconsumer/test"
 )
 
 func main() {

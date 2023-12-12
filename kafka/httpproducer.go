@@ -1,23 +1,21 @@
 package kafka
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
-	"net/http"
 	"time"
 
 	"github.com/sabariramc/goserverbase/v4/log"
 	"github.com/sabariramc/goserverbase/v4/utils"
+	"github.com/sabariramc/goserverbase/v4/utils/httputil"
 )
 
 type HTTPProducer struct {
 	baseUrl      string
 	log          *log.Logger
 	topicName    string
-	httpClient   *http.Client
+	httpClient   *httputil.HttpClient
 	resourceName string
 }
 
@@ -26,8 +24,7 @@ func NewHTTPProducer(ctx context.Context, log *log.Logger, baseURL, topicName st
 }
 
 func NewHTTPProducerResource(ctx context.Context, log *log.Logger, resourceName, baseURL, topicName string, timeout time.Duration) *HTTPProducer {
-	p := &HTTPProducer{baseUrl: baseURL, topicName: topicName, httpClient: &http.Client{Timeout: timeout}, resourceName: resourceName, log: log.NewResourceLogger(resourceName)}
-
+	p := &HTTPProducer{baseUrl: baseURL, topicName: topicName, httpClient: httputil.NewDefaultHttpClient(log), resourceName: resourceName, log: log.NewResourceLogger(resourceName)}
 	return p
 }
 
@@ -40,40 +37,19 @@ func (k HTTPProducer) ProduceMessage(ctx context.Context, key string, message *u
 		},
 		},
 	}
+	resBody := make(map[string]any)
+	res, err := k.httpClient.Post(ctx, url, data, &resBody, map[string]string{
+		"Content-Type": "application/vnd.kafka.v2+json",
+	})
+	if err != nil || (res != nil && res.StatusCode > 299) {
+		if res != nil {
+			resBlob, _ := io.ReadAll(res.Body)
+			err = fmt.Errorf("kafka.HTTPProducer.ProduceMessage: http error with statusCode %v", res.StatusCode)
+			k.log.Error(ctx, fmt.Sprintf("KAFKA HTTP response : %v", res.StatusCode), string(resBlob))
+		} else {
+			return fmt.Errorf("kafka.HTTPProducer.ProduceMessage: error in network call: %w", err)
+		}
 
-	var reqBodyBlob bytes.Buffer
-	err := json.NewEncoder(&reqBodyBlob).Encode(&data)
-	if err != nil {
-		return fmt.Errorf("kafka.HTTPProducer.ProduceMessage: error in payload encoding: %w", err)
-	}
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, url, &reqBodyBlob)
-	if err != nil {
-		return fmt.Errorf("kafka.HTTPProducer.ProduceMessage: error in request creation: %w", err)
-	}
-	log.SetCorrelationHeader(ctx, req)
-	req.Header.Add("Content-Type", "application/vnd.kafka.json.v2+json")
-	for key, val := range headers {
-		req.Header.Add(key, val)
-	}
-	k.log.Debug(ctx, "Request payload", data)
-	k.log.Debug(ctx, "Request header", req.Header)
-	k.log.Debug(ctx, "Request url", req.URL)
-	res, err := k.httpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("kafka.HTTPProducer.ProduceMessage: error in network call: %w", err)
-	}
-	defer res.Body.Close()
-	blobBody, _ := io.ReadAll(res.Body)
-	var resBody any
-	resBody = make(map[string]any)
-	err = json.Unmarshal(blobBody, &resBody)
-	if err != nil {
-		k.log.Error(ctx, "kafka.HTTPProducer.ProduceMessage: error response body JSON unmarshal", err)
-		resBody = string(blobBody)
-	}
-	if res.StatusCode > 299 {
-		err = fmt.Errorf("kafka.HTTPProducer.ProduceMessage: http error with statusCode %v", res.StatusCode)
-		k.log.Error(ctx, fmt.Sprintf("KAFKA HTTP response -%v", res.StatusCode), resBody)
 	} else {
 		k.log.Debug(ctx, fmt.Sprintf("KAFKA HTTP response -%v", res.StatusCode), resBody)
 	}

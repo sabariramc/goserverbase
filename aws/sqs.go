@@ -46,14 +46,11 @@ func (s *SQS) IsFIFO() bool {
 func GetQueueURL(ctx context.Context, logger *log.Logger, queueName string, sqsClient *sqs.Client) (*string, error) {
 	req := &sqs.GetQueueUrlInput{
 		QueueName: &queueName}
-	logger.Debug(ctx, "SQS get queue url request", req)
 	res, err := sqsClient.GetQueueUrl(ctx, req)
 	if err != nil {
 		logger.Error(ctx, "Error creating queue URL", err)
 		return nil, fmt.Errorf("SQS.GetQueueURL: %w", err)
 	}
-	logger.Debug(ctx, "SQS get queue url response", res)
-	logger.Debug(ctx, "Queue URL", res.QueueUrl)
 	return res.QueueUrl, nil
 }
 

@@ -58,7 +58,7 @@ func (h *HttpServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 		c.Next()
 		if loggingW.status < 500 {
 			h.log.Info(r.Context(), "Response", map[string]any{"statusCode": loggingW.status, "headers": loggingW.Header()})
-			h.log.Debug(r.Context(), "Response-Body", loggingW.body)
+			h.log.Trace(r.Context(), "Response-Body", loggingW.body)
 		} else {
 			h.log.Error(r.Context(), "Response", map[string]any{"statusCode": loggingW.status, "headers": loggingW.Header()})
 			h.log.Error(r.Context(), "Response-Body", loggingW.body)
@@ -71,7 +71,7 @@ func (h *HttpServer) HandleExceptionMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		w, r := c.Writer, c.Request
 		req := h.ExtractRequestMetadata(r)
-		req["Body"] = h.GetRequestBody(r)
+		req["Body"] = h.GetTextBody(r)
 		span, spanOk := tracer.SpanFromContext(r.Context())
 		defer func() {
 			if rec := recover(); rec != nil {

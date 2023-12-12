@@ -88,6 +88,9 @@ func NewLogger(ctx context.Context, lc *Config, moduleName string, lMux LogMux, 
 		l.Warning(ctx, "Erroneous log level - log set to INFO", nil)
 		logLevel = int(INFO)
 	}
+	if logLevel == int(TRACE) {
+		l.Warning(ctx, "log set is set to TRACE", nil)
+	}
 	l.logLevel = LogLevelCode(logLevel)
 	return l
 }

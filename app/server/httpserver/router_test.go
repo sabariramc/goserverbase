@@ -112,3 +112,13 @@ func TestPost(t *testing.T) {
 	assert.Equal(t, w.Result().StatusCode, http.StatusOK)
 	assert.DeepEqual(t, res, expectedResponse)
 }
+
+func TestIntegration(t *testing.T) {
+	srv := server.NewServer()
+	payload, _ := json.Marshal(map[string]string{"fasdfas": "FASDFASf"})
+	buff := bytes.NewBuffer(payload)
+	req := httptest.NewRequest(http.MethodPost, "/service/v1/test/all", buff)
+	w := httptest.NewRecorder()
+	srv.ServeHTTP(w, req)
+	assert.Equal(t, w.Result().StatusCode, http.StatusNoContent)
+}

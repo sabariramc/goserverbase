@@ -73,7 +73,6 @@ func (a *GCM) Decrypt(ctx context.Context, encryptedData []byte) (plainData []by
 }
 
 func (a *GCM) DecryptString(ctx context.Context, encryptedText string) (string, error) {
-	a.log.Debug(ctx, "EncryptedString", encryptedText)
 	decoded, err := base64.StdEncoding.DecodeString(encryptedText)
 	if err != nil {
 		a.log.Error(ctx, "error in decoding encryptedData", err)
@@ -85,6 +84,5 @@ func (a *GCM) DecryptString(ctx context.Context, encryptedText string) (string, 
 		return "", fmt.Errorf("GCM.DecryptString: error in decrypting: %w", err)
 	}
 	res := string(blobRes)
-	a.log.Debug(ctx, "DecryptedString", res)
 	return res, nil
 }

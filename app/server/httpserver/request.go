@@ -45,13 +45,6 @@ func (h *HttpServer) PrintRequest(ctx context.Context, r *http.Request) {
 	}
 	req := h.ExtractRequestMetadata(r)
 	h.log.Info(ctx, "Request", req)
-	if h.c.Log.ContentLength >= r.ContentLength {
-		h.log.Debug(ctx, "Request-Body", func() string {
-			return h.GetRequestBody(r)
-		})
-	} else if h.c.Log.ContentLength < r.ContentLength {
-		h.log.Notice(ctx, "Request-Body", "Content length is too big to print check server log configuration")
-	}
 	for key, value := range popList {
 		header.Del(key)
 		for _, v := range value {
@@ -93,23 +86,6 @@ func (h *HttpServer) ExtractRequestMetadata(r *http.Request) map[string]any {
 	return res
 }
 
-func (h *HttpServer) GetRequestBody(r *http.Request) string {
-	ctx := r.Context()
-	ctxBody := ctx.Value(ContextKeyRequestBodyString)
-	if ctxBody != nil {
-		body, ok := ctxBody.(*string)
-		if !ok {
-			h.log.Emergency(ctx, "Invalid type for ContextKeyRequestBodyString context variable", fmt.Errorf("HttpServer.GetRequestBody: invalid type for context body reference"), ctxBody)
-		}
-		if *body == "" {
-			*body = string(h.GetBody(r))
-		}
-		return *body
-	}
-	val := string(h.CopyRequestBody(r))
-	return val
-}
-
 func (h *HttpServer) GetBody(r *http.Request) []byte {
 	ctx := r.Context()
 	ctxBody := ctx.Value(ContextKeyRequestBodyRaw)
@@ -136,4 +112,21 @@ func (h *HttpServer) GetJSONBody(r *http.Request, body any) error {
 		return fmt.Errorf("GetJSONBody.empty body")
 	}
 	return json.Unmarshal(blob, body)
+}
+
+func (h *HttpServer) GetTextBody(r *http.Request) string {
+	ctx := r.Context()
+	ctxBody := ctx.Value(ContextKeyRequestBodyString)
+	if ctxBody != nil {
+		body, ok := ctxBody.(*string)
+		if !ok {
+			h.log.Emergency(ctx, "Invalid type for ContextKeyRequestBodyString context variable", fmt.Errorf("HttpServer.GetRequestBody: invalid type for context body reference"), ctxBody)
+		}
+		if *body == "" {
+			*body = string(h.GetBody(r))
+		}
+		return *body
+	}
+	val := string(h.GetBody(r))
+	return val
 }

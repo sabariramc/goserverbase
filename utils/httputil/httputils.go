@@ -16,23 +16,15 @@ import (
 )
 
 var ErrResponseUnmarshal = fmt.Errorf("http.do.responseBodyMarshall")
+var ErrResponseFromUpstream = fmt.Errorf("HttpClient.Call: Non 2xx status")
 
 type CheckRetry func(ctx context.Context, resp *http.Response, err error) (bool, error)
 
 type Backoff func(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration
 
-type LogConfig struct {
-	MaxContentLength int64
-}
-
-var DefaultLogConfig = &LogConfig{
-	MaxContentLength: 10240,
-}
-
 type HttpClient struct {
 	*http.Client
 	log          *log.Logger
-	LogConfig    LogConfig
 	RetryMax     int
 	RetryWaitMin time.Duration
 	RetryWaitMax time.Duration
@@ -41,15 +33,15 @@ type HttpClient struct {
 }
 
 func NewDefaultHttpClient(log *log.Logger) *HttpClient {
-	return NewHttpClient(log, *DefaultLogConfig, 4, time.Second*1, time.Second*5)
+	return NewHttpClient(log, 4, time.Second*1, time.Second*5)
 }
 
-func NewHttpClient(log *log.Logger, logConfig LogConfig, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HttpClient {
+func NewHttpClient(log *log.Logger, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HttpClient {
 	t := http.DefaultTransport.(*http.Transport).Clone()
 	t.MaxIdleConns = 100
 	t.MaxConnsPerHost = 100
 	t.MaxIdleConnsPerHost = 100
-	c := &HttpClient{Client: ddtrace.WrapClient(&http.Client{Transport: t}), log: log.NewResourceLogger("HttpClient"), LogConfig: logConfig, RetryMax: retryMax, RetryWaitMin: retryWaitMin, RetryWaitMax: retryWaitMax, CheckRetry: retryablehttp.DefaultRetryPolicy, Backoff: retryablehttp.DefaultBackoff}
+	c := &HttpClient{Client: ddtrace.WrapClient(&http.Client{Transport: t}), log: log.NewResourceLogger("HttpClient"), RetryMax: retryMax, RetryWaitMin: retryWaitMin, RetryWaitMax: retryWaitMax, CheckRetry: retryablehttp.DefaultRetryPolicy, Backoff: retryablehttp.DefaultBackoff}
 	return c
 }
 
@@ -63,39 +55,29 @@ func (h *HttpClient) Validator(resBody interface{}) error {
 	return nil
 }
 
-func (h *HttpClient) Encode(ctx context.Context, data interface{}) (interface{}, io.Reader, error) {
-	var print interface{}
+func (h *HttpClient) Encode(ctx context.Context, data interface{}) (io.Reader, error) {
 	var body io.Reader
 	if data != nil {
 		switch v := data.(type) {
 		case string:
-			if int64(len(v)) <= h.LogConfig.MaxContentLength {
-				print = v
-			}
 			body = bytes.NewReader([]byte(v))
 		case []byte:
-			if int64(len(v)) <= h.LogConfig.MaxContentLength {
-				print = string(v)
-			}
+
 			body = bytes.NewReader(v)
 		case io.ReadCloser:
 			body = v
 		case io.Reader:
 			body = v
 		default:
-			rv := reflect.ValueOf(v)
-			if int64(rv.Type().Size()) <= h.LogConfig.MaxContentLength {
-				print = data
-			}
 			buff := &bytes.Buffer{}
 			err := json.NewEncoder(buff).Encode(&data)
 			if err != nil {
-				return nil, nil, fmt.Errorf("HttpClient.Encode: error in encoding payload: %w", err)
+				return nil, fmt.Errorf("HttpClient.Encode: error in encoding payload: %w", err)
 			}
 			body = buff
 		}
 	}
-	return print, body, nil
+	return body, nil
 }
 
 func (h *HttpClient) Decode(ctx context.Context, body []byte, data interface{}) (io.ReadCloser, error) {
@@ -144,7 +126,7 @@ func (h *HttpClient) Call(ctx context.Context, method, url string, reqBody, resB
 		return nil, err
 	}
 	var req *http.Request
-	reqPrint, body, err := h.Encode(ctx, reqBody)
+	body, err := h.Encode(ctx, reqBody)
 	if err != nil {
 		return nil, err
 	}
@@ -156,14 +138,10 @@ func (h *HttpClient) Call(ctx context.Context, method, url string, reqBody, resB
 	for key, val := range headers {
 		req.Header.Add(key, val)
 	}
-	if reqBody != nil && reqPrint == nil {
-		h.log.Debug(ctx, "Request payload is not printed : either it is a io.Reader or violates MaxContentLength", err)
-	}
-	h.log.Debug(ctx, "Request", map[string]interface{}{
+	h.log.Info(ctx, "Request", map[string]interface{}{
 		"method":  method,
 		"url":     url,
 		"headers": req.Header,
-		"body":    reqPrint,
 	})
 	r, err := h.Do(req)
 	if err != nil {
@@ -175,26 +153,14 @@ func (h *HttpClient) Call(ctx context.Context, method, url string, reqBody, resB
 		"statusCode": r.StatusCode,
 		"headers":    r.Header,
 	}
-	defer r.Body.Close()
-	resBlob, _ := io.ReadAll(r.Body)
-	if r.StatusCode == http.StatusNoContent || len(resBlob) == 0 {
-		h.log.Debug(ctx, "Response", logRes)
-		return r, nil
-	}
 	if r.StatusCode > 299 {
-		return r, fmt.Errorf("HttpClient.Call: Non 2xx status: %v", r.StatusCode)
-	}
-	r.Body, err = h.Decode(ctx, resBlob, resBody)
-	if r.ContentLength > h.LogConfig.MaxContentLength {
-		h.log.Debug(ctx, "Response payload is not printed - violets MaxContentLength config", nil)
+		h.log.Error(ctx, "Response", logRes)
+		return r, ErrResponseFromUpstream
 	} else {
-		if err != nil {
-			logRes["body"] = string(resBlob)
-		} else {
-			logRes["body"] = resBody
-		}
+		h.log.Info(ctx, "Response", logRes)
 	}
-	h.log.Debug(ctx, "Response", logRes)
+	resBlob, _ := io.ReadAll(r.Body)
+	r.Body, err = h.Decode(ctx, resBlob, resBody)
 	return r, err
 }
 

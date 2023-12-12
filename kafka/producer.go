@@ -18,19 +18,18 @@ type Producer struct {
 	log             *log.Logger
 	topic           string
 	serviceName     string
-	resourceName    string
 	autoFlushCancel context.CancelFunc
 }
 
-func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerConfig, resourceName, topic string) (*Producer, error) {
+func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerConfig, topic string) (*Producer, error) {
 	if config.MaxBuffer == 0 {
 		config.MaxBuffer = 100
 	}
 	if config.AutoFlushIntervalInMs == 0 {
 		config.AutoFlushIntervalInMs = 1000
 	}
-	logger = logger.NewResourceLogger(resourceName)
-	defaultCorrelationParam := &log.CorrelationParam{CorrelationId: config.ServiceName + "--" + resourceName}
+	logger = logger.NewResourceLogger("KafkaProducer")
+	defaultCorrelationParam := &log.CorrelationParam{CorrelationId: config.ServiceName + ":KafkaProducer"}
 	kLog := &kafkaLogger{
 		Logger:  logger,
 		ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
@@ -60,14 +59,12 @@ func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerC
 	} else {
 		writer = api.NewWriter(ctx, p, config.MaxBuffer, *logger)
 	}
-
 	k := &Producer{
-		serviceName:  config.ServiceName,
-		resourceName: resourceName,
-		log:          logger,
-		config:       *config,
-		Writer:       writer,
-		topic:        topic,
+		serviceName: config.ServiceName,
+		log:         logger,
+		config:      *config,
+		Writer:      writer,
+		topic:       topic,
 	}
 	autoFlushContext, cancel := context.WithCancel(log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam))
 	k.autoFlushCancel = cancel
@@ -100,8 +97,7 @@ func (k *Producer) Produce(ctx context.Context, key string, message []byte, head
 			Value: []byte(v),
 		})
 	}
-	k.log.Info(ctx, "Message", map[string]any{"key": key, "headers": headers, "topic": k.topic})
-	k.log.Debug(ctx, "Message Body", func() string { return string(message) })
+	k.log.Info(ctx, "MessageMeta", map[string]any{"key": key, "headers": headers, "topic": k.topic})
 	return k.Send(ctx, key, message, messageHeader)
 }
 
