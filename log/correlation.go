@@ -17,10 +17,10 @@ type HostParams struct {
 }
 
 type CorrelationParam struct {
-	CorrelationId string `header:"x-correlation-id" body:"correlationId"`
-	ScenarioId    string `header:"x-scenario-id,omitempty" body:"scenarioId,omitempty"`
-	SessionId     string `header:"x-session-id,omitempty" body:"sessionId,omitempty"`
-	ScenarioName  string `header:"x-scenario-name,omitempty" body:"scenarioName,omitempty"`
+	CorrelationId string  `header:"x-correlation-id" body:"correlationId"`
+	ScenarioId    *string `header:"x-scenario-id,omitempty" body:"scenarioId,omitempty"`
+	SessionId     *string `header:"x-session-id,omitempty" body:"sessionId,omitempty"`
+	ScenarioName  *string `header:"x-scenario-name,omitempty" body:"scenarioName,omitempty"`
 }
 
 func (c *CorrelationParam) GetPayload() map[string]string {
@@ -38,9 +38,9 @@ func (c *CorrelationParam) GetHeader() map[string]string {
 }
 
 type CustomerIdentifier struct {
-	CustomerId string `header:"x-customer-id,omitempty" body:"customerId,omitempty"`
-	AppUserId  string `header:"x-app-user-id,omitempty" body:"appUserId,omitempty"`
-	Id         string `header:"x-entity-id,omitempty" body:"Id,omitempty"`
+	CustomerId *string `header:"x-customer-id,omitempty" body:"customerId,omitempty"`
+	AppUserId  *string `header:"x-app-user-id,omitempty" body:"appUserId,omitempty"`
+	Id         *string `header:"x-entity-id,omitempty" body:"Id,omitempty"`
 }
 
 func (c *CustomerIdentifier) GetPayload() map[string]string {
