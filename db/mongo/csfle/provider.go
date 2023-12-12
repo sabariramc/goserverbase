@@ -45,7 +45,6 @@ func GetAWSProvider(ctx context.Context, logger *log.Logger, awsConfig *aws.Conf
 		return nil, fmt.Errorf("CSFLE.GetAWSProvider: error in aws credential fetch: %w", err)
 	}
 	provider = CreateAWSProvider(cred.AccessKeyID, cred.SecretAccessKey, cred.SessionToken, awsConfig.Region)
-	logger.Debug(ctx, "Mongo AWS KMS provider", provider)
 	return provider, nil
 }
 
