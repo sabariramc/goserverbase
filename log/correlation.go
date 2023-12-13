@@ -44,7 +44,7 @@ func (c *CorrelationParam) LoadFromHeader(header map[string]string) error {
 	}
 	err = utils.HeaderJson.Unmarshal(data, c)
 	if err != nil {
-		return fmt.Errorf("CorrelationParam.LoadFromHeader: error unmarshaling header: %w", err)
+		return fmt.Errorf("CorrelationParam.LoadFromHeader: error unmarshalling header: %w", err)
 	}
 	return nil
 }
@@ -76,7 +76,7 @@ func (c *CustomerIdentifier) LoadFromHeader(header map[string]string) error {
 	}
 	err = utils.HeaderJson.Unmarshal(data, c)
 	if err != nil {
-		return fmt.Errorf("CustomerIdentifier.LoadFromHeader: error unmarshaling header: %w", err)
+		return fmt.Errorf("CustomerIdentifier.LoadFromHeader: error unmarshalling header: %w", err)
 	}
 	return nil
 }

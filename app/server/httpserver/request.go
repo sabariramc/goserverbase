@@ -2,12 +2,10 @@ package httpserver
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-	"strings"
 
 	"github.com/sabariramc/goserverbase/v4/log"
 )
@@ -42,7 +40,8 @@ func (h *HttpServer) GetCustomerId(r *http.Request) *log.CustomerIdentifier {
 	return id
 }
 
-func (h *HttpServer) PrintRequest(ctx context.Context, r *http.Request) {
+func (h *HttpServer) PrintRequest(r *http.Request) {
+	ctx := r.Context()
 	header := r.Header
 	popList := make(map[string][]string)
 	for _, key := range h.c.Log.AuthHeaderKeyList {
@@ -62,23 +61,13 @@ func (h *HttpServer) PrintRequest(ctx context.Context, r *http.Request) {
 	}
 }
 
-func (h *HttpServer) CopyRequestBody(r *http.Request) []byte {
-	if r.ContentLength <= 0 {
-		return nil
+func (h *HttpServer) CopyRequestBody(r *http.Request) ([]byte, error) {
+	blobBody, err := h.GetRequestBody(r)
+	if err != nil {
+		return blobBody, fmt.Errorf("HttpServer.CopyRequestBody: %w", err)
 	}
-	body := r.Body
-	defer body.Close()
-	blobBody, _ := io.ReadAll(body)
 	r.Body = io.NopCloser(bytes.NewReader(blobBody))
-	contentType := r.Header.Get(HttpHeaderContentType)
-	if strings.HasPrefix(contentType, HttpContentTypeJSON) {
-		var prettyJSON bytes.Buffer
-		err := json.Indent(&prettyJSON, blobBody, "", "\t")
-		if err == nil {
-			return prettyJSON.Bytes()
-		}
-	}
-	return blobBody
+	return blobBody, nil
 }
 
 func (h *HttpServer) ExtractRequestMetadata(r *http.Request) map[string]any {
@@ -95,47 +84,27 @@ func (h *HttpServer) ExtractRequestMetadata(r *http.Request) map[string]any {
 	return res
 }
 
-func (h *HttpServer) GetBody(r *http.Request) []byte {
-	ctx := r.Context()
-	ctxBody := ctx.Value(ContextKeyRequestBodyRaw)
-	if ctxBody != nil {
-		body, ok := ctxBody.(**[]byte)
-		if !ok {
-			h.log.Emergency(ctx, "Invalid type for ContextKeyRequestBodyRaw context variable", fmt.Errorf("HttpServer.GetBody: invalid type for context body reference"), ctxBody)
-		}
-		if body == nil {
-			return h.CopyRequestBody(r)
-		}
-		if *body == nil {
-			data := h.CopyRequestBody(r)
-			*body = &data
-		}
-		return **body
+func (h *HttpServer) GetRequestBody(r *http.Request) ([]byte, error) {
+	if r.ContentLength <= 0 {
+		return nil, nil
 	}
-	return h.CopyRequestBody(r)
+	body := r.Body
+	defer body.Close()
+	blobBody, err := io.ReadAll(body)
+	if err != nil {
+		err = fmt.Errorf("HttpServer.GetRequestBody: error reading request body: %w", err)
+	}
+	return blobBody, err
 }
 
-func (h *HttpServer) GetJSONBody(r *http.Request, body any) error {
-	blob := h.GetBody(r)
-	if blob == nil {
-		return fmt.Errorf("GetJSONBody.empty body")
+func (h *HttpServer) LoadRequestJSONBody(r *http.Request, body any) error {
+	blobBody, err := h.GetRequestBody(r)
+	if err != nil {
+		return fmt.Errorf("HttpServer.LoadJSONBody: %w", err)
 	}
-	return json.Unmarshal(blob, body)
-}
-
-func (h *HttpServer) GetTextBody(r *http.Request) string {
-	ctx := r.Context()
-	ctxBody := ctx.Value(ContextKeyRequestBodyString)
-	if ctxBody != nil {
-		body, ok := ctxBody.(*string)
-		if !ok {
-			h.log.Emergency(ctx, "Invalid type for ContextKeyRequestBodyString context variable", fmt.Errorf("HttpServer.GetRequestBody: invalid type for context body reference"), ctxBody)
-		}
-		if *body == "" {
-			*body = string(h.GetBody(r))
-		}
-		return *body
+	err = json.Unmarshal(blobBody, body)
+	if err != nil {
+		err = fmt.Errorf("HttpServer.LoadJSONBody: error loading request body to object: %w", err)
 	}
-	val := string(h.GetBody(r))
-	return val
+	return err
 }

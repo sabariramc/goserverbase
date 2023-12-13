@@ -104,7 +104,7 @@ func (g *GraylogWriter) WriteMessage(ctx context.Context, msg *log.LogMessage) (
 		errorMessage.Message = "Error sending to graylog"
 		errorMessage.LogObject = err.Error()
 		_ = g.errorLog.WriteMessage(ctx, &errorMessage)
-		return fmt.Errorf("GraylogWriter.WriteMessage : %w", err)
+		return fmt.Errorf("GraylogWriter.WriteMessage: %w", err)
 	}
 	return nil
 }

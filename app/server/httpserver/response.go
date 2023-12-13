@@ -25,13 +25,13 @@ func (w *loggingResponseWriter) Write(body []byte) (int, error) {
 	return w.ResponseWriter.Write(body)
 }
 
-func (h *HttpServer) WriteJsonWithStatusCode(ctx context.Context, w http.ResponseWriter, statusCode int, responseBody any) {
+func (h *HttpServer) WriteJSONWithStatusCode(ctx context.Context, w http.ResponseWriter, statusCode int, responseBody any) {
 	var err error
 	blob, ok := responseBody.([]byte)
 	if !ok {
 		blob, err = json.Marshal(responseBody)
 		if err != nil {
-			h.log.Emergency(ctx, "Error in response json marshall", fmt.Errorf("HttpServer.WriteJsonWithStatusCode: response marshal error: %w", err), responseBody)
+			h.log.Emergency(ctx, "Error in response json marshall", fmt.Errorf("HttpServer.WriteJsonWithStatusCode: error marshalling response: %w", err), responseBody)
 		}
 	}
 	w.Header().Set(HttpHeaderContentType, HttpContentTypeJSON)
@@ -40,7 +40,7 @@ func (h *HttpServer) WriteJsonWithStatusCode(ctx context.Context, w http.Respons
 }
 
 func (h *HttpServer) WriteJson(ctx context.Context, w http.ResponseWriter, responseBody any) {
-	h.WriteJsonWithStatusCode(ctx, w, http.StatusOK, responseBody)
+	h.WriteJSONWithStatusCode(ctx, w, http.StatusOK, responseBody)
 }
 
 func (h *HttpServer) WriteResponseWithStatusCode(ctx context.Context, w http.ResponseWriter, statusCode int, contentType string, responseBody []byte) {

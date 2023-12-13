@@ -41,7 +41,7 @@ func (e *ErrorNotifierKafka) send(ctx context.Context, errorCode string, err err
 	err = e.producer.ProduceMessage(ctx, "", msg, map[string]string{"x-error-timestamp": strconv.FormatInt(time.Now().UnixMilli(), 10)})
 	if err != nil {
 		e.log.Error(ctx, "Error in error-notifier", err)
-		err = fmt.Errorf("ErrorNotifierKafka.send : %w", err)
+		err = fmt.Errorf("ErrorNotifierKafka.send: %w", err)
 	}
 	return err
 }

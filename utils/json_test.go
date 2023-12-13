@@ -31,5 +31,5 @@ func TestJsonDecoding(t *testing.T) {
 	assert.DeepEqual(t, val, toData.DecimalVal)
 	data["newField"] = "random value"
 	err = utils.StrictJsonTransformer(data, toData)
-	assert.Error(t, err, "StrictJsonTransformer: error in decoding to destination: json: unknown field \"newField\"")
+	assert.Error(t, err, "StrictJsonTransformer: error decoding content: json: unknown field \"newField\"")
 }

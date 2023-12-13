@@ -15,8 +15,8 @@ import (
 	ddtrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/net/http"
 )
 
-var ErrResponseUnmarshal = fmt.Errorf("http.do.responseBodyMarshall")
-var ErrResponseFromUpstream = fmt.Errorf("HttpClient.Call: Non 2xx status")
+var ErrResponseUnmarshal = fmt.Errorf("error marshalling response body")
+var ErrResponseFromUpstream = fmt.Errorf("HttpClient.Call: non 2xx status")
 
 type CheckRetry func(ctx context.Context, resp *http.Response, err error) (bool, error)
 
@@ -49,7 +49,7 @@ func (h *HttpClient) Validator(resBody interface{}) error {
 	if resBody != nil {
 		v := reflect.ValueOf(resBody)
 		if v.Kind() != reflect.Ptr {
-			return fmt.Errorf("`resBody` is not ptr; is %T", resBody)
+			return fmt.Errorf("HttpClient.Validator: `resBody` is not ptr type is %T", resBody)
 		}
 	}
 	return nil
@@ -72,7 +72,7 @@ func (h *HttpClient) Encode(ctx context.Context, data interface{}) (io.Reader, e
 			buff := &bytes.Buffer{}
 			err := json.NewEncoder(buff).Encode(&data)
 			if err != nil {
-				return nil, fmt.Errorf("HttpClient.Encode: error in encoding payload: %w", err)
+				return nil, fmt.Errorf("HttpClient.Encode: error encoding payload: %w", err)
 			}
 			body = buff
 		}
@@ -91,7 +91,7 @@ func (h *HttpClient) Decode(ctx context.Context, body []byte, data interface{}) 
 			err := json.Unmarshal(body, data)
 			if err != nil {
 				newBuff := io.NopCloser(bytes.NewReader(body))
-				return newBuff, fmt.Errorf("HttpClient:Decode: %w : %w", ErrResponseUnmarshal, err)
+				return newBuff, fmt.Errorf("HttpClient.Decode: %w: %w", ErrResponseUnmarshal, err)
 			}
 		}
 		return nil, nil
@@ -132,7 +132,7 @@ func (h *HttpClient) Call(ctx context.Context, method, url string, reqBody, resB
 	}
 	req, err = http.NewRequestWithContext(ctx, method, url, body)
 	if err != nil {
-		return nil, fmt.Errorf("HttpClient.Call: error in request creation: %w", err)
+		return nil, fmt.Errorf("HttpClient.Call: error creating request: %w", err)
 	}
 	log.SetCorrelationHeader(ctx, req)
 	for key, val := range headers {
@@ -145,7 +145,7 @@ func (h *HttpClient) Call(ctx context.Context, method, url string, reqBody, resB
 	})
 	r, err := h.Do(req)
 	if err != nil {
-		return r, fmt.Errorf("HttpClient.Call: error in network call: %w", err)
+		return r, fmt.Errorf("HttpClient.Call: network call error: %w", err)
 	} else if r == nil {
 		return r, err
 	}

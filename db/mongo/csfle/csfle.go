@@ -67,7 +67,7 @@ func GetDataKey(ctx context.Context, m *m.Mongo, keyVaultNamespace, keyAltName s
 		Decode(&dataKey)
 	if err != nil {
 		if err != mongo.ErrNoDocuments {
-			err = fmt.Errorf("csfle.GetDataKey: error encountered while attempting to find data key: %w", err)
+			err = fmt.Errorf("csfle.GetDataKey: error finding data key: %w", err)
 			return
 
 		}

@@ -43,7 +43,7 @@ func (s *S3) PutObject(ctx context.Context, s3Bucket, s3Key string, body io.Read
 	res, err := s.Client.PutObject(ctx, req)
 	if err != nil {
 		s.log.Error(ctx, "error uploading file", err)
-		return nil, fmt.Errorf("S3.PutObject: error uploading file:%w", err)
+		return nil, fmt.Errorf("S3.PutObject: error uploading file: %w", err)
 	}
 	return res, nil
 }
@@ -80,19 +80,19 @@ func (s *S3) GetFile(ctx context.Context, s3Bucket, s3Key, localFilePath string)
 	}
 	blob, err := io.ReadAll(res.Body)
 	if err != nil {
-		s.log.Error(ctx, "error occurred while reading data", err)
-		return fmt.Errorf("S3.GetFile: error occurred while reading data: %w", err)
+		s.log.Error(ctx, "error reading remote content", err)
+		return fmt.Errorf("S3.GetFile: error reading remote content: %w", err)
 	}
 	fp, err := os.Create(localFilePath)
 	if err != nil {
-		s.log.Error(ctx, "error in creating local file", err)
-		return fmt.Errorf("S3.GetFile: error in creating local file: %w", err)
+		s.log.Error(ctx, "error creating local file", err)
+		return fmt.Errorf("S3.GetFile: error creating local file: %w", err)
 	}
 	defer fp.Close()
 	n, err := fp.Write(blob)
 	if err != nil {
-		s.log.Error(ctx, "error in writing local file", err)
-		return fmt.Errorf("S3.GetFile: error in writing local file: %w", err)
+		s.log.Error(ctx, "error writing to local file", err)
+		return fmt.Errorf("S3.GetFile: error writing to local file: %w", err)
 	}
 	if n != len(blob) {
 		s.log.Error(ctx, fmt.Sprintf("total bytes %v, written bytes %v", len(blob), n), nil)

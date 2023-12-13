@@ -77,7 +77,7 @@ func (k *Producer) ProduceMessage(ctx context.Context, key string, message *util
 	if err != nil {
 		k.log.Error(ctx, "Failed to encode message", err)
 		k.log.Error(ctx, "Message", message)
-		return fmt.Errorf("kafka.Producer.ProduceMessage: %w", err)
+		return fmt.Errorf("Producer.ProduceMessage: error marshalling message: %w", err)
 	}
 	return k.Produce(ctx, key, blob, headers)
 }
@@ -107,7 +107,7 @@ func (k *Producer) autoFlush(ctx context.Context) {
 	case <-timeout.Done():
 		err := k.Flush(ctx)
 		if err != nil {
-			k.log.Error(ctx, "Error while writing kafka message", err)
+			k.log.Emergency(ctx, "Error while writing kafka message", fmt.Errorf("Producer.autoFlush: %w", err), nil)
 		}
 		timeout, _ = context.WithTimeout(context.Background(), time.Duration(k.config.AutoFlushIntervalInMs*uint64(time.Millisecond)))
 	case <-ctx.Done():
