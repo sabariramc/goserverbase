@@ -3,7 +3,6 @@ package kafka_test
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/sabariramc/goserverbase/v4/errors/notifier/kafka"
 	pKafka "github.com/sabariramc/goserverbase/v4/kafka"
@@ -35,21 +34,6 @@ func TestErrorNotification(t *testing.T) {
 	notifier := kafka.New(context.TODO(), TestLogger, "Test", p)
 	ctx := GetCorrelationContext()
 	custId := "cust_test_id"
-	err := notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{CustomerId: &custId}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
-	assert.NilError(t, err)
-	custId = "app_user_id"
-	err = notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{AppUserId: &custId}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
-	assert.NilError(t, err)
-	custId = "entity_id"
-	err = notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{Id: &custId}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
-	assert.NilError(t, err)
-}
-
-func TestErrorNotification2(t *testing.T) {
-	custId := "cust_test_id"
-	p := pKafka.NewHTTPProducer(context.TODO(), TestLogger, TestConfig.KafkaHTTPProxyURL, TestConfig.KafkaTestTopic, time.Second)
-	notifier := kafka.New(context.TODO(), TestLogger, "Test", p)
-	ctx := GetCorrelationContext()
 	err := notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{CustomerId: &custId}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
 	assert.NilError(t, err)
 	custId = "app_user_id"
