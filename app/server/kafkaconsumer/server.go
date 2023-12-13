@@ -43,7 +43,7 @@ func (k *KafkaConsumerServer) Subscribe(ctx context.Context) {
 	k.ch = ch
 	client, err := kafka.NewConsumer(ctx, k.log, k.c.KafkaConsumerConfig, topicList...)
 	if err != nil {
-		k.log.Emergency(ctx, "Error occurred during client creation", fmt.Errorf("KafkaConsumerServer. Subscribe: error on creating kafka consumer: %w", err), map[string]any{
+		k.log.Emergency(ctx, "Error occurred during client creation", fmt.Errorf("KafkaConsumerServer.Subscribe: error creating kafka consumer: %w", err), map[string]any{
 			"topicList": topicList,
 			"config":    k.c.KafkaConsumerConfig,
 		})
@@ -84,7 +84,7 @@ func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 			topicName := (*msg).Topic
 			handler := k.handler[topicName]
 			if handler == nil {
-				k.log.Emergency(pollCtx, "missing handler for topic - "+topicName, nil, fmt.Errorf("missing handler for topic - %v", topicName))
+				k.log.Emergency(pollCtx, "missing handler for topic - "+topicName, nil, fmt.Errorf("KafkaConsumerServer.StartConsumer: missing handler for topic: %v", topicName))
 			}
 			emMsg := &kafka.Message{Message: msg}
 			msgCtx := k.GetMessageContext(emMsg)

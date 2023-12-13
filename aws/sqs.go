@@ -55,7 +55,7 @@ func GetQueueURL(ctx context.Context, logger *log.Logger, queueName string, sqsC
 }
 
 func (s *SQS) SendMessage(ctx context.Context, message *utils.Message, attribute map[string]string, delayInSeconds int32, messageDeduplicationID, messageGroupID *string) (*sqs.SendMessageOutput, error) {
-	body, err := utils.Serialize(message)
+	body, err := utils.LoadString(message)
 	if err != nil {
 		return nil, fmt.Errorf("SQS.SendMessage: %w", err)
 	}
@@ -91,7 +91,7 @@ func (s *SQS) SendMessageBatch(ctx context.Context, messageList []*BatchQueueMes
 	messageReq := make([]types.SendMessageBatchRequestEntry, len(messageList))
 	i := 0
 	for _, message := range messageList {
-		body, err := utils.Serialize(message.Message)
+		body, err := utils.LoadString(message.Message)
 		if err != nil {
 			return nil, fmt.Errorf("SQS.SendMessageBatch: %w", err)
 		}

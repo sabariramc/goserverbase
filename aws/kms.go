@@ -41,8 +41,8 @@ func (k *KMS) Encrypt(ctx context.Context, plainText []byte) (cipherBlob []byte,
 	}
 	res, err := k.Client.Encrypt(ctx, req)
 	if err != nil {
-		k.log.Error(ctx, "error during encrypt", err)
-		err = fmt.Errorf("KMS.Encrypt: error during encrypt: %w", err)
+		k.log.Error(ctx, "error encrypting content", err)
+		err = fmt.Errorf("KMS.Encrypt: error encrypting content: %w", err)
 		return
 	}
 	cipherBlob = res.CiphertextBlob
@@ -56,8 +56,8 @@ func (k *KMS) Decrypt(ctx context.Context, cipherBlob []byte) (plainText []byte,
 	}
 	res, err := k.Client.Decrypt(ctx, req)
 	if err != nil {
-		k.log.Error(ctx, "error during decrypt", err)
-		err = fmt.Errorf("KMS.Decrypt: error during decrypt: %w", err)
+		k.log.Error(ctx, "error decrypting content", err)
+		err = fmt.Errorf("KMS.Decrypt: error decrypting content: %w", err)
 		return
 	}
 	plainText = res.Plaintext

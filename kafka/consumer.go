@@ -30,7 +30,7 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerC
 	if config.AutoCommitIntervalInMs <= 0 {
 		config.AutoCommitIntervalInMs = 1000
 	}
-	
+
 	logger = logger.NewResourceLogger("KafkaConsumer")
 	defaultCorrelationParam := &log.CorrelationParam{CorrelationId: config.ServiceName + ":KafkaConsumer"}
 	r := kafka.NewReader(kafka.ReaderConfig{
@@ -119,7 +119,7 @@ outer:
 		if pollErr == nil {
 			pollErr = commitErr
 		} else {
-			pollErr = fmt.Errorf("kafka.Consumer.Poll.Error: %w, %w", pollErr, commitErr)
+			pollErr = fmt.Errorf("Consumer.Poll: %w , %w", pollErr, commitErr)
 		}
 	}
 	k.log.Notice(ctx, fmt.Sprintf("Polling ended for topic : %v", k.topics), nil)
@@ -134,7 +134,7 @@ func (k *Consumer) Close(ctx context.Context) error {
 	k.log.Notice(ctx, "Consumer closed for topic", k.topics)
 	if commitErr != nil || closeErr != nil {
 		k.log.Error(ctx, fmt.Sprintf("Consumer closed with error for topic : %v", k.topics), closeErr)
-		return fmt.Errorf("KafkaConsumer.Close: %w, %w", commitErr, closeErr)
+		return fmt.Errorf("Consumer.Close: %w, %w", commitErr, closeErr)
 	}
 	return nil
 }

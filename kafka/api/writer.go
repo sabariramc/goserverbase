@@ -80,7 +80,7 @@ func (w *Writer) Flush(ctx context.Context) error {
 	w.messageList = make([]kafka.Message, 0, w.bufferLen)
 	if err != nil {
 		w.log.Error(ctx, "Failed to flush message", err)
-		return fmt.Errorf("kafka.Writer.Flush: error in flushing message: %w", err)
+		return fmt.Errorf("Writer.Flush: error in flushing message: %w", err)
 	}
 	return nil
 }

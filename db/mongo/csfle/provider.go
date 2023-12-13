@@ -38,11 +38,11 @@ func GetAWSProvider(ctx context.Context, logger *log.Logger, awsConfig *aws.Conf
 	kms := cuaws.NewKMSClient(logger, cuaws.NewAWSKMSClientWithConfig(*awsConfig), kmsARN)
 	_, err = kms.Encrypt(ctx, []byte("test"))
 	if err != nil {
-		return nil, fmt.Errorf("csfle.GetAWSProvider: error in kms test flight: %w", err)
+		return nil, fmt.Errorf("csfle.GetAWSProvider: error test flight of kms: %w", err)
 	}
 	cred, err := awsConfig.Copy().Credentials.Retrieve(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("CSFLE.GetAWSProvider: error in aws credential fetch: %w", err)
+		return nil, fmt.Errorf("CSFLE.GetAWSProvider: error fetching aws credential: %w", err)
 	}
 	provider = CreateAWSProvider(cred.AccessKeyID, cred.SecretAccessKey, cred.SessionToken, awsConfig.Region)
 	return provider, nil
@@ -94,7 +94,7 @@ func SetEncryptionKey(ctx context.Context, logger *log.Logger, encryptionSchema 
 	schema := make(map[string]interface{})
 	err := json.Unmarshal([]byte(*encryptionSchema), &schema)
 	if err != nil {
-		return fmt.Errorf("csfle.SetEncryptionKey: csfle schema unmarshal error: %w", err)
+		return fmt.Errorf("csfle.SetEncryptionKey: error unmarshalling csfle schema: %w", err)
 	}
 	client, err := mongo.New(ctx, logger, c)
 	if err != nil {
@@ -123,7 +123,7 @@ func SetEncryptionKey(ctx context.Context, logger *log.Logger, encryptionSchema 
 	}
 	blob, err := json.Marshal(schema)
 	if err != nil {
-		return fmt.Errorf("csfle.SetEncryptionKey: error in marshaling csfle scheme: %w", err)
+		return fmt.Errorf("csfle.SetEncryptionKey: error marshaling csfle scheme: %w", err)
 	}
 	*encryptionSchema = string(blob)
 	return nil

@@ -26,8 +26,8 @@ type ECB struct {
 func NewECBPKC5(ctx context.Context, key []byte, log *log.Logger) (*ECB, error) {
 	cipher, err := NewECB(ctx, key, log, padding.NewPKCS7(len(key)))
 	if err != nil {
-		log.Error(ctx, "error in creating ECB", err)
-		return nil, fmt.Errorf("NewECBPKC5: error in creating ECB: %w", err)
+		log.Error(ctx, "error creating ECB", err)
+		return nil, fmt.Errorf("NewECBPKC5: error creating ECB: %w", err)
 	}
 	return cipher, nil
 }
@@ -35,8 +35,8 @@ func NewECBPKC5(ctx context.Context, key []byte, log *log.Logger) (*ECB, error) 
 func NewECB(ctx context.Context, key []byte, log *log.Logger, padder crypto.Padder) (*ECB, error) {
 	cipher, err := aes.NewCipher(key)
 	if err != nil {
-		log.Error(ctx, "error in creating cipher", err)
-		return nil, fmt.Errorf("NewECB: error in creating cipher: %w", err)
+		log.Error(ctx, "error creating cipher", err)
+		return nil, fmt.Errorf("NewECB: error creating cipher: %w", err)
 	}
 	return &ECB{
 		b:         cipher,
@@ -60,8 +60,8 @@ func (a *ECB) Encrypt(ctx context.Context, data []byte) ([]byte, error) {
 func (a *ECB) EncryptString(ctx context.Context, plainText string) (string, error) {
 	blobRes, err := a.Encrypt(ctx, []byte(plainText))
 	if err != nil {
-		a.log.Error(ctx, "error during encryption", err)
-		return "", fmt.Errorf("ECB.EncryptString: %w", err)
+		a.log.Error(ctx, "error encryption content", err)
+		return "", fmt.Errorf("ECB.EncryptString: error encryption content: %w", err)
 	}
 	res := base64.StdEncoding.EncodeToString(blobRes)
 	return res, nil

@@ -17,7 +17,7 @@ func SetDefaultPagination(filter interface{}, defaultSortBy string) error {
 	var defaultFilter Filter
 	err := utils.StrictJsonTransformer(filter, &defaultFilter)
 	if err != nil {
-		return fmt.Errorf("baseapp.SetDefault : %w", err)
+		return fmt.Errorf("baseapp.SetDefaultPagination: format mismatch: %w", err)
 	}
 	if defaultFilter.PageNo <= 0 {
 		defaultFilter.PageNo = 1
@@ -30,7 +30,7 @@ func SetDefaultPagination(filter interface{}, defaultSortBy string) error {
 	}
 	err = utils.StrictJsonTransformer(&defaultFilter, filter)
 	if err != nil {
-		return fmt.Errorf("app.SetDefault : %w", err)
+		return fmt.Errorf("baseapp.SetDefaultPagination: error transforming filter: %w", err)
 	}
 	return nil
 }

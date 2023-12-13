@@ -40,11 +40,11 @@ func (m *Message) GetPayload(name string) (p Payload, err error) {
 			p, ok = m.Payload[name]
 			if !ok {
 				p = nil
-				err = fmt.Errorf("Payload %v not found", name)
+				err = fmt.Errorf("Message.GetPayload: payload %v not found", name)
 			}
 			return
 		}
 	}
-	err = fmt.Errorf("Payload %v not found in contains param", name)
+	err = fmt.Errorf("Message.GetPayload: payload %v not found in contains param", name)
 	return
 }

@@ -28,8 +28,8 @@ type CBC struct {
 func NewCBCPKCS7(ctx context.Context, log *log.Logger, key string, iv []byte) (*CBC, error) {
 	keyByte, err := getKeyBytes(key)
 	if err != nil {
-		log.Error(ctx, "error in key", err)
-		return nil, fmt.Errorf("NewAESCBCPKCS7: error in key: %w", err)
+		log.Error(ctx, "erroneous in key", err)
+		return nil, fmt.Errorf("NewAESCBCPKCS7: %w", err)
 	}
 	block, err := aes.NewCipher(keyByte)
 	if err != nil {
@@ -42,12 +42,12 @@ func NewCBC(ctx context.Context, log *log.Logger, key string, padder crypto.Padd
 	keyByte, err := getKeyBytes(key)
 	if err != nil {
 		log.Error(ctx, "error in key", err)
-		return nil, fmt.Errorf("crypto.aes.NewCBC: error in key: %w", err)
+		return nil, fmt.Errorf("crypto.aes.NewCBC: %w", err)
 	}
 	block, err := aes.NewCipher(keyByte)
 	if err != nil {
-		log.Error(ctx, "error in creating cipher", err)
-		return nil, fmt.Errorf("crypto.aes.NewCBC: error in creating cipher: %w", err)
+		log.Error(ctx, "error creating cipher", err)
+		return nil, fmt.Errorf("crypto.aes.NewCBC: error creating cipher: %w", err)
 	}
 	if iv != nil && len(iv) != block.BlockSize() {
 		log.Error(ctx, "invalid iv length", ErrIVLengthMismatch)
@@ -59,8 +59,8 @@ func NewCBC(ctx context.Context, log *log.Logger, key string, padder crypto.Padd
 func (a *CBC) Encrypt(ctx context.Context, plainBlob []byte) ([]byte, error) {
 	block, err := aes.NewCipher(a.key)
 	if err != nil {
-		a.log.Error(ctx, "error in creating cipher", err)
-		return nil, fmt.Errorf("CBC.Encrypt: error in creating cipher: %w", err)
+		a.log.Error(ctx, "error creating cipher", err)
+		return nil, fmt.Errorf("CBC.Encrypt: error creating cipher: %w", err)
 	}
 	paddedData := a.padder.Pad(plainBlob)
 	iv := a.getIv()
@@ -73,8 +73,8 @@ func (a *CBC) Encrypt(ctx context.Context, plainBlob []byte) ([]byte, error) {
 func (a *CBC) EncryptString(ctx context.Context, data string) (string, error) {
 	blobRes, err := a.Encrypt(ctx, []byte(data))
 	if err != nil {
-		a.log.Error(ctx, "error in encrypting data", err)
-		return "", fmt.Errorf("CBC.EncryptString: error in encrypting data: %w", err)
+		a.log.Error(ctx, "error encrypting data", err)
+		return "", fmt.Errorf("CBC.EncryptString: error encrypting data: %w", err)
 	}
 	res := base64.StdEncoding.EncodeToString(blobRes)
 	return res, nil
@@ -83,8 +83,8 @@ func (a *CBC) EncryptString(ctx context.Context, data string) (string, error) {
 func (a *CBC) Decrypt(ctx context.Context, encryptedData []byte) (plainData []byte, err error) {
 	block, err := aes.NewCipher(a.key)
 	if err != nil {
-		a.log.Error(ctx, "error in creating cipher", err)
-		return nil, fmt.Errorf("CBC.Decrypt: %w", err)
+		a.log.Error(ctx, "error creating cipher", err)
+		return nil, fmt.Errorf("CBC.Decrypt: error creating cipher: %w", err)
 	}
 	blockSize := block.BlockSize()
 	iv := encryptedData[:blockSize]
@@ -103,13 +103,13 @@ func (a *CBC) Decrypt(ctx context.Context, encryptedData []byte) (plainData []by
 func (a *CBC) DecryptString(ctx context.Context, encryptedData string) (string, error) {
 	decoded, err := base64.StdEncoding.DecodeString(encryptedData)
 	if err != nil {
-		a.log.Error(ctx, "error in decoding encryptedData", err)
-		return "", fmt.Errorf("CBC.DecryptString: error in decoding encryptedData: %w", err)
+		a.log.Error(ctx, "error decoding encryptedData", err)
+		return "", fmt.Errorf("CBC.DecryptString: error decoding content: %w", err)
 	}
 	blobRes, err := a.Decrypt(ctx, []byte(decoded))
 	if err != nil {
-		a.log.Error(ctx, "error in decrypting", err)
-		return "", fmt.Errorf("CBC.DecryptString: error in decrypting: %w", err)
+		a.log.Error(ctx, "error decrypting content", err)
+		return "", fmt.Errorf("CBC.DecryptString: error decrypting content: %w", err)
 	}
 	res := string(blobRes)
 	return res, nil

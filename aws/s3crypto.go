@@ -53,23 +53,23 @@ func (s *S3Crypto) encrypt(ctx context.Context, body io.Reader) (io.Reader, map[
 	key := utils.GenerateRandomString(32)
 	encryptedKey, err := s.kms.Encrypt(ctx, []byte(key))
 	if err != nil {
-		s.log.Error(ctx, "error on encrypting content key", err)
-		return nil, nil, fmt.Errorf("S3Crypto.encrypt: error on encrypting content key: %w", err)
+		s.log.Error(ctx, "error encrypting content key", err)
+		return nil, nil, fmt.Errorf("S3Crypto.encrypt: error encrypting content key: %w", err)
 	}
 	data, err := io.ReadAll(body)
 	if err != nil {
-		s.log.Error(ctx, "error on reading content", err)
-		return nil, nil, fmt.Errorf("S3Crypto.encrypt: error on reading content: %w", err)
+		s.log.Error(ctx, "error reading content", err)
+		return nil, nil, fmt.Errorf("S3Crypto.encrypt: error reading content: %w", err)
 	}
 	cipher, err := aes.NewGCM(ctx, s.log, key)
 	if err != nil {
-		s.log.Error(ctx, "error on creating cipher", err)
-		return nil, nil, fmt.Errorf("S3Crypto.encrypt: error on creating cipher: %w", err)
+		s.log.Error(ctx, "error creating cipher", err)
+		return nil, nil, fmt.Errorf("S3Crypto.encrypt: error creating cipher: %w", err)
 	}
 	data, err = cipher.Encrypt(ctx, data)
 	if err != nil {
-		s.log.Error(ctx, "error on encrypting content", err)
-		return nil, nil, fmt.Errorf("S3Crypto.encrypt: error on encrypting content: %w", err)
+		s.log.Error(ctx, "error encrypting content", err)
+		return nil, nil, fmt.Errorf("S3Crypto.encrypt: error encrypting content: %w", err)
 	}
 	return bytes.NewReader(data), map[string]string{
 		ConstMetadataKMSARN:              *s.kms.keyArn,
@@ -81,13 +81,13 @@ func (s *S3Crypto) encrypt(ctx context.Context, body io.Reader) (io.Reader, map[
 func (s *S3Crypto) PutObject(ctx context.Context, s3Bucket, s3Key string, body io.Reader, mimeType string) error {
 	body, metadata, err := s.encrypt(ctx, body)
 	if err != nil {
-		s.log.Error(ctx, "error on encrypting content", err)
-		return fmt.Errorf("S3Crypto.PutObject: error on encrypting content: %w", err)
+		s.log.Error(ctx, "error encrypting content", err)
+		return fmt.Errorf("S3Crypto.PutObject: error encrypting content: %w", err)
 	}
 	_, err = s.S3.PutObject(ctx, s3Bucket, s3Key, body, mimeType, metadata)
 	if err != nil {
-		s.log.Error(ctx, "error on uploading file", err)
-		return fmt.Errorf("S3Crypto.PutObject: error on uploading file: %w", err)
+		s.log.Error(ctx, "error uploading file", err)
+		return fmt.Errorf("S3Crypto.PutObject: error uploading file: %w", err)
 	}
 	return nil
 }
@@ -116,33 +116,33 @@ func (s *S3Crypto) decrypt(ctx context.Context, res *s3.GetObjectOutput) ([]byte
 	}
 	if res.Metadata[ConstMetadataEncryptionAlgorithm] != ConstEncryptionAlgorithm {
 		s.log.Error(ctx, "algorithm not supported", res.Metadata[ConstMetadataEncryptionAlgorithm])
-		return nil, fmt.Errorf("S3Crypto.decrypt: algorithm not supported :%s", res.Metadata[ConstMetadataEncryptionAlgorithm])
+		return nil, fmt.Errorf("S3Crypto.decrypt: algorithm not supported: %s", res.Metadata[ConstMetadataEncryptionAlgorithm])
 	}
 	encryptedKey, err := hex.DecodeString(res.Metadata[ConstMetadataContentKey])
 	if err != nil {
-		s.log.Error(ctx, "error on decoding content key", err)
-		return nil, fmt.Errorf("S3Crypto.decrypt: error on decoding content key: %w", err)
+		s.log.Error(ctx, "error decoding content key", err)
+		return nil, fmt.Errorf("S3Crypto.decrypt: error decoding content key: %w", err)
 	}
 	decryptKMS := NewKMSClient(s.log, s.kms.Client, res.Metadata[ConstMetadataKMSARN])
 	key, err := decryptKMS.Decrypt(ctx, encryptedKey)
 	if err != nil {
-		s.log.Error(ctx, "error on decrypting content key", err)
-		return nil, fmt.Errorf("S3Crypto.decrypt: error on decrypting content key: %w", err)
+		s.log.Error(ctx, "error decrypting content key", err)
+		return nil, fmt.Errorf("S3Crypto.decrypt: error decrypting content key: %w", err)
 	}
 	data, err := io.ReadAll(res.Body)
 	if err != nil {
-		s.log.Error(ctx, "error on reading content", err)
-		return nil, fmt.Errorf("S3Crypto.decrypt: error on reading content: %w", err)
+		s.log.Error(ctx, "error reading content", err)
+		return nil, fmt.Errorf("S3Crypto.decrypt: error reading content: %w", err)
 	}
 	cipher, err := aes.NewGCM(ctx, s.log, string(key))
 	if err != nil {
-		s.log.Error(ctx, "error on creating cipher", err)
-		return nil, fmt.Errorf("S3Crypto.decrypt: error on creating cipher: %w", err)
+		s.log.Error(ctx, "error creating cipher", err)
+		return nil, fmt.Errorf("S3Crypto.decrypt: error creating cipher: %w", err)
 	}
 	data, err = cipher.Decrypt(ctx, data)
 	if err != nil {
-		s.log.Error(ctx, "error on decrypting content", err)
-		return nil, fmt.Errorf("S3Crypto.decrypt: error on decrypting content: %w", err)
+		s.log.Error(ctx, "error decrypting content", err)
+		return nil, fmt.Errorf("S3Crypto.decrypt: error decrypting content: %w", err)
 	}
 	return data, nil
 }
@@ -150,7 +150,7 @@ func (s *S3Crypto) decrypt(ctx context.Context, res *s3.GetObjectOutput) ([]byte
 func (s *S3Crypto) GetObject(ctx context.Context, s3Bucket, s3Key string) ([]byte, error) {
 	res, err := s.S3.GetObject(ctx, s3Bucket, s3Key)
 	if err != nil {
-		s.log.Error(ctx, "error on decrypting content", err)
+		s.log.Error(ctx, "error decrypting content", err)
 		return nil, fmt.Errorf("S3Crypto.GetObject: error get object: %w", err)
 	}
 	return s.decrypt(ctx, res)

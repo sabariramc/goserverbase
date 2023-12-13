@@ -50,8 +50,8 @@ func (s *SecretManager) GetSecret(ctx context.Context, secretArn string) (map[st
 		req := &secretsmanager.GetSecretValueInput{SecretId: &secretArn}
 		res, err := s.Client.GetSecretValue(ctx, req)
 		if err != nil {
-			s.log.Error(ctx, "error in fetching secret", err)
-			return nil, fmt.Errorf("SecretManager.GetSecret: error in fetching secret: %w", err)
+			s.log.Error(ctx, "error fetching secret", err)
+			return nil, fmt.Errorf("SecretManager.GetSecret: error fetching secret: %w", err)
 		}
 		secretCacheData = secretManagerCache{expireTime: time.Now().Add(time.Minute * 15), data: *res}
 		secretCache[secretArn] = secretCacheData

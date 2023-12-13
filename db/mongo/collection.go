@@ -29,7 +29,7 @@ func init() {
 	newRegistry.RegisterTypeEncoder(decimalType, bsoncodec.ValueEncoderFunc(func(ctx bsoncodec.EncodeContext, vr bsonrw.ValueWriter, val reflect.Value) error {
 		decimalValue, ok := val.Interface().(decimal.Decimal)
 		if !ok {
-			return fmt.Errorf("decimal bson encode error - value is not a decimal type - %v", val)
+			return fmt.Errorf("mongo.DecimalRegistryBuilder: decimal bson encode error: value is not a decimal type - %v", val)
 		}
 		dec, err := primitive.ParseDecimal128(decimalValue.String())
 		if err != nil {
