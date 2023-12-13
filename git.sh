@@ -1,5 +1,5 @@
-export message="Master merge"
-export version="v4.0.1"
+export message="Test case update"
+export version="v4.1.0"
 export branch="master"
 git add .
 git commit -m "$message"

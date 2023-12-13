@@ -68,6 +68,12 @@ func (s *server) Func2(c *gin.Context) {
 	w := c.Writer
 	fmt.Println(c.Param("tenantId"))
 	w.WriteHeader(200)
+	w.Write([]byte("World"))
+}
+
+func (s *server) benc(c *gin.Context) {
+	w := c.Writer
+	w.WriteHeader(200)
 	w.Write([]byte(uuid.New().String()))
 }
 
@@ -149,6 +155,7 @@ func NewServer() *server {
 		coll:       conn.Database("GOBaseTest").Collection("TestColl"),
 	}
 	r := srv.GetRouter().Group("/service/v1")
+	r.POST("/benc", srv.benc)
 	tenant := r.Group("/tenant")
 	tenant.GET("", gin.WrapF(srv.Func1))
 	tenant.POST("", gin.WrapF(srv.Func1))
