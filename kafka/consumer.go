@@ -110,7 +110,6 @@ outer:
 				break outer
 			}
 			count++
-			ch <- msg
 			consumerLag := time.Since(msg.Time)
 			if consumerLag > infoConsumerLag {
 				k.log.Info(ctx, "consumer lag in ms", consumerLag.Milliseconds())
@@ -119,6 +118,7 @@ outer:
 			} else if consumerLag > warningConsumerLag {
 				k.log.Warning(ctx, "consumer lag in ms", consumerLag.Milliseconds())
 			}
+			ch <- msg
 			if k.config.AutoCommit {
 				k.StoreMessage(ctx, msg)
 			}
