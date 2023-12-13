@@ -8,4 +8,5 @@ import (
 type KafkaConsumerServerConfig struct {
 	*baseapp.ServerConfig
 	*kafka.KafkaConsumerConfig
+	ConsumerLagToleranceInMs int
 }
