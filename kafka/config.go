@@ -20,12 +20,11 @@ type KafkaCredConfig struct {
 
 type KafkaConsumerConfig struct {
 	*KafkaCredConfig
-	GroupID                  string
-	OffsetReset              bool
-	AutoCommit               bool
-	MaxBuffer                uint64
-	AutoCommitIntervalInMs   uint64
-	ConsumerLagToleranceInMs uint64
+	GroupID                string
+	OffsetReset            bool
+	AutoCommit             bool
+	MaxBuffer              uint64
+	AutoCommitIntervalInMs uint64
 }
 
 type KafkaProducerConfig struct {

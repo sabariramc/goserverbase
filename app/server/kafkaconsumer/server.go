@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	baseapp "github.com/sabariramc/goserverbase/v4/app"
 	"github.com/sabariramc/goserverbase/v4/errors"
@@ -25,6 +26,9 @@ type KafkaConsumerServer struct {
 
 func New(appConfig KafkaConsumerServerConfig, logger *log.Logger, errorNotifier errors.ErrorNotifier) *KafkaConsumerServer {
 	b := baseapp.New(*appConfig.ServerConfig, logger, errorNotifier)
+	if appConfig.ConsumerLagToleranceInMs <= 0 {
+		appConfig.ConsumerLagToleranceInMs = 1000
+	}
 	h := &KafkaConsumerServer{
 		BaseApp: b,
 		log:     logger.NewResourceLogger("KafkaConsumerServer"),
@@ -73,6 +77,9 @@ func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 		k.log.Emergency(pollCtx, "Kafka consumer exited", nil, fmt.Errorf("KafkaConsumerServer.StartConsumer: process exit: %w", err))
 	}()
 	k.log.Notice(pollCtx, "Kafka consumer started", nil)
+	infoConsumerLag := time.Millisecond * time.Duration(k.c.ConsumerLagToleranceInMs)
+	noticeConsumerLag := 2 * infoConsumerLag
+	warningConsumerLag := 2 * noticeConsumerLag
 	for {
 		select {
 		case <-ctx.Done():
@@ -88,6 +95,14 @@ func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 			}
 			emMsg := &kafka.Message{Message: msg}
 			msgCtx := k.GetMessageContext(emMsg)
+			consumerLag := time.Since(msg.Time)
+			if consumerLag > infoConsumerLag {
+				k.log.Info(ctx, "consumer lag in ms", consumerLag.Milliseconds())
+			} else if consumerLag > noticeConsumerLag {
+				k.log.Notice(ctx, "consumer lag in ms", consumerLag.Milliseconds())
+			} else if consumerLag > warningConsumerLag {
+				k.log.Warning(ctx, "consumer lag in ms", consumerLag.Milliseconds())
+			}
 			k.ProcessEvent(msgCtx, emMsg, handler)
 		}
 	}

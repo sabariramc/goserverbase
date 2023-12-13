@@ -30,9 +30,7 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerC
 	if config.AutoCommitIntervalInMs <= 0 {
 		config.AutoCommitIntervalInMs = 1000
 	}
-	if config.ConsumerLagToleranceInMs <= 0 {
-		config.ConsumerLagToleranceInMs = 1000
-	}
+	
 	logger = logger.NewResourceLogger("KafkaConsumer")
 	defaultCorrelationParam := &log.CorrelationParam{CorrelationId: config.ServiceName + ":KafkaConsumer"}
 	r := kafka.NewReader(kafka.ReaderConfig{
@@ -80,9 +78,6 @@ func (k *Consumer) Poll(ctx context.Context, ch chan<- *kafka.Message) error {
 	defer k.wg.Wait()
 	k.log.Info(ctx, fmt.Sprintf("Polling started for topics : %v", k.topics), nil)
 	commitTimeout, commitNow := context.WithTimeout(context.Background(), time.Millisecond*time.Duration(k.config.AutoCommitIntervalInMs))
-	infoConsumerLag := time.Millisecond * time.Duration(k.config.ConsumerLagToleranceInMs)
-	noticeConsumerLag := 2 * infoConsumerLag
-	warningConsumerLag := 2 * noticeConsumerLag
 	var count uint64
 	count = 0
 outer:
@@ -110,14 +105,6 @@ outer:
 				break outer
 			}
 			count++
-			consumerLag := time.Since(msg.Time)
-			if consumerLag > infoConsumerLag {
-				k.log.Info(ctx, "consumer lag in ms", consumerLag.Milliseconds())
-			} else if consumerLag > noticeConsumerLag {
-				k.log.Notice(ctx, "consumer lag in ms", consumerLag.Milliseconds())
-			} else if consumerLag > warningConsumerLag {
-				k.log.Warning(ctx, "consumer lag in ms", consumerLag.Milliseconds())
-			}
 			ch <- msg
 			if k.config.AutoCommit {
 				k.StoreMessage(ctx, msg)
