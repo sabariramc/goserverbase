@@ -32,20 +32,13 @@ func (h *HttpServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 		loggingW := &loggingResponseWriter{
 			ResponseWriter: w,
 		}
-		var bodyBlob *[]byte
-		var bodyStr string
 		ctx := r.Context()
-		ctx = context.WithValue(ctx, ContextKeyRequestBodyRaw, &bodyBlob)
-		ctx = context.WithValue(ctx, ContextKeyRequestBodyString, &bodyStr)
 		r = r.WithContext(ctx)
-		h.PrintRequest(r.Context(), r)
+		h.PrintRequest(r)
 		c.Writer = loggingW
 		c.Request = r
 		c.Next()
-		if loggingW.status < 500 {
-			h.log.Info(r.Context(), "Response", map[string]any{"statusCode": loggingW.status, "headers": loggingW.Header()})
-			h.log.Trace(r.Context(), "Response-Body", loggingW.body)
-		} else {
+		if loggingW.status > 299 {
 			h.log.Error(r.Context(), "Response", map[string]any{"statusCode": loggingW.status, "headers": loggingW.Header()})
 			h.log.Error(r.Context(), "Response-Body", loggingW.body)
 		}
@@ -57,21 +50,26 @@ func (h *HttpServer) HandleExceptionMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		w, r := c.Writer, c.Request
 		req := h.ExtractRequestMetadata(r)
-		req["Body"] = h.GetTextBody(r)
+		req["Body"], _ = h.CopyRequestBody(r)
 		defer func() {
 			if rec := recover(); rec != nil {
 				statusCode, body := h.PanicRecovery(r.Context(), rec, req)
-				h.WriteJsonWithStatusCode(r.Context(), w, statusCode, body)
+				h.WriteJSONWithStatusCode(r.Context(), w, statusCode, body)
 			}
 		}()
 		ctx := r.Context()
 		var handlerError error
+		var stackTrace string
 		ctx = context.WithValue(ctx, ContextKeyHandlerError, func(err error) { handlerError = err })
+		ctx = context.WithValue(ctx, ContextKeyHandlerErrorStackTrace, func(st string) { stackTrace = st })
 		c.Request = r.WithContext(ctx)
 		c.Next()
 		if handlerError != nil {
-			statusCode, body := h.ProcessError(ctx, "", handlerError, req)
-			h.WriteJsonWithStatusCode(r.Context(), w, statusCode, body)
+			if blob, ok := req["Body"].([]byte); ok {
+				req["Body"] = string(blob)
+			}
+			statusCode, body := h.ProcessError(ctx, stackTrace, handlerError, req)
+			h.WriteJSONWithStatusCode(r.Context(), w, statusCode, body)
 		}
 	}
 }
