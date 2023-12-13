@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/sabariramc/goserverbase/v4/app/server/httpserver"
 	"github.com/sabariramc/goserverbase/v4/aws"
 	"github.com/sabariramc/goserverbase/v4/db/mongo"
@@ -67,7 +68,7 @@ func (s *server) Func2(c *gin.Context) {
 	w := c.Writer
 	fmt.Println(c.Param("tenantId"))
 	w.WriteHeader(200)
-	w.Write([]byte("World"))
+	w.Write([]byte(uuid.New().String()))
 }
 
 func (s *server) testAll(w http.ResponseWriter, r *http.Request) {
