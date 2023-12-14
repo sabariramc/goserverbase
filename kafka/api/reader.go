@@ -19,22 +19,24 @@ type Reader struct {
 	msgCh            chan *kafka.Message
 	bufferSize       uint64
 	cancelPoll       context.CancelFunc
+	idx              int
 }
 
 func NewReader(ctx context.Context, log log.Logger, r *kafka.Reader, bufferSize uint64) *Reader {
 	return &Reader{
 		Reader:           r,
 		log:              *log.NewResourceLogger("KafkaReader"),
-		consumedMessages: make([]kafka.Message, 0, bufferSize),
+		consumedMessages: make([]kafka.Message, bufferSize),
 		msgCh:            make(chan *kafka.Message, bufferSize),
 		bufferSize:       bufferSize,
+		idx:              0,
 	}
 }
 
 func (k *Reader) Commit(ctx context.Context) error {
 	k.commitLock.Lock()
 	defer k.commitLock.Unlock()
-	if len(k.consumedMessages) == 0 {
+	if k.idx == 0 {
 		return nil
 	}
 	opts := []tracer.StartSpanOption{
@@ -44,12 +46,12 @@ func (k *Reader) Commit(ctx context.Context) error {
 	span, ctx := tracer.StartSpanFromContext(ctx, "kafka.consume.commit", opts...)
 	defer span.Finish()
 	k.log.Debug(ctx, "committing messages", k.consumedMessages)
-	err := k.CommitMessages(ctx, k.consumedMessages...)
+	err := k.CommitMessages(ctx, k.consumedMessages[:k.idx]...)
+	k.idx = 0
 	if err != nil {
 		k.log.Error(ctx, "error in commit", err)
 		return fmt.Errorf("kafka.Reader.Commit: error committing message: %w", err)
 	}
-	k.consumedMessages = make([]kafka.Message, 0, k.bufferSize)
 	return nil
 }
 
@@ -77,10 +79,15 @@ func (k *Reader) GetEventChannel() <-chan *kafka.Message {
 	return k.msgCh
 }
 
-func (k *Reader) StoreMessage(ctx context.Context, msg *kafka.Message) {
+func (k *Reader) StoreMessage(ctx context.Context, msg *kafka.Message) error {
 	k.commitLock.Lock()
-	k.consumedMessages = append(k.consumedMessages, *msg)
+	k.consumedMessages[k.idx] = *msg
+	k.idx++
 	k.commitLock.Unlock()
+	if k.idx >= int(k.bufferSize) {
+		return k.Commit(ctx)
+	}
+	return nil
 }
 
 func (k *Reader) Close(ctx context.Context) error {

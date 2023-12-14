@@ -22,8 +22,6 @@ type Consumer struct {
 	serviceName      string
 	wg               sync.WaitGroup
 	autoCommitCancel context.CancelFunc
-	count            uint64
-	countLock        sync.Mutex
 }
 
 func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerConfig, topics ...string) (*Consumer, error) {
@@ -65,7 +63,6 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerC
 		Reader:      api.NewReader(ctx, *logger, r, config.MaxBuffer),
 		topics:      topics,
 		serviceName: config.ServiceName,
-		count:       0,
 	}
 	if k.config.AutoCommit {
 		commitCtx, cancel := context.WithCancel(log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam))
@@ -76,6 +73,7 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerC
 }
 
 func (k *Consumer) Poll(ctx context.Context, ch chan<- *kafka.Message) error {
+	defaultCorrelationParam := &log.CorrelationParam{CorrelationId: k.serviceName + ":KafkaConsumer"}
 	pollCtx, cancelPoll := context.WithCancel(ctx)
 	var pollErr, commitErr error
 	k.wg.Add(1)
@@ -91,6 +89,7 @@ outer:
 		select {
 		case <-ctx.Done():
 			cancelPoll()
+			ctx = log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam)
 			commitErr = k.Commit(ctx)
 			k.log.Notice(ctx, "Polling Timeout/cancelled", nil)
 			break outer
@@ -100,19 +99,9 @@ outer:
 				commitErr = k.Commit(ctx)
 				break outer
 			}
-			k.incrementCount(1)
 			ch <- msg
 			if k.config.AutoCommit {
 				k.StoreMessage(ctx, msg)
-			}
-			if k.count >= k.config.MaxBuffer {
-				k.countLock.Lock()
-				commitErr = k.Commit(ctx)
-				if commitErr != nil {
-					cancelPoll()
-					break outer
-				}
-				k.resetCount()
 			}
 		}
 	}
@@ -127,29 +116,16 @@ outer:
 	return pollErr
 }
 
-func (k *Consumer) incrementCount(i uint64) {
-	k.countLock.Lock()
-	k.count += i
-	k.countLock.Unlock()
-}
-
-func (k *Consumer) resetCount() {
-	k.count = 0
-	k.countLock.Unlock()
-}
-
 func (k *Consumer) autoCommit(ctx context.Context) {
 	timeout, _ := context.WithTimeout(context.Background(), time.Duration(k.config.AutoCommitIntervalInMs*uint64(time.Millisecond)))
 	defer k.log.Warning(ctx, "auto commit stopped", nil)
 	for {
 		select {
 		case <-timeout.Done():
-			k.countLock.Lock()
 			err := k.Commit(ctx)
 			if err != nil {
 				k.log.Emergency(ctx, "Error while writing kafka message", fmt.Errorf("Producer.autoFlush: %w", err), nil)
 			}
-			k.resetCount()
 			timeout, _ = context.WithTimeout(context.Background(), time.Duration(k.config.AutoCommitIntervalInMs*uint64(time.Millisecond)))
 		case <-ctx.Done():
 			return
