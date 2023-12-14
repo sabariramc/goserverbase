@@ -2,6 +2,7 @@ package kafka_test
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"sync"
 	"testing"
@@ -68,8 +69,8 @@ func TestKafkaConsumer(t *testing.T) {
 	s.Add(1)
 	maxCount := 10000
 	go func() {
+		defer s.Done()
 		co.Poll(tCtx, ch)
-		s.Done()
 	}()
 	i := 0
 	for msg := range ch {
@@ -82,6 +83,7 @@ func TestKafkaConsumer(t *testing.T) {
 			break
 		}
 	}
+	co.Commit(ctx)
 	cancel()
 	s.Wait()
 	assert.NilError(t, err)
@@ -213,4 +215,8 @@ func TestKafkaPollWithDelay(t *testing.T) {
 	KafkaTestLogger.Info(ctx, "Total received", msgCount)
 	s.Wait()
 	assert.Equal(t, totalCount, count)
+}
+
+func TestSlice(t *testing.T) {
+	fmt.Println([]int{0, 1, 2, 3, 4}[:1])
 }

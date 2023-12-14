@@ -19,15 +19,17 @@ type Writer struct {
 	msgCh           chan kafka.Message
 	isChannelWriter bool
 	wg              sync.WaitGroup
+	idx             int
 }
 
 func NewWriter(ctx context.Context, w *kafka.Writer, bufferLen int, log log.Logger) *Writer {
 	return &Writer{
 		Writer:          w,
-		messageList:     make([]kafka.Message, 0, bufferLen),
+		messageList:     make([]kafka.Message, bufferLen),
 		bufferLen:       bufferLen,
 		log:             *log.NewResourceLogger("KafkaWriter"),
 		isChannelWriter: false,
+		idx:             0,
 	}
 }
 
@@ -57,9 +59,10 @@ func (w *Writer) Send(ctx context.Context, key string, message []byte, messageHe
 		return nil
 	}
 	w.produceLock.Lock()
-	w.messageList = append(w.messageList, msg)
+	w.messageList[w.idx] = msg
+	w.idx++
 	w.produceLock.Unlock()
-	if len(w.messageList) >= w.bufferLen {
+	if w.idx >= w.bufferLen {
 		return w.Flush(ctx)
 	}
 	return nil
@@ -72,12 +75,12 @@ func (w *Writer) Flush(ctx context.Context) error {
 	}
 	w.produceLock.Lock()
 	defer w.produceLock.Unlock()
-	if len(w.messageList) == 0 {
+	if w.idx == 0 {
 		return nil
 	}
-	w.log.Debug(ctx, "Flushing messages", nil)
-	err := w.WriteMessages(context.Background(), w.messageList...)
-	w.messageList = make([]kafka.Message, 0, w.bufferLen)
+	w.log.Notice(ctx, "Flushing messages", w.idx)
+	err := w.WriteMessages(context.Background(), w.messageList[:w.idx]...)
+	w.idx = 0
 	if err != nil {
 		w.log.Error(ctx, "Failed to flush message", err)
 		return fmt.Errorf("Writer.Flush: error in flushing message: %w", err)
