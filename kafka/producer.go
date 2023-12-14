@@ -103,15 +103,18 @@ func (k *Producer) Produce(ctx context.Context, key string, message []byte, head
 
 func (k *Producer) autoFlush(ctx context.Context) {
 	timeout, _ := context.WithTimeout(context.Background(), time.Duration(k.config.AutoFlushIntervalInMs*uint64(time.Millisecond)))
-	select {
-	case <-timeout.Done():
-		err := k.Flush(ctx)
-		if err != nil {
-			k.log.Emergency(ctx, "Error while writing kafka message", fmt.Errorf("Producer.autoFlush: %w", err), nil)
+	defer k.log.Warning(ctx, "auto flush stopped", nil)
+	for {
+		select {
+		case <-timeout.Done():
+			err := k.Flush(ctx)
+			if err != nil {
+				k.log.Emergency(ctx, "Error while writing kafka message", fmt.Errorf("Producer.autoFlush: %w", err), nil)
+			}
+			timeout, _ = context.WithTimeout(context.Background(), time.Duration(k.config.AutoFlushIntervalInMs*uint64(time.Millisecond)))
+		case <-ctx.Done():
+			return
 		}
-		timeout, _ = context.WithTimeout(context.Background(), time.Duration(k.config.AutoFlushIntervalInMs*uint64(time.Millisecond)))
-	case <-ctx.Done():
-		return
 	}
 }
 

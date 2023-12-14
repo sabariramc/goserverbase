@@ -100,7 +100,7 @@ func (s *server) testAll(w http.ResponseWriter, r *http.Request) {
 		s.log.Info(ctx, "http response", res)
 	}()
 	s.pr1.ProduceMessage(ctx, "fasdfa", msg, nil)
-	s.pr1.Flush(ctx)
+	// s.pr1.Flush(ctx)
 	wg.Wait()
 	w.WriteHeader(204)
 }
@@ -115,7 +115,7 @@ func (s *server) testKafka(w http.ResponseWriter, r *http.Request) {
 	msg := utils.NewMessage("testFlight", "test")
 	msg.AddPayload("content", data)
 	s.pr2.ProduceMessage(ctx, "fasdfa", msg, nil)
-	s.pr2.Flush(ctx)
+	// s.pr2.Flush(ctx)
 	w.WriteHeader(204)
 }
 
