@@ -71,7 +71,7 @@ func (s *server) Func1(ctx context.Context, event *kafka.Message) error {
 		s.log.Info(ctx, "http response", res)
 	}()
 	s.pr.ProduceMessage(ctx, "fasdfa", msg, nil)
-	s.pr.Flush(ctx)
+	// s.pr.Flush(ctx)
 	wg.Wait()
 	return nil
 }
