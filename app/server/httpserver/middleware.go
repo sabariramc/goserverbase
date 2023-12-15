@@ -56,10 +56,8 @@ func (h *HttpServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 		c.Request = r
 		c.Next()
 		if loggingW.status > 299 {
-			h.log.Error(r.Context(), "Response", map[string]any{"statusCode": loggingW.status, "headers": loggingW.Header()})
-			h.log.Error(r.Context(), "Response-Body", loggingW.body)
+			h.log.Error(r.Context(), "Response", map[string]any{"statusCode": loggingW.status, "headers": loggingW.Header(), "body": loggingW.body})
 		}
-
 	}
 }
 
