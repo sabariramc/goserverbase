@@ -45,6 +45,8 @@ func (k *Reader) Commit(ctx context.Context) error {
 	}
 	span, ctx := tracer.StartSpanFromContext(ctx, "kafka.consume.commit", opts...)
 	defer span.Finish()
+	corr := log.GetCorrelationParam(ctx)
+	span.SetTag("correlationId", corr.CorrelationId)
 	k.log.Debug(ctx, "committing messages", k.consumedMessages)
 	err := k.CommitMessages(ctx, k.consumedMessages[:k.idx]...)
 	k.idx = 0

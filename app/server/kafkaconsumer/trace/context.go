@@ -34,6 +34,6 @@ func StartSpan(ctx context.Context, serviceName string, msg *kafka.Message) ddtr
 	// reinject the span context so consumers can pick it up
 	tracer.Inject(span.Context(), carrier)
 	corr := log.GetCorrelationParam(ctx)
-	span.SetTag("headers.x-correlation-id", corr.CorrelationId)
+	span.SetTag("correlationId", corr.CorrelationId)
 	return span
 }

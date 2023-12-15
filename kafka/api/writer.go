@@ -84,13 +84,6 @@ func (w *Writer) Send(ctx context.Context, key string, message []byte, messageHe
 }
 
 func (w *Writer) Flush(ctx context.Context) error {
-	opts := []tracer.StartSpanOption{
-		tracer.Tag("messaging.kafka.topic", w.Topic),
-		tracer.Tag(ext.SpanKind, ext.SpanKindInternal),
-		tracer.Measured(),
-	}
-	span, ctx := tracer.StartSpanFromContext(ctx, "kafka.produce.flush", opts...)
-	defer span.Finish()
 	if w.isChannelWriter {
 		w.log.Notice(ctx, "Flush is not operational for channeled writer", nil)
 		return nil
@@ -100,6 +93,15 @@ func (w *Writer) Flush(ctx context.Context) error {
 	if w.idx == 0 {
 		return nil
 	}
+	opts := []tracer.StartSpanOption{
+		tracer.Tag("messaging.kafka.topic", w.Topic),
+		tracer.Tag(ext.SpanKind, ext.SpanKindInternal),
+		tracer.Measured(),
+	}
+	span, ctx := tracer.StartSpanFromContext(ctx, "kafka.produce.flush", opts...)
+	defer span.Finish()
+	corr := log.GetCorrelationParam(ctx)
+	span.SetTag("correlationId", corr.CorrelationId)
 	w.log.Notice(ctx, "Flushing messages", w.idx)
 	err := w.WriteMessages(context.Background(), w.messageList[:w.idx]...)
 	w.idx = 0
