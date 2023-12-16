@@ -11,7 +11,7 @@ func (h *HttpServer) SetContextMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		r := c.Request
 		ctx := h.GetContextWithCorrelation(r.Context(), h.GetCorrelationParams(r))
-		ctx = h.GetContextWithCustomerId(ctx, h.GetCustomerId(r))
+		ctx = h.GetContextWithCustomerId(ctx, h.GetCustomerID(r))
 		c.Request = r.WithContext(ctx)
 		c.Next()
 	}
@@ -32,16 +32,24 @@ func (h *HttpServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 		loggingW := &loggingResponseWriter{
 			ResponseWriter: w,
 		}
+		var bodyBlob *[]byte
 		ctx := r.Context()
+		ctx = context.WithValue(ctx, ContextKeyRequestBody, &bodyBlob)
+		r = r.WithContext(ctx)
 		req := h.GetMaskedRequestMeta(r)
 		c.Writer = loggingW
 		c.Request = r
+		body, _ := h.CopyRequestBody(r)
+		bodyBlob = &body
 		c.Next()
+		res := map[string]any{"statusCode": loggingW.status, "headers": loggingW.Header()}
 		if loggingW.status > 299 {
+			req["Body"] = string(body)
+			res["Body"] = loggingW.body
 			h.log.Error(ctx, "Request", req)
-			h.log.Error(ctx, "Response", map[string]any{"statusCode": loggingW.status, "headers": loggingW.Header(), "body": loggingW.body})
+			h.log.Error(ctx, "Response", res)
 		} else {
-			h.log.Info(ctx, "Request", req)
+			h.log.Info(ctx, "ResponseMeta", res)
 		}
 	}
 }

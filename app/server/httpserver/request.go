@@ -32,7 +32,7 @@ func (h *HttpServer) GetCorrelationParams(r *http.Request) *log.CorrelationParam
 	return cr
 }
 
-func (h *HttpServer) GetCustomerId(r *http.Request) *log.CustomerIdentifier {
+func (h *HttpServer) GetCustomerID(r *http.Request) *log.CustomerIdentifier {
 	keyList := []string{"x-app-user-id", "x-customer-id", "x-entity-id"}
 	headers := extractKeyValue(r, keyList)
 	id := &log.CustomerIdentifier{}
@@ -51,7 +51,6 @@ func (h *HttpServer) GetMaskedRequestMeta(r *http.Request) map[string]any {
 		}
 	}
 	req := h.ExtractRequestMetadata(r)
-
 	for key, value := range popList {
 		header.Del(key)
 		for _, v := range value {
@@ -95,6 +94,33 @@ func (h *HttpServer) GetRequestBody(r *http.Request) ([]byte, error) {
 		err = fmt.Errorf("HttpServer.GetRequestBody: error reading request body: %w", err)
 	}
 	return blobBody, err
+}
+
+func (h *HttpServer) GetCacheRequestBody(r *http.Request) ([]byte, error) {
+	if r.ContentLength <= 0 {
+		return nil, nil
+	}
+	ctx := r.Context()
+	ctxBody := ctx.Value(ContextKeyRequestBody)
+	if ctxBody != nil {
+		body, ok := ctxBody.(**[]byte)
+		if !ok {
+			return nil, fmt.Errorf("HttpServer.CacheRequestBody: invalid type for context body reference")
+		}
+		if body == nil {
+			return nil, fmt.Errorf("HttpServer.CacheRequestBody: context body ptr is null ptr")
+		}
+		if *body == nil {
+			data, err := h.CopyRequestBody(r)
+			if err != nil {
+				return nil, fmt.Errorf("HttpServer.CacheRequestBody: %w", err)
+			}
+			*body = &data
+			return data, nil
+		}
+		return **body, nil
+	}
+	return nil, fmt.Errorf("HttpServer.CacheRequestBody: context cache not initiated")
 }
 
 func (h *HttpServer) LoadRequestJSONBody(r *http.Request, body any) error {

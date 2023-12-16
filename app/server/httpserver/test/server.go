@@ -72,6 +72,12 @@ func (s *server) Func2(c *gin.Context) {
 }
 
 func (s *server) benc(c *gin.Context) {
+	return
+}
+
+func (s *server) testRequest(c *gin.Context) {
+	body, _ := s.GetCacheRequestBody(c.Request)
+	s.log.Notice(c.Request.Context(), "request body", string(body))
 	w := c.Writer
 	w.WriteHeader(200)
 	w.Write([]byte(uuid.New().String()))
@@ -163,6 +169,7 @@ func NewServer() *server {
 	resource := r.Group("/test")
 	resource.POST("/all", gin.WrapF(srv.testAll))
 	resource.POST("/kafka", gin.WrapF(srv.testKafka))
+	resource.POST("/req", srv.testRequest)
 	errorRoute := r.Group("/error")
 	errorRoute.GET("/error1", gin.WrapF(srv.Func3))
 	errorRoute.GET("/error2", gin.WrapF(srv.Func4))

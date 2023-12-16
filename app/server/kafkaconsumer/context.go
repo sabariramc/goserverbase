@@ -16,7 +16,7 @@ func (k *KafkaConsumerServer) GetCorrelationParams(headers map[string]string) *l
 	return cr
 }
 
-func (k *KafkaConsumerServer) GetCustomerId(headers map[string]string) *log.CustomerIdentifier {
+func (k *KafkaConsumerServer) GetCustomerID(headers map[string]string) *log.CustomerIdentifier {
 	id := &log.CustomerIdentifier{}
 	id.LoadFromHeader(headers)
 	return id
@@ -25,6 +25,6 @@ func (k *KafkaConsumerServer) GetCustomerId(headers map[string]string) *log.Cust
 func (k *KafkaConsumerServer) GetMessageContext(msg *kafka.Message) context.Context {
 	msgCtx := context.Background()
 	msgCtx = k.GetContextWithCorrelation(msgCtx, k.GetCorrelationParams(msg.GetHeaders()))
-	msgCtx = k.GetContextWithCustomerId(msgCtx, k.GetCustomerId(msg.GetHeaders()))
+	msgCtx = k.GetContextWithCustomerId(msgCtx, k.GetCustomerID(msg.GetHeaders()))
 	return msgCtx
 }
