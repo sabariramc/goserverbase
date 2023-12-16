@@ -16,3 +16,15 @@ func (h *HttpServer) SetErrorInContext(ctx context.Context, err error) {
 	}
 	setter(err)
 }
+
+func (h *HttpServer) SetStackTrackInContext(ctx context.Context, stackTrace string) {
+	iSetter := ctx.Value(ContextKeyHandlerErrorStackTrace)
+	if iSetter == nil {
+		return
+	}
+	setter, ok := iSetter.(func(string))
+	if !ok {
+		h.log.Emergency(ctx, "Unable to set context stack trace", nil, fmt.Errorf("context stack trace handler corrupted, stack trace to handle: %v", stackTrace))
+	}
+	setter(stackTrace)
+}

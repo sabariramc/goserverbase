@@ -126,7 +126,7 @@ func TestIntegration(t *testing.T) {
 
 const (
 	start = 1 // actual = start  * goprocs
-	end   = 4 // actual = end    * goprocs
+	end   = 8 // actual = end    * goprocs
 	step  = 1
 )
 

@@ -58,7 +58,7 @@ func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 	k.log.Notice(pollCtx, "Starting kafka consumer", nil)
 	defer func() {
 		if rec := recover(); rec != nil {
-			k.PanicRecovery(pollCtx, rec, nil)
+			k.PanicRecovery(pollCtx, rec)
 		}
 	}()
 	var wg sync.WaitGroup

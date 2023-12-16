@@ -40,8 +40,7 @@ func (h *HttpServer) GetCustomerId(r *http.Request) *log.CustomerIdentifier {
 	return id
 }
 
-func (h *HttpServer) PrintRequest(r *http.Request) {
-	ctx := r.Context()
+func (h *HttpServer) GetMaskedRequestMeta(r *http.Request) map[string]any {
 	header := r.Header
 	popList := make(map[string][]string)
 	for _, key := range h.c.Log.AuthHeaderKeyList {
@@ -52,13 +51,14 @@ func (h *HttpServer) PrintRequest(r *http.Request) {
 		}
 	}
 	req := h.ExtractRequestMetadata(r)
-	h.log.Info(ctx, "Request", req)
+
 	for key, value := range popList {
 		header.Del(key)
 		for _, v := range value {
 			header.Add(key, v)
 		}
 	}
+	return req
 }
 
 func (h *HttpServer) CopyRequestBody(r *http.Request) ([]byte, error) {

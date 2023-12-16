@@ -20,11 +20,11 @@ func (k *KafkaConsumerServer) AddHandler(ctx context.Context, topicName string, 
 func (k *KafkaConsumerServer) ProcessEvent(ctx context.Context, msg *kafka.Message, handler KafkaEventProcessor) {
 	defer func() {
 		if rec := recover(); rec != nil {
-			k.PanicRecovery(ctx, rec, msg)
+			k.PanicRecovery(ctx, rec)
 		}
 	}()
 	err := handler(ctx, msg)
 	if err != nil {
-		k.ProcessError(ctx, "", err, msg)
+		k.ProcessError(ctx, "", err)
 	}
 }

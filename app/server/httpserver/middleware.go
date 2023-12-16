@@ -33,13 +33,15 @@ func (h *HttpServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 			ResponseWriter: w,
 		}
 		ctx := r.Context()
-		r = r.WithContext(ctx)
-		h.PrintRequest(r)
+		req := h.GetMaskedRequestMeta(r)
 		c.Writer = loggingW
 		c.Request = r
 		c.Next()
 		if loggingW.status > 299 {
-			h.log.Error(r.Context(), "Response", map[string]any{"statusCode": loggingW.status, "headers": loggingW.Header(), "body": loggingW.body})
+			h.log.Error(ctx, "Request", req)
+			h.log.Error(ctx, "Response", map[string]any{"statusCode": loggingW.status, "headers": loggingW.Header(), "body": loggingW.body})
+		} else {
+			h.log.Info(ctx, "Request", req)
 		}
 	}
 }
@@ -47,11 +49,9 @@ func (h *HttpServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 func (h *HttpServer) HandleExceptionMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		w, r := c.Writer, c.Request
-		req := h.ExtractRequestMetadata(r)
-		req["Body"], _ = h.CopyRequestBody(r)
 		defer func() {
 			if rec := recover(); rec != nil {
-				statusCode, body := h.PanicRecovery(r.Context(), rec, req)
+				statusCode, body := h.PanicRecovery(r.Context(), rec)
 				h.WriteJSONWithStatusCode(r.Context(), w, statusCode, body)
 			}
 		}()
@@ -63,10 +63,7 @@ func (h *HttpServer) HandleExceptionMiddleware() gin.HandlerFunc {
 		c.Request = r.WithContext(ctx)
 		c.Next()
 		if handlerError != nil {
-			if blob, ok := req["Body"].([]byte); ok {
-				req["Body"] = string(blob)
-			}
-			statusCode, body := h.ProcessError(ctx, stackTrace, handlerError, req)
+			statusCode, body := h.ProcessError(ctx, stackTrace, handlerError)
 			h.WriteJSONWithStatusCode(r.Context(), w, statusCode, body)
 		}
 	}
