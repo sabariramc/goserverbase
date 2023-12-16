@@ -3,6 +3,7 @@ package log_test
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"testing"
 	"time"
 
@@ -62,7 +63,7 @@ func TestLogWriter(t *testing.T) {
 	valueList := []any{0, 1.234, dec, true, "abcd", []any{"asdf", 10}, map[string]any{"a": "fadsf", "b": 10}, GetSampleData()}
 	ch := make(chan []string, len(valueList))
 	lmux := log.NewDefaultLogMux(NewLogWriter(ch))
-	log := log.NewLogger(context.Background(), &log.Config{LogLevel: 7}, "Test Logger", lmux, nil)
+	log := log.NewLogger(context.Background(), &log.Config{LogLevelName: "DEBUG"}, "Test Logger", lmux, nil)
 	for _, v := range valueList {
 		log.Debug(context.Background(), "test", v)
 	}
@@ -73,5 +74,46 @@ func TestLogWriter(t *testing.T) {
 			close(ch)
 		}
 		i++
+	}
+}
+
+var goprocs = runtime.GOMAXPROCS(0) // 8
+
+type BenchLogWriter struct {
+	i *int
+}
+
+func (b *BenchLogWriter) WriteMessage(context.Context, *log.LogMessage) error {
+	*b.i = *b.i + 1
+	return nil
+}
+
+func BenchmarkLogger(b *testing.B) {
+	k := 0
+	lmux := log.NewDefaultLogMux(&BenchLogWriter{i: &k})
+	log := log.NewLogger(context.Background(), &log.Config{LogLevelName: "DEBUG"}, "Test Logger", lmux, nil)
+	ctx := context.Background()
+	for i := 1; i < 8; i += 2 {
+		b.Run(fmt.Sprintf("goroutines-%d", i*goprocs), func(b *testing.B) {
+			b.SetParallelism(i)
+			b.RunParallel(func(pb *testing.PB) {
+				for pb.Next() {
+					log.Debug(ctx, "fdasfasd", nil)
+				}
+			})
+		})
+	}
+}
+
+func BenchmarkParseLogObject(b *testing.B) {
+	for i := 1; i < 8; i += 2 {
+		b.Run(fmt.Sprintf("goroutines-%d", i*goprocs), func(b *testing.B) {
+			b.SetParallelism(i)
+			b.RunParallel(func(pb *testing.PB) {
+				for pb.Next() {
+					logwriter.ParseLogObject(GetSampleData(), false)
+				}
+			})
+		})
 	}
 }

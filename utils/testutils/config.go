@@ -80,8 +80,8 @@ func NewConfig() *TestConfig {
 				Host:        utils.GetEnv("HOST", utils.GetHostName()),
 				ServiceName: serviceName,
 			},
-			LogLevel:   utils.GetEnvInt("LOG_LEVEL", 6),
-			BufferSize: utils.GetEnvInt("LOG_BUFFER_SIZE", 1),
+			LogLevelName: utils.GetEnv("LOG_LEVEL", "INFO"),
+			BufferSize:   utils.GetEnvInt("LOG_BUFFER_SIZE", 1),
 		},
 		App: appConfig,
 		Http: &httpserver.HttpServerConfig{
