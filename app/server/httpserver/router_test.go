@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"runtime"
 	"testing"
 
 	"github.com/sabariramc/goserverbase/v3/app/server/httpserver/test/server"
@@ -111,4 +112,41 @@ func TestPost(t *testing.T) {
 	json.Unmarshal(blob, &res)
 	assert.Equal(t, w.Result().StatusCode, http.StatusOK)
 	assert.DeepEqual(t, res, expectedResponse)
+}
+
+const (
+	start = 1 // actual = start  * goprocs
+	end   = 8 // actual = end    * goprocs
+	step  = 1
+)
+
+var goprocs = runtime.GOMAXPROCS(0) // 8
+
+func TestRoute(t *testing.T) {
+	srv := server.NewServer()
+	payload, _ := json.Marshal(map[string]string{"fasdfas": "FASDFASf"})
+	buff := bytes.NewBuffer(payload)
+	req := httptest.NewRequest(http.MethodPost, "/service/v1/benc", buff)
+	w := httptest.NewRecorder()
+	srv.ServeHTTP(w, req)
+	assert.Equal(t, w.Result().StatusCode, http.StatusOK)
+}
+
+func BenchmarkRoutes(b *testing.B) {
+	srv := server.NewServer()
+	payload, _ := json.Marshal(map[string]string{"fasdfas": "FASDFASf"})
+	buff := bytes.NewBuffer(payload)
+	for i := start; i < end; i += step {
+		b.Run(fmt.Sprintf("goroutines-%d", i*goprocs), func(b *testing.B) {
+			b.SetParallelism(i)
+			b.RunParallel(func(pb *testing.PB) {
+				for pb.Next() {
+					req := httptest.NewRequest(http.MethodPost, "/service/v1/benc", buff)
+					w := httptest.NewRecorder()
+					srv.ServeHTTP(w, req)
+					assert.Equal(b, w.Result().StatusCode, http.StatusOK)
+				}
+			})
+		})
+	}
 }
