@@ -21,7 +21,7 @@ RUN go build -tags musl -o /app -ldflags '-linkmode external -w -extldflags "-st
 
 
 FROM builder AS kafkabuilder
-WORKDIR /myapp/app/server/kafkaconsumer/test
+WORKDIR /myapp/app/server/kafkaconsumer/test/consumer
 RUN go build -tags musl -o /app -ldflags '-linkmode external -w -extldflags "-static"'
 
 

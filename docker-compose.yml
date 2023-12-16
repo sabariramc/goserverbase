@@ -18,6 +18,24 @@ services:
       - mongo_mongodb
       - kafka_default
       - common
+  http2:
+    build:
+      context: .
+      target: http2
+    container_name: gobase_http2
+    env_file:
+      - .env
+    environment:
+      SERVICE_NAME: gobase_http2
+      DD_SERVICE: gobase_http2
+      KAFKA_BROKER: broker:9092
+      DD_AGENT_HOST: dreamy_cannon:8126
+    ports:
+      - 60006:8080
+    networks:
+      - mongo_mongodb
+      - kafka_default
+      - common
   kafka:
     build:
       context: .
