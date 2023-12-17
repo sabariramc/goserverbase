@@ -6,6 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sabariramc/goserverbase/v4/errors"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type APIDocumentation struct {
@@ -62,10 +64,20 @@ func HealthCheck(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(204)
 }
 
-func (h *HttpServer) SetupRouter(ctx context.Context) {
+func (h *HTTPServer) SetupRouter(ctx context.Context) {
 	h.handler.NoRoute(gin.WrapF(NotFound()))
 	h.handler.NoMethod(gin.WrapF(MethodNotAllowed()))
 	h.handler.GET("/meta/health", gin.WrapF(HealthCheck))
 	h.handler.HandleMethodNotAllowed = true
 	h.handler.Use(h.SetContextMiddleware(), h.RequestTimerMiddleware(), h.LogRequestResponseMiddleware(), h.HandleExceptionMiddleware())
+	h.SetupDocumentation(ctx)
+}
+
+func (h *HTTPServer) SetupDocumentation(ctx context.Context) {
+	h.handler.GET("/meta/docs/*any", ginSwagger.WrapHandler(swaggerfiles.Handler,
+		ginSwagger.URL(h.c.DocHost+"/meta/static/swagger.yaml"),
+		ginSwagger.DefaultModelsExpandDepth(-1), func(c *ginSwagger.Config) {
+			c.Title = h.c.ServiceName
+		}))
+	h.handler.StaticFS("/meta/static", http.Dir(h.c.SwaggerRootFolder))
 }
