@@ -1,0 +1,8 @@
+value:
+  getCustomer360SummaryReq:
+    msgBdy:
+      imgTp: '2'
+      cstId: '137774255'
+      authToken: "{{authenticationToken}}"
+
+

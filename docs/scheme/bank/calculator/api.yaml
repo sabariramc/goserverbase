@@ -1,0 +1,28 @@
+post:
+  summary: Deposit Calculator
+  parameters:
+    - $ref: "../../headers.yaml#/CorrelationId"
+  responses:
+    "200":
+      description: OK
+      headers:
+        X-TPA-Fd-ABC-Request-Id:
+          schema:
+            type: string
+          description: Bank request id
+      content:
+        application/json:
+          examples:
+            success:
+              $ref: "./response.yaml"
+  requestBody:
+    content:
+      application/json:
+        schema:
+          type: object
+        examples:
+          sample:
+            $ref: "./request.yaml"
+  tags:
+    - Proxy
+    - ABC
