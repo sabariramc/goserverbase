@@ -32,7 +32,7 @@ func init() {
 	ServerTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter(log.HostParams{
 		Version:     ServerTestConfig.Logger.Version,
-		Host:        ServerTestConfig.Http.Host,
+		Host:        ServerTestConfig.HTTP.Host,
 		ServiceName: ServerTestConfig.App.ServiceName,
 	})
 	ServerTestLMux = log.NewDefaultLogMux(consoleLogWriter)
@@ -45,7 +45,7 @@ func GetCorrelationContext() context.Context {
 }
 
 type server struct {
-	*httpserver.HttpServer
+	*httpserver.HTTPServer
 	log        *log.Logger
 	pr1        *kafka.Producer
 	pr2        *kafka.Producer
@@ -152,7 +152,7 @@ func NewServer() *server {
 		ServerTestLogger.Emergency(ctx, "error creating mongo connection", err, nil)
 	}
 	srv := &server{
-		HttpServer: httpserver.New(*ServerTestConfig.Http, ServerTestLogger, nil), log: ServerTestLogger,
+		HTTPServer: httpserver.New(*ServerTestConfig.HTTP, ServerTestLogger, nil), log: ServerTestLogger,
 		pr1:        pr1,
 		pr2:        pr2,
 		sns:        aws.GetDefaultSNSClient(ServerTestLogger),

@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (h *HttpServer) SetContextMiddleware() gin.HandlerFunc {
+func (h *HTTPServer) SetContextMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		r := c.Request
 		ctx := h.GetContextWithCorrelation(r.Context(), h.GetCorrelationParams(r))
@@ -17,7 +17,7 @@ func (h *HttpServer) SetContextMiddleware() gin.HandlerFunc {
 	}
 }
 
-func (h *HttpServer) RequestTimerMiddleware() gin.HandlerFunc {
+func (h *HTTPServer) RequestTimerMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		r := c.Request
 		st := time.Now()
@@ -26,7 +26,7 @@ func (h *HttpServer) RequestTimerMiddleware() gin.HandlerFunc {
 	}
 }
 
-func (h *HttpServer) LogRequestResponseMiddleware() gin.HandlerFunc {
+func (h *HTTPServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		w, r := c.Writer, c.Request
 		loggingW := &loggingResponseWriter{
@@ -41,6 +41,7 @@ func (h *HttpServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 		c.Request = r
 		body, _ := h.CopyRequestBody(r)
 		bodyBlob = &body
+		h.log.Info(ctx, "RequestMeta", req)
 		c.Next()
 		res := map[string]any{"statusCode": loggingW.status, "headers": loggingW.Header()}
 		if loggingW.status > 299 {
@@ -54,7 +55,7 @@ func (h *HttpServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 	}
 }
 
-func (h *HttpServer) HandleExceptionMiddleware() gin.HandlerFunc {
+func (h *HTTPServer) HandleExceptionMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		w, r := c.Writer, c.Request
 		defer func() {

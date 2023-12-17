@@ -21,7 +21,7 @@ func extractKeyValue(r *http.Request, keyList []string) map[string]string {
 	return res
 }
 
-func (h *HttpServer) GetCorrelationParams(r *http.Request) *log.CorrelationParam {
+func (h *HTTPServer) GetCorrelationParams(r *http.Request) *log.CorrelationParam {
 	keyList := []string{"x-correlation-id", "x-scenario-id", "x-scenario-name", "x-session-id"}
 	headers := extractKeyValue(r, keyList)
 	cr := &log.CorrelationParam{}
@@ -32,7 +32,7 @@ func (h *HttpServer) GetCorrelationParams(r *http.Request) *log.CorrelationParam
 	return cr
 }
 
-func (h *HttpServer) GetCustomerID(r *http.Request) *log.CustomerIdentifier {
+func (h *HTTPServer) GetCustomerID(r *http.Request) *log.CustomerIdentifier {
 	keyList := []string{"x-app-user-id", "x-customer-id", "x-entity-id"}
 	headers := extractKeyValue(r, keyList)
 	id := &log.CustomerIdentifier{}
@@ -40,7 +40,7 @@ func (h *HttpServer) GetCustomerID(r *http.Request) *log.CustomerIdentifier {
 	return id
 }
 
-func (h *HttpServer) GetMaskedRequestMeta(r *http.Request) map[string]any {
+func (h *HTTPServer) GetMaskedRequestMeta(r *http.Request) map[string]any {
 	header := r.Header
 	popList := make(map[string][]string)
 	for _, key := range h.c.Log.AuthHeaderKeyList {
@@ -60,7 +60,7 @@ func (h *HttpServer) GetMaskedRequestMeta(r *http.Request) map[string]any {
 	return req
 }
 
-func (h *HttpServer) CopyRequestBody(r *http.Request) ([]byte, error) {
+func (h *HTTPServer) CopyRequestBody(r *http.Request) ([]byte, error) {
 	blobBody, err := h.GetRequestBody(r)
 	if err != nil {
 		return blobBody, fmt.Errorf("HttpServer.CopyRequestBody: %w", err)
@@ -69,7 +69,7 @@ func (h *HttpServer) CopyRequestBody(r *http.Request) ([]byte, error) {
 	return blobBody, nil
 }
 
-func (h *HttpServer) ExtractRequestMetadata(r *http.Request) map[string]any {
+func (h *HTTPServer) ExtractRequestMetadata(r *http.Request) map[string]any {
 	res := map[string]interface{}{
 		"Method":        r.Method,
 		"Header":        r.Header,
@@ -83,7 +83,7 @@ func (h *HttpServer) ExtractRequestMetadata(r *http.Request) map[string]any {
 	return res
 }
 
-func (h *HttpServer) GetRequestBody(r *http.Request) ([]byte, error) {
+func (h *HTTPServer) GetRequestBody(r *http.Request) ([]byte, error) {
 	if r.ContentLength <= 0 {
 		return nil, nil
 	}
@@ -96,7 +96,7 @@ func (h *HttpServer) GetRequestBody(r *http.Request) ([]byte, error) {
 	return blobBody, err
 }
 
-func (h *HttpServer) GetCacheRequestBody(r *http.Request) ([]byte, error) {
+func (h *HTTPServer) GetCacheRequestBody(r *http.Request) ([]byte, error) {
 	if r.ContentLength <= 0 {
 		return nil, nil
 	}
@@ -123,7 +123,7 @@ func (h *HttpServer) GetCacheRequestBody(r *http.Request) ([]byte, error) {
 	return nil, fmt.Errorf("HttpServer.CacheRequestBody: context cache not initiated")
 }
 
-func (h *HttpServer) LoadRequestJSONBody(r *http.Request, body any) error {
+func (h *HTTPServer) LoadRequestJSONBody(r *http.Request, body any) error {
 	blobBody, err := h.GetRequestBody(r)
 	if err != nil {
 		return fmt.Errorf("HttpServer.LoadJSONBody: %w", err)

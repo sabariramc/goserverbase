@@ -24,7 +24,7 @@ type Consumer struct {
 	autoCommitCancel context.CancelFunc
 }
 
-func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerConfig, topics ...string) (*Consumer, error) {
+func NewConsumer(ctx context.Context, logger *log.Logger, config KafkaConsumerConfig, topics ...string) (*Consumer, error) {
 	if config.MaxBuffer <= 0 {
 		config.MaxBuffer = 100
 	}
@@ -59,7 +59,7 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config *KafkaConsumerC
 	})
 	k := &Consumer{
 		log:         logger.NewResourceLogger("KafkaConsumer"),
-		config:      *config,
+		config:      config,
 		Reader:      api.NewReader(ctx, *logger, r, config.MaxBuffer),
 		topics:      topics,
 		serviceName: config.ServiceName,

@@ -24,7 +24,7 @@ type KafkaConsumerServer struct {
 }
 
 func New(appConfig KafkaConsumerServerConfig, logger *log.Logger, errorNotifier errors.ErrorNotifier) *KafkaConsumerServer {
-	b := baseapp.New(*appConfig.ServerConfig, logger, errorNotifier)
+	b := baseapp.New(appConfig.ServerConfig, logger, errorNotifier)
 	h := &KafkaConsumerServer{
 		BaseApp: b,
 		log:     logger.NewResourceLogger("KafkaConsumerServer"),

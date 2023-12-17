@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func (h *HttpServer) SetErrorInContext(ctx context.Context, err error) {
+func (h *HTTPServer) SetErrorInContext(ctx context.Context, err error) {
 	iSetter := ctx.Value(ContextKeyHandlerError)
 	if iSetter == nil {
 		return
@@ -17,7 +17,7 @@ func (h *HttpServer) SetErrorInContext(ctx context.Context, err error) {
 	setter(err)
 }
 
-func (h *HttpServer) SetStackTrackInContext(ctx context.Context, stackTrace string) {
+func (h *HTTPServer) SetStackTrackInContext(ctx context.Context, stackTrace string) {
 	iSetter := ctx.Value(ContextKeyHandlerErrorStackTrace)
 	if iSetter == nil {
 		return

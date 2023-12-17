@@ -2,7 +2,6 @@ package kafka_test
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 	"sync"
 	"testing"
@@ -215,8 +214,4 @@ func TestKafkaPollWithDelay(t *testing.T) {
 	KafkaTestLogger.Info(ctx, "Total received", msgCount)
 	s.Wait()
 	assert.Equal(t, totalCount, count)
-}
-
-func TestSlice(t *testing.T) {
-	fmt.Println([]int{0, 1, 2, 3, 4}[:1])
 }

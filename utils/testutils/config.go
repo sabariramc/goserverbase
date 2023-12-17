@@ -26,12 +26,12 @@ type AWSConfig struct {
 type TestConfig struct {
 	Logger              *log.Config
 	App                 *baseapp.ServerConfig
-	Http                *httpserver.HttpServerConfig
+	HTTP                *httpserver.HTTPServerConfig
 	Kafka               *kafkaconsumer.KafkaConsumerServerConfig
 	KafkaSASLCredential *kafka.SASLCredential
 	Mongo               *mongo.Config
 	AWS                 *AWSConfig
-	KafkaConsumer       *kafka.KafkaConsumerConfig
+	KafkaConsumer       kafka.KafkaConsumerConfig
 	KafkaProducer       *kafka.KafkaProducerConfig
 	KafkaTestTopic      string
 	KafkaTestTopic2     string
@@ -54,7 +54,7 @@ func NewConfig() *TestConfig {
 	appConfig := &baseapp.ServerConfig{
 		ServiceName: serviceName,
 	}
-	consumer := &kafka.KafkaConsumerConfig{
+	consumer := kafka.KafkaConsumerConfig{
 		KafkaCredConfig: &kafkaBaseConfig,
 		GroupID:         utils.GetEnvMust("KAFKA_CONSUMER_ID"),
 		MaxBuffer:       uint64(utils.GetEnvInt("KAFKA_CONSUMER_MAX_BUFFER", 1000)),
@@ -84,14 +84,18 @@ func NewConfig() *TestConfig {
 			BufferSize:   utils.GetEnvInt("LOG_BUFFER_SIZE", 1),
 		},
 		App: appConfig,
-		Http: &httpserver.HttpServerConfig{
-			ServerConfig: appConfig,
+		HTTP: &httpserver.HTTPServerConfig{
+			ServerConfig: *appConfig,
 			Log:          &httpserver.LogConfig{AuthHeaderKeyList: utils.GetEnvAsSlice("AUTH_HEADER_LIST", []string{}, ";")},
 			Host:         "0.0.0.0",
 			Port:         utils.GetEnv("APP_PORT", "8080"),
+			DocumentationConfig: httpserver.DocumentationConfig{
+				DocHost:           utils.GetEnv("DOC_HOST", "localhost:8080"),
+				SwaggerRootFolder: utils.GetEnv("DOC_ROOT_FOLDER", ""),
+			},
 		},
 		Kafka: &kafkaconsumer.KafkaConsumerServerConfig{
-			ServerConfig:        appConfig,
+			ServerConfig:        *appConfig,
 			KafkaConsumerConfig: consumer,
 		},
 		KafkaSASLCredential: saslConfig,
