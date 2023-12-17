@@ -11,7 +11,7 @@ services:
       SERVICE_NAME: gobase_http
       DD_SERVICE: gobase_http
       KAFKA_BROKER: broker:29092
-      DD_AGENT_HOST: dreamy_cannon:8126
+      DD_AGENT_HOST: datadog
       DOC_HOST: http://localhost:60005
       KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
       KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
@@ -23,6 +23,7 @@ services:
       - mongo_mongodb
       - kafka_default
       - echo_default
+      - common
   http2:
     build:
       context: .
@@ -34,7 +35,7 @@ services:
       SERVICE_NAME: gobase_http2
       DD_SERVICE: gobase_http2
       KAFKA_BROKER: broker:29092
-      DD_AGENT_HOST: dreamy_cannon:8126
+      DD_AGENT_HOST: datadog
       DOC_HOST: https://localhost:60006
       HTTP2_PUBLIC_KEY: /app/server.crt
       HTTP2_PRIVATE_KEY: /app/server.key
@@ -48,6 +49,7 @@ services:
       - mongo_mongodb
       - kafka_default
       - echo_default
+      - common
   kafka:
     build:
       context: .
@@ -59,7 +61,7 @@ services:
       SERVICE_NAME: gobase_kafka
       DD_SERVICE: gobase_kafka
       KAFKA_BROKER: broker:29092
-      DD_AGENT_HOST: dreamy_cannon:8126
+      DD_AGENT_HOST: datadog
       KAFKA_CONSUMER_ID: gobase-test-docker-consumer
       KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
       KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
@@ -69,10 +71,13 @@ services:
       - mongo_mongodb
       - kafka_default
       - echo_default
+      - common
 networks:
   mongo_mongodb:
     external: true
   kafka_default:
     external: true
   echo_default:
+    external: true
+  common:
     external: true

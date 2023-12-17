@@ -61,6 +61,8 @@ func (h *HTTPServer) StartServer() {
 }
 
 func (h *HTTPServer) StartTLSServer() {
+	tracer.Start()
+	defer tracer.Stop()
 	h.log.Notice(context.TODO(), fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
 	err := http.ListenAndServeTLS(h.GetPort(), h.c.HTTP2Config.PublicKeyPath, h.c.HTTP2Config.PrivateKeyPath, h)
 	h.log.Emergency(context.Background(), "Server crashed", nil, err)

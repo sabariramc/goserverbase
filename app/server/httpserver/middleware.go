@@ -15,7 +15,8 @@ import (
 func (h *HTTPServer) SetContextMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		r := c.Request
-		ctx := h.GetContextWithCorrelation(r.Context(), h.GetCorrelationParams(r))
+		corr := h.GetCorrelationParams(r)
+		ctx := h.GetContextWithCorrelation(r.Context(), corr)
 		ctx = h.GetContextWithCustomerId(ctx, h.GetCustomerID(r))
 		c.Request = r.WithContext(ctx)
 		if span, ok := tracer.SpanFromContext(r.Context()); ok {
