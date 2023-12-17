@@ -1,0 +1,48 @@
+openapi: 3.0.3
+servers:
+  - url: http://localhost:8080
+    description: Local server
+  - url: https://{environment}/gobase
+    description: Deployment
+    variables:
+      environment:
+        default: uat
+        enum:
+          - uat
+          - prod
+  - url: http://localhost:60005
+    description: Local docker compose http
+  - url: https://localhost:60006
+    description: Local docker compose http2
+info:
+  title: Gobase HTTP server
+  version: 1.0.0
+  contact:
+    name: "Sab"
+    email: "fasdf@gfas.co"
+
+paths:
+  /meta/health:
+    get:
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      responses:
+        "204":
+          description: NO CONTENT
+          schema:
+            type: string
+      summary: Health check
+      tags:
+        - Meta
+  /proxy/bank/in/digibnk/get/deposit/calculator/secure/v1/:
+    $ref: "./scheme/bank/calculator/api.yaml"
+  /proxy/bank/digibnk/sms/generate/otp/secure/v1:
+    $ref: "./scheme/bank/otp/api.yaml"
+  /proxy/bank/digibnk/sms/validate/otp/secure/v1:
+    $ref: "./scheme/bank/otpVerify/api.yaml"
+  /proxy/bank/in/digibnk/get/cust/360/summary/secure/v1:
+    $ref: "./scheme/bank/customer360/api.yaml"
+  /proxy/XYZ/customers/basic/fd/details:
+    $ref: "./scheme/XYZ/customer/api.yaml"

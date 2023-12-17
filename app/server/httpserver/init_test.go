@@ -18,7 +18,7 @@ func init() {
 	ServerTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter(log.HostParams{
 		Version:     ServerTestConfig.Logger.Version,
-		Host:        ServerTestConfig.Http.Host,
+		Host:        ServerTestConfig.HTTP.Host,
 		ServiceName: ServerTestConfig.App.ServiceName,
 	})
 	ServerTestLMux = log.NewDefaultLogMux(consoleLogWriter)

@@ -8,7 +8,7 @@ import (
 	"github.com/sabariramc/goserverbase/v4/errors"
 )
 
-func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error, requestData any) (int, []byte) {
+func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error) (int, []byte) {
 	var statusCode int
 	var body []byte
 	var errorData interface{}
@@ -39,11 +39,7 @@ func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error
 	if parseErr != nil {
 		b.log.Error(ctx, "Error occurred during marshal of errors", parseErr)
 	}
-	if errorData == nil {
-		errorData = requestData
-	}
 	b.log.Error(ctx, "Wrapped Error", err)
-	b.log.Error(ctx, "Request data", requestData)
 	if notify && b.errorNotifier != nil {
 		if statusCode >= 500 {
 			b.errorNotifier.Send5XX(ctx, errorCode, err, stackTrace, errorData)

@@ -8,6 +8,7 @@ RUN go mod tidy
 
 FROM alpine:latest AS runner
 RUN apk --no-cache add tzdata bash
+WORKDIR /app
 
 
 FROM builder AS httpbuilder
@@ -21,23 +22,27 @@ RUN go build -tags musl -o /app -ldflags '-linkmode external -w -extldflags "-st
 
 
 FROM builder AS kafkabuilder
-WORKDIR /myapp/app/server/kafkaconsumer/test
+WORKDIR /myapp/app/server/kafkaconsumer/test/consumer
 RUN go build -tags musl -o /app -ldflags '-linkmode external -w -extldflags "-static"'
 
 
 FROM runner AS http
-COPY --from=httpbuilder /app /app
+COPY --from=httpbuilder /app /app/app
+COPY ./docs /app/docs
 EXPOSE 8080
-ENTRYPOINT ["/app"]
+ENTRYPOINT ["/app/app"]
 
 
 FROM runner AS http2
-COPY --from=http2builder /app /app
+COPY --from=http2builder /app /app/app
+COPY ./docs /app/docs
+COPY ./app/server/httpserver/test/http2/server.crt /app/server.crt
+COPY ./app/server/httpserver/test/http2/server.key /app/server.key
 EXPOSE 8080
-ENTRYPOINT ["/app"]
+ENTRYPOINT ["/app/app"]
 
 
 
 FROM runner AS kafka
-COPY --from=kafkabuilder /app /app
-ENTRYPOINT ["/app"]
+COPY --from=kafkabuilder /app /app/app
+ENTRYPOINT ["/app/app"]

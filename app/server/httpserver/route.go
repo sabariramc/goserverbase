@@ -7,6 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sabariramc/goserverbase/v4/errors"
+	swaggerfiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	gintrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/gin-gonic/gin"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
@@ -76,11 +78,21 @@ func HealthCheck(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(204)
 }
 
-func (h *HttpServer) SetupRouter(ctx context.Context) {
+func (h *HTTPServer) SetupRouter(ctx context.Context) {
 	h.handler.NoRoute(gin.WrapF(NotFound()))
 	h.handler.NoMethod(gin.WrapF(MethodNotAllowed()))
 	h.handler.GET("/meta/health", gin.WrapF(HealthCheck))
 	h.handler.HandleMethodNotAllowed = true
+	h.SetupDocumentation(ctx)
 	h.handler.Use(gintrace.Middleware(h.c.ServiceName))
 	h.handler.Use(h.SetContextMiddleware(), h.RequestTimerMiddleware(), h.LogRequestResponseMiddleware(), h.HandleExceptionMiddleware())
+}
+
+func (h *HTTPServer) SetupDocumentation(ctx context.Context) {
+	h.handler.GET("/meta/docs/*any", ginSwagger.WrapHandler(swaggerfiles.Handler,
+		ginSwagger.URL(h.c.DocHost+"/meta/static/swagger.yaml"),
+		ginSwagger.DefaultModelsExpandDepth(-1), func(c *ginSwagger.Config) {
+			c.Title = h.c.ServiceName
+		}))
+	h.handler.StaticFS("/meta/static", http.Dir(h.c.SwaggerRootFolder))
 }

@@ -26,17 +26,19 @@ type AWSConfig struct {
 type TestConfig struct {
 	Logger              *log.Config
 	App                 *baseapp.ServerConfig
-	Http                *httpserver.HttpServerConfig
+	HTTP                *httpserver.HTTPServerConfig
 	Kafka               *kafkaconsumer.KafkaConsumerServerConfig
 	KafkaSASLCredential *kafka.SASLCredential
 	Mongo               *mongo.Config
 	AWS                 *AWSConfig
-	KafkaConsumer       *kafka.KafkaConsumerConfig
+	KafkaConsumer       kafka.KafkaConsumerConfig
 	KafkaProducer       *kafka.KafkaProducerConfig
 	KafkaTestTopic      string
 	KafkaTestTopic2     string
 	KafkaHTTPProxyURL   string
 	Graylog             logwriter.GraylogConfig
+	TestURL1            string
+	TestURL2            string
 }
 
 func (t *TestConfig) GetLoggerConfig() *log.Config {
@@ -54,7 +56,7 @@ func NewConfig() *TestConfig {
 	appConfig := &baseapp.ServerConfig{
 		ServiceName: serviceName,
 	}
-	consumer := &kafka.KafkaConsumerConfig{
+	consumer := kafka.KafkaConsumerConfig{
 		KafkaCredConfig: &kafkaBaseConfig,
 		GroupID:         utils.GetEnvMust("KAFKA_CONSUMER_ID"),
 		MaxBuffer:       uint64(utils.GetEnvInt("KAFKA_CONSUMER_MAX_BUFFER", 1000)),
@@ -80,18 +82,26 @@ func NewConfig() *TestConfig {
 				Host:        utils.GetEnv("HOST", utils.GetHostName()),
 				ServiceName: serviceName,
 			},
-			LogLevel:   utils.GetEnvInt("LOG_LEVEL", 6),
-			BufferSize: utils.GetEnvInt("LOG_BUFFER_SIZE", 1),
+			LogLevelName: utils.GetEnv("LOG_LEVEL", "INFO"),
+			BufferSize:   utils.GetEnvInt("LOG_BUFFER_SIZE", 1),
 		},
 		App: appConfig,
-		Http: &httpserver.HttpServerConfig{
-			ServerConfig: appConfig,
+		HTTP: &httpserver.HTTPServerConfig{
+			ServerConfig: *appConfig,
 			Log:          &httpserver.LogConfig{AuthHeaderKeyList: utils.GetEnvAsSlice("AUTH_HEADER_LIST", []string{}, ";")},
 			Host:         "0.0.0.0",
 			Port:         utils.GetEnv("APP_PORT", "8080"),
+			DocumentationConfig: httpserver.DocumentationConfig{
+				DocHost:           utils.GetEnv("DOC_HOST", "localhost:8080"),
+				SwaggerRootFolder: utils.GetEnv("DOC_ROOT_FOLDER", ""),
+			},
+			HTTP2Config: &httpserver.HTTP2Config{
+				PublicKeyPath:  utils.GetEnv("HTTP2_PUBLIC_KEY", ""),
+				PrivateKeyPath: utils.GetEnv("HTTP2_PRIVATE_KEY", ""),
+			},
 		},
 		Kafka: &kafkaconsumer.KafkaConsumerServerConfig{
-			ServerConfig:        appConfig,
+			ServerConfig:        *appConfig,
 			KafkaConsumerConfig: consumer,
 		},
 		KafkaSASLCredential: saslConfig,
@@ -121,5 +131,7 @@ func NewConfig() *TestConfig {
 			Address: utils.GetEnv("GRAYLOG_URL", ""),
 			Port:    utils.GetEnvInt("GRAYLOG_PORT", 12001),
 		},
+		TestURL1: utils.GetEnv("TEST_URL_1", ""),
+		TestURL2: utils.GetEnv("TEST_URL_2", ""),
 	}
 }

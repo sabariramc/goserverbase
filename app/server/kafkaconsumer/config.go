@@ -6,6 +6,6 @@ import (
 )
 
 type KafkaConsumerServerConfig struct {
-	*baseapp.ServerConfig
-	*kafka.KafkaConsumerConfig
+	baseapp.ServerConfig
+	kafka.KafkaConsumerConfig
 }

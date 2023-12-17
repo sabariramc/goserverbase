@@ -7,8 +7,20 @@ type LogConfig struct {
 	ContentLength     int64
 }
 
-type HttpServerConfig struct {
-	*baseapp.ServerConfig
+type DocumentationConfig struct {
+	DocHost           string
+	SwaggerRootFolder string
+}
+
+type HTTP2Config struct {
+	PublicKeyPath  string
+	PrivateKeyPath string
+}
+
+type HTTPServerConfig struct {
+	baseapp.ServerConfig
+	DocumentationConfig
+	*HTTP2Config
 	Host string
 	Port string
 	Log  *LogConfig

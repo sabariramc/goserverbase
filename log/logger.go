@@ -36,6 +36,15 @@ var logLevelMap = map[LogLevelCode]*LogLevel{
 	FATAL:     {Level: FATAL, LogLevelName: "EMERGENCY"},
 }
 
+var logLevelInverseMap map[string]*LogLevel
+
+func init() {
+	logLevelInverseMap = make(map[string]*LogLevel, 8)
+	for _, v := range logLevelMap {
+		logLevelInverseMap[v.LogLevelName] = v
+	}
+}
+
 func GetLogLevelMap(level LogLevelCode) LogLevel {
 	l, ok := logLevelMap[level]
 	if !ok {
@@ -83,15 +92,15 @@ func NewLogger(ctx context.Context, lc *Config, moduleName string, lMux LogMux, 
 		},
 		audit: audit,
 	}
-	logLevel := lc.LogLevel
-	if logLevel > int(TRACE) || logLevel < int(FATAL) {
+	logLevel, ok := logLevelInverseMap[lc.LogLevelName]
+	if !ok {
+		logLevel = logLevelInverseMap["INFO"]
 		l.Warning(ctx, "Erroneous log level - log level set to INFO", nil)
-		logLevel = int(INFO)
 	}
-	if logLevel == int(TRACE) {
+	if logLevel.Level == TRACE {
 		l.Warning(ctx, "log level is set to TRACE", nil)
 	}
-	l.logLevel = LogLevelCode(logLevel)
+	l.logLevel = logLevel.Level
 	return l
 }
 
@@ -149,13 +158,12 @@ func (l *Logger) print(ctx context.Context, level *LogLevel, message string, log
 	if level.Level > l.logLevel {
 		return
 	}
-	msg := &LogMessage{
+	l.lMux.Print(ctx, &LogMessage{
 		LogLevel:    *level,
 		Message:     message,
 		LogObject:   logObject,
 		Timestamp:   time.Now(),
 		ModuleName:  l.moduleName,
 		ServiceName: l.serviceName,
-	}
-	l.lMux.Print(ctx, msg)
+	})
 }

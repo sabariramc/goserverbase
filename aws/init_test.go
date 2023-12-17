@@ -25,7 +25,7 @@ func init() {
 	AWSTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter(log.HostParams{
 		Version:     AWSTestConfig.Logger.Version,
-		Host:        AWSTestConfig.Http.Host,
+		Host:        AWSTestConfig.HTTP.Host,
 		ServiceName: AWSTestConfig.App.ServiceName,
 	})
 	lMux := log.NewDefaultLogMux(consoleLogWriter)

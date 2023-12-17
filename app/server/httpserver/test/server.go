@@ -27,12 +27,12 @@ var ServerTestLMux log.LogMux
 
 func init() {
 	fmt.Println(os.Getwd())
-	testutils.LoadEnv("./test/.env")
+	testutils.LoadEnv("../../../.env")
 	testutils.Initialize()
 	ServerTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter(log.HostParams{
 		Version:     ServerTestConfig.Logger.Version,
-		Host:        ServerTestConfig.Http.Host,
+		Host:        ServerTestConfig.HTTP.Host,
 		ServiceName: ServerTestConfig.App.ServiceName,
 	})
 	ServerTestLMux = log.NewDefaultLogMux(consoleLogWriter)
@@ -45,7 +45,7 @@ func GetCorrelationContext() context.Context {
 }
 
 type server struct {
-	*httpserver.HttpServer
+	*httpserver.HTTPServer
 	log        *log.Logger
 	pr1        *kafka.Producer
 	pr2        *kafka.Producer
@@ -72,6 +72,12 @@ func (s *server) Func2(c *gin.Context) {
 }
 
 func (s *server) benc(c *gin.Context) {
+	return
+}
+
+func (s *server) testRequest(c *gin.Context) {
+	body, _ := s.GetCacheRequestBody(c.Request)
+	s.log.Notice(c.Request.Context(), "request body", string(body))
 	w := c.Writer
 	w.WriteHeader(200)
 	w.Write([]byte(uuid.New().String()))
@@ -96,7 +102,7 @@ func (s *server) testAll(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		defer wg.Done()
 		res := make(map[string]any)
-		s.httpClient.Post(ctx, "http://localhost:64000/service/a/b", data, &res, nil)
+		s.httpClient.Post(ctx, ServerTestConfig.TestURL1, data, &res, nil)
 		s.log.Info(ctx, "http response", res)
 	}()
 	s.pr1.ProduceMessage(ctx, "fasdfa", msg, nil)
@@ -146,7 +152,7 @@ func NewServer() *server {
 		ServerTestLogger.Emergency(ctx, "error creating mongo connection", err, nil)
 	}
 	srv := &server{
-		HttpServer: httpserver.New(*ServerTestConfig.Http, ServerTestLogger, nil), log: ServerTestLogger,
+		HTTPServer: httpserver.New(*ServerTestConfig.HTTP, ServerTestLogger, nil), log: ServerTestLogger,
 		pr1:        pr1,
 		pr2:        pr2,
 		sns:        aws.GetDefaultSNSClient(ServerTestLogger),
@@ -163,6 +169,7 @@ func NewServer() *server {
 	resource := r.Group("/test")
 	resource.POST("/all", gin.WrapF(srv.testAll))
 	resource.POST("/kafka", gin.WrapF(srv.testKafka))
+	resource.POST("/req", srv.testRequest)
 	errorRoute := r.Group("/error")
 	errorRoute.GET("/error1", gin.WrapF(srv.Func3))
 	errorRoute.GET("/error2", gin.WrapF(srv.Func4))

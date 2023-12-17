@@ -25,7 +25,7 @@ type KafkaConsumerServer struct {
 }
 
 func New(appConfig KafkaConsumerServerConfig, logger *log.Logger, errorNotifier errors.ErrorNotifier) *KafkaConsumerServer {
-	b := baseapp.New(*appConfig.ServerConfig, logger, errorNotifier)
+	b := baseapp.New(appConfig.ServerConfig, logger, errorNotifier)
 	h := &KafkaConsumerServer{
 		BaseApp: b,
 		log:     logger.NewResourceLogger("KafkaConsumerServer"),
@@ -61,7 +61,7 @@ func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 	k.log.Notice(pollCtx, "Starting kafka consumer", nil)
 	defer func() {
 		if rec := recover(); rec != nil {
-			k.PanicRecovery(pollCtx, rec, nil)
+			k.PanicRecovery(pollCtx, rec)
 		}
 	}()
 	var wg sync.WaitGroup

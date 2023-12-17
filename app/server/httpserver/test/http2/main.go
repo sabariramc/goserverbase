@@ -6,5 +6,5 @@ import (
 
 func main() {
 	s := server.NewServer()
-	s.StartTLSServer("./app/server/httpserver/test/http2/server.crt", "./app/server/httpserver/test/http2/server.key")
+	s.StartTLSServer()
 }

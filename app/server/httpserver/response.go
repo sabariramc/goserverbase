@@ -25,7 +25,7 @@ func (w *loggingResponseWriter) Write(body []byte) (int, error) {
 	return w.ResponseWriter.Write(body)
 }
 
-func (h *HttpServer) WriteJSONWithStatusCode(ctx context.Context, w http.ResponseWriter, statusCode int, responseBody any) {
+func (h *HTTPServer) WriteJSONWithStatusCode(ctx context.Context, w http.ResponseWriter, statusCode int, responseBody any) {
 	var err error
 	blob, ok := responseBody.([]byte)
 	if !ok {
@@ -39,16 +39,16 @@ func (h *HttpServer) WriteJSONWithStatusCode(ctx context.Context, w http.Respons
 	w.Write(blob)
 }
 
-func (h *HttpServer) WriteJson(ctx context.Context, w http.ResponseWriter, responseBody any) {
+func (h *HTTPServer) WriteJson(ctx context.Context, w http.ResponseWriter, responseBody any) {
 	h.WriteJSONWithStatusCode(ctx, w, http.StatusOK, responseBody)
 }
 
-func (h *HttpServer) WriteResponseWithStatusCode(ctx context.Context, w http.ResponseWriter, statusCode int, contentType string, responseBody []byte) {
+func (h *HTTPServer) WriteResponseWithStatusCode(ctx context.Context, w http.ResponseWriter, statusCode int, contentType string, responseBody []byte) {
 	w.Header().Set(HttpHeaderContentType, contentType)
 	w.WriteHeader(statusCode)
 	w.Write(responseBody)
 }
 
-func (h *HttpServer) WriteResponse(ctx context.Context, w http.ResponseWriter, statusCode int, contentType string, responseBody []byte) {
+func (h *HTTPServer) WriteResponse(ctx context.Context, w http.ResponseWriter, statusCode int, contentType string, responseBody []byte) {
 	h.WriteResponseWithStatusCode(ctx, w, http.StatusOK, contentType, responseBody)
 }

@@ -45,7 +45,7 @@ func (b *BaseApp) GetErrorNotifier() errors.ErrorNotifier {
 	return b.errorNotifier
 }
 
-func (b *BaseApp) PanicRecovery(ctx context.Context, rec any, errorData any) (int, []byte) {
+func (b *BaseApp) PanicRecovery(ctx context.Context, rec any) (int, []byte) {
 	stackTrace := string(debug.Stack())
 	b.log.Error(ctx, "Recovered - Panic", rec)
 	b.log.Error(ctx, "Recovered - StackTrace", stackTrace)
@@ -54,5 +54,5 @@ func (b *BaseApp) PanicRecovery(ctx context.Context, rec any, errorData any) (in
 		blob, _ := json.Marshal(rec)
 		err = fmt.Errorf("non error panic: %v", string(blob))
 	}
-	return b.ProcessError(ctx, stackTrace, err, errorData)
+	return b.ProcessError(ctx, stackTrace, err)
 }

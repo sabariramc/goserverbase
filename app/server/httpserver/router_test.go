@@ -124,15 +124,25 @@ func TestIntegration(t *testing.T) {
 	assert.Equal(t, w.Result().StatusCode, http.StatusNoContent)
 }
 
+func TestRequestCache(t *testing.T) {
+	srv := server.NewServer()
+	payload, _ := json.Marshal(map[string]string{"fasdfas": "FASDFASf"})
+	buff := bytes.NewBuffer(payload)
+	req := httptest.NewRequest(http.MethodPost, "/service/v1/test/req", buff)
+	w := httptest.NewRecorder()
+	srv.ServeHTTP(w, req)
+	assert.Equal(t, w.Result().StatusCode, http.StatusOK)
+}
+
 const (
 	start = 1 // actual = start  * goprocs
-	end   = 4 // actual = end    * goprocs
+	end   = 8 // actual = end    * goprocs
 	step  = 1
 )
 
 var goprocs = runtime.GOMAXPROCS(0) // 8
 
-func TestRoute(t *testing.T) {
+func TestBencRoute(t *testing.T) {
 	srv := server.NewServer()
 	payload, _ := json.Marshal(map[string]string{"fasdfas": "FASDFASf"})
 	buff := bytes.NewBuffer(payload)

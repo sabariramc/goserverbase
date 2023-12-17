@@ -28,7 +28,7 @@ func (k *KafkaConsumerServer) ProcessEvent(ctx context.Context, msg *kafka.Messa
 	}()
 	defer func() {
 		if rec := recover(); rec != nil {
-			k.PanicRecovery(ctx, rec, msg)
+			k.PanicRecovery(ctx, rec)
 			if spanOk {
 				err, errOk := rec.(error)
 				if !errOk {
@@ -40,7 +40,7 @@ func (k *KafkaConsumerServer) ProcessEvent(ctx context.Context, msg *kafka.Messa
 	}()
 	err := handler(ctx, msg)
 	if err != nil {
-		statusCode, _ := k.ProcessError(ctx, "", err, msg)
+		statusCode, _ := k.ProcessError(ctx, "", err)
 		if spanOk && statusCode >= 500 {
 			span.SetTag(ext.Error, err)
 		}

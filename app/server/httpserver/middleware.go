@@ -12,13 +12,11 @@ import (
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
-func (h *HttpServer) SetContextMiddleware() gin.HandlerFunc {
+func (h *HTTPServer) SetContextMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		r := c.Request
-		corr := h.GetCorrelationParams(r)
-		id := h.GetCustomerId(r)
-		ctx := h.GetContextWithCorrelation(r.Context(), corr)
-		ctx = h.GetContextWithCustomerId(ctx, id)
+		ctx := h.GetContextWithCorrelation(r.Context(), h.GetCorrelationParams(r))
+		ctx = h.GetContextWithCustomerId(ctx, h.GetCustomerID(r))
 		c.Request = r.WithContext(ctx)
 		if span, ok := tracer.SpanFromContext(r.Context()); ok {
 			span.SetTag("correlationId", corr.CorrelationId)
@@ -28,7 +26,7 @@ func (h *HttpServer) SetContextMiddleware() gin.HandlerFunc {
 	}
 }
 
-func (h *HttpServer) RequestTimerMiddleware() gin.HandlerFunc {
+func (h *HTTPServer) RequestTimerMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		r := c.Request
 		st := time.Now()
@@ -37,7 +35,7 @@ func (h *HttpServer) RequestTimerMiddleware() gin.HandlerFunc {
 	}
 }
 
-func (h *HttpServer) LogRequestResponseMiddleware() gin.HandlerFunc {
+func (h *HTTPServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		w, r := c.Writer, c.Request
 		loggingW := &loggingResponseWriter{
@@ -49,27 +47,36 @@ func (h *HttpServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 				span.SetTag(ext.HTTPCode, strconv.Itoa(loggingW.status))
 			}
 		}()
+		var bodyBlob *[]byte
 		ctx := r.Context()
+		ctx = context.WithValue(ctx, ContextKeyRequestBody, &bodyBlob)
 		r = r.WithContext(ctx)
-		h.PrintRequest(r)
+		req := h.GetMaskedRequestMeta(r)
 		c.Writer = loggingW
 		c.Request = r
+		body, _ := h.CopyRequestBody(r)
+		bodyBlob = &body
+		h.log.Info(ctx, "RequestMeta", req)
 		c.Next()
+		res := map[string]any{"statusCode": loggingW.status, "headers": loggingW.Header()}
 		if loggingW.status > 299 {
-			h.log.Error(r.Context(), "Response", map[string]any{"statusCode": loggingW.status, "headers": loggingW.Header(), "body": loggingW.body})
+			req["Body"] = string(body)
+			res["Body"] = loggingW.body
+			h.log.Error(ctx, "Request", req)
+			h.log.Error(ctx, "Response", res)
+		} else {
+			h.log.Info(ctx, "ResponseMeta", res)
 		}
 	}
 }
 
-func (h *HttpServer) HandleExceptionMiddleware() gin.HandlerFunc {
+func (h *HTTPServer) HandleExceptionMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		w, r := c.Writer, c.Request
-		req := h.ExtractRequestMetadata(r)
-		req["Body"], _ = h.CopyRequestBody(r)
 		span, spanOk := tracer.SpanFromContext(r.Context())
 		defer func() {
 			if rec := recover(); rec != nil {
-				statusCode, body := h.PanicRecovery(r.Context(), rec, req)
+				statusCode, body := h.PanicRecovery(r.Context(), rec)
 				h.WriteJSONWithStatusCode(r.Context(), w, statusCode, body)
 				if spanOk {
 					err, errOk := rec.(error)
@@ -88,10 +95,7 @@ func (h *HttpServer) HandleExceptionMiddleware() gin.HandlerFunc {
 		c.Request = r.WithContext(ctx)
 		c.Next()
 		if handlerError != nil {
-			if blob, ok := req["Body"].([]byte); ok {
-				req["Body"] = string(blob)
-			}
-			statusCode, body := h.ProcessError(ctx, stackTrace, handlerError, req)
+			statusCode, body := h.ProcessError(ctx, stackTrace, handlerError)
 			h.WriteJSONWithStatusCode(r.Context(), w, statusCode, body)
 			if spanOk && statusCode > 299 {
 				span.SetTag(ext.Error, handlerError)

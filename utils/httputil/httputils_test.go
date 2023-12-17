@@ -23,7 +23,7 @@ func init() {
 	HttpUtilTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter(log.HostParams{
 		Version:     HttpUtilTestConfig.Logger.Version,
-		Host:        HttpUtilTestConfig.Http.Host,
+		Host:        HttpUtilTestConfig.HTTP.Host,
 		ServiceName: HttpUtilTestConfig.App.ServiceName,
 	})
 	lMux := log.NewDefaultLogMux(consoleLogWriter)

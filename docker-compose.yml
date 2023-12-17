@@ -10,14 +10,44 @@ services:
     environment:
       SERVICE_NAME: gobase_http
       DD_SERVICE: gobase_http
-      KAFKA_BROKER: broker:9092
+      KAFKA_BROKER: broker:29092
       DD_AGENT_HOST: dreamy_cannon:8126
+      DOC_HOST: http://localhost:60005
+      KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
+      KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
+      TEST_URL_1: "http://echo-http-1:3000/service/a/b"
+      TEST_URL_2: "http://gobase_http:8080/service/v1/tenant"
     ports:
       - 60005:8080
     networks:
       - mongo_mongodb
       - kafka_default
-      - common
+      - echo_default
+  http2:
+    build:
+      context: .
+      target: http2
+    container_name: gobase_http2
+    env_file:
+      - .env
+    environment:
+      SERVICE_NAME: gobase_http2
+      DD_SERVICE: gobase_http2
+      KAFKA_BROKER: broker:29092
+      DD_AGENT_HOST: dreamy_cannon:8126
+      DOC_HOST: https://localhost:60006
+      HTTP2_PUBLIC_KEY: /app/server.crt
+      HTTP2_PRIVATE_KEY: /app/server.key
+      KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
+      KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
+      TEST_URL_1: "http://echo-http-1:3000/service/a/b"
+      TEST_URL_2: "http://gobase_http:8080/service/v1/tenant"
+    ports:
+      - 60006:8080
+    networks:
+      - mongo_mongodb
+      - kafka_default
+      - echo_default
   kafka:
     build:
       context: .
@@ -28,16 +58,21 @@ services:
     environment:
       SERVICE_NAME: gobase_kafka
       DD_SERVICE: gobase_kafka
-      KAFKA_BROKER: broker:9092
+      KAFKA_BROKER: broker:29092
       DD_AGENT_HOST: dreamy_cannon:8126
+      KAFKA_CONSUMER_ID: gobase-test-docker-consumer
+      KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
+      KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
+      TEST_URL_1: "http://echo-http-1:3000/service/a/b"
+      TEST_URL_2: "http://gobase_http:8080/service/v1/tenant"
     networks:
       - mongo_mongodb
       - kafka_default
-      - common
+      - echo_default
 networks:
   mongo_mongodb:
     external: true
   kafka_default:
     external: true
-  common:
+  echo_default:
     external: true

@@ -1,0 +1,7 @@
+CorrelationId:
+  name: x-correlation-id
+  in: header
+  description: tracking header
+  required: true
+  type: string
+  default: sample-correlation-id-31241234-41234123
