@@ -27,7 +27,7 @@ var ServerTestLMux log.LogMux
 
 func init() {
 	fmt.Println(os.Getwd())
-	testutils.LoadEnv("./test/.env")
+	testutils.LoadEnv("../../../.env")
 	testutils.Initialize()
 	ServerTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter(log.HostParams{
@@ -102,7 +102,7 @@ func (s *server) testAll(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		defer wg.Done()
 		res := make(map[string]any)
-		s.httpClient.Post(ctx, "http://localhost:64000/service/a/b", data, &res, nil)
+		s.httpClient.Post(ctx, ServerTestConfig.TestURL1, data, &res, nil)
 		s.log.Info(ctx, "http response", res)
 	}()
 	s.pr1.ProduceMessage(ctx, "fasdfa", msg, nil)

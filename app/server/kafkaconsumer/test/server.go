@@ -22,7 +22,7 @@ var ServerTestLogger *log.Logger
 var ServerTestLMux log.LogMux
 
 func init() {
-	testutils.LoadEnv("./test/.env")
+	testutils.LoadEnv("../../../.env")
 	testutils.Initialize()
 	ServerTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter(log.HostParams{
@@ -67,7 +67,7 @@ func (s *server) Func1(ctx context.Context, event *kafka.Message) error {
 	go func() {
 		defer wg.Done()
 		res := make(map[string]any)
-		s.httpClient.Post(ctx, "http://localhost:8080/service/v1/tenant", data, &res, nil)
+		s.httpClient.Post(ctx, ServerTestConfig.TestURL2, data, &res, nil)
 		s.log.Info(ctx, "http response", res)
 	}()
 	s.pr.ProduceMessage(ctx, "fasdfa", msg, nil)
