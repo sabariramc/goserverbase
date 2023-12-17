@@ -10,7 +10,7 @@ services:
     environment:
       SERVICE_NAME: gobase_http
       DD_SERVICE: gobase_http
-      KAFKA_BROKER: broker:9092
+      KAFKA_BROKER: broker:29092
       DD_AGENT_HOST: dreamy_cannon:8126
       DOC_HOST: http://localhost:60005
     ports:
@@ -29,7 +29,7 @@ services:
     environment:
       SERVICE_NAME: gobase_http2
       DD_SERVICE: gobase_http2
-      KAFKA_BROKER: broker:9092
+      KAFKA_BROKER: broker:29092
       DD_AGENT_HOST: dreamy_cannon:8126
       DOC_HOST: https://localhost:60006
       HTTP2_PUBLIC_KEY: /app/server.crt
@@ -50,8 +50,11 @@ services:
     environment:
       SERVICE_NAME: gobase_kafka
       DD_SERVICE: gobase_kafka
-      KAFKA_BROKER: broker:9092
+      KAFKA_BROKER: broker:29092
       DD_AGENT_HOST: dreamy_cannon:8126
+      KAFKA_CONSUMER_ID: gobase-test-docker-consumer
+      KAFKA_TEST_TOPIC: com.oneapp.lending.uat.error
+      KAFKA_TEST_TOPIC_2: com.oneapp.utility.uat.error
     networks:
       - mongo_mongodb
       - kafka_default
