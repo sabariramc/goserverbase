@@ -93,6 +93,10 @@ func NewConfig() *TestConfig {
 				DocHost:           utils.GetEnv("DOC_HOST", "localhost:8080"),
 				SwaggerRootFolder: utils.GetEnv("DOC_ROOT_FOLDER", ""),
 			},
+			HTTP2Config: &httpserver.HTTP2Config{
+				PublicKeyPath:  utils.GetEnv("HTTP2_PUBLIC_KEY", ""),
+				PrivateKeyPath: utils.GetEnv("HTTP2_PRIVATE_KEY", ""),
+			},
 		},
 		Kafka: &kafkaconsumer.KafkaConsumerServerConfig{
 			ServerConfig:        *appConfig,

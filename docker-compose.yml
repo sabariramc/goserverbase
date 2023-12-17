@@ -12,6 +12,7 @@ services:
       DD_SERVICE: gobase_http
       KAFKA_BROKER: broker:9092
       DD_AGENT_HOST: dreamy_cannon:8126
+      DOC_HOST: http://localhost:60005
     ports:
       - 60005:8080
     networks:
@@ -30,6 +31,9 @@ services:
       DD_SERVICE: gobase_http2
       KAFKA_BROKER: broker:9092
       DD_AGENT_HOST: dreamy_cannon:8126
+      DOC_HOST: https://localhost:60006
+      HTTP2_PUBLIC_KEY: /app/server.crt
+      HTTP2_PRIVATE_KEY: /app/server.key
     ports:
       - 60006:8080
     networks:

@@ -12,9 +12,15 @@ type DocumentationConfig struct {
 	SwaggerRootFolder string
 }
 
+type HTTP2Config struct {
+	PublicKeyPath  string
+	PrivateKeyPath string
+}
+
 type HTTPServerConfig struct {
 	baseapp.ServerConfig
 	DocumentationConfig
+	*HTTP2Config
 	Host string
 	Port string
 	Log  *LogConfig

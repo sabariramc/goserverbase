@@ -10,8 +10,10 @@ servers:
         enum:
           - uat
           - prod
-  - url: http://localhost:60006
-    description: Local docker compose
+  - url: http://localhost:60005
+    description: Local docker compose http
+  - url: https://localhost:60006
+    description: Local docker compose http2
 info:
   title: Gobase HTTP server
   version: 1.0.0

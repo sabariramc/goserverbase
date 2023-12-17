@@ -69,8 +69,8 @@ func (h *HTTPServer) SetupRouter(ctx context.Context) {
 	h.handler.NoMethod(gin.WrapF(MethodNotAllowed()))
 	h.handler.GET("/meta/health", gin.WrapF(HealthCheck))
 	h.handler.HandleMethodNotAllowed = true
-	h.handler.Use(h.SetContextMiddleware(), h.RequestTimerMiddleware(), h.LogRequestResponseMiddleware(), h.HandleExceptionMiddleware())
 	h.SetupDocumentation(ctx)
+	h.handler.Use(h.SetContextMiddleware(), h.RequestTimerMiddleware(), h.LogRequestResponseMiddleware(), h.HandleExceptionMiddleware())
 }
 
 func (h *HTTPServer) SetupDocumentation(ctx context.Context) {
