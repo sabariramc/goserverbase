@@ -58,7 +58,7 @@ func (h *HTTPServer) StartServer() {
 	corr := &log.CorrelationParam{CorrelationId: fmt.Sprintf("%v-HTTP-SERVER", h.c.ServiceName)}
 	ctx := log.GetContextWithCorrelation(context.TODO(), corr)
 	h.log.Notice(ctx, fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
-	h.Start(ctx)
+	h.StartSignalMonitor(ctx)
 	err := http.ListenAndServe(h.GetPort(), h)
 	h.log.Emergency(context.Background(), "Server crashed", nil, err)
 }
@@ -69,7 +69,7 @@ func (h *HTTPServer) StartTLSServer() {
 	corr := &log.CorrelationParam{CorrelationId: fmt.Sprintf("%v-HTTP2-SERVER", h.c.ServiceName)}
 	ctx := log.GetContextWithCorrelation(context.TODO(), corr)
 	h.log.Notice(ctx, fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
-	h.Start(ctx)
+	h.StartSignalMonitor(ctx)
 	err := http.ListenAndServeTLS(h.GetPort(), h.c.HTTP2Config.PublicKeyPath, h.c.HTTP2Config.PrivateKeyPath, h)
 	h.log.Emergency(context.Background(), "Server crashed", nil, err)
 }

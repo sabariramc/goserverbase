@@ -5,9 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"os/signal"
 	"runtime/debug"
-	"syscall"
 	"time"
 
 	"github.com/sabariramc/goserverbase/v4/errors"
@@ -55,10 +53,10 @@ func (b *BaseApp) GetErrorNotifier() errors.ErrorNotifier {
 	return b.errorNotifier
 }
 
-func (b *BaseApp) Start(ctx context.Context) error {
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, syscall.SIGTERM, os.Interrupt)
-	go b.monitorSignals(ctx, c)
+func (b *BaseApp) StartSignalMonitor(ctx context.Context) error {
+	// c := make(chan os.Signal, 1)
+	// signal.Notify(c, syscall.SIGTERM, os.Interrupt)
+	// go b.monitorSignals(ctx, c)
 	return nil
 }
 
