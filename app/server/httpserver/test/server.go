@@ -105,7 +105,7 @@ func (s *server) testAll(w http.ResponseWriter, r *http.Request) {
 		s.httpClient.Post(ctx, ServerTestConfig.TestURL1, data, &res, nil)
 		s.log.Info(ctx, "http response", res)
 	}()
-	s.pr1.ProduceMessage(ctx, "fasdfa", msg, nil)
+	s.pr1.ProduceMessageWithTopic(ctx, ServerTestConfig.KafkaTestTopic, uuid.NewString(), msg, nil)
 	// s.pr1.Flush(ctx)
 	wg.Wait()
 	w.WriteHeader(204)
@@ -120,7 +120,7 @@ func (s *server) testKafka(w http.ResponseWriter, r *http.Request) {
 	}
 	msg := utils.NewMessage("testFlight", "test")
 	msg.AddPayload("content", data)
-	s.pr2.ProduceMessage(ctx, "fasdfa", msg, nil)
+	s.pr2.ProduceMessageWithTopic(ctx, ServerTestConfig.KafkaTestTopic2, uuid.NewString(), msg, nil)
 	// s.pr2.Flush(ctx)
 	w.WriteHeader(204)
 }
@@ -139,11 +139,11 @@ func (s *server) Func5(w http.ResponseWriter, r *http.Request) {
 
 func NewServer() *server {
 	ctx := GetCorrelationContext()
-	pr1, err := kafka.NewProducer(ctx, ServerTestLogger, ServerTestConfig.KafkaProducer, ServerTestConfig.KafkaTestTopic)
+	pr1, err := kafka.NewProducer(ctx, ServerTestLogger, ServerTestConfig.KafkaProducer)
 	if err != nil {
 		ServerTestLogger.Emergency(ctx, "error creating producer1", err, nil)
 	}
-	pr2, err := kafka.NewProducer(ctx, ServerTestLogger, ServerTestConfig.KafkaProducer, ServerTestConfig.KafkaTestTopic2)
+	pr2, err := kafka.NewProducer(ctx, ServerTestLogger, ServerTestConfig.KafkaProducer)
 	if err != nil {
 		ServerTestLogger.Emergency(ctx, "error creating producer2", err, nil)
 	}

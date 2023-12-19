@@ -22,7 +22,7 @@ type Producer struct {
 	isTopicSpecificProducer bool
 }
 
-func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerConfig, topic string) (*Producer, error) {
+func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerConfig) (*Producer, error) {
 	if config.MaxBuffer == 0 {
 		config.MaxBuffer = 100
 	}
@@ -38,7 +38,7 @@ func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerC
 	}
 	p := &kafka.Writer{
 		Addr:     kafka.TCP(config.Brokers...),
-		Topic:    topic,
+		Topic:    config.Topic,
 		Balancer: &kafka.Hash{},
 		Transport: &kafka.Transport{
 			SASL: config.SASLMechanism,
@@ -61,7 +61,7 @@ func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerC
 		writer = api.NewWriter(ctx, p, config.MaxBuffer, *logger)
 	}
 	isTopicSpecificProducer := false
-	if topic != "" {
+	if config.Topic != "" {
 		isTopicSpecificProducer = true
 	}
 	k := &Producer{
@@ -69,7 +69,7 @@ func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerC
 		log:                     logger,
 		config:                  *config,
 		Writer:                  writer,
-		topic:                   topic,
+		topic:                   config.Topic,
 		isTopicSpecificProducer: isTopicSpecificProducer,
 	}
 	autoFlushContext, cancel := context.WithCancel(log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam))
@@ -85,16 +85,17 @@ func (k *Producer) ProduceMessage(ctx context.Context, key string, message *util
 		k.log.Error(ctx, "Message", message)
 		return fmt.Errorf("Producer.ProduceMessage: error marshalling message: %w", err)
 	}
-	return k.Produce(ctx, key, blob, headers)
+	return k.ProduceToTopic(ctx, k.topic, key, blob, headers)
 }
 
-func (k *Producer) Produce(ctx context.Context, key string, message []byte, headers map[string]string) (err error) {
-	if !k.isTopicSpecificProducer {
-		err := fmt.Errorf("Producer.Produce: topic is not set use `ProduceToTopic` method")
-		k.log.Error(ctx, "topic is not set use `ProduceToTopic` method", err)
-		return err
+func (k *Producer) ProduceMessageWithTopic(ctx context.Context, topic, key string, message *utils.Message, headers map[string]string) (err error) {
+	blob, err := json.Marshal(message)
+	if err != nil {
+		k.log.Error(ctx, "Failed to encode message", err)
+		k.log.Error(ctx, "Message", message)
+		return fmt.Errorf("Producer.ProduceMessageWithTopic: error marshalling message: %w", err)
 	}
-	return k.ProduceToTopic(ctx, k.topic, key, message, headers)
+	return k.ProduceToTopic(ctx, topic, key, blob, headers)
 }
 
 func (k *Producer) ProduceToTopic(ctx context.Context, topic, key string, message []byte, headers map[string]string) (err error) {
