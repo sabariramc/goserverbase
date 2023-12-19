@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/sabariramc/goserverbase/v4/log"
 	"github.com/segmentio/kafka-go"
@@ -47,19 +46,13 @@ func NewChanneledWriter(ctx context.Context, w *kafka.Writer, bufferLen int, log
 	return writer
 }
 
-func (w *Writer) Send(ctx context.Context, key string, message []byte, messageHeader []kafka.Header) error {
-	msg := kafka.Message{
-		Key:     []byte(key),
-		Value:   message,
-		Headers: messageHeader,
-		Time:    time.Now(),
-	}
+func (w *Writer) Send(ctx context.Context, msg *kafka.Message) error {
 	if w.isChannelWriter {
-		w.msgCh <- msg
+		w.msgCh <- *msg
 		return nil
 	}
 	w.produceLock.Lock()
-	w.messageList[w.idx] = msg
+	w.messageList[w.idx] = *msg
 	w.idx++
 	w.produceLock.Unlock()
 	if w.idx >= w.bufferLen {
@@ -69,10 +62,6 @@ func (w *Writer) Send(ctx context.Context, key string, message []byte, messageHe
 }
 
 func (w *Writer) Flush(ctx context.Context) error {
-	if w.isChannelWriter {
-		w.log.Notice(ctx, "Flush is not operational for channeled writer", nil)
-		return nil
-	}
 	w.produceLock.Lock()
 	defer w.produceLock.Unlock()
 	if w.idx == 0 {

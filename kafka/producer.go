@@ -14,11 +14,12 @@ import (
 
 type Producer struct {
 	*api.Writer
-	config          KafkaProducerConfig
-	log             *log.Logger
-	topic           string
-	serviceName     string
-	autoFlushCancel context.CancelFunc
+	config                  KafkaProducerConfig
+	log                     *log.Logger
+	topic                   string
+	serviceName             string
+	autoFlushCancel         context.CancelFunc
+	isTopicSpecificProducer bool
 }
 
 func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerConfig, topic string) (*Producer, error) {
@@ -59,12 +60,17 @@ func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerC
 	} else {
 		writer = api.NewWriter(ctx, p, config.MaxBuffer, *logger)
 	}
+	isTopicSpecificProducer := false
+	if topic != "" {
+		isTopicSpecificProducer = true
+	}
 	k := &Producer{
-		serviceName: config.ServiceName,
-		log:         logger,
-		config:      *config,
-		Writer:      writer,
-		topic:       topic,
+		serviceName:             config.ServiceName,
+		log:                     logger,
+		config:                  *config,
+		Writer:                  writer,
+		topic:                   topic,
+		isTopicSpecificProducer: isTopicSpecificProducer,
 	}
 	autoFlushContext, cancel := context.WithCancel(log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam))
 	k.autoFlushCancel = cancel
@@ -83,6 +89,20 @@ func (k *Producer) ProduceMessage(ctx context.Context, key string, message *util
 }
 
 func (k *Producer) Produce(ctx context.Context, key string, message []byte, headers map[string]string) (err error) {
+	if !k.isTopicSpecificProducer {
+		err := fmt.Errorf("Producer.Produce: topic is not set use `ProduceToTopic` method")
+		k.log.Error(ctx, "topic is not set use `ProduceToTopic` method", err)
+		return err
+	}
+	return k.ProduceToTopic(ctx, k.topic, key, message, headers)
+}
+
+func (k *Producer) ProduceToTopic(ctx context.Context, topic, key string, message []byte, headers map[string]string) (err error) {
+	if k.isTopicSpecificProducer && topic != k.topic {
+		err := fmt.Errorf("Producer.ProduceToTopic: topic is set for producer use `Produce` method")
+		k.log.Error(ctx, "topic is set for producer use `Produce` method", err)
+		return err
+	}
 	if headers == nil {
 		headers = make(map[string]string, 0)
 	}
@@ -97,8 +117,17 @@ func (k *Producer) Produce(ctx context.Context, key string, message []byte, head
 			Value: []byte(v),
 		})
 	}
-	k.log.Info(ctx, "MessageMeta", map[string]any{"key": key, "headers": headers, "topic": k.topic})
-	return k.Send(ctx, key, message, messageHeader)
+	k.log.Info(ctx, "MessageMeta", map[string]any{"key": key, "headers": headers, "topic": topic})
+	msg := &kafka.Message{
+		Key:     []byte(key),
+		Value:   message,
+		Headers: messageHeader,
+		Time:    time.Now(),
+	}
+	if !k.isTopicSpecificProducer {
+		msg.Topic = topic
+	}
+	return k.Send(ctx, msg)
 }
 
 func (k *Producer) autoFlush(ctx context.Context) {
