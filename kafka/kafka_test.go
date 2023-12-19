@@ -15,13 +15,15 @@ import (
 )
 
 func newProducer(ctx context.Context) (*kafka.Producer, error) {
-	return kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducer, KafkaTestConfig.KafkaTestTopic)
+	KafkaTestConfig.KafkaProducer.Topic = KafkaTestConfig.KafkaTestTopic
+	return kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducer)
 }
 
 func newChanneledProducer(ctx context.Context) (*kafka.Producer, error) {
+	KafkaTestConfig.KafkaProducer.Topic = KafkaTestConfig.KafkaTestTopic
 	config := *KafkaTestConfig.KafkaProducer
 	config.Channeled = true
-	return kafka.NewProducer(ctx, KafkaTestLogger, &config, KafkaTestConfig.KafkaTestTopic)
+	return kafka.NewProducer(ctx, KafkaTestLogger, &config)
 }
 
 func newConsumer(ctx context.Context) (*kafka.Consumer, error) {

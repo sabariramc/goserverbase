@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/google/uuid"
 	"github.com/sabariramc/goserverbase/v4/app/server/kafkaconsumer"
 	"github.com/sabariramc/goserverbase/v4/aws"
 	"github.com/sabariramc/goserverbase/v4/db/mongo"
@@ -70,7 +71,7 @@ func (s *server) Func1(ctx context.Context, event *kafka.Message) error {
 		s.httpClient.Post(ctx, ServerTestConfig.TestURL2, data, &res, nil)
 		s.log.Info(ctx, "http response", res)
 	}()
-	s.pr.ProduceMessage(ctx, "fasdfa", msg, nil)
+	s.pr.ProduceMessageWithTopic(ctx, ServerTestConfig.KafkaTestTopic2, uuid.NewString(), msg, nil)
 	// s.pr.Flush(ctx)
 	wg.Wait()
 	return nil
@@ -82,7 +83,7 @@ func (s *server) Func2(ctx context.Context, msg *kafka.Message) error {
 
 func NewServer() *server {
 	ctx := GetCorrelationContext()
-	pr, err := kafka.NewProducer(ctx, ServerTestLogger, ServerTestConfig.KafkaProducer, ServerTestConfig.KafkaTestTopic2)
+	pr, err := kafka.NewProducer(ctx, ServerTestLogger, ServerTestConfig.KafkaProducer)
 	if err != nil {
 		ServerTestLogger.Emergency(ctx, "error creating producer2", err, nil)
 	}

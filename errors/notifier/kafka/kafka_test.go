@@ -30,7 +30,8 @@ func GetCorrelationContext() context.Context {
 }
 
 func TestErrorNotification(t *testing.T) {
-	p, _ := pKafka.NewProducer(context.TODO(), TestLogger, TestConfig.KafkaProducer, TestConfig.KafkaTestTopic)
+	TestConfig.KafkaProducer.Topic = TestConfig.KafkaTestTopic
+	p, _ := pKafka.NewProducer(context.TODO(), TestLogger, TestConfig.KafkaProducer)
 	notifier := kafka.New(context.TODO(), TestLogger, "Test", p)
 	ctx := GetCorrelationContext()
 	custId := "cust_test_id"

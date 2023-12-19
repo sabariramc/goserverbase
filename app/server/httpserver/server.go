@@ -55,7 +55,10 @@ func (h *HTTPServer) GetRouter() *gin.Engine {
 func (h *HTTPServer) StartServer() {
 	tracer.Start()
 	defer tracer.Stop()
-	h.log.Notice(context.TODO(), fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
+	corr := &log.CorrelationParam{CorrelationId: fmt.Sprintf("%v-HTTP-SERVER", h.c.ServiceName)}
+	ctx := log.GetContextWithCorrelation(context.TODO(), corr)
+	h.log.Notice(ctx, fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
+	h.Start(ctx)
 	err := http.ListenAndServe(h.GetPort(), h)
 	h.log.Emergency(context.Background(), "Server crashed", nil, err)
 }
@@ -63,7 +66,10 @@ func (h *HTTPServer) StartServer() {
 func (h *HTTPServer) StartTLSServer() {
 	tracer.Start()
 	defer tracer.Stop()
-	h.log.Notice(context.TODO(), fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
+	corr := &log.CorrelationParam{CorrelationId: fmt.Sprintf("%v-HTTP2-SERVER", h.c.ServiceName)}
+	ctx := log.GetContextWithCorrelation(context.TODO(), corr)
+	h.log.Notice(ctx, fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
+	h.Start(ctx)
 	err := http.ListenAndServeTLS(h.GetPort(), h.c.HTTP2Config.PublicKeyPath, h.c.HTTP2Config.PrivateKeyPath, h)
 	h.log.Emergency(context.Background(), "Server crashed", nil, err)
 }

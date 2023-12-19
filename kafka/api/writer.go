@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/sabariramc/goserverbase/v4/kafka/api/trace"
 	"github.com/sabariramc/goserverbase/v4/log"
@@ -50,31 +49,25 @@ func NewChanneledWriter(ctx context.Context, w *kafka.Writer, bufferLen int, log
 	return writer
 }
 
-func (w *Writer) Send(ctx context.Context, key string, message []byte, messageHeader []kafka.Header) error {
+func (w *Writer) Send(ctx context.Context, msg *kafka.Message) error {
 	opts := []tracer.StartSpanOption{
 		tracer.Tag("messaging.kafka.topic", w.Topic),
-		tracer.Tag("messaging.kafka.key", key),
-		tracer.Tag("messaging.kafka.timestamp", time.Now().UnixMilli()),
+		tracer.Tag("messaging.kafka.key", msg.Key),
+		tracer.Tag("messaging.kafka.timestamp", msg.Time),
 		tracer.Tag(ext.SpanKind, ext.SpanKindProducer),
 		tracer.Tag(ext.MessagingSystem, "kafka"),
 		tracer.Measured(),
 	}
 	span, ctx := tracer.StartSpanFromContext(ctx, "kafka.produce", opts...)
 	defer span.Finish()
-	msg := kafka.Message{
-		Key:     []byte(key),
-		Value:   message,
-		Headers: messageHeader,
-		Time:    time.Now(),
-	}
-	traceMsg := trace.NewMessageCarrier(&msg)
+	traceMsg := trace.NewMessageCarrier(msg)
 	tracer.Inject(span.Context(), traceMsg)
 	if w.isChannelWriter {
-		w.msgCh <- msg
+		w.msgCh <- *msg
 		return nil
 	}
 	w.produceLock.Lock()
-	w.messageList[w.idx] = msg
+	w.messageList[w.idx] = *msg
 	w.idx++
 	w.produceLock.Unlock()
 	if w.idx >= w.bufferLen {
@@ -84,10 +77,6 @@ func (w *Writer) Send(ctx context.Context, key string, message []byte, messageHe
 }
 
 func (w *Writer) Flush(ctx context.Context) error {
-	if w.isChannelWriter {
-		w.log.Notice(ctx, "Flush is not operational for channeled writer", nil)
-		return nil
-	}
 	w.produceLock.Lock()
 	defer w.produceLock.Unlock()
 	if w.idx == 0 {
