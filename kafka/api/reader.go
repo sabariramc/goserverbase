@@ -44,7 +44,7 @@ func (k *Reader) Commit(ctx context.Context) error {
 	defer span.Finish()
 	corr := log.GetCorrelationParam(ctx)
 	span.SetTag("correlationId", corr.CorrelationId)
-	k.log.Debug(ctx, "committing messages", k.consumedMessages)
+	k.log.Debug(ctx, "committing messages", k.consumedMessages[:k.idx])
 	err := k.CommitMessages(ctx, k.consumedMessages[:k.idx]...)
 	k.idx = 0
 	if err != nil {
