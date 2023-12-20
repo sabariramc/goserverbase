@@ -52,7 +52,7 @@ func (k *KafkaConsumerServer) Subscribe(ctx context.Context) {
 }
 
 func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
-	corr := &log.CorrelationParam{CorrelationId: fmt.Sprintf("%v-KAFKA-CONSUMER", k.c.ServiceName)}
+	corr := &log.CorrelationParam{CorrelationId: fmt.Sprintf("%v:KafkaConsumerServer", k.c.ServiceName)}
 	ctx = log.GetContextWithCorrelation(ctx, corr)
 	k.StartSignalMonitor(ctx)
 	pollCtx, cancelPoll := context.WithCancel(log.GetContextWithCorrelation(context.Background(), corr))
