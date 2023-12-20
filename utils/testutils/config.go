@@ -59,7 +59,7 @@ func NewConfig() *TestConfig {
 	consumer := kafka.KafkaConsumerConfig{
 		KafkaCredConfig: &kafkaBaseConfig,
 		GroupID:         utils.GetEnvMust("KAFKA_CONSUMER_ID"),
-		MaxBuffer:       uint64(utils.GetEnvInt("KAFKA_CONSUMER_MAX_BUFFER", 1000)),
+		MaxBuffer:       utils.GetEnvInt("KAFKA_CONSUMER_MAX_BUFFER", 1000),
 		AutoCommit:      true,
 	}
 	saslConfig := &kafka.SASLCredential{
