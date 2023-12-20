@@ -40,12 +40,12 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config KafkaConsumerCo
 		QueueCapacity:     config.MaxBuffer,
 		MaxBytes:          10e6, // 10MB,
 		Logger: &kafkaLogger{
-			Logger:  logger,
+			Logger:  logger.NewResourceLogger("KafkaConsumerInfoLog"),
 			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
 			isError: false,
 		},
 		ErrorLogger: &kafkaLogger{
-			Logger:  logger,
+			Logger:  logger.NewResourceLogger("KafkaConsumerErrorLog"),
 			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
 			isError: true,
 		},

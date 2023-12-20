@@ -23,7 +23,12 @@ func (k *kafkaLogger) Printf(shortMessage string, logMessage ...interface{}) {
 	}
 }
 
-func (k *kafkaLogger) DeliveryReport(messages []kafka.Message, err error) {
+type kafkaDeliveryReportLogger struct {
+	*log.Logger
+	ctx context.Context
+}
+
+func (k *kafkaDeliveryReportLogger) DeliveryReport(messages []kafka.Message, err error) {
 	if err != nil {
 		k.Error(k.ctx, "Error Writing to topic", err)
 		k.Error(k.ctx, "Affected Message", messages)
