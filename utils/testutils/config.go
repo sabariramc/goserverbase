@@ -28,7 +28,7 @@ type TestConfig struct {
 	App                 *baseapp.ServerConfig
 	HTTP                *httpserver.HTTPServerConfig
 	Kafka               *kafkaconsumer.KafkaConsumerServerConfig
-	KafkaSASLCredential *kafka.SASLCredential
+	KafkaSASLCredential *kafka.SASLConfig
 	Mongo               *mongo.Config
 	AWS                 *AWSConfig
 	KafkaConsumer       kafka.KafkaConsumerConfig
@@ -62,7 +62,7 @@ func NewConfig() *TestConfig {
 		MaxBuffer:       utils.GetEnvInt("KAFKA_CONSUMER_MAX_BUFFER", 1000),
 		AutoCommit:      true,
 	}
-	saslConfig := &kafka.SASLCredential{
+	saslConfig := &kafka.SASLConfig{
 		SASLMechanism: utils.GetEnvMust("SASL_MECHANISM"),
 	}
 	if saslConfig.SASLMechanism == "PLAIN" {

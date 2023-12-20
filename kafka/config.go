@@ -6,7 +6,7 @@ import (
 	"github.com/segmentio/kafka-go/sasl"
 )
 
-type SASLCredential struct {
+type SASLConfig struct {
 	SASLMechanism  string
 	SASLCredential interface{}
 }

@@ -1,5 +1,5 @@
-export message="Updated logger name"
-export version="v4.4.2"
+export message="Renamed"
+export version="v4.4.3"
 export branch="master"
 git add .
 git commit -m "$message"
