@@ -31,10 +31,9 @@ func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerC
 	}
 	logger = logger.NewResourceLogger("KafkaProducer")
 	defaultCorrelationParam := &log.CorrelationParam{CorrelationId: config.ServiceName + ":KafkaProducer"}
-	kLog := &kafkaLogger{
-		Logger:  logger,
-		ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
-		isError: false,
+	kLog := &kafkaDeliveryReportLogger{
+		Logger: logger.NewResourceLogger("KafkaProducerDeliveryLog"),
+		ctx:    log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
 	}
 	p := &kafka.Writer{
 		Addr:     kafka.TCP(config.Brokers...),
@@ -44,10 +43,14 @@ func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerC
 			SASL: config.SASLMechanism,
 			TLS:  config.TLSConfig,
 		},
-		Logger: kLog,
+		Logger: &kafkaLogger{
+			Logger:  logger.NewResourceLogger("KafkaProducerInfoLog"),
+			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
+			isError: false,
+		},
 		ErrorLogger: &kafkaLogger{
 			isError: true,
-			Logger:  logger,
+			Logger:  logger.NewResourceLogger("KafkaProducerErrorLog"),
 			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
 		},
 		Completion:   kLog.DeliveryReport,
