@@ -23,7 +23,7 @@ type KafkaConsumerConfig struct {
 	GroupID                string
 	OffsetReset            bool
 	AutoCommit             bool
-	MaxBuffer              uint64
+	MaxBuffer              int
 	AutoCommitIntervalInMs uint64
 }
 

@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/sabariramc/goserverbase/v4/kafka/api"
@@ -20,7 +19,6 @@ type Consumer struct {
 	log              *log.Logger
 	topics           []string
 	serviceName      string
-	wg               sync.WaitGroup
 	autoCommitCancel context.CancelFunc
 }
 
@@ -39,6 +37,7 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config KafkaConsumerCo
 		GroupID:           config.GroupID,
 		GroupTopics:       topics,
 		HeartbeatInterval: time.Second,
+		QueueCapacity:     config.MaxBuffer,
 		MaxBytes:          10e6, // 10MB,
 		Logger: &kafkaLogger{
 			Logger:  logger,
@@ -74,34 +73,28 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config KafkaConsumerCo
 
 func (k *Consumer) Poll(ctx context.Context, ch chan<- *kafka.Message) error {
 	defaultCorrelationParam := &log.CorrelationParam{CorrelationId: k.serviceName + ":KafkaConsumer"}
-	pollCtx, cancelPoll := context.WithCancel(ctx)
 	var pollErr, commitErr error
-	k.wg.Add(1)
-	go func() {
-		defer k.wg.Done()
-		pollErr = k.Reader.Poll(pollCtx)
-	}()
 	defer close(ch)
-	defer k.wg.Wait()
 	k.log.Info(ctx, fmt.Sprintf("Polling started for topics : %v", k.topics), nil)
 outer:
 	for {
 		select {
 		case <-ctx.Done():
-			cancelPoll()
 			ctx = log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam)
 			commitErr = k.Commit(ctx)
 			k.log.Notice(ctx, "Polling Timeout/cancelled", nil)
 			break outer
-		case msg, ok := <-k.GetEventChannel():
-			if !ok {
-				cancelPoll()
+		default:
+			msg, err := k.FetchMessage(ctx)
+			if err != nil {
+				k.log.Error(ctx, "error fetching message", err)
+				pollErr = fmt.Errorf("Consumer.Poll: error fetching message: %w", err)
 				commitErr = k.Commit(ctx)
 				break outer
 			}
-			ch <- msg
+			ch <- &msg
 			if k.config.AutoCommit {
-				k.StoreMessage(ctx, msg)
+				k.StoreMessage(ctx, &msg)
 			}
 		}
 	}
@@ -136,7 +129,6 @@ func (k *Consumer) autoCommit(ctx context.Context) {
 func (k *Consumer) Close(ctx context.Context) error {
 	k.log.Notice(ctx, "Consumer closer initiated for topic", k.topics)
 	closeErr := k.Reader.Close(ctx)
-	k.wg.Wait()
 	k.autoCommitCancel()
 	commitErr := k.Commit(ctx)
 	if commitErr != nil || closeErr != nil {

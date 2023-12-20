@@ -16,18 +16,15 @@ type Reader struct {
 	log              log.Logger
 	commitLock       sync.Mutex
 	consumedMessages []kafka.Message
-	msgCh            chan *kafka.Message
-	bufferSize       uint64
-	cancelPoll       context.CancelFunc
+	bufferSize       int
 	idx              int
 }
 
-func NewReader(ctx context.Context, log log.Logger, r *kafka.Reader, bufferSize uint64) *Reader {
+func NewReader(ctx context.Context, log log.Logger, r *kafka.Reader, bufferSize int) *Reader {
 	return &Reader{
 		Reader:           r,
 		log:              *log.NewResourceLogger("KafkaReader"),
 		consumedMessages: make([]kafka.Message, bufferSize),
-		msgCh:            make(chan *kafka.Message, bufferSize),
 		bufferSize:       bufferSize,
 		idx:              0,
 	}
@@ -57,30 +54,6 @@ func (k *Reader) Commit(ctx context.Context) error {
 	return nil
 }
 
-func (k *Reader) Poll(ctx context.Context) error {
-	pollCtx, pollCancel := context.WithCancel(ctx)
-	k.cancelPoll = pollCancel
-	for {
-		select {
-		case <-ctx.Done():
-			return nil
-		case <-pollCtx.Done():
-			return nil
-		default:
-			m, err := k.FetchMessage(ctx)
-			if err != nil {
-				k.log.Error(ctx, "error fetching message", err)
-				return fmt.Errorf("kafka.Reader.Poll: error fetching message: %w", err)
-			}
-			k.msgCh <- &m
-		}
-	}
-}
-
-func (k *Reader) GetEventChannel() <-chan *kafka.Message {
-	return k.msgCh
-}
-
 func (k *Reader) StoreMessage(ctx context.Context, msg *kafka.Message) error {
 	k.commitLock.Lock()
 	k.consumedMessages[k.idx] = *msg
@@ -93,10 +66,6 @@ func (k *Reader) StoreMessage(ctx context.Context, msg *kafka.Message) error {
 }
 
 func (k *Reader) Close(ctx context.Context) error {
-	if k.cancelPoll != nil {
-		k.cancelPoll()
-	}
-	close(k.msgCh)
 	err := k.Reader.Close()
 	if err != nil {
 		k.log.Error(ctx, "error in closing reader", err)
