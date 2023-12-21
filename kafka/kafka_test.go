@@ -19,10 +19,10 @@ func newProducer(ctx context.Context) (*kafka.Producer, error) {
 	return kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducer)
 }
 
-func newChanneledProducer(ctx context.Context) (*kafka.Producer, error) {
+func newAsyncProducer(ctx context.Context) (*kafka.Producer, error) {
 	KafkaTestConfig.KafkaProducer.Topic = KafkaTestConfig.KafkaTestTopic
 	config := *KafkaTestConfig.KafkaProducer
-	config.Channeled = true
+	config.Async = true
 	return kafka.NewProducer(ctx, KafkaTestLogger, &config)
 }
 
@@ -143,15 +143,15 @@ func TestKafkaPoll(t *testing.T) {
 	testKafkaPoll(ctx, t, co, pr, 100000)
 }
 
-func TestKafkaPollChanneledWriter(t *testing.T) {
+func TestKafkaPollAsyncWriter(t *testing.T) {
 	ctx := GetCorrelationContext()
 	co, err := newConsumer(ctx)
 	assert.NilError(t, err)
 	defer co.Close(ctx)
-	pr, err := newChanneledProducer(ctx)
+	pr, err := newAsyncProducer(ctx)
 	assert.NilError(t, err)
 	defer pr.Close(ctx)
-	testKafkaPoll(ctx, t, co, pr, 10)
+	testKafkaPoll(ctx, t, co, pr, 100000)
 }
 
 func TestKafkaPollWithDelay(t *testing.T) {
