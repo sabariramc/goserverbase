@@ -95,10 +95,10 @@ func NewLogger(ctx context.Context, lc *Config, moduleName string, lMux LogMux, 
 	logLevel, ok := logLevelInverseMap[lc.LogLevelName]
 	if !ok {
 		logLevel = logLevelInverseMap["INFO"]
-		l.Warning(ctx, "Erroneous log level - log level set to INFO", nil)
+		l.Warning(ctx, "Erroneous log level - log level set as INFO", nil)
 	}
 	if logLevel.Level == TRACE {
-		l.Warning(ctx, "log level is set to TRACE", nil)
+		l.Notice(ctx, "log level is set as TRACE", nil)
 	}
 	l.logLevel = logLevel.Level
 	return l

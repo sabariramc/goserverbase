@@ -14,39 +14,26 @@ import (
 
 type Writer struct {
 	*kafka.Writer
-	messageList     []kafka.Message
-	produceLock     sync.Mutex
-	bufferLen       int
-	log             log.Logger
-	msgCh           chan kafka.Message
-	isChannelWriter bool
-	wg              sync.WaitGroup
-	idx             int
+	messageList []kafka.Message
+	produceLock sync.Mutex
+	bufferLen   int
+	log         log.Logger
+	msgCh       chan kafka.Message
+	wg          sync.WaitGroup
+	idx         int
 }
 
 func NewWriter(ctx context.Context, w *kafka.Writer, bufferLen int, log log.Logger) *Writer {
+	if w.Async {
+		log.Notice(ctx, "Kafak writer is set to async mode", nil)
+	}
 	return &Writer{
-		Writer:          w,
-		messageList:     make([]kafka.Message, bufferLen),
-		bufferLen:       bufferLen,
-		log:             *log.NewResourceLogger("KafkaWriter"),
-		isChannelWriter: false,
-		idx:             0,
+		Writer:      w,
+		messageList: make([]kafka.Message, bufferLen),
+		bufferLen:   bufferLen,
+		log:         *log.NewResourceLogger("KafkaWriter"),
+		idx:         0,
 	}
-}
-
-func NewChanneledWriter(ctx context.Context, w *kafka.Writer, bufferLen int, log log.Logger) *Writer {
-	writer := &Writer{
-		Writer:          w,
-		bufferLen:       bufferLen,
-		log:             *log.NewResourceLogger("KafkaChanneledWriter"),
-		isChannelWriter: true,
-		msgCh:           make(chan kafka.Message, bufferLen),
-	}
-	writer.wg.Add(1)
-	writer.log.Warning(ctx, "Channeled writer is an experimental implementation", nil)
-	go writer.writeChannelMessage(context.Background())
-	return writer
 }
 
 func (w *Writer) Send(ctx context.Context, msg *kafka.Message) error {
@@ -62,9 +49,8 @@ func (w *Writer) Send(ctx context.Context, msg *kafka.Message) error {
 	defer span.Finish()
 	traceMsg := trace.NewMessageCarrier(msg)
 	tracer.Inject(span.Context(), traceMsg)
-	if w.isChannelWriter {
-		w.msgCh <- *msg
-		return nil
+	if w.Async {
+		return w.WriteMessages(ctx, *msg)
 	}
 	w.produceLock.Lock()
 	w.messageList[w.idx] = *msg
@@ -100,16 +86,6 @@ func (w *Writer) Flush(ctx context.Context) error {
 		return fmt.Errorf("Writer.Flush: error in flushing message: %w", err)
 	}
 	return nil
-}
-
-func (w *Writer) writeChannelMessage(ctx context.Context) {
-	defer w.wg.Done()
-	for msg := range w.msgCh {
-		err := w.WriteMessages(ctx, msg)
-		if err != nil {
-			w.log.Emergency(ctx, "Failed to writing message", fmt.Errorf("kafka.Writer.writeChannelMessage: error in flushing message: %w", err), nil)
-		}
-	}
 }
 
 func (w *Writer) Close(ctx context.Context) error {

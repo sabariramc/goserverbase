@@ -35,6 +35,9 @@ func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerC
 		Logger: logger.NewResourceLogger("KafkaProducerDeliveryLog"),
 		ctx:    log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
 	}
+	if config.Acknowledge == 0 {
+		logger.Warning(ctx, "Kafka replica acknowledgement is set to None", nil)
+	}
 	p := &kafka.Writer{
 		Addr:     kafka.TCP(config.Brokers...),
 		Topic:    config.Topic,
@@ -56,13 +59,9 @@ func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerC
 		Completion:   kLog.DeliveryReport,
 		BatchSize:    config.MaxBuffer,
 		RequiredAcks: kafka.RequiredAcks(config.Acknowledge),
+		Async:        config.Async,
 	}
-	var writer *api.Writer
-	if config.Channeled {
-		writer = api.NewChanneledWriter(ctx, p, config.MaxBuffer, *logger)
-	} else {
-		writer = api.NewWriter(ctx, p, config.MaxBuffer, *logger)
-	}
+	writer := api.NewWriter(ctx, p, config.MaxBuffer, *logger)
 	isTopicSpecificProducer := false
 	if config.Topic != "" {
 		isTopicSpecificProducer = true
