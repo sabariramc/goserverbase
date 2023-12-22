@@ -81,6 +81,10 @@ func (s *server) Func2(ctx context.Context, msg *kafka.Message) error {
 	return errors.NewCustomError("hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, true, nil)
 }
 
+func (s *server) Name(ctx context.Context) string {
+	return ""
+}
+
 func NewServer() *server {
 	ctx := GetCorrelationContext()
 	pr, err := kafka.NewProducer(ctx, ServerTestLogger, ServerTestConfig.KafkaProducer)

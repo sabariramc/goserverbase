@@ -36,8 +36,8 @@ services:
       KAFKA_BROKER: broker:29092
       DD_AGENT_HOST: dreamy_cannon:8126
       DOC_HOST: https://localhost:60006
-      HTTP2_PUBLIC_KEY: /app/server.crt
-      HTTP2_PRIVATE_KEY: /app/server.key
+      HTTP2_PUBLIC_KEY: /service/server.crt
+      HTTP2_PRIVATE_KEY: /service/server.key
       KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
       KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
       TEST_URL_1: "http://echo-http-1:3000/service/a/b"

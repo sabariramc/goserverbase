@@ -2,6 +2,7 @@ package kafkaconsumer
 
 import (
 	"context"
+	e "errors"
 	"fmt"
 	"sync"
 
@@ -16,11 +17,14 @@ type KafkaEventProcessor func(context.Context, *kafka.Message) error
 
 type KafkaConsumerServer struct {
 	*baseapp.BaseApp
-	client  *kafka.Consumer
-	handler map[string]KafkaEventProcessor
-	log     *log.Logger
-	ch      chan *ckafka.Message
-	c       *KafkaConsumerServerConfig
+	client       *kafka.Consumer
+	handler      map[string]KafkaEventProcessor
+	log          *log.Logger
+	ch           chan *ckafka.Message
+	c            *KafkaConsumerServerConfig
+	shutdown     context.CancelFunc
+	shutdownPoll context.CancelFunc
+	wg           sync.WaitGroup
 }
 
 func New(appConfig KafkaConsumerServerConfig, logger *log.Logger, errorNotifier errors.ErrorNotifier) *KafkaConsumerServer {
@@ -31,6 +35,7 @@ func New(appConfig KafkaConsumerServerConfig, logger *log.Logger, errorNotifier 
 		c:       &appConfig,
 		handler: make(map[string]KafkaEventProcessor),
 	}
+	h.AddShutdownHook(h)
 	return h
 }
 
@@ -51,27 +56,41 @@ func (k *KafkaConsumerServer) Subscribe(ctx context.Context) {
 	k.client = client
 }
 
+func (k *KafkaConsumerServer) Name(ctx context.Context) string {
+	return "KafkaConsumerServer"
+}
+
+func (k *KafkaConsumerServer) Shutdown(ctx context.Context) error {
+	defer k.wg.Done()
+	k.wg.Add(1)
+	k.shutdownPoll()
+	k.client.Close(ctx)
+	k.shutdown()
+	return nil
+}
+
 func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 	corr := &log.CorrelationParam{CorrelationId: fmt.Sprintf("%v:KafkaConsumerServer", k.c.ServiceName)}
-	ctx = log.GetContextWithCorrelation(ctx, corr)
+	ctx, k.shutdown = context.WithCancel(log.GetContextWithCorrelation(ctx, corr))
 	k.StartSignalMonitor(ctx)
 	pollCtx, cancelPoll := context.WithCancel(log.GetContextWithCorrelation(context.Background(), corr))
+	k.shutdownPoll = cancelPoll
 	k.log.Notice(pollCtx, "Starting kafka consumer", nil)
 	defer func() {
 		if rec := recover(); rec != nil {
 			k.PanicRecovery(pollCtx, rec)
 		}
 	}()
-	var wg sync.WaitGroup
 	k.Subscribe(pollCtx)
-	defer k.client.Close(ctx)
-	defer wg.Wait()
+	defer k.wg.Wait()
 	defer cancelPoll()
-	wg.Add(1)
+	k.wg.Add(1)
 	go func() {
-		defer wg.Done()
+		defer k.wg.Done()
 		err := k.client.Poll(pollCtx, k.ch)
-		k.log.Emergency(pollCtx, "Kafka consumer exited", nil, fmt.Errorf("KafkaConsumerServer.StartConsumer: process exit: %w", err))
+		if !e.Is(err, context.Canceled) {
+			k.log.Emergency(pollCtx, "Kafka consumer exited", nil, fmt.Errorf("KafkaConsumerServer.StartConsumer: process exit: %w", err))
+		}
 	}()
 	k.log.Notice(pollCtx, "Kafka consumer started", nil)
 	for {

@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/sabariramc/goserverbase/v4/kafka/api"
@@ -20,6 +22,7 @@ type Consumer struct {
 	topics           []string
 	serviceName      string
 	autoCommitCancel context.CancelFunc
+	wg               sync.WaitGroup
 }
 
 func NewConsumer(ctx context.Context, logger *log.Logger, config KafkaConsumerConfig, topics ...string) (*Consumer, error) {
@@ -66,6 +69,7 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config KafkaConsumerCo
 	if k.config.AutoCommit {
 		commitCtx, cancel := context.WithCancel(log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam))
 		k.autoCommitCancel = cancel
+		k.wg.Add(1)
 		go k.autoCommit(commitCtx)
 	}
 	return k, nil
@@ -87,7 +91,9 @@ outer:
 		default:
 			msg, err := k.FetchMessage(ctx)
 			if err != nil {
-				k.log.Error(ctx, "error fetching message", err)
+				if !errors.Is(err, context.Canceled) {
+					k.log.Error(ctx, "error fetching message", err)
+				}
 				pollErr = fmt.Errorf("Consumer.Poll: error fetching message: %w", err)
 				commitErr = k.Commit(ctx)
 				break outer
@@ -111,13 +117,14 @@ outer:
 
 func (k *Consumer) autoCommit(ctx context.Context) {
 	timeout, _ := context.WithTimeout(context.Background(), time.Duration(k.config.AutoCommitIntervalInMs*uint64(time.Millisecond)))
+	defer k.wg.Done()
 	defer k.log.Warning(ctx, "auto commit stopped", nil)
 	for {
 		select {
 		case <-timeout.Done():
 			err := k.Commit(ctx)
 			if err != nil {
-				k.log.Emergency(ctx, "Error while writing kafka message", fmt.Errorf("Producer.autoFlush: %w", err), nil)
+				k.log.Emergency(ctx, "Error while writing kafka message", fmt.Errorf("Consumer.autoCommit: %w", err), nil)
 			}
 			timeout, _ = context.WithTimeout(context.Background(), time.Duration(k.config.AutoCommitIntervalInMs*uint64(time.Millisecond)))
 		case <-ctx.Done():
@@ -135,6 +142,7 @@ func (k *Consumer) Close(ctx context.Context) error {
 		k.log.Error(ctx, fmt.Sprintf("Consumer closed with error for topic : %v", k.topics), closeErr)
 		return fmt.Errorf("Consumer.Close: %w, %w", commitErr, closeErr)
 	}
+	k.wg.Wait()
 	k.log.Notice(ctx, "Consumer closed for topic", k.topics)
 	return nil
 }

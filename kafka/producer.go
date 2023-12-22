@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sync"
 	"time"
 
 	"github.com/sabariramc/goserverbase/v4/kafka/api"
@@ -20,6 +21,7 @@ type Producer struct {
 	serviceName             string
 	autoFlushCancel         context.CancelFunc
 	isTopicSpecificProducer bool
+	wg                      sync.WaitGroup
 }
 
 func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerConfig) (*Producer, error) {
@@ -76,6 +78,7 @@ func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerC
 	}
 	autoFlushContext, cancel := context.WithCancel(log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam))
 	k.autoFlushCancel = cancel
+	k.wg.Add(1)
 	go k.autoFlush(autoFlushContext)
 	return k, nil
 }
@@ -134,8 +137,9 @@ func (k *Producer) ProduceToTopic(ctx context.Context, topic, key string, messag
 }
 
 func (k *Producer) autoFlush(ctx context.Context) {
+	defer k.wg.Done()
 	timeout, _ := context.WithTimeout(context.Background(), time.Duration(k.config.AutoFlushIntervalInMs*uint64(time.Millisecond)))
-	defer k.log.Warning(ctx, "auto flush stopped", nil)
+	defer k.log.Notice(ctx, "auto flush stopped", nil)
 	for {
 		select {
 		case <-timeout.Done():
@@ -154,6 +158,7 @@ func (k *Producer) Close(ctx context.Context) error {
 	k.log.Notice(ctx, "Producer closer initiated for topic", k.topic)
 	k.autoFlushCancel()
 	k.Flush(ctx)
+	k.wg.Wait()
 	err := k.Writer.Close(ctx)
 	if err == nil {
 		k.log.Notice(ctx, "Producer closed for topic", k.topic)
