@@ -1,5 +1,5 @@
 export message="tracing update"
-export version="v4.5.0.ddtrace"
+export version="v4.6.0.ddtrace"
 export branch="ddtrace"
 git add .
 git commit -m "$message"
