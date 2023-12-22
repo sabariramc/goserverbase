@@ -53,6 +53,7 @@ type server struct {
 	coll       *mongo.Collection
 	sns        *aws.SNS
 	httpClient *httputil.HttpClient
+	c          *testutils.TestConfig
 }
 
 func (s *server) Func1(w http.ResponseWriter, r *http.Request) {
@@ -137,6 +138,16 @@ func (s *server) Func5(w http.ResponseWriter, r *http.Request) {
 	s.SetErrorInContext(r.Context(), errors.NewHTTPClientError(403, "hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, nil))
 }
 
+func (s *server) Name(ctx context.Context) string {
+	return s.c.HTTP.ServiceName
+}
+
+func (s *server) Shutdown(ctx context.Context) error {
+	s.pr1.Close(ctx)
+	s.pr2.Close(ctx)
+	return s.conn.Disconnect(ctx)
+}
+
 func NewServer() *server {
 	ctx := GetCorrelationContext()
 	pr1, err := kafka.NewProducer(ctx, ServerTestLogger, ServerTestConfig.KafkaProducer)
@@ -159,7 +170,9 @@ func NewServer() *server {
 		httpClient: httputil.NewDefaultHttpClient(ServerTestLogger),
 		conn:       conn,
 		coll:       conn.Database("GOBaseTest").Collection("TestColl"),
+		c:          ServerTestConfig,
 	}
+	srv.AddShutdownHook(srv)
 	r := srv.GetRouter().Group("/service/v1")
 	r.POST("/benc", srv.benc)
 	tenant := r.Group("/tenant")

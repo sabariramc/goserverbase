@@ -40,7 +40,7 @@ func TestKafkaProducer(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			pr, err := newProducer(ctx)
+			pr, err := newAsyncProducer(ctx)
 			assert.NilError(t, err)
 			defer pr.Close(ctx)
 			for i := 0; i < totalNoOfMessage/connFac; i++ {

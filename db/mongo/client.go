@@ -77,3 +77,13 @@ func (m *Mongo) Database(name string, opts ...*options.DatabaseOptions) *Databas
 	db := m.Client.Database(name, opts...)
 	return &Database{Database: db, log: m.log.NewResourceLogger("MongoDatabase")}
 }
+
+func (m *Mongo) Disconnect(ctx context.Context) error {
+	m.log.Notice(ctx, "Mongo client closure initiated", nil)
+	err := m.Client.Disconnect(ctx)
+	if err != nil {
+		return fmt.Errorf("Mongo.Disconnect: %w", err)
+	}
+	m.log.Notice(ctx, "Mongo client closed", nil)
+	return nil
+}
