@@ -1,5 +1,5 @@
 export message="Kafka writer asncy mode"
-export version="v4.5.0"
+export version="v4.6.0"
 export branch="master"
 git add .
 git commit -m "$message"
