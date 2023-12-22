@@ -1,5 +1,5 @@
-export message="Kafka writer asncy mode"
-export version="v4.6.0"
+export message="Removed unused config"
+export version="v4.6.1"
 export branch="master"
 git add .
 git commit -m "$message"

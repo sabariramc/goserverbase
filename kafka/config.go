@@ -21,7 +21,6 @@ type KafkaCredConfig struct {
 type KafkaConsumerConfig struct {
 	*KafkaCredConfig
 	GroupID                string
-	OffsetReset            bool
 	AutoCommit             bool
 	MaxBuffer              int
 	AutoCommitIntervalInMs uint64
