@@ -57,18 +57,20 @@ func (s *server) Func1(ctx context.Context, event *kafka.Message) error {
 	msg.AddPayload("content", data)
 	var wg sync.WaitGroup
 	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		s.sns.Publish(ctx, &ServerTestConfig.AWS.SNS_ARN, nil, msg, nil)
-	}()
+	// go func() {
+	// 	defer wg.Done()
+	// 	s.sns.Publish(ctx, &ServerTestConfig.AWS.SNS_ARN, nil, msg, nil)
+	// }()
 	go func() {
 		defer wg.Done()
 		res := make(map[string]any)
 		s.httpClient.Post(ctx, ServerTestConfig.TestURL2, data, &res, nil)
 		s.log.Info(ctx, "http response", res)
 	}()
-	s.pr.ProduceMessageWithTopic(ctx, ServerTestConfig.KafkaTestTopic2, uuid.NewString(), msg, nil)
-	// s.pr.Flush(ctx)
+	go func() {
+		defer wg.Done()
+		s.pr.ProduceMessageWithTopic(ctx, ServerTestConfig.KafkaTestTopic2, uuid.NewString(), msg, nil)
+	}()
 	wg.Wait()
 	return nil
 }

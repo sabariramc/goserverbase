@@ -92,18 +92,20 @@ func (s *server) testAll(w http.ResponseWriter, r *http.Request) {
 	msg.AddPayload("content", data)
 	var wg sync.WaitGroup
 	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		s.sns.Publish(ctx, &ServerTestConfig.AWS.SNS_ARN, nil, msg, nil)
-	}()
+	// go func() {
+	// 	defer wg.Done()
+	// 	s.sns.Publish(ctx, &ServerTestConfig.AWS.SNS_ARN, nil, msg, nil)
+	// }()
 	go func() {
 		defer wg.Done()
 		res := make(map[string]any)
 		s.httpClient.Post(ctx, ServerTestConfig.TestURL1, data, &res, nil)
 		s.log.Info(ctx, "http response", res)
 	}()
-	s.pr1.ProduceMessageWithTopic(ctx, ServerTestConfig.KafkaTestTopic, uuid.NewString(), msg, nil)
-	// s.pr1.Flush(ctx)
+	go func() {
+		defer wg.Done()
+		s.pr1.ProduceMessageWithTopic(ctx, ServerTestConfig.KafkaTestTopic, uuid.NewString(), msg, nil)
+	}()
 	wg.Wait()
 	w.WriteHeader(204)
 }
@@ -118,7 +120,6 @@ func (s *server) testKafka(w http.ResponseWriter, r *http.Request) {
 	msg := utils.NewMessage("testFlight", "test")
 	msg.AddPayload("content", data)
 	s.pr2.ProduceMessageWithTopic(ctx, ServerTestConfig.KafkaTestTopic2, uuid.NewString(), msg, nil)
-	// s.pr2.Flush(ctx)
 	w.WriteHeader(204)
 }
 
