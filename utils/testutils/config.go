@@ -24,21 +24,20 @@ type AWSConfig struct {
 }
 
 type TestConfig struct {
-	Logger              *log.Config
-	App                 *baseapp.ServerConfig
-	HTTP                *httpserver.HTTPServerConfig
-	Kafka               *kafkaconsumer.KafkaConsumerServerConfig
-	KafkaSASLCredential *kafka.SASLConfig
-	Mongo               *mongo.Config
-	AWS                 *AWSConfig
-	KafkaConsumer       kafka.KafkaConsumerConfig
-	KafkaProducer       *kafka.KafkaProducerConfig
-	KafkaTestTopic      string
-	KafkaTestTopic2     string
-	KafkaHTTPProxyURL   string
-	Graylog             logwriter.GraylogConfig
-	TestURL1            string
-	TestURL2            string
+	Logger            *log.Config
+	App               *baseapp.ServerConfig
+	HTTP              *httpserver.HTTPServerConfig
+	Kafka             *kafkaconsumer.KafkaConsumerServerConfig
+	Mongo             *mongo.Config
+	AWS               *AWSConfig
+	KafkaConsumer     kafka.KafkaConsumerConfig
+	KafkaProducer     *kafka.KafkaProducerConfig
+	KafkaTestTopic    string
+	KafkaTestTopic2   string
+	KafkaHTTPProxyURL string
+	Graylog           logwriter.GraylogConfig
+	TestURL1          string
+	TestURL2          string
 }
 
 func (t *TestConfig) GetLoggerConfig() *log.Config {
@@ -52,6 +51,7 @@ func NewConfig() *TestConfig {
 	serviceName := utils.GetEnv("SERVICE_NAME", "go-base")
 	kafkaBaseConfig := kafka.KafkaCredConfig{Brokers: []string{utils.GetEnv("KAFKA_BROKER", "")},
 		ServiceName: serviceName,
+		SASLType:    utils.GetEnv("SASL_TYPE", "NONE"),
 	}
 	appConfig := &baseapp.ServerConfig{
 		ServiceName: serviceName,
@@ -62,10 +62,7 @@ func NewConfig() *TestConfig {
 		MaxBuffer:       utils.GetEnvInt("KAFKA_CONSUMER_MAX_BUFFER", 1000),
 		AutoCommit:      true,
 	}
-	saslConfig := &kafka.SASLConfig{
-		SASLMechanism: utils.GetEnvMust("SASL_MECHANISM"),
-	}
-	if saslConfig.SASLMechanism == "PLAIN" {
+	if kafkaBaseConfig.SASLType == "PLAIN" {
 		kafkaBaseConfig.SASLMechanism = &plain.Mechanism{
 			Username: utils.GetEnv("KAFKA_USERNAME", ""),
 			Password: utils.GetEnv("KAFKA_PASSWORD", ""),
@@ -74,16 +71,11 @@ func NewConfig() *TestConfig {
 			MinVersion: tls.VersionTLS12,
 		}
 	}
-
 	return &TestConfig{
 		Logger: &log.Config{
-			HostParams: log.HostParams{
-				Version:     utils.GetEnv("LOG_VERSION", "1.1"),
-				Host:        utils.GetEnv("HOST", utils.GetHostName()),
-				ServiceName: serviceName,
-			},
-			LogLevelName: utils.GetEnv("LOG_LEVEL", "INFO"),
-			BufferSize:   utils.GetEnvInt("LOG_BUFFER_SIZE", 1),
+			ServiceName:      serviceName,
+			ServiceNamespace: utils.GetEnv("SERVICE_NAMESPACE", ""),
+			LogLevelName:     utils.GetEnv("LOG_LEVEL", "INFO"),
 		},
 		App: appConfig,
 		HTTP: &httpserver.HTTPServerConfig{
@@ -104,7 +96,6 @@ func NewConfig() *TestConfig {
 			ServerConfig:        *appConfig,
 			KafkaConsumerConfig: consumer,
 		},
-		KafkaSASLCredential: saslConfig,
 		Mongo: &mongo.Config{
 			ConnectionString:  utils.GetEnv("MONGO_URL", "mongodb://localhost:60001"),
 			MinConnectionPool: uint64(utils.GetEnvInt("MONGO_MIN_CONNECTION_POOL", 10)),
@@ -122,6 +113,7 @@ func NewConfig() *TestConfig {
 			KafkaCredConfig: &kafkaBaseConfig,
 			Acknowledge:     -1,
 			MaxBuffer:       utils.GetEnvInt("KAFKA_PRODUCER_MAX_BUFFER", 1000),
+			Async:           true,
 		},
 		KafkaConsumer:     consumer,
 		KafkaTestTopic:    utils.GetEnvMust("KAFKA_TEST_TOPIC"),

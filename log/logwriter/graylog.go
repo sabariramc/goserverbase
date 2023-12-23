@@ -26,6 +26,8 @@ type Endpoint struct {
 }
 
 type GraylogConfig struct {
+	Host              string
+	Version           string
 	Address           string
 	Port              int
 	ShortMessageLimit uint
@@ -34,27 +36,26 @@ type GraylogConfig struct {
 
 // GraylogWriter represents an established graylog connection
 type GraylogWriter struct {
-	BaseLogWriter
 	writer   gelf.Writer
 	errorLog log.LogWriter
 	c        GraylogConfig
 }
 
-func NewGraylogTCP(hostParam log.HostParams, errorLog log.LogWriter, c GraylogConfig) (*GraylogWriter, error) {
+func NewGraylogTCP(errorLog log.LogWriter, c GraylogConfig) (*GraylogWriter, error) {
 	gelfWriter, err := gelf.NewTCPWriter(fmt.Sprintf("%s:%d", c.Address, c.Port))
 	if err != nil {
 		return nil, err
 	}
 
-	return &GraylogWriter{writer: gelfWriter, errorLog: errorLog, c: c, BaseLogWriter: BaseLogWriter{hostParam: &hostParam}}, nil
+	return &GraylogWriter{writer: gelfWriter, errorLog: errorLog, c: c}, nil
 }
 
-func NewGraylogUDP(hostParam log.HostParams, errorLog log.LogWriter, c GraylogConfig) (*GraylogWriter, error) {
+func NewGraylogUDP(errorLog log.LogWriter, c GraylogConfig) (*GraylogWriter, error) {
 	gelfWriter, err := gelf.NewUDPWriter(fmt.Sprintf("%s:%d", c.Address, c.Port))
 	if err != nil {
 		return nil, err
 	}
-	return &GraylogWriter{writer: gelfWriter, errorLog: errorLog, c: c, BaseLogWriter: BaseLogWriter{hostParam: &hostParam}}, nil
+	return &GraylogWriter{writer: gelfWriter, errorLog: errorLog, c: c}, nil
 }
 
 func (g *GraylogWriter) GetBufferSize() int {
@@ -83,8 +84,8 @@ func (g *GraylogWriter) WriteMessage(ctx context.Context, msg *log.LogMessage) (
 		Timestamp: time.Now()}
 	fullMessage := ParseLogObject(msg.LogObject, false)
 	err = g.writer.WriteMessage(&gelf.Message{
-		Version:  g.hostParam.Version,
-		Host:     g.hostParam.Host,
+		Version:  g.c.Version,
+		Host:     g.c.Host,
 		Short:    truncate(&msg.Message, g.c.ShortMessageLimit),
 		Full:     truncate(&fullMessage, g.c.LongMessageLimit),
 		TimeUnix: float64(msg.Timestamp.UnixMilli()) / 1000,

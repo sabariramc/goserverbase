@@ -30,11 +30,7 @@ func init() {
 	testutils.LoadEnv("../../../.env")
 	testutils.Initialize()
 	ServerTestConfig = testutils.NewConfig()
-	consoleLogWriter := logwriter.NewConsoleWriter(log.HostParams{
-		Version:     ServerTestConfig.Logger.Version,
-		Host:        ServerTestConfig.HTTP.Host,
-		ServiceName: ServerTestConfig.App.ServiceName,
-	})
+	consoleLogWriter := logwriter.NewConsoleWriter()
 	ServerTestLMux = log.NewDefaultLogMux(consoleLogWriter)
 	ServerTestLogger = log.NewLogger(context.TODO(), ServerTestConfig.Logger, "BaseTest", ServerTestLMux, nil)
 }
@@ -52,7 +48,7 @@ type server struct {
 	conn       *mongo.Mongo
 	coll       *mongo.Collection
 	sns        *aws.SNS
-	httpClient *httputil.HttpClient
+	httpClient *httputil.HTTPClient
 	c          *testutils.TestConfig
 }
 
@@ -167,7 +163,7 @@ func NewServer() *server {
 		pr1:        pr1,
 		pr2:        pr2,
 		sns:        aws.GetDefaultSNSClient(ServerTestLogger),
-		httpClient: httputil.NewDefaultHttpClient(ServerTestLogger),
+		httpClient: httputil.NewDefaultHTTPClient(ServerTestLogger),
 		conn:       conn,
 		coll:       conn.Database("GOBaseTest").Collection("TestColl"),
 		c:          ServerTestConfig,

@@ -15,12 +15,7 @@ func init() {
 	testutils.Initialize()
 	testutils.LoadEnv("../../.env")
 	MongoTestConfig = testutils.NewConfig()
-	hostParams := log.HostParams{
-		Version:     MongoTestConfig.Logger.Version,
-		Host:        MongoTestConfig.HTTP.Host,
-		ServiceName: MongoTestConfig.App.ServiceName,
-	}
-	consoleLogWriter := logwriter.NewConsoleWriter(hostParams)
+	consoleLogWriter := logwriter.NewConsoleWriter()
 	lMux := log.NewDefaultLogMux(consoleLogWriter)
 	MongoTestLogger = log.NewLogger(context.TODO(), MongoTestConfig.Logger, "MongoTest", lMux, nil)
 }

@@ -39,13 +39,13 @@ func (h *HTTPServer) RequestTimerMiddleware() gin.HandlerFunc {
 func (h *HTTPServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		w, r := c.Writer, c.Request
-		loggingW := &loggingResponseWriter{
+		logResWri := &loggingResponseWriter{
 			ResponseWriter: w,
 		}
 		span, spanOk := tracer.SpanFromContext(r.Context())
 		defer func() {
 			if spanOk {
-				span.SetTag(ext.HTTPCode, strconv.Itoa(loggingW.status))
+				span.SetTag(ext.HTTPCode, strconv.Itoa(logResWri.status))
 			}
 		}()
 		var bodyBlob *[]byte
@@ -53,16 +53,16 @@ func (h *HTTPServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 		ctx = context.WithValue(ctx, ContextKeyRequestBody, &bodyBlob)
 		r = r.WithContext(ctx)
 		req := h.GetMaskedRequestMeta(r)
-		c.Writer = loggingW
+		c.Writer = logResWri
 		c.Request = r
 		body, _ := h.CopyRequestBody(r)
 		bodyBlob = &body
 		h.log.Info(ctx, "RequestMeta", req)
 		c.Next()
-		res := map[string]any{"statusCode": loggingW.status, "headers": loggingW.Header()}
-		if loggingW.status > 299 {
+		res := map[string]any{"statusCode": logResWri.status, "headers": logResWri.Header()}
+		if logResWri.status > 299 {
 			req["Body"] = string(body)
-			res["Body"] = loggingW.body
+			res["Body"] = logResWri.body
 			h.log.Error(ctx, "Request", req)
 			h.log.Error(ctx, "Response", res)
 		} else {

@@ -39,7 +39,7 @@ func (h *HTTPServer) WriteJSONWithStatusCode(ctx context.Context, w http.Respons
 	w.Write(blob)
 }
 
-func (h *HTTPServer) WriteJson(ctx context.Context, w http.ResponseWriter, responseBody any) {
+func (h *HTTPServer) WriteJSON(ctx context.Context, w http.ResponseWriter, responseBody any) {
 	h.WriteJSONWithStatusCode(ctx, w, http.StatusOK, responseBody)
 }
 
@@ -49,6 +49,6 @@ func (h *HTTPServer) WriteResponseWithStatusCode(ctx context.Context, w http.Res
 	w.Write(responseBody)
 }
 
-func (h *HTTPServer) WriteResponse(ctx context.Context, w http.ResponseWriter, statusCode int, contentType string, responseBody []byte) {
+func (h *HTTPServer) WriteResponse(ctx context.Context, w http.ResponseWriter, contentType string, responseBody []byte) {
 	h.WriteResponseWithStatusCode(ctx, w, http.StatusOK, contentType, responseBody)
 }

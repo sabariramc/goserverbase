@@ -16,11 +16,7 @@ func init() {
 	testutils.LoadEnv("../../../.env")
 	testutils.Initialize()
 	ServerTestConfig = testutils.NewConfig()
-	consoleLogWriter := logwriter.NewConsoleWriter(log.HostParams{
-		Version:     ServerTestConfig.Logger.Version,
-		Host:        ServerTestConfig.HTTP.Host,
-		ServiceName: ServerTestConfig.App.ServiceName,
-	})
+	consoleLogWriter := logwriter.NewConsoleWriter()
 	ServerTestLMux = log.NewDefaultLogMux(consoleLogWriter)
 	ServerTestLogger = log.NewLogger(context.TODO(), ServerTestConfig.Logger, "BaseTest", ServerTestLMux, nil)
 }

@@ -23,11 +23,7 @@ func init() {
 		panic(err)
 	}
 	AWSTestConfig = testutils.NewConfig()
-	consoleLogWriter := logwriter.NewConsoleWriter(log.HostParams{
-		Version:     AWSTestConfig.Logger.Version,
-		Host:        AWSTestConfig.HTTP.Host,
-		ServiceName: AWSTestConfig.App.ServiceName,
-	})
+	consoleLogWriter := logwriter.NewConsoleWriter()
 	lMux := log.NewDefaultLogMux(consoleLogWriter)
 	AWSTestLogger = log.NewLogger(context.TODO(), AWSTestConfig.Logger, "AWSTest", lMux, nil)
 	defaultConfig, _ := config.LoadDefaultConfig(context.TODO())

@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/sabariramc/goserverbase/v4/kafka"
+	ckafka "github.com/segmentio/kafka-go"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
@@ -46,4 +47,29 @@ func (k *KafkaConsumerServer) ProcessEvent(ctx context.Context, msg *kafka.Messa
 		}
 	}
 
+}
+
+func (k *KafkaConsumerServer) Commit(ctx context.Context) error {
+	return k.client.Commit(ctx)
+}
+
+func (k *KafkaConsumerServer) StoreMessage(ctx context.Context, msg *kafka.Message) {
+	k.client.StoreMessage(ctx, msg.Message)
+}
+
+func (k *KafkaConsumerServer) Subscribe(ctx context.Context) {
+	topicList := make([]string, 0, len(k.handler))
+	for h := range k.handler {
+		topicList = append(topicList, h)
+	}
+	ch := make(chan *ckafka.Message)
+	k.ch = ch
+	client, err := kafka.NewConsumer(ctx, k.log, k.c.KafkaConsumerConfig, topicList...)
+	if err != nil {
+		k.log.Emergency(ctx, "Error occurred during client creation", fmt.Errorf("KafkaConsumerServer.Subscribe: error creating kafka consumer: %w", err), map[string]any{
+			"topicList": topicList,
+			"config":    k.c.KafkaConsumerConfig,
+		})
+	}
+	k.client = client
 }

@@ -16,11 +16,7 @@ func init() {
 	testutils.LoadEnv("../../.env")
 	testutils.Initialize()
 	ServerTestConfig = testutils.NewConfig()
-	consoleLogWriter := logwriter.NewConsoleWriter(log.HostParams{
-		Version:     ServerTestConfig.Logger.Version,
-		Host:        ServerTestConfig.HTTP.Host,
-		ServiceName: ServerTestConfig.App.ServiceName,
-	})
+	consoleLogWriter := logwriter.NewConsoleWriter()
 	lmux := log.NewDefaultLogMux(consoleLogWriter)
 	ServerTestLogger = log.NewLogger(context.TODO(), ServerTestConfig.Logger, "CRYPTOTEST", lmux, nil)
 	ServerTestLMux = lmux
