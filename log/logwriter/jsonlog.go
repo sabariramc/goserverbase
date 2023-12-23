@@ -24,19 +24,17 @@ func DefaultLogMapper(ctx context.Context, msg *log.LogMessage) map[string]any {
 type LogMapper func(context.Context, *log.LogMessage) map[string]any
 
 type JSONLConsoleWriter struct {
-	hostParam    *log.HostParams
-	appNamespace string
-	logMapper    LogMapper
+	serviceNamespace string
+	logMapper        LogMapper
 }
 
-func NewJSONLConsoleWriter(hostParam log.HostParams, appNamespace string, mapper LogMapper) *JSONLConsoleWriter {
+func NewJSONLConsoleWriter(ctx context.Context, serviceNamespace string, mapper LogMapper) *JSONLConsoleWriter {
 	if mapper == nil {
 		mapper = DefaultLogMapper
 	}
 	return &JSONLConsoleWriter{
-		hostParam:    &hostParam,
-		appNamespace: appNamespace,
-		logMapper:    mapper,
+		serviceNamespace: serviceNamespace,
+		logMapper:        mapper,
 	}
 }
 

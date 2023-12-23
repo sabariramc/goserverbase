@@ -4,7 +4,6 @@ import baseapp "github.com/sabariramc/goserverbase/v4/app"
 
 type LogConfig struct {
 	AuthHeaderKeyList []string
-	ContentLength     int64
 }
 
 type DocumentationConfig struct {

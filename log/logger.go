@@ -65,7 +65,6 @@ type LogMessage struct {
 type Logger struct {
 	logLevel    LogLevelCode
 	lMux        LogMux
-	hostParams  *HostParams
 	moduleName  string
 	serviceName string
 	config      *Config
@@ -85,12 +84,7 @@ func NewLogger(ctx context.Context, lc *Config, moduleName string, lMux LogMux, 
 		moduleName:  moduleName,
 		serviceName: lc.ServiceName,
 		config:      lc,
-		hostParams: &HostParams{
-			Version:     lc.Version,
-			Host:        lc.Host,
-			ServiceName: lc.ServiceName,
-		},
-		audit: audit,
+		audit:       audit,
 	}
 	logLevel, ok := logLevelInverseMap[lc.LogLevelName]
 	if !ok {

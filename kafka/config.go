@@ -6,14 +6,10 @@ import (
 	"github.com/segmentio/kafka-go/sasl"
 )
 
-type SASLConfig struct {
-	SASLMechanism  string
-	SASLCredential interface{}
-}
-
 type KafkaCredConfig struct {
 	Brokers       []string
 	ServiceName   string
+	SASLType      string
 	SASLMechanism sasl.Mechanism
 	TLSConfig     *tls.Config
 }

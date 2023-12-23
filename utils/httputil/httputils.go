@@ -21,7 +21,7 @@ type CheckRetry func(ctx context.Context, resp *http.Response, err error) (bool,
 
 type Backoff func(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration
 
-type HttpClient struct {
+type HTTPClient struct {
 	*http.Client
 	log          *log.Logger
 	RetryMax     int
@@ -31,20 +31,20 @@ type HttpClient struct {
 	Backoff      Backoff
 }
 
-func NewDefaultHttpClient(log *log.Logger) *HttpClient {
-	return NewHttpClient(log, 4, time.Second*1, time.Second*5)
+func NewDefaultHTTPClient(log *log.Logger) *HTTPClient {
+	return NewHTTPClient(log, 4, time.Second*1, time.Second*5)
 }
 
-func NewHttpClient(log *log.Logger, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HttpClient {
+func NewHTTPClient(log *log.Logger, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HTTPClient {
 	t := http.DefaultTransport.(*http.Transport).Clone()
 	t.MaxIdleConns = 100
 	t.MaxConnsPerHost = 100
 	t.MaxIdleConnsPerHost = 100
-	c := &HttpClient{Client: &http.Client{Transport: t}, log: log.NewResourceLogger("HttpClient"), RetryMax: retryMax, RetryWaitMin: retryWaitMin, RetryWaitMax: retryWaitMax, CheckRetry: retryablehttp.DefaultRetryPolicy, Backoff: retryablehttp.DefaultBackoff}
+	c := &HTTPClient{Client: &http.Client{Transport: t}, log: log.NewResourceLogger("HttpClient"), RetryMax: retryMax, RetryWaitMin: retryWaitMin, RetryWaitMax: retryWaitMax, CheckRetry: retryablehttp.DefaultRetryPolicy, Backoff: retryablehttp.DefaultBackoff}
 	return c
 }
 
-func (h *HttpClient) Validator(resBody interface{}) error {
+func (h *HTTPClient) Validator(resBody interface{}) error {
 	if resBody != nil {
 		v := reflect.ValueOf(resBody)
 		if v.Kind() != reflect.Ptr {
@@ -54,7 +54,7 @@ func (h *HttpClient) Validator(resBody interface{}) error {
 	return nil
 }
 
-func (h *HttpClient) Encode(ctx context.Context, data interface{}) (io.Reader, error) {
+func (h *HTTPClient) Encode(ctx context.Context, data interface{}) (io.Reader, error) {
 	var body io.Reader
 	if data != nil {
 		switch v := data.(type) {
@@ -79,7 +79,7 @@ func (h *HttpClient) Encode(ctx context.Context, data interface{}) (io.Reader, e
 	return body, nil
 }
 
-func (h *HttpClient) Decode(ctx context.Context, body []byte, data interface{}) (io.ReadCloser, error) {
+func (h *HTTPClient) Decode(ctx context.Context, body []byte, data interface{}) (io.ReadCloser, error) {
 	if data != nil {
 		switch v := data.(type) {
 		case *string:
@@ -99,27 +99,27 @@ func (h *HttpClient) Decode(ctx context.Context, body []byte, data interface{}) 
 	return newBuff, nil
 }
 
-func (h *HttpClient) Get(ctx context.Context, url string, reqBody, resBody interface{}, headers map[string]string) (*http.Response, error) {
+func (h *HTTPClient) Get(ctx context.Context, url string, reqBody, resBody interface{}, headers map[string]string) (*http.Response, error) {
 	return h.Call(ctx, http.MethodGet, url, reqBody, resBody, headers)
 }
 
-func (h *HttpClient) Post(ctx context.Context, url string, reqBody, resBody interface{}, headers map[string]string) (*http.Response, error) {
+func (h *HTTPClient) Post(ctx context.Context, url string, reqBody, resBody interface{}, headers map[string]string) (*http.Response, error) {
 	return h.Call(ctx, http.MethodPost, url, reqBody, resBody, headers)
 }
 
-func (h *HttpClient) Put(ctx context.Context, url string, reqBody, resBody interface{}, headers map[string]string) (*http.Response, error) {
+func (h *HTTPClient) Put(ctx context.Context, url string, reqBody, resBody interface{}, headers map[string]string) (*http.Response, error) {
 	return h.Call(ctx, http.MethodPut, url, reqBody, resBody, headers)
 }
 
-func (h *HttpClient) Patch(ctx context.Context, url string, reqBody, resBody interface{}, headers map[string]string) (*http.Response, error) {
+func (h *HTTPClient) Patch(ctx context.Context, url string, reqBody, resBody interface{}, headers map[string]string) (*http.Response, error) {
 	return h.Call(ctx, http.MethodPatch, url, reqBody, resBody, headers)
 }
 
-func (h *HttpClient) Delete(ctx context.Context, url string, reqBody, resBody interface{}, headers map[string]string) (*http.Response, error) {
+func (h *HTTPClient) Delete(ctx context.Context, url string, reqBody, resBody interface{}, headers map[string]string) (*http.Response, error) {
 	return h.Call(ctx, http.MethodDelete, url, reqBody, resBody, headers)
 }
 
-func (h *HttpClient) Call(ctx context.Context, method, url string, reqBody, resBody interface{}, headers map[string]string) (*http.Response, error) {
+func (h *HTTPClient) Call(ctx context.Context, method, url string, reqBody, resBody interface{}, headers map[string]string) (*http.Response, error) {
 	err := h.Validator(resBody)
 	if err != nil {
 		return nil, err
@@ -163,7 +163,7 @@ func (h *HttpClient) Call(ctx context.Context, method, url string, reqBody, resB
 	return r, err
 }
 
-func (h *HttpClient) Do(req *http.Request) (*http.Response, error) {
+func (h *HTTPClient) Do(req *http.Request) (*http.Response, error) {
 	/*this is a modified version of go-retryablehttp*/
 	var resp *http.Response
 	var attempt int

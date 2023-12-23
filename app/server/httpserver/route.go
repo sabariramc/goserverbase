@@ -10,33 +10,6 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
-type APIDocumentation struct {
-	Server []DocumentServer
-	Routes APIRoute
-}
-
-type DocumentServer struct {
-	Tag     string
-	BaseURL string
-}
-
-type APIRoute map[string]map[string]*APIHandler
-
-type Response struct {
-	StatusCode        int
-	StatusDescription string
-	Response          interface{}
-}
-
-type APIHandler struct {
-	Func            http.HandlerFunc `json:"-"`
-	Description     string
-	Tags            []string
-	Payload         interface{}
-	SuccessResponse []Response
-	FailureResponse []Response
-}
-
 func NotFound() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add(HttpHeaderContentType, HttpContentTypeJSON)

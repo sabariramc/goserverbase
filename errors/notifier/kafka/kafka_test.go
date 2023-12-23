@@ -19,7 +19,7 @@ func init() {
 	testutils.Initialize()
 	testutils.LoadEnv("../../../.env")
 	TestConfig = testutils.NewConfig()
-	consoleLogWriter := logwriter.NewConsoleWriter(TestConfig.Logger.HostParams)
+	consoleLogWriter := logwriter.NewConsoleWriter()
 	lMux := log.NewDefaultLogMux(consoleLogWriter)
 	TestLogger = log.NewLogger(context.TODO(), TestConfig.Logger, "KafkaTest", lMux, nil)
 }
@@ -30,9 +30,8 @@ func GetCorrelationContext() context.Context {
 }
 
 func TestErrorNotification(t *testing.T) {
-	TestConfig.KafkaProducer.Topic = TestConfig.KafkaTestTopic
 	p, _ := pKafka.NewProducer(context.TODO(), TestLogger, TestConfig.KafkaProducer)
-	notifier := kafka.New(context.TODO(), TestLogger, "Test", p)
+	notifier := kafka.New(context.TODO(), TestLogger, "Test", TestConfig.KafkaTestTopic, p)
 	ctx := GetCorrelationContext()
 	custId := "cust_test_id"
 	err := notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{CustomerId: &custId}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})

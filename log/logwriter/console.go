@@ -8,13 +8,10 @@ import (
 )
 
 type ConsoleWriter struct {
-	BaseLogWriter
 }
 
-func NewConsoleWriter(hostParam log.HostParams) *ConsoleWriter {
-	return &ConsoleWriter{
-		BaseLogWriter: BaseLogWriter{hostParam: &hostParam},
-	}
+func NewConsoleWriter() *ConsoleWriter {
+	return &ConsoleWriter{}
 }
 
 func (c *ConsoleWriter) Start(logChannel chan log.MuxLogMessage) {

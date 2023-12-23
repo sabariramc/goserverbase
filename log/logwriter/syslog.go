@@ -10,16 +10,15 @@ import (
 )
 
 type SyslogWriter struct {
-	BaseLogWriter
 	logger *stlLog.Logger
 }
 
-func NewSyslogWriterWriter(hostParam log.HostParams, syslogTag, prefix string) *SyslogWriter {
+func NewSyslogWriterWriter(ctx context.Context, syslogTag, prefix string) *SyslogWriter {
 	logWriter, err := syslog.New(syslog.LOG_SYSLOG, syslogTag)
 	if err != nil {
 		panic(fmt.Errorf("NewSyslogWriterWriter: unable to set log file: %w", err))
 	}
-	syslog := &SyslogWriter{logger: stlLog.New(logWriter, prefix, stlLog.LstdFlags), BaseLogWriter: BaseLogWriter{hostParam: &hostParam}}
+	syslog := &SyslogWriter{logger: stlLog.New(logWriter, prefix, stlLog.LstdFlags)}
 	return syslog
 }
 

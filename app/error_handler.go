@@ -2,11 +2,26 @@ package baseapp
 
 import (
 	"context"
+	"encoding/json"
 	e "errors"
+	"fmt"
 	"net/http"
+	"runtime/debug"
 
 	"github.com/sabariramc/goserverbase/v4/errors"
 )
+
+func (b *BaseApp) PanicRecovery(ctx context.Context, rec any) (int, []byte) {
+	stackTrace := string(debug.Stack())
+	b.log.Error(ctx, "Recovered - Panic", rec)
+	b.log.Error(ctx, "Recovered - StackTrace", stackTrace)
+	err, ok := rec.(error)
+	if !ok {
+		blob, _ := json.Marshal(rec)
+		err = fmt.Errorf("non error panic: %v", string(blob))
+	}
+	return b.ProcessError(ctx, stackTrace, err)
+}
 
 func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error) (int, []byte) {
 	var statusCode int

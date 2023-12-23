@@ -21,11 +21,7 @@ func init() {
 	testutils.Initialize()
 
 	HttpUtilTestConfig = testutils.NewConfig()
-	consoleLogWriter := logwriter.NewConsoleWriter(log.HostParams{
-		Version:     HttpUtilTestConfig.Logger.Version,
-		Host:        HttpUtilTestConfig.HTTP.Host,
-		ServiceName: HttpUtilTestConfig.App.ServiceName,
-	})
+	consoleLogWriter := logwriter.NewConsoleWriter()
 	lMux := log.NewDefaultLogMux(consoleLogWriter)
 	HttpUtilTestLogger = log.NewLogger(context.TODO(), HttpUtilTestConfig.Logger, "AWSTest", lMux, nil)
 }
@@ -40,7 +36,7 @@ const RetryURL = "http://localhost:64000/service/error/b"
 const ErrURL = "http://localhost:80/service/error/b"
 
 func TestHttpUtilGet(t *testing.T) {
-	client := httputil.NewDefaultHttpClient(HttpUtilTestLogger)
+	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger)
 	data := make(map[string]any)
 	res, err := client.Get(GetCorrelationContext(), URL, nil, &data, nil)
 	assert.NilError(t, err)
@@ -48,7 +44,7 @@ func TestHttpUtilGet(t *testing.T) {
 }
 
 func TestHttpUtilGetWithBody(t *testing.T) {
-	client := httputil.NewDefaultHttpClient(HttpUtilTestLogger)
+	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger)
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -61,7 +57,7 @@ func TestHttpUtilGetWithBody(t *testing.T) {
 }
 
 func TestHttpUtilUnwrapError(t *testing.T) {
-	client := httputil.NewDefaultHttpClient(HttpUtilTestLogger)
+	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger)
 	data := 0
 	body := map[string]string{
 		"tag": "Test",
@@ -74,7 +70,7 @@ func TestHttpUtilUnwrapError(t *testing.T) {
 }
 
 func TestHttpUtilPost(t *testing.T) {
-	client := httputil.NewDefaultHttpClient(HttpUtilTestLogger)
+	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger)
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -87,7 +83,7 @@ func TestHttpUtilPost(t *testing.T) {
 }
 
 func TestHttpUtilPatch(t *testing.T) {
-	client := httputil.NewDefaultHttpClient(HttpUtilTestLogger)
+	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger)
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -100,7 +96,7 @@ func TestHttpUtilPatch(t *testing.T) {
 }
 
 func TestHttpUtilPut(t *testing.T) {
-	client := httputil.NewDefaultHttpClient(HttpUtilTestLogger)
+	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger)
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -113,7 +109,7 @@ func TestHttpUtilPut(t *testing.T) {
 }
 
 func TestHttpUtilDelete(t *testing.T) {
-	client := httputil.NewDefaultHttpClient(HttpUtilTestLogger)
+	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger)
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -126,7 +122,7 @@ func TestHttpUtilDelete(t *testing.T) {
 }
 
 func TestHttpUtilRetry(t *testing.T) {
-	client := httputil.NewDefaultHttpClient(HttpUtilTestLogger)
+	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger)
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -136,7 +132,7 @@ func TestHttpUtilRetry(t *testing.T) {
 }
 
 func TestHttpUtilRetryError(t *testing.T) {
-	client := httputil.NewDefaultHttpClient(HttpUtilTestLogger)
+	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger)
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",

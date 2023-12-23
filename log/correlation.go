@@ -10,12 +10,6 @@ import (
 	"github.com/sabariramc/goserverbase/v4/utils"
 )
 
-type HostParams struct {
-	Version     string `json:"version"`
-	Host        string `json:"host"`
-	ServiceName string `json:"service-name,omitempty"`
-}
-
 type CorrelationParam struct {
 	CorrelationId string  `header:"x-correlation-id" body:"correlationId"`
 	ScenarioId    *string `header:"x-scenario-id,omitempty" body:"scenarioId,omitempty"`

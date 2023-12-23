@@ -1,7 +1,7 @@
 package log
 
 type Config struct {
-	HostParams
-	LogLevelName string
-	BufferSize   int
+	ServiceName      string
+	ServiceNamespace string
+	LogLevelName     string
 }

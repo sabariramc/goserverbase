@@ -26,11 +26,7 @@ func init() {
 	testutils.LoadEnv("../../../.env")
 	testutils.Initialize()
 	ServerTestConfig = testutils.NewConfig()
-	consoleLogWriter := logwriter.NewConsoleWriter(log.HostParams{
-		Version:     ServerTestConfig.Logger.Version,
-		Host:        ServerTestConfig.HTTP.Host,
-		ServiceName: ServerTestConfig.App.ServiceName,
-	})
+	consoleLogWriter := logwriter.NewConsoleWriter()
 	ServerTestLMux = log.NewDefaultLogMux(consoleLogWriter)
 	ServerTestLogger = log.NewLogger(context.TODO(), ServerTestConfig.Logger, "BaseTest", ServerTestLMux, nil)
 }
@@ -47,7 +43,7 @@ type server struct {
 	conn       *mongo.Mongo
 	coll       *mongo.Collection
 	sns        *aws.SNS
-	httpClient *httputil.HttpClient
+	httpClient *httputil.HTTPClient
 }
 
 func (s *server) Func1(ctx context.Context, event *kafka.Message) error {
@@ -99,7 +95,7 @@ func NewServer() *server {
 		KafkaConsumerServer: kafkaconsumer.New(*ServerTestConfig.Kafka, ServerTestLogger, nil),
 		pr:                  pr,
 		sns:                 aws.GetDefaultSNSClient(ServerTestLogger),
-		httpClient:          httputil.NewDefaultHttpClient(ServerTestLogger),
+		httpClient:          httputil.NewDefaultHTTPClient(ServerTestLogger),
 		conn:                conn,
 		coll:                conn.Database("GOBaseTest").Collection("TestColl"),
 	}

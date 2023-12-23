@@ -1,5 +1,5 @@
-export message="Removed unused config"
-export version="v4.6.1"
+export message="Removed obsolete code and general refactoring"
+export version="v4.7.0"
 export branch="master"
 git add .
 git commit -m "$message"

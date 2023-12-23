@@ -58,8 +58,7 @@ func TestGraylog(t *testing.T) {
 func TestGraylogWrapper(t *testing.T) {
 	testutils.LoadEnv("../../.env")
 	config := testutils.NewConfig()
-	hostParams := config.Logger.HostParams
-	grey, err := logwriter.NewGraylogUDP(hostParams, logwriter.NewConsoleWriter(hostParams), config.Graylog)
+	grey, err := logwriter.NewGraylogUDP(logwriter.NewConsoleWriter(), config.Graylog)
 	assert.NilError(t, err)
 	grey.WriteMessage(context.Background(), &log.LogMessage{
 		Message: "Test Wrapper" + uuid.NewString(),
