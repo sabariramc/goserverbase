@@ -45,6 +45,6 @@ func (b *BaseApp) SetLogger(l *log.Logger) {
 	b.log = l
 }
 
-func (b *BaseApp) GetErrorNotifier() errors.ErrorNotifier {
-	return b.errorNotifier
+func (b *BaseApp) SetErrorNotifier(errorNotifier errors.ErrorNotifier) {
+	b.errorNotifier = errorNotifier
 }
