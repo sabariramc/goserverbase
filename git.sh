@@ -1,5 +1,5 @@
-export message="Fixed kafka consumer panic for non auto commit config"
-export version="v4.7.2"
+export message="Fixed error code not proccesed for custom error"
+export version="v4.7.3"
 export branch="master"
 git add .
 git commit -m "$message"
