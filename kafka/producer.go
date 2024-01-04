@@ -22,14 +22,18 @@ type Producer struct {
 	autoFlushCancel         context.CancelFunc
 	isTopicSpecificProducer bool
 	wg                      sync.WaitGroup
+	isBatch                 bool
 }
 
 func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerConfig) (*Producer, error) {
 	if config.MaxBuffer == 0 {
 		config.MaxBuffer = 100
 	}
+	isBatch := false
 	if config.AutoFlushIntervalInMs == 0 {
 		config.AutoFlushIntervalInMs = 1000
+		isBatch = true
+
 	}
 	logger = logger.NewResourceLogger("KafkaProducer")
 	defaultCorrelationParam := &log.CorrelationParam{CorrelationId: config.ServiceName + ":KafkaProducer"}
@@ -75,11 +79,14 @@ func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerC
 		Writer:                  writer,
 		topic:                   config.Topic,
 		isTopicSpecificProducer: isTopicSpecificProducer,
+		isBatch:                 isBatch,
 	}
-	autoFlushContext, cancel := context.WithCancel(log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam))
-	k.autoFlushCancel = cancel
-	k.wg.Add(1)
-	go k.autoFlush(autoFlushContext)
+	if isBatch {
+		autoFlushContext, cancel := context.WithCancel(log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam))
+		k.autoFlushCancel = cancel
+		k.wg.Add(1)
+		go k.autoFlush(autoFlushContext)
+	}
 	return k, nil
 }
 
@@ -156,7 +163,9 @@ func (k *Producer) autoFlush(ctx context.Context) {
 
 func (k *Producer) Close(ctx context.Context) error {
 	k.log.Notice(ctx, "Producer closer initiated for topic", k.topic)
-	k.autoFlushCancel()
+	if k.isBatch {
+		k.autoFlushCancel()
+	}
 	k.Flush(ctx)
 	k.wg.Wait()
 	err := k.Writer.Close(ctx)

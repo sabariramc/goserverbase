@@ -1,5 +1,5 @@
-export message="Added setter for error notifier"
-export version="v4.7.1"
+export message="Fixed kafka consumer panic for non auto commit config"
+export version="v4.7.2"
 export branch="master"
 git add .
 git commit -m "$message"

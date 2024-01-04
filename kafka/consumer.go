@@ -32,7 +32,6 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config KafkaConsumerCo
 	if config.AutoCommitIntervalInMs <= 0 {
 		config.AutoCommitIntervalInMs = 1000
 	}
-
 	logger = logger.NewResourceLogger("KafkaConsumer")
 	defaultCorrelationParam := &log.CorrelationParam{CorrelationId: config.ServiceName + ":KafkaConsumer"}
 	r := kafka.NewReader(kafka.ReaderConfig{
@@ -136,7 +135,9 @@ func (k *Consumer) autoCommit(ctx context.Context) {
 func (k *Consumer) Close(ctx context.Context) error {
 	k.log.Notice(ctx, "Consumer closer initiated for topic", k.topics)
 	closeErr := k.Reader.Close(ctx)
-	k.autoCommitCancel()
+	if k.config.AutoCommit {
+		k.autoCommitCancel()
+	}
 	commitErr := k.Commit(ctx)
 	if commitErr != nil || closeErr != nil {
 		k.log.Error(ctx, fmt.Sprintf("Consumer closed with error for topic : %v", k.topics), closeErr)
