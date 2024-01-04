@@ -33,7 +33,6 @@ func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error
 	var parseErr error
 	var customError *errors.CustomError
 	var httpErr *errors.HTTPError
-	b.log.Error(ctx, "Error", err)
 	if e.As(err, &httpErr) {
 		statusCode = httpErr.ErrorStatusCode
 		notify = httpErr.Notify
@@ -55,7 +54,7 @@ func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error
 	if parseErr != nil {
 		b.log.Error(ctx, "Error occurred during marshal of errors", parseErr)
 	}
-	b.log.Error(ctx, "Wrapped Error", err)
+	b.log.Error(ctx, "Error", err)
 	if notify && b.errorNotifier != nil {
 		if statusCode >= 500 {
 			b.errorNotifier.Send5XX(ctx, errorCode, err, stackTrace, errorData)
