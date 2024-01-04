@@ -75,16 +75,15 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config KafkaConsumerCo
 }
 
 func (k *Consumer) Poll(ctx context.Context, ch chan<- *kafka.Message) error {
-	defaultCorrelationParam := &log.CorrelationParam{CorrelationId: k.serviceName + ":KafkaConsumer"}
 	var pollErr, commitErr error
 	defer close(ch)
 	k.log.Info(ctx, fmt.Sprintf("Polling started for topics : %v", k.topics), nil)
+	nCtx := context.WithoutCancel(ctx)
 outer:
 	for {
 		select {
 		case <-ctx.Done():
-			ctx = log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam)
-			commitErr = k.Commit(ctx)
+			commitErr = k.Commit(nCtx)
 			k.log.Notice(ctx, "Polling Timeout/cancelled", nil)
 			break outer
 		default:
@@ -118,6 +117,7 @@ func (k *Consumer) autoCommit(ctx context.Context) {
 	timeout, _ := context.WithTimeout(context.Background(), time.Duration(k.config.AutoCommitIntervalInMs*uint64(time.Millisecond)))
 	defer k.wg.Done()
 	defer k.log.Warning(ctx, "auto commit stopped", nil)
+	nCtx := context.WithoutCancel(ctx)
 	for {
 		select {
 		case <-timeout.Done():
@@ -127,6 +127,10 @@ func (k *Consumer) autoCommit(ctx context.Context) {
 			}
 			timeout, _ = context.WithTimeout(context.Background(), time.Duration(k.config.AutoCommitIntervalInMs*uint64(time.Millisecond)))
 		case <-ctx.Done():
+			err := k.Commit(nCtx)
+			if err != nil {
+				k.log.Error(nCtx, "error in auto commit", err)
+			}
 			return
 		}
 	}
