@@ -26,6 +26,10 @@ func (c *ConsoleWriter) GetBufferSize() int {
 
 func (c *ConsoleWriter) WriteMessage(ctx context.Context, l *log.LogMessage) error {
 	cr := log.GetCorrelationParam(ctx)
-	fmt.Printf("[%v] [%v] [%v] [%v] [%v] [%v] [%v] [%v]\n", l.Timestamp, l.LogLevelName, cr.CorrelationId, l.ServiceName, l.ModuleName, l.Message, GetLogObjectType(l.LogObject), ParseLogObject(l.LogObject, true))
+	if l != nil {
+		fmt.Printf("[%v] [%v] [%v] [%v] [%v] [%v] [%v] [%v]\n", l.Timestamp, l.LogLevelName, cr.CorrelationId, l.ServiceName, l.ModuleName, l.Message, GetLogObjectType(l.LogObject), ParseLogObject(l.LogObject, true))
+	} else {
+		fmt.Printf("[%v] [%v] [%v] [%v] [%v] [%v]\n", l.Timestamp, l.LogLevelName, cr.CorrelationId, l.ServiceName, l.ModuleName, l.Message)
+	}
 	return nil
 }

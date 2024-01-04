@@ -54,7 +54,9 @@ services:
     build:
       context: .
       target: kafka
-    container_name: gobase_kafka
+    deploy:
+      mode: replicated
+      replicas: 3
     env_file:
       - .env
     environment:
