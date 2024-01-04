@@ -59,7 +59,9 @@ func TestKafkaProducer(t *testing.T) {
 
 func TestKafkaConsumer(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := newConsumer(ctx)
+	config := KafkaTestConfig.KafkaConsumer
+	config.AutoCommit = false
+	co, err := kafka.NewConsumer(ctx, KafkaTestLogger, config, KafkaTestConfig.KafkaTestTopic)
 	assert.NilError(t, err)
 	defer co.Close(ctx)
 	ch := make(chan *cKafka.Message, 100)
@@ -74,6 +76,7 @@ func TestKafkaConsumer(t *testing.T) {
 	i := 0
 	for msg := range ch {
 		i++
+		co.StoreMessage(ctx, msg)
 		kMsg := kafka.Message{
 			Message: msg,
 		}
