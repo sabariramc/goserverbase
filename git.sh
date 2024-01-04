@@ -1,5 +1,5 @@
-export message="Fixed error code not proccesed for custom error"
-export version="v4.7.3"
+export message="Fixed custom error print not parsing original error"
+export version="v4.7.4"
 export branch="master"
 git add .
 git commit -m "$message"

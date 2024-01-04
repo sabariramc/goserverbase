@@ -11,7 +11,7 @@ type CustomError struct {
 	ErrorDescription interface{} `json:"errorDescription"`
 	ErrorCode        string      `json:"errorCode"`
 	Notify           bool        `json:"-"`
-	OriginalError    error       `json:"error"`
+	OriginalError    string      `json:"error"`
 }
 
 func (e *CustomError) Error() string {
@@ -39,7 +39,11 @@ func (e *CustomError) GetErrorResponse() ([]byte, error) {
 }
 
 func NewCustomError(errorCode, errorMessage string, errorData interface{}, errorDescription interface{}, notify bool, err error) *CustomError {
-	return &CustomError{ErrorCode: errorCode, ErrorMessage: errorMessage, ErrorData: errorData, Notify: notify, ErrorDescription: errorDescription, OriginalError: err}
+	var errStr string
+	if err != nil {
+		errStr = err.Error()
+	}
+	return &CustomError{ErrorCode: errorCode, ErrorMessage: errorMessage, ErrorData: errorData, Notify: notify, ErrorDescription: errorDescription, OriginalError: errStr}
 }
 
 type HTTPError struct {
