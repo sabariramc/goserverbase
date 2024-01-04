@@ -1,5 +1,5 @@
-export message="Fixed cancelled context being used"
-export version="v4.7.5"
+export message="Added notice log for consumer"
+export version="v4.7.6"
 export branch="master"
 git add .
 git commit -m "$message"

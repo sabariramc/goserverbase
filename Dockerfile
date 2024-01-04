@@ -2,7 +2,16 @@ FROM golang:1.21-alpine AS builder
 RUN apk update && apk add --no-cache git
 RUN apk add build-base
 WORKDIR /myapp
-COPY . .
+COPY ./app ./app
+COPY ./aws ./aws
+COPY ./crypto ./crypto
+COPY ./db ./db
+COPY ./errors ./errors
+COPY ./kafka ./kafka
+COPY ./log ./log
+COPY ./utils ./utils
+COPY ./go.mod ./go.mod
+
 RUN go mod tidy
 
 
