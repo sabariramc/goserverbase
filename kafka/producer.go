@@ -145,6 +145,7 @@ func (k *Producer) ProduceToTopic(ctx context.Context, topic, key string, messag
 
 func (k *Producer) autoFlush(ctx context.Context) {
 	defer k.wg.Done()
+	nCtx := context.WithoutCancel(ctx)
 	timeout, _ := context.WithTimeout(context.Background(), time.Duration(k.config.AutoFlushIntervalInMs*uint64(time.Millisecond)))
 	defer k.log.Notice(ctx, "auto flush stopped", nil)
 	for {
@@ -156,6 +157,10 @@ func (k *Producer) autoFlush(ctx context.Context) {
 			}
 			timeout, _ = context.WithTimeout(context.Background(), time.Duration(k.config.AutoFlushIntervalInMs*uint64(time.Millisecond)))
 		case <-ctx.Done():
+			err := k.Flush(nCtx)
+			if err != nil {
+				k.log.Error(nCtx, "error in auto flush", err)
+			}
 			return
 		}
 	}

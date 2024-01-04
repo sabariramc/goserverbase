@@ -1,5 +1,5 @@
-export message="Fixed custom error print not parsing original error"
-export version="v4.7.4"
+export message="Fixed cancelled context being used"
+export version="v4.7.5"
 export branch="master"
 git add .
 git commit -m "$message"
