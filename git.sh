@@ -1,5 +1,5 @@
-export message="marjor overhaul of internal auto commit and auto flush"
-export version="v4.10.0"
+export message="kafka meta to have offset"
+export version="v4.10.1"
 export branch="master"
 git add .
 git commit -m "$message"

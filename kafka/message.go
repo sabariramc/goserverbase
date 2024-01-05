@@ -43,6 +43,7 @@ func (m *Message) GetMeta() map[string]any {
 		"Key":       m.GetKey(),
 		"Headers":   m.GetHeaders(),
 		"Partition": m.Partition,
+		"Offset":    m.Offset,
 		"Topic":     m.Topic,
 		"Time":      m.Time,
 	}
