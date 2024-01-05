@@ -25,7 +25,7 @@ var goprocs = runtime.GOMAXPROCS(0) // 8
 
 var benchmarkRes string
 
-func BenchmarkRoutes(b *testing.B) {
+func BenchmarkCustomError(b *testing.B) {
 	var str string
 	err := fmt.Errorf("test error")
 	err = errors.NewCustomError("com.sabariram.test.error", "test error message", "test error data", "test error description", false, err)

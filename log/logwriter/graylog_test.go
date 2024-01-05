@@ -9,7 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/sabariramc/goserverbase/v4/log"
 	"github.com/sabariramc/goserverbase/v4/log/logwriter"
-	"github.com/sabariramc/goserverbase/v4/utils/testutils"
+	"github.com/sabariramc/goserverbase/v4/testutils"
 	"gopkg.in/Graylog2/go-gelf.v2/gelf"
 	"gotest.tools/assert"
 )

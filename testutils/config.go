@@ -112,7 +112,7 @@ func NewConfig() *TestConfig {
 		KafkaProducer: &kafka.KafkaProducerConfig{
 			KafkaCredConfig: &kafkaBaseConfig,
 			Acknowledge:     -1,
-			MaxBuffer:       utils.GetEnvInt("KAFKA_PRODUCER_MAX_BUFFER", 1000),
+			BatchMaxBuffer:  utils.GetEnvInt("KAFKA_PRODUCER_MAX_BUFFER", 1000),
 			Async:           true,
 		},
 		KafkaConsumer:     consumer,

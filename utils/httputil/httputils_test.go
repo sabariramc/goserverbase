@@ -8,8 +8,8 @@ import (
 
 	"github.com/sabariramc/goserverbase/v4/log"
 	"github.com/sabariramc/goserverbase/v4/log/logwriter"
+	"github.com/sabariramc/goserverbase/v4/testutils"
 	"github.com/sabariramc/goserverbase/v4/utils/httputil"
-	"github.com/sabariramc/goserverbase/v4/utils/testutils"
 	"gotest.tools/assert"
 )
 

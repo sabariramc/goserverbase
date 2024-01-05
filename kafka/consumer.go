@@ -83,34 +83,62 @@ outer:
 	for {
 		select {
 		case <-ctx.Done():
-			commitErr = k.Commit(nCtx)
+			commitErr = k.commit(nCtx)
 			k.log.Notice(ctx, "Polling Timeout/cancelled", nil)
 			break outer
 		default:
 			msg, err := k.FetchMessage(ctx)
 			if err != nil {
-				if !errors.Is(err, context.Canceled) {
-					k.log.Error(ctx, "error fetching message", err)
+				if errors.Is(err, context.Canceled) {
+					commitErr = k.commit(nCtx)
+					break outer
 				}
+				k.log.Error(ctx, "error fetching message", err)
 				pollErr = fmt.Errorf("Consumer.Poll: error fetching message: %w", err)
-				commitErr = k.Commit(ctx)
+				commitErr = k.commit(nCtx)
 				break outer
 			}
 			ch <- &msg
-			if k.config.AutoCommit {
-				k.StoreMessage(ctx, &msg)
+			pollErr = k.storeMessage(ctx, &msg)
+			if pollErr == api.ErrReaderBufferFull {
+				commitErr = k.Commit(ctx)
+				if commitErr != nil {
+					break outer
+				}
+				err = k.storeMessage(ctx, &msg)
+				if err != nil {
+					pollErr = err
+					break outer
+				}
+			} else if pollErr != nil {
+				break outer
 			}
 		}
 	}
-	if commitErr != nil {
+	if commitErr != nil || pollErr != nil {
 		if pollErr == nil {
 			pollErr = commitErr
-		} else {
-			pollErr = fmt.Errorf("Consumer.Poll: %w , %w", pollErr, commitErr)
+		} else if commitErr != nil {
+			pollErr = fmt.Errorf("%w , commitError: %w", pollErr, commitErr)
 		}
+		k.log.Error(ctx, "error in consumer poll", pollErr)
 	}
 	k.log.Notice(ctx, fmt.Sprintf("Polling ended for topic : %v", k.topics), nil)
 	return pollErr
+}
+
+func (k *Consumer) storeMessage(ctx context.Context, msg *kafka.Message) error {
+	if k.config.AutoCommit {
+		return k.StoreMessage(ctx, msg)
+	}
+	return nil
+}
+
+func (k *Consumer) commit(ctx context.Context) error {
+	if k.config.AutoCommit {
+		return k.Commit(ctx)
+	}
+	return nil
 }
 
 func (k *Consumer) autoCommit(ctx context.Context) {
@@ -138,14 +166,13 @@ func (k *Consumer) autoCommit(ctx context.Context) {
 
 func (k *Consumer) Close(ctx context.Context) error {
 	k.log.Notice(ctx, "Consumer closer initiated for topic", k.topics)
-	closeErr := k.Reader.Close(ctx)
 	if k.config.AutoCommit {
 		k.autoCommitCancel()
 	}
-	commitErr := k.Commit(ctx)
-	if commitErr != nil || closeErr != nil {
+	closeErr := k.Reader.Close(ctx)
+	if closeErr != nil {
 		k.log.Error(ctx, fmt.Sprintf("Consumer closed with error for topic : %v", k.topics), closeErr)
-		return fmt.Errorf("Consumer.Close: %w, %w", commitErr, closeErr)
+		return fmt.Errorf("Consumer.Close: %w", closeErr)
 	}
 	k.wg.Wait()
 	k.log.Notice(ctx, "Consumer closed for topic", k.topics)

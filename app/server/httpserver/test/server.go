@@ -16,9 +16,9 @@ import (
 	"github.com/sabariramc/goserverbase/v4/kafka"
 	"github.com/sabariramc/goserverbase/v4/log"
 	"github.com/sabariramc/goserverbase/v4/log/logwriter"
+	"github.com/sabariramc/goserverbase/v4/testutils"
 	"github.com/sabariramc/goserverbase/v4/utils"
 	"github.com/sabariramc/goserverbase/v4/utils/httputil"
-	"github.com/sabariramc/goserverbase/v4/utils/testutils"
 )
 
 var ServerTestConfig *testutils.TestConfig
@@ -43,8 +43,7 @@ func GetCorrelationContext() context.Context {
 type server struct {
 	*httpserver.HTTPServer
 	log        *log.Logger
-	pr1        *kafka.Producer
-	pr2        *kafka.Producer
+	pr         *kafka.Producer
 	conn       *mongo.Mongo
 	coll       *mongo.Collection
 	sns        *aws.SNS
@@ -104,7 +103,7 @@ func (s *server) testAll(w http.ResponseWriter, r *http.Request) {
 	}()
 	go func() {
 		defer wg.Done()
-		s.pr1.ProduceMessageWithTopic(ctx, ServerTestConfig.KafkaTestTopic, uuid.NewString(), msg, nil)
+		s.pr.ProduceMessageWithTopic(ctx, ServerTestConfig.KafkaTestTopic, uuid.NewString(), msg, nil)
 	}()
 	wg.Wait()
 	w.WriteHeader(204)
@@ -119,7 +118,7 @@ func (s *server) testKafka(w http.ResponseWriter, r *http.Request) {
 	}
 	msg := utils.NewMessage("testFlight", "test")
 	msg.AddPayload("content", data)
-	s.pr2.ProduceMessageWithTopic(ctx, ServerTestConfig.KafkaTestTopic2, uuid.NewString(), msg, nil)
+	s.pr.ProduceMessageWithTopic(ctx, ServerTestConfig.KafkaTestTopic2, uuid.NewString(), msg, nil)
 	w.WriteHeader(204)
 }
 
@@ -140,20 +139,15 @@ func (s *server) Name(ctx context.Context) string {
 }
 
 func (s *server) Shutdown(ctx context.Context) error {
-	s.pr1.Close(ctx)
-	s.pr2.Close(ctx)
+	s.pr.Close(ctx)
 	return s.conn.Disconnect(ctx)
 }
 
 func NewServer() *server {
 	ctx := GetCorrelationContext()
-	pr1, err := kafka.NewProducer(ctx, ServerTestLogger, ServerTestConfig.KafkaProducer)
+	pr, err := kafka.NewProducer(ctx, ServerTestLogger, ServerTestConfig.KafkaProducer)
 	if err != nil {
 		ServerTestLogger.Emergency(ctx, "error creating producer1", err, nil)
-	}
-	pr2, err := kafka.NewProducer(ctx, ServerTestLogger, ServerTestConfig.KafkaProducer)
-	if err != nil {
-		ServerTestLogger.Emergency(ctx, "error creating producer2", err, nil)
 	}
 	conn, err := mongo.New(ctx, ServerTestLogger, *ServerTestConfig.Mongo)
 	if err != nil {
@@ -161,8 +155,7 @@ func NewServer() *server {
 	}
 	srv := &server{
 		HTTPServer: httpserver.New(*ServerTestConfig.HTTP, ServerTestLogger, nil), log: ServerTestLogger,
-		pr1:        pr1,
-		pr2:        pr2,
+		pr:         pr,
 		sns:        aws.GetDefaultSNSClient(ServerTestLogger),
 		httpClient: httputil.NewDefaultHTTPClient(ServerTestLogger),
 		conn:       conn,

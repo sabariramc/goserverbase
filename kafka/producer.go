@@ -26,14 +26,19 @@ type Producer struct {
 }
 
 func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerConfig) (*Producer, error) {
-	if config.MaxBuffer == 0 {
-		config.MaxBuffer = 100
+	if config.Batch && config.Async {
+		return nil, fmt.Errorf("NewProducer: `Batch` and `Async` are mutually exclusive")
 	}
-	isBatch := false
-	if config.AutoFlushIntervalInMs == 0 {
-		config.AutoFlushIntervalInMs = 1000
-		isBatch = true
-
+	if !config.Batch && !config.Async {
+		return nil, fmt.Errorf("NewProducer: set either `Batch` or `Async`")
+	}
+	if config.Batch {
+		if config.BatchMaxBuffer <= 0 {
+			config.BatchMaxBuffer = 100
+		}
+		if config.BatchFlushIntervalInMs <= 0 {
+			config.BatchFlushIntervalInMs = 1000
+		}
 	}
 	logger = logger.NewResourceLogger("KafkaProducer")
 	defaultCorrelationParam := &log.CorrelationParam{CorrelationId: config.ServiceName + ":KafkaProducer"}
@@ -63,11 +68,10 @@ func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerC
 			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
 		},
 		Completion:   kLog.DeliveryReport,
-		BatchSize:    config.MaxBuffer,
 		RequiredAcks: kafka.RequiredAcks(config.Acknowledge),
 		Async:        config.Async,
 	}
-	writer := api.NewWriter(ctx, p, config.MaxBuffer, *logger)
+	writer := api.NewWriter(ctx, p, config.BatchMaxBuffer, *logger)
 	isTopicSpecificProducer := false
 	if config.Topic != "" {
 		isTopicSpecificProducer = true
@@ -79,13 +83,14 @@ func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerC
 		Writer:                  writer,
 		topic:                   config.Topic,
 		isTopicSpecificProducer: isTopicSpecificProducer,
-		isBatch:                 isBatch,
+		isBatch:                 config.Batch,
 	}
-	if isBatch {
+	if config.Batch {
 		autoFlushContext, cancel := context.WithCancel(log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam))
 		k.autoFlushCancel = cancel
 		k.wg.Add(1)
 		go k.autoFlush(autoFlushContext)
+		logger.Notice(ctx, "Kafak producer is set to batch mode", nil)
 	}
 	return k, nil
 }
@@ -140,13 +145,21 @@ func (k *Producer) ProduceToTopic(ctx context.Context, topic, key string, messag
 	if !k.isTopicSpecificProducer {
 		msg.Topic = topic
 	}
-	return k.Send(ctx, msg)
+	err = k.Send(ctx, msg)
+	if err == api.ErrWriterBufferFull {
+		err = k.Flush(ctx)
+		if err != nil {
+			return err
+		}
+		return k.Send(ctx, msg)
+	}
+	return nil
 }
 
 func (k *Producer) autoFlush(ctx context.Context) {
 	defer k.wg.Done()
 	nCtx := context.WithoutCancel(ctx)
-	timeout, _ := context.WithTimeout(context.Background(), time.Duration(k.config.AutoFlushIntervalInMs*uint64(time.Millisecond)))
+	timeout, _ := context.WithTimeout(context.Background(), time.Duration(k.config.BatchFlushIntervalInMs*uint64(time.Millisecond)))
 	defer k.log.Notice(ctx, "auto flush stopped", nil)
 	for {
 		select {
@@ -155,7 +168,7 @@ func (k *Producer) autoFlush(ctx context.Context) {
 			if err != nil {
 				k.log.Emergency(ctx, "Error while writing kafka message", fmt.Errorf("Producer.autoFlush: %w", err), nil)
 			}
-			timeout, _ = context.WithTimeout(context.Background(), time.Duration(k.config.AutoFlushIntervalInMs*uint64(time.Millisecond)))
+			timeout, _ = context.WithTimeout(context.Background(), time.Duration(k.config.BatchFlushIntervalInMs*uint64(time.Millisecond)))
 		case <-ctx.Done():
 			err := k.Flush(nCtx)
 			if err != nil {
@@ -171,7 +184,6 @@ func (k *Producer) Close(ctx context.Context) error {
 	if k.isBatch {
 		k.autoFlushCancel()
 	}
-	k.Flush(ctx)
 	k.wg.Wait()
 	err := k.Writer.Close(ctx)
 	if err == nil {

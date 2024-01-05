@@ -13,9 +13,9 @@ import (
 	"github.com/sabariramc/goserverbase/v4/kafka"
 	"github.com/sabariramc/goserverbase/v4/log"
 	"github.com/sabariramc/goserverbase/v4/log/logwriter"
+	"github.com/sabariramc/goserverbase/v4/testutils"
 	"github.com/sabariramc/goserverbase/v4/utils"
 	"github.com/sabariramc/goserverbase/v4/utils/httputil"
-	"github.com/sabariramc/goserverbase/v4/utils/testutils"
 )
 
 var ServerTestConfig *testutils.TestConfig

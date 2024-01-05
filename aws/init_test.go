@@ -8,7 +8,7 @@ import (
 	"github.com/sabariramc/goserverbase/v4/aws"
 	"github.com/sabariramc/goserverbase/v4/log"
 	"github.com/sabariramc/goserverbase/v4/log/logwriter"
-	"github.com/sabariramc/goserverbase/v4/utils/testutils"
+	"github.com/sabariramc/goserverbase/v4/testutils"
 )
 
 var AWSTestConfig *testutils.TestConfig

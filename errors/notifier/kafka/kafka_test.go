@@ -8,7 +8,7 @@ import (
 	pKafka "github.com/sabariramc/goserverbase/v4/kafka"
 	"github.com/sabariramc/goserverbase/v4/log"
 	"github.com/sabariramc/goserverbase/v4/log/logwriter"
-	"github.com/sabariramc/goserverbase/v4/utils/testutils"
+	"github.com/sabariramc/goserverbase/v4/testutils"
 	"gotest.tools/assert"
 )
 

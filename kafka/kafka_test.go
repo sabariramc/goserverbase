@@ -66,7 +66,6 @@ func TestKafkaConsumer(t *testing.T) {
 	defer co.Close(ctx)
 	ch := make(chan *cKafka.Message, 100)
 	tCtx, cancel := context.WithTimeout(ctx, time.Second*45)
-	defer cancel()
 	assert.NilError(t, err)
 	maxCount := 100000
 	st := time.Now()
@@ -76,7 +75,12 @@ func TestKafkaConsumer(t *testing.T) {
 	i := 0
 	for msg := range ch {
 		i++
-		co.StoreMessage(ctx, msg)
+		err := co.StoreMessage(ctx, msg)
+		if err != nil {
+			co.Commit(ctx)
+			err = co.StoreMessage(ctx, msg)
+			assert.NilError(t, err)
+		}
 		kMsg := kafka.Message{
 			Message: msg,
 		}
@@ -85,9 +89,8 @@ func TestKafkaConsumer(t *testing.T) {
 			break
 		}
 	}
-	co.Commit(ctx)
 	cancel()
-	assert.NilError(t, err)
+	co.Commit(ctx)
 	KafkaTestLogger.Notice(ctx, "Time taken in ms", time.Now().Sub(st)/1000000)
 }
 
