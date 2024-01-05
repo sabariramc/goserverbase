@@ -15,7 +15,7 @@ type kafkaLogger struct {
 	isError bool
 }
 
-var debugLogPrefix = []string{"no messages received from kafka within the allocated time for partition"}
+var debugLogPrefix = []string{"no messages received from kafka within the allocated time for partition", "writing %d messages to"}
 
 func (k *kafkaLogger) Printf(shortMessage string, logMessage ...interface{}) {
 	message := fmt.Sprintf(shortMessage, logMessage...)
