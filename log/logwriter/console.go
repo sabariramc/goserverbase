@@ -24,12 +24,14 @@ func (c *ConsoleWriter) GetBufferSize() int {
 	return 1
 }
 
+const TimeFormat = "2006-01-02T15:04:05.000Z07:00"
+
 func (c *ConsoleWriter) WriteMessage(ctx context.Context, l *log.LogMessage) error {
 	cr := log.GetCorrelationParam(ctx)
-	if l != nil {
-		fmt.Printf("[%v] [%v] [%v] [%v] [%v] [%v] [%v] [%v]\n", l.Timestamp, l.LogLevelName, cr.CorrelationId, l.ServiceName, l.ModuleName, l.Message, GetLogObjectType(l.LogObject), ParseLogObject(l.LogObject, true))
+	if l.LogObject != nil {
+		fmt.Printf("[%v] [%v] [%v] [%v] [%v] [%v] [%v] [%v]\n", l.Timestamp.Format(TimeFormat), l.LogLevelName, cr.CorrelationId, l.ServiceName, l.ModuleName, l.Message, GetLogObjectType(l.LogObject), ParseLogObject(l.LogObject, true))
 	} else {
-		fmt.Printf("[%v] [%v] [%v] [%v] [%v] [%v]\n", l.Timestamp, l.LogLevelName, cr.CorrelationId, l.ServiceName, l.ModuleName, l.Message)
+		fmt.Printf("[%v] [%v] [%v] [%v] [%v] [%v]\n", l.Timestamp.Format(TimeFormat), l.LogLevelName, cr.CorrelationId, l.ServiceName, l.ModuleName, l.Message)
 	}
 	return nil
 }

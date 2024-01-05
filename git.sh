@@ -1,5 +1,5 @@
-export message="Added notice log for consumer"
-export version="v4.7.6"
+export message="marjor overhaul of internal auto commit and auto flush"
+export version="v4.10.0"
 export branch="master"
 git add .
 git commit -m "$message"

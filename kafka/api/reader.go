@@ -18,6 +18,8 @@ type Reader struct {
 	idx              int
 }
 
+var ErrReaderBufferFull = fmt.Errorf("Reader.StoreMessage: Buffer full")
+
 func NewReader(ctx context.Context, log log.Logger, r *kafka.Reader, bufferSize int) *Reader {
 	return &Reader{
 		Reader:           r,
@@ -41,17 +43,18 @@ func (k *Reader) Commit(ctx context.Context) error {
 		k.log.Error(ctx, "error in commit", err)
 		return fmt.Errorf("kafka.Reader.Commit: error committing message: %w", err)
 	}
+	k.log.Notice(ctx, "messages committed", nil)
 	return nil
 }
 
 func (k *Reader) StoreMessage(ctx context.Context, msg *kafka.Message) error {
+	if k.idx >= k.bufferSize {
+		return ErrReaderBufferFull
+	}
 	k.commitLock.Lock()
+	defer k.commitLock.Unlock()
 	k.consumedMessages[k.idx] = *msg
 	k.idx++
-	k.commitLock.Unlock()
-	if k.idx >= int(k.bufferSize) {
-		return k.Commit(ctx)
-	}
 	return nil
 }
 

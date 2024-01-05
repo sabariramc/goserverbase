@@ -24,9 +24,10 @@ type KafkaConsumerConfig struct {
 
 type KafkaProducerConfig struct {
 	*KafkaCredConfig
-	Acknowledge           int
-	MaxBuffer             int
-	AutoFlushIntervalInMs uint64
-	Async                 bool
-	Topic                 string
+	Acknowledge            int
+	BatchMaxBuffer         int
+	BatchFlushIntervalInMs uint64
+	Async                  bool
+	Batch                  bool
+	Topic                  string
 }

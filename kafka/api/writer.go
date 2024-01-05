@@ -20,6 +20,8 @@ type Writer struct {
 	idx         int
 }
 
+var ErrWriterBufferFull = fmt.Errorf("Reader.Send: Buffer full")
+
 func NewWriter(ctx context.Context, w *kafka.Writer, bufferLen int, log log.Logger) *Writer {
 	if w.Async {
 		log.Notice(ctx, "Kafak writer is set to async mode", nil)
@@ -38,12 +40,12 @@ func (w *Writer) Send(ctx context.Context, msg *kafka.Message) error {
 		return w.WriteMessages(ctx, *msg)
 	}
 	w.produceLock.Lock()
+	defer w.produceLock.Unlock()
+	if w.idx >= w.bufferLen {
+		return ErrWriterBufferFull
+	}
 	w.messageList[w.idx] = *msg
 	w.idx++
-	w.produceLock.Unlock()
-	if w.idx >= w.bufferLen {
-		return w.Flush(ctx)
-	}
 	return nil
 }
 

@@ -34,8 +34,8 @@ func (k *KafkaConsumerServer) Commit(ctx context.Context) error {
 	return k.client.Commit(ctx)
 }
 
-func (k *KafkaConsumerServer) StoreMessage(ctx context.Context, msg *kafka.Message) {
-	k.client.StoreMessage(ctx, msg.Message)
+func (k *KafkaConsumerServer) StoreMessage(ctx context.Context, msg *kafka.Message) error {
+	return k.client.StoreMessage(ctx, msg.Message)
 }
 
 func (k *KafkaConsumerServer) Subscribe(ctx context.Context) {
