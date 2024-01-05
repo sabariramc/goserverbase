@@ -1,5 +1,5 @@
-export message="kafka meta to have offset"
-export version="v4.10.1"
+export message="added kafka log blacklist"
+export version="v4.10.2"
 export branch="master"
 git add .
 git commit -m "$message"
