@@ -1,5 +1,5 @@
-export message="added kafka log blacklist"
-export version="v4.10.2"
+export message="Support for h2c server"
+export version="v4.11.0"
 export branch="master"
 git add .
 git commit -m "$message"

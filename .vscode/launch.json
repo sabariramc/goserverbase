@@ -12,11 +12,21 @@
             "console": "integratedTerminal"
         },
         {
-            "name": "HTTP2 Server",
+            "name": "HTTP TLS Server",
             "type": "go",
             "request": "launch",
             "mode": "debug",
             "program": "${workspaceFolder}/app/server/httpserver/test/http2/main.go",
+            "cwd": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "H2C Server",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/app/server/httpserver/test/h2c/main.go",
             "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env",
             "console": "integratedTerminal"

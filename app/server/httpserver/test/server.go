@@ -140,6 +140,14 @@ func (s *server) Shutdown(ctx context.Context) error {
 	return s.conn.Disconnect(ctx)
 }
 
+func (s *server) printHttpVersion() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		r := c.Request
+		s.log.Notice(r.Context(), "http proto", r.Proto)
+		c.Next()
+	}
+}
+
 func NewServer() *server {
 	ctx := GetCorrelationContext()
 	pr, err := kafka.NewProducer(ctx, ServerTestLogger, ServerTestConfig.KafkaProducer)
@@ -159,6 +167,7 @@ func NewServer() *server {
 		coll:       conn.Database("GOBaseTest").Collection("TestColl"),
 		c:          ServerTestConfig,
 	}
+	srv.AddMiddleware(srv.printHttpVersion())
 	srv.RegisterOnShutdown(srv)
 	r := srv.GetRouter().Group("/service/v1")
 	r.POST("/benc", srv.benc)
@@ -170,6 +179,7 @@ func NewServer() *server {
 	resource.POST("/all", gin.WrapF(srv.testAll))
 	resource.POST("/kafka", gin.WrapF(srv.testKafka))
 	resource.POST("/req", srv.testRequest)
+	resource.GET("/req", srv.testRequest)
 	errorRoute := r.Group("/error")
 	errorRoute.GET("/error1", gin.WrapF(srv.Func3))
 	errorRoute.GET("/error2", gin.WrapF(srv.Func4))
