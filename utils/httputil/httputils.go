@@ -3,7 +3,6 @@ package httputil
 import (
 	"bytes"
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -42,7 +41,6 @@ func NewHTTPClient(log *log.Logger, retryMax int, retryWaitMin, retryWaitMax tim
 	t.MaxIdleConns = 100
 	t.MaxConnsPerHost = 100
 	t.MaxIdleConnsPerHost = 100
-	t.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	c := &HTTPClient{Client: &http.Client{Transport: t}, log: log.NewResourceLogger("HttpClient"), RetryMax: retryMax, RetryWaitMin: retryWaitMin, RetryWaitMax: retryWaitMax, CheckRetry: retryablehttp.DefaultRetryPolicy, Backoff: retryablehttp.DefaultBackoff}
 	return c
 }
@@ -133,7 +131,7 @@ func (h *HTTPClient) Call(ctx context.Context, method, url string, reqBody, resB
 		return nil, err
 	}
 	clientTrace := &httptrace.ClientTrace{
-		GotConn: func(info httptrace.GotConnInfo) { h.log.Debug(ctx, "is conn reused", info.Reused) },
+		GotConn: func(info httptrace.GotConnInfo) { h.log.Debug(ctx, "is conn reused:", info.Reused) },
 	}
 	traceCtx := httptrace.WithClientTrace(context.Background(), clientTrace)
 	req, err = http.NewRequestWithContext(traceCtx, method, url, body)
