@@ -61,7 +61,7 @@ func TestKafkaConsumer(t *testing.T) {
 	ctx := GetCorrelationContext()
 	config := KafkaTestConfig.KafkaConsumer
 	config.AutoCommit = false
-	co, err := kafka.NewConsumer(ctx, KafkaTestLogger, config, KafkaTestConfig.KafkaTestTopic)
+	co, err := kafka.NewConsumer(ctx, KafkaTestLogger, config, KafkaTestConfig.KafkaTestTopic, KafkaTestConfig.KafkaTestTopic2)
 	assert.NilError(t, err)
 	defer co.Close(ctx)
 	ch := make(chan *cKafka.Message, 100)

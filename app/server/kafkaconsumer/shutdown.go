@@ -3,10 +3,10 @@ package kafkaconsumer
 import "context"
 
 func (k *KafkaConsumerServer) Shutdown(ctx context.Context) error {
-	defer k.wg.Done()
-	k.wg.Add(1)
+	defer k.shutdownWG.Done()
 	k.shutdownPoll()
-	k.client.Close(ctx)
+	k.requestWG.Wait()
 	k.shutdown()
+	k.client.Close(ctx)
 	return nil
 }

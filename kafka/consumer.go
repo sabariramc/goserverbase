@@ -99,18 +99,8 @@ outer:
 				break outer
 			}
 			ch <- &msg
-			pollErr = k.storeMessage(ctx, &msg)
-			if pollErr == api.ErrReaderBufferFull {
-				commitErr = k.Commit(ctx)
-				if commitErr != nil {
-					break outer
-				}
-				err = k.storeMessage(ctx, &msg)
-				if err != nil {
-					pollErr = err
-					break outer
-				}
-			} else if pollErr != nil {
+			commitErr = k.storeMessage(ctx, &msg)
+			if commitErr != nil {
 				break outer
 			}
 		}
@@ -129,7 +119,20 @@ outer:
 
 func (k *Consumer) storeMessage(ctx context.Context, msg *kafka.Message) error {
 	if k.config.AutoCommit {
-		return k.StoreMessage(ctx, msg)
+		err := k.StoreMessage(ctx, msg)
+		if err == api.ErrReaderBufferFull {
+			err = k.Commit(ctx)
+			if err != nil {
+				return err
+			}
+			err = k.StoreMessage(ctx, msg)
+			if err != nil {
+				return err
+			}
+		} else if err != nil {
+			return err
+		}
+		return nil
 	}
 	return nil
 }

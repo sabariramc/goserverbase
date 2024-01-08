@@ -15,14 +15,13 @@ type KafkaEventProcessor func(context.Context, *kafka.Message) error
 
 type KafkaConsumerServer struct {
 	*baseapp.BaseApp
-	client       *kafka.Consumer
-	handler      map[string]KafkaEventProcessor
-	log          *log.Logger
-	ch           chan *ckafka.Message
-	c            *KafkaConsumerServerConfig
-	shutdown     context.CancelFunc
-	shutdownPoll context.CancelFunc
-	wg           sync.WaitGroup
+	client                 *kafka.Consumer
+	handler                map[string]KafkaEventProcessor
+	log                    *log.Logger
+	ch                     chan *ckafka.Message
+	c                      *KafkaConsumerServerConfig
+	shutdown, shutdownPoll context.CancelFunc
+	requestWG, shutdownWG  sync.WaitGroup
 }
 
 func New(appConfig KafkaConsumerServerConfig, logger *log.Logger, errorNotifier errors.ErrorNotifier) *KafkaConsumerServer {
@@ -33,7 +32,7 @@ func New(appConfig KafkaConsumerServerConfig, logger *log.Logger, errorNotifier 
 		c:       &appConfig,
 		handler: make(map[string]KafkaEventProcessor),
 	}
-	h.AddShutdownHook(h)
+	h.RegisterOnShutdown(h)
 	return h
 }
 

@@ -159,7 +159,7 @@ func NewServer() *server {
 		coll:       conn.Database("GOBaseTest").Collection("TestColl"),
 		c:          ServerTestConfig,
 	}
-	srv.AddShutdownHook(srv)
+	srv.RegisterOnShutdown(srv)
 	r := srv.GetRouter().Group("/service/v1")
 	r.POST("/benc", srv.benc)
 	tenant := r.Group("/tenant")
