@@ -10,6 +10,7 @@ COPY ./errors ./errors
 COPY ./kafka ./kafka
 COPY ./log ./log
 COPY ./utils ./utils
+COPY ./testutils ./testutils
 COPY ./go.mod ./go.mod
 
 RUN go mod tidy
