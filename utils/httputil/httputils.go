@@ -133,7 +133,7 @@ func (h *HTTPClient) Call(ctx context.Context, method, url string, reqBody, resB
 	clientTrace := &httptrace.ClientTrace{
 		GotConn: func(info httptrace.GotConnInfo) { h.log.Debug(ctx, "is conn reused:", info.Reused) },
 	}
-	traceCtx := httptrace.WithClientTrace(context.Background(), clientTrace)
+	traceCtx := httptrace.WithClientTrace(ctx, clientTrace)
 	req, err = http.NewRequestWithContext(traceCtx, method, url, body)
 	if err != nil {
 		return nil, fmt.Errorf("HttpClient.Call: error creating request: %w", err)

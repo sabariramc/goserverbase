@@ -75,7 +75,7 @@ func TestH2CServer(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			for j := 0; j < 100; j++ {
-				data, err := client.Post("localhost:8080", "/service/v1/test/req", []byte("fasdfasfasdfsadf"))
+				data, err := client.Post("localhost:60007", "/service/v1/test/req", []byte("{\"fasdfasfasdfsadf\":10}"))
 				assert.NilError(t, err)
 				fmt.Println(string(data))
 			}
