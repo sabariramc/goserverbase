@@ -10,6 +10,7 @@ COPY ./errors ./errors
 COPY ./kafka ./kafka
 COPY ./log ./log
 COPY ./utils ./utils
+COPY ./testutils ./testutils
 COPY ./go.mod ./go.mod
 
 RUN go mod tidy
@@ -24,6 +25,9 @@ FROM builder AS httpbuilder
 WORKDIR /myapp/app/server/httpserver/test/http
 RUN go build -tags musl -o /app -ldflags '-linkmode external -w -extldflags "-static"'
     
+FROM builder AS h2cbuilder
+WORKDIR /myapp/app/server/httpserver/test/h2c
+RUN go build -tags musl -o /app -ldflags '-linkmode external -w -extldflags "-static"'
 
 FROM builder AS http2builder
 WORKDIR /myapp/app/server/httpserver/test/http2
@@ -37,6 +41,13 @@ RUN go build -tags musl -o /app -ldflags '-linkmode external -w -extldflags "-st
 
 FROM runner AS http
 COPY --from=httpbuilder /app /service/app
+COPY ./docs /service/docs
+EXPOSE 8080
+ENTRYPOINT ["/service/app"]
+
+
+FROM runner AS h2c
+COPY --from=h2cbuilder /app /service/app
 COPY ./docs /service/docs
 EXPOSE 8080
 ENTRYPOINT ["/service/app"]

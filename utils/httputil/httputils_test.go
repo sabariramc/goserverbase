@@ -1,9 +1,13 @@
 package httputil_test
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"sync"
 	"testing"
 
 	"github.com/sabariramc/goserverbase/v4/log"
@@ -141,4 +145,24 @@ func TestHttpUtilRetryError(t *testing.T) {
 	if err == nil || res != nil {
 		t.Fail()
 	}
+}
+
+func TestConnectionReuse(t *testing.T) {
+	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger)
+	var wg sync.WaitGroup
+	body, _ := json.Marshal(map[string]string{"fasdfsda": "fasdfas", "fasdfas": "fasdfas"})
+	for i := 0; i < 10; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			ctx := GetCorrelationContext()
+			for i := 0; i < 100; i++ {
+				res, _ := client.Post(ctx, "https://localhost:60006/service/v1/test/all", bytes.NewBuffer(body), nil, map[string]string{
+					"Content-Type": "application/json",
+				})
+				fmt.Printf("is HTTP2: %v (%s)\n\n", res.ProtoAtLeast(2, 0), res.Proto)
+			}
+		}()
+	}
+	wg.Wait()
 }

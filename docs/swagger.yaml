@@ -14,6 +14,8 @@ servers:
     description: Local docker compose http
   - url: https://localhost:60006
     description: Local docker compose http2
+  - url: http://localhost:60007
+    description: Local docker compose h2c
 info:
   title: Gobase HTTP server
   version: 1.0.0

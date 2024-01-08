@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/sabariramc/goserverbase/v4/errors"
@@ -18,6 +19,7 @@ type BaseApp struct {
 	log           *log.Logger
 	errorNotifier errors.ErrorNotifier
 	shutdownHooks []ShutdownHook
+	hookLock      sync.Mutex
 }
 
 func New(appConfig ServerConfig, logger *log.Logger, errorNotifier errors.ErrorNotifier) *BaseApp {

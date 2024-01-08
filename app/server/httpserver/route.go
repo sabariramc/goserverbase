@@ -69,3 +69,7 @@ func (h *HTTPServer) SetupDocumentation(ctx context.Context) {
 		}))
 	h.handler.StaticFS("/meta/static", http.Dir(h.c.SwaggerRootFolder))
 }
+
+func (h *HTTPServer) AddMiddleware(middleware ...gin.HandlerFunc) {
+	h.handler.Use(middleware...)
+}
