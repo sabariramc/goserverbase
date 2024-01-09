@@ -35,9 +35,9 @@ func GetCorrelationContext() context.Context {
 	return ctx
 }
 
-const URL = "http://localhost:64000/service/a/b"
-const RetryURL = "http://localhost:64000/service/error/b"
-const ErrURL = "http://localhost:80/service/error/b"
+const URL = "http://localhost:64000/service/v1/echo/a/b"
+const RetryURL = "http://localhost:64000/service/v1/echo/error/b"
+const ErrURL = "http://localhost:80/service/v1/echo/error/b"
 
 func TestHttpUtilGet(t *testing.T) {
 	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger)

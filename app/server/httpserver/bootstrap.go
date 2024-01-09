@@ -11,8 +11,8 @@ import (
 	"golang.org/x/net/http2/h2c"
 )
 
-func (h *HTTPServer) BootstrapServer(ctx context.Context) error {
-	h.server = &http.Server{Addr: h.GetPort(), Handler: h}
+func (h *HTTPServer) BootstrapServer(ctx context.Context, handler http.Handler) error {
+	h.server = &http.Server{Addr: h.GetPort(), Handler: handler}
 	return h.StartSignalMonitor(ctx)
 }
 
@@ -20,7 +20,7 @@ func (h *HTTPServer) StartServer() {
 	corr := &log.CorrelationParam{CorrelationId: fmt.Sprintf("%v-HTTP-SERVER", h.c.ServiceName)}
 	ctx := log.GetContextWithCorrelation(context.TODO(), corr)
 	h.log.Notice(ctx, fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
-	err := h.BootstrapServer(ctx)
+	err := h.BootstrapServer(ctx, h)
 	if err != nil {
 		h.log.Emergency(context.Background(), "Server bootstrap failed", err, nil)
 	}
@@ -35,7 +35,7 @@ func (h *HTTPServer) StartTLSServer() {
 	corr := &log.CorrelationParam{CorrelationId: fmt.Sprintf("%v-HTTP2-SERVER", h.c.ServiceName)}
 	ctx := log.GetContextWithCorrelation(context.TODO(), corr)
 	h.log.Notice(ctx, fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
-	err := h.BootstrapServer(ctx)
+	err := h.BootstrapServer(ctx, h)
 	if err != nil {
 		h.log.Emergency(context.Background(), "Server bootstrap failed", err, nil)
 	}
@@ -51,8 +51,7 @@ func (h *HTTPServer) StartH2CServer() {
 	ctx := log.GetContextWithCorrelation(context.TODO(), corr)
 	h.log.Notice(ctx, fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
 	h2s := &http2.Server{}
-	h.server = &http.Server{Addr: h.GetPort(), Handler: h2c.NewHandler(h, h2s)}
-	err := h.StartSignalMonitor(ctx)
+	err := h.BootstrapServer(ctx, h2c.NewHandler(h, h2s))
 	if err != nil {
 		h.log.Emergency(context.Background(), "Server bootstrap failed", err, nil)
 	}
