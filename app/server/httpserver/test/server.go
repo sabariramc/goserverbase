@@ -90,11 +90,23 @@ func (s *server) testAll(w http.ResponseWriter, r *http.Request) {
 	msg := utils.NewMessage("testFlight", "test")
 	msg.AddPayload("content", data)
 	var wg sync.WaitGroup
-	wg.Add(2)
+	wg.Add(3)
 	// go func() {
 	// 	defer wg.Done()
 	// 	s.sns.Publish(ctx, &ServerTestConfig.AWS.SNS_ARN, nil, msg, nil)
 	// }()
+	go func() {
+		defer wg.Done()
+		res := make(map[string]any)
+		s.httpClient.Post(ctx, ServerTestConfig.TestURL1+"/service/v1/echo/12/2", data, &res, nil)
+		s.log.Info(ctx, "http response", res)
+	}()
+	go func() {
+		defer wg.Done()
+		res := make(map[string]any)
+		s.httpClient.Post(ctx, ServerTestConfig.TestURL1+"/service/v1/write", data, &res, nil)
+		s.log.Info(ctx, "http response", res)
+	}()
 	go func() {
 		defer wg.Done()
 		res := make(map[string]any)

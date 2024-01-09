@@ -12,18 +12,18 @@ import (
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
-func (h *HTTPServer) BootstrapServer(ctx context.Context) error {
-	h.server = &http.Server{Addr: h.GetPort(), Handler: h}
+func (h *HTTPServer) BootstrapServer(ctx context.Context, handler http.Handler) error {
+	tracer.Start()
+	defer tracer.Stop()
+	h.server = &http.Server{Addr: h.GetPort(), Handler: handler}
 	return h.StartSignalMonitor(ctx)
 }
 
 func (h *HTTPServer) StartServer() {
-	tracer.Start()
-	defer tracer.Stop()
 	corr := &log.CorrelationParam{CorrelationId: fmt.Sprintf("%v-HTTP-SERVER", h.c.ServiceName)}
 	ctx := log.GetContextWithCorrelation(context.TODO(), corr)
 	h.log.Notice(ctx, fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
-	err := h.BootstrapServer(ctx)
+	err := h.BootstrapServer(ctx, h)
 	if err != nil {
 		h.log.Emergency(context.Background(), "Server bootstrap failed", err, nil)
 	}
@@ -35,12 +35,10 @@ func (h *HTTPServer) StartServer() {
 }
 
 func (h *HTTPServer) StartTLSServer() {
-	tracer.Start()
-	defer tracer.Stop()
 	corr := &log.CorrelationParam{CorrelationId: fmt.Sprintf("%v-HTTP2-SERVER", h.c.ServiceName)}
 	ctx := log.GetContextWithCorrelation(context.TODO(), corr)
 	h.log.Notice(ctx, fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
-	err := h.BootstrapServer(ctx)
+	err := h.BootstrapServer(ctx, h)
 	if err != nil {
 		h.log.Emergency(context.Background(), "Server bootstrap failed", err, nil)
 	}
@@ -56,8 +54,7 @@ func (h *HTTPServer) StartH2CServer() {
 	ctx := log.GetContextWithCorrelation(context.TODO(), corr)
 	h.log.Notice(ctx, fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
 	h2s := &http2.Server{}
-	h.server = &http.Server{Addr: h.GetPort(), Handler: h2c.NewHandler(h, h2s)}
-	err := h.StartSignalMonitor(ctx)
+	err := h.BootstrapServer(ctx, h2c.NewHandler(h, h2s))
 	if err != nil {
 		h.log.Emergency(context.Background(), "Server bootstrap failed", err, nil)
 	}
