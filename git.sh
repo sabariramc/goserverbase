@@ -1,5 +1,5 @@
-export message="Test updated and refactored http "
-export version="v4.11.2"
+export message="Added H2C client"
+export version="v4.12.0"
 export branch="master"
 git add .
 git commit -m "$message"

@@ -110,7 +110,7 @@ func (s *server) testAll(w http.ResponseWriter, r *http.Request) {
 	go func() {
 		defer wg.Done()
 		res := make(map[string]any)
-		s.httpClient.Post(ctx, ServerTestConfig.TestURL1, data, &res, nil)
+		s.httpClient.Post(ctx, ServerTestConfig.TestURL2, data, &res, nil)
 		s.log.Info(ctx, "http response", res)
 	}()
 	s.pr.ProduceMessageWithTopic(ctx, ServerTestConfig.KafkaTestTopic, uuid.NewString(), msg, nil)
@@ -155,7 +155,7 @@ func (s *server) Shutdown(ctx context.Context) error {
 func (s *server) printHttpVersion() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		r := c.Request
-		s.log.Notice(r.Context(), "http proto", r.Proto)
+		s.log.Debug(r.Context(), "http proto", r.Proto)
 		c.Next()
 	}
 }

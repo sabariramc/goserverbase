@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/sabariramc/goserverbase/v4/log"
 	"github.com/sabariramc/goserverbase/v4/log/logwriter"
@@ -161,6 +163,28 @@ func TestConnectionReuse(t *testing.T) {
 					"Content-Type": "application/json",
 				})
 				fmt.Printf("is HTTP2: %v (%s)\n\n", res.ProtoAtLeast(2, 0), res.Proto)
+			}
+		}()
+	}
+	wg.Wait()
+}
+
+func TestH2CClient(t *testing.T) {
+	client := httputil.NewH2CClient(HttpUtilTestLogger, 4, time.Second, 4*time.Second)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	ctx := GetCorrelationContext()
+	body, _ := json.Marshal(map[string]any{"sabariram": 10})
+	for i := 0; i < 10; i++ {
+		go func() {
+			defer wg.Done()
+			for j := 0; j < 100; j++ {
+				res, err := client.Post(ctx, "https://localhost:60007/service/v1/test/req", body, nil, map[string]string{"Content-Type": "application/json"})
+				assert.NilError(t, err)
+				data, err := io.ReadAll(res.Body)
+				assert.NilError(t, err)
+				res.Body.Close()
+				fmt.Println(string(data))
 			}
 		}()
 	}

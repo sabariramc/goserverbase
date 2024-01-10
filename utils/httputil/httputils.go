@@ -3,9 +3,11 @@ package httputil
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptrace"
 	"reflect"
@@ -13,6 +15,7 @@ import (
 
 	"github.com/hashicorp/go-retryablehttp"
 	"github.com/sabariramc/goserverbase/v4/log"
+	"golang.org/x/net/http2"
 )
 
 var ErrResponseUnmarshal = fmt.Errorf("error marshalling response body")
@@ -42,6 +45,21 @@ func NewHTTPClient(log *log.Logger, retryMax int, retryWaitMin, retryWaitMax tim
 	t.MaxConnsPerHost = 100
 	t.MaxIdleConnsPerHost = 100
 	c := &HTTPClient{Client: &http.Client{Transport: t}, log: log.NewResourceLogger("HttpClient"), RetryMax: retryMax, RetryWaitMin: retryWaitMin, RetryWaitMax: retryWaitMax, CheckRetry: retryablehttp.DefaultRetryPolicy, Backoff: retryablehttp.DefaultBackoff}
+	return c
+}
+
+func NewH2CClient(log *log.Logger, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HTTPClient {
+	c := &HTTPClient{Client: &http.Client{
+		Transport: &http2.Transport{
+			// So http2.Transport doesn't complain the URL scheme isn't 'https'
+			AllowHTTP: false,
+			// Pretend we are dialing a TLS endpoint.
+			// Note, we ignore the passed tls.Config
+			DialTLS: func(network, addr string, cfg *tls.Config) (net.Conn, error) {
+				return net.Dial(network, addr)
+			},
+		},
+	}, log: log.NewResourceLogger("HttpClient"), RetryMax: retryMax, RetryWaitMin: retryWaitMin, RetryWaitMax: retryWaitMax, CheckRetry: retryablehttp.DefaultRetryPolicy, Backoff: retryablehttp.DefaultBackoff}
 	return c
 }
 

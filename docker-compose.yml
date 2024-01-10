@@ -15,14 +15,14 @@ services:
       DOC_HOST: http://localhost:60005
       KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
       KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
-      TEST_URL_1: "http://echo-http-1:3000/service/a/b"
+      TEST_URL_1: "http://echo-nginx-1"
       TEST_URL_2: "http://gobase_http:8080/service/v1/tenant"
     ports:
       - 60005:8080
     networks:
       - mongo_mongodb
       - kafka_default
-      - echo_default
+      - common
   http2:
     build:
       context: .
@@ -40,14 +40,14 @@ services:
       HTTP2_PRIVATE_KEY: /service/server.key
       KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
       KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
-      TEST_URL_1: "http://echo-http-1:3000/service/a/b"
+      TEST_URL_1: "http://echo-nginx-1"
       TEST_URL_2: "http://gobase_http:8080/service/v1/tenant"
     ports:
       - 60006:8080
     networks:
       - mongo_mongodb
       - kafka_default
-      - echo_default
+      - common
   h2c:
     build:
       context: .
@@ -57,20 +57,21 @@ services:
       - .env
     environment:
       SERVICE_NAME: gobase_h2c
+      LOG_LEVEL: DEBUG
       DD_SERVICE: gobase_h2c
       KAFKA_BROKER: broker:29092
       DD_AGENT_HOST: datadog
       DOC_HOST: http://localhost:60007
       KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
       KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
-      TEST_URL_1: "http://echo-http-1:3000/service/a/b"
+      TEST_URL_1: "http://echo-nginx-1"
       TEST_URL_2: "http://gobase_http:8080/service/v1/tenant"
     ports:
       - 60007:8080
     networks:
       - mongo_mongodb
       - kafka_default
-      - echo_default
+      - common
   kafka:
     build:
       context: .
@@ -88,16 +89,16 @@ services:
       KAFKA_CONSUMER_ID: gobase-test-docker-consumer
       KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
       KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
-      TEST_URL_1: "http://echo-http-1:3000"
+      TEST_URL_1: "http://echo-nginx-1"
       TEST_URL_2: "http://gobase_http:8080/service/v1/tenant"
     networks:
       - mongo_mongodb
       - kafka_default
-      - echo_default
+      - common
 networks:
   mongo_mongodb:
     external: true
   kafka_default:
     external: true
-  echo_default:
+  common:
     external: true
