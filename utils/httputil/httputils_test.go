@@ -3,12 +3,13 @@ package httputil_test
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/sabariramc/goserverbase/v4/log"
 	"github.com/sabariramc/goserverbase/v4/log/logwriter"
@@ -149,6 +150,7 @@ func TestHttpUtilRetryError(t *testing.T) {
 
 func TestConnectionReuse(t *testing.T) {
 	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger)
+	client.Client.Transport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	var wg sync.WaitGroup
 	body, _ := json.Marshal(map[string]string{"fasdfsda": "fasdfas", "fasdfas": "fasdfas"})
 	for i := 0; i < 10; i++ {
@@ -160,7 +162,26 @@ func TestConnectionReuse(t *testing.T) {
 				res, _ := client.Post(ctx, "https://localhost:60006/service/v1/test/all", bytes.NewBuffer(body), nil, map[string]string{
 					"Content-Type": "application/json",
 				})
-				fmt.Printf("is HTTP2: %v (%s)\n\n", res.ProtoAtLeast(2, 0), res.Proto)
+				assert.Assert(t, res.ProtoAtLeast(2, 0))
+			}
+		}()
+	}
+	wg.Wait()
+}
+
+func TestH2CClient(t *testing.T) {
+	client := httputil.NewH2CClient(HttpUtilTestLogger, 4, time.Second, 4*time.Second)
+	var wg sync.WaitGroup
+	wg.Add(1)
+	ctx := GetCorrelationContext()
+	body, _ := json.Marshal(map[string]any{"sabariram": 10})
+	for i := 0; i < 10; i++ {
+		go func() {
+			defer wg.Done()
+			for j := 0; j < 100; j++ {
+				res, err := client.Post(ctx, "https://localhost:60007/service/v1/test/req", body, nil, map[string]string{"Content-Type": "application/json"})
+				assert.NilError(t, err)
+				assert.Assert(t, res.StatusCode < 300)
 			}
 		}()
 	}
