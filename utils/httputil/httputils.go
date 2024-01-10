@@ -45,12 +45,11 @@ func NewHTTPClient(log *log.Logger, retryMax int, retryWaitMin, retryWaitMax tim
 	t.MaxIdleConns = 100
 	t.MaxConnsPerHost = 100
 	t.MaxIdleConnsPerHost = 100
-	c := &HTTPClient{Client: ddtrace.WrapClient(&http.Client{Transport: t}), log: log.NewResourceLogger("HttpClient"), RetryMax: retryMax, RetryWaitMin: retryWaitMin, RetryWaitMax: retryWaitMax, CheckRetry: retryablehttp.DefaultRetryPolicy, Backoff: retryablehttp.DefaultBackoff}
-	return c
+	return New(log, &http.Client{Transport: ddtrace.WrapRoundTripper(t)}, retryMax, retryWaitMin, retryWaitMax)
 }
 
 func NewH2CClient(log *log.Logger, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HTTPClient {
-	c := &HTTPClient{Client: &http.Client{
+	return New(log, &http.Client{
 		Transport: ddtrace.WrapRoundTripper(&http2.Transport{
 			// So http2.Transport doesn't complain the URL scheme isn't 'https'
 			AllowHTTP: false,
@@ -60,8 +59,11 @@ func NewH2CClient(log *log.Logger, retryMax int, retryWaitMin, retryWaitMax time
 				return net.Dial(network, addr)
 			},
 		}),
-	}, log: log.NewResourceLogger("HttpClient"), RetryMax: retryMax, RetryWaitMin: retryWaitMin, RetryWaitMax: retryWaitMax, CheckRetry: retryablehttp.DefaultRetryPolicy, Backoff: retryablehttp.DefaultBackoff}
-	return c
+	}, retryMax, retryWaitMin, retryWaitMax)
+}
+
+func New(log *log.Logger, c *http.Client, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HTTPClient {
+	return &HTTPClient{Client: c, log: log.NewResourceLogger("HttpClient"), RetryMax: retryMax, RetryWaitMin: retryWaitMin, RetryWaitMax: retryWaitMax, CheckRetry: retryablehttp.DefaultRetryPolicy, Backoff: retryablehttp.DefaultBackoff}
 }
 
 func (h *HTTPClient) Validator(resBody interface{}) error {
