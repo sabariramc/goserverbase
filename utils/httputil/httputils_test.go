@@ -149,8 +149,9 @@ func TestHttpUtilRetryError(t *testing.T) {
 }
 
 func TestConnectionReuse(t *testing.T) {
-	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger)
-	client.Client.Transport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	ht := http.DefaultTransport.(*http.Transport).Clone()
+	ht.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
+	client := httputil.New(HttpUtilTestLogger, &http.Client{Transport: ht}, 4, time.Second*1, time.Second*5)
 	var wg sync.WaitGroup
 	body, _ := json.Marshal(map[string]string{"fasdfsda": "fasdfas", "fasdfas": "fasdfas"})
 	for i := 0; i < 10; i++ {
