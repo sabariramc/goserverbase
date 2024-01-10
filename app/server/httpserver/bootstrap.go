@@ -13,13 +13,13 @@ import (
 )
 
 func (h *HTTPServer) BootstrapServer(ctx context.Context, handler http.Handler) error {
-	tracer.Start()
-	defer tracer.Stop()
 	h.server = &http.Server{Addr: h.GetPort(), Handler: handler}
 	return h.StartSignalMonitor(ctx)
 }
 
 func (h *HTTPServer) StartServer() {
+	tracer.Start()
+	defer tracer.Stop()
 	corr := &log.CorrelationParam{CorrelationId: fmt.Sprintf("%v-HTTP-SERVER", h.c.ServiceName)}
 	ctx := log.GetContextWithCorrelation(context.TODO(), corr)
 	h.log.Notice(ctx, fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
@@ -35,6 +35,8 @@ func (h *HTTPServer) StartServer() {
 }
 
 func (h *HTTPServer) StartTLSServer() {
+	tracer.Start()
+	defer tracer.Stop()
 	corr := &log.CorrelationParam{CorrelationId: fmt.Sprintf("%v-HTTP2-SERVER", h.c.ServiceName)}
 	ctx := log.GetContextWithCorrelation(context.TODO(), corr)
 	h.log.Notice(ctx, fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
@@ -50,6 +52,8 @@ func (h *HTTPServer) StartTLSServer() {
 }
 
 func (h *HTTPServer) StartH2CServer() {
+	tracer.Start()
+	defer tracer.Stop()
 	corr := &log.CorrelationParam{CorrelationId: fmt.Sprintf("%v-HTTP2-SERVER", h.c.ServiceName)}
 	ctx := log.GetContextWithCorrelation(context.TODO(), corr)
 	h.log.Notice(ctx, fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
