@@ -1,5 +1,5 @@
-export message="http test update"
-export version="v4.12.0"
+export message="mongo internal log"
+export version="v4.12.1"
 export branch="master"
 git add .
 git commit -m "$message"
