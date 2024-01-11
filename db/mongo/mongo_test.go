@@ -36,6 +36,22 @@ func GetSampleData() *TestVal {
 	return data
 }
 
+func BenchmarkMongoCollectionInsertOne(b *testing.B) {
+	ctx := GetCorrelationContext()
+	client, err := mongo.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
+	if err != nil {
+		assert.NilError(b, err)
+	}
+	coll := client.Database("GOTEST").Collection("Plain")
+	data := GetSampleData()
+	for i := 0; i < b.N; i++ {
+		_, err = coll.InsertOne(ctx, data)
+		if err != nil {
+			assert.NilError(b, err)
+		}
+	}
+}
+
 func TestMongoCollectionInsertOne(t *testing.T) {
 	ctx := GetCorrelationContext()
 	client, err := mongo.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo)

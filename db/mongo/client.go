@@ -9,6 +9,7 @@ import (
 
 	"github.com/sabariramc/goserverbase/v4/log"
 
+	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -52,6 +53,18 @@ func NewMongoClient(ctx context.Context, logger *log.Logger, c *Config, opts ...
 	connectionOptions.SetMinPoolSize(c.MinConnectionPool)
 	connectionOptions.SetMaxPoolSize(c.MaxConnectionPool)
 	connectionOptions.SetMaxConnIdleTime(time.Minute * 5)
+	connectionOptions.SetCompressors([]string{"snappy", "zlib", "zstd"})
+	mongoLogger := &MongoLogger{log: logger.NewResourceLogger("MongoInternalLog"), ctx: log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam("MongoInternal"))}
+	connectionOptions.SetLoggerOptions(&options.LoggerOptions{
+		ComponentLevels: map[options.LogComponent]options.LogLevel{
+			options.LogComponentAll: options.LogLevelDebug,
+		},
+		Sink:              mongoLogger,
+		MaxDocumentLength: 1024,
+	})
+	connectionOptions.SetPoolMonitor(&event.PoolMonitor{
+		Event: mongoLogger.PoolEvent,
+	})
 	opts = append(opts, connectionOptions)
 	client, err := mongo.Connect(ctx, opts...)
 	if err != nil {
@@ -86,4 +99,25 @@ func (m *Mongo) Disconnect(ctx context.Context) error {
 	}
 	m.log.Notice(ctx, "Mongo client closed", nil)
 	return nil
+}
+
+type MongoLogger struct {
+	log *log.Logger
+	ctx context.Context
+}
+
+func (m *MongoLogger) Info(level int, message string, keysAndValues ...interface{}) {
+	if level == int(options.LogLevelInfo) {
+		m.log.Debug(m.ctx, message, keysAndValues)
+	} else {
+		m.log.Trace(m.ctx, message, keysAndValues)
+	}
+}
+
+func (m *MongoLogger) Error(err error, message string, keysAndValues ...interface{}) {
+	m.log.Error(m.ctx, message, keysAndValues)
+}
+
+func (m *MongoLogger) PoolEvent(e *event.PoolEvent) {
+	m.log.Debug(m.ctx, "mongo pool event", e)
 }
