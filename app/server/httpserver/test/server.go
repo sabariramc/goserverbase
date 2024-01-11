@@ -89,36 +89,34 @@ func (s *server) testAll(w http.ResponseWriter, r *http.Request) {
 	s.coll.InsertOne(ctx, data)
 	msg := utils.NewMessage("testFlight", "test")
 	msg.AddPayload("content", data)
-	var wg sync.WaitGroup
-	wg.Add(3)
-	// go func() {
-	// 	defer wg.Done()
-	// 	s.sns.Publish(ctx, &ServerTestConfig.AWS.SNS_ARN, nil, msg, nil)
-	// }()
-	go func() {
-		defer wg.Done()
+	wg := &sync.WaitGroup{}
+	// s.run(wg, func() { s.sns.Publish(ctx, &ServerTestConfig.AWS.SNS_ARN, nil, msg, nil) })
+	s.run(wg, func() {
 		res := make(map[string]any)
 		s.httpClient.Post(ctx, ServerTestConfig.TestURL1+"/service/v1/echo/12/2", data, &res, nil)
 		s.log.Info(ctx, "http response", res)
-	}()
-	go func() {
-		defer wg.Done()
+	})
+	s.run(wg, func() {
 		res := make(map[string]any)
 		s.httpClient.Post(ctx, ServerTestConfig.TestURL1+"/service/v1/write", data, &res, nil)
 		s.log.Info(ctx, "http response", res)
-	}()
-	go func() {
-		defer wg.Done()
+	})
+	s.run(wg, func() {
 		res := make(map[string]any)
 		s.httpClient.Post(ctx, ServerTestConfig.TestURL2, data, &res, nil)
 		s.log.Info(ctx, "http response", res)
-	}()
-	go func() {
-		defer wg.Done()
-		s.pr.ProduceMessageWithTopic(ctx, ServerTestConfig.KafkaTestTopic, uuid.NewString(), msg, nil)
-	}()
+	})
+	s.pr.ProduceMessageWithTopic(ctx, ServerTestConfig.KafkaTestTopic, uuid.NewString(), msg, nil)
 	wg.Wait()
 	w.WriteHeader(204)
+}
+
+func (s *server) run(wg *sync.WaitGroup, fn func()) {
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		fn()
+	}()
 }
 
 func (s *server) testKafka(w http.ResponseWriter, r *http.Request) {
