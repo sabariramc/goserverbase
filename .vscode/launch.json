@@ -9,7 +9,6 @@
             "program": "${workspaceFolder}/app/server/httpserver/test/http/main.go",
             "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env",
-            "console": "integratedTerminal"
         },
         {
             "name": "HTTP TLS Server",
@@ -19,7 +18,6 @@
             "program": "${workspaceFolder}/app/server/httpserver/test/http2/main.go",
             "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env",
-            "console": "integratedTerminal"
         },
         {
             "name": "H2C Server",
@@ -39,7 +37,6 @@
             "program": "${workspaceFolder}/app/server/kafkaconsumer/test/consumer/main.go",
             "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env",
-            "console": "integratedTerminal"
         }
     ]
 }

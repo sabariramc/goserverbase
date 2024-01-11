@@ -173,10 +173,10 @@ func TestConnectionReuse(t *testing.T) {
 func TestH2CClient(t *testing.T) {
 	client := httputil.NewH2CClient(HttpUtilTestLogger, 4, time.Second, 4*time.Second)
 	var wg sync.WaitGroup
-	wg.Add(1)
 	ctx := GetCorrelationContext()
 	body, _ := json.Marshal(map[string]any{"sabariram": 10})
 	for i := 0; i < 10; i++ {
+		wg.Add(1)
 		go func() {
 			defer wg.Done()
 			for j := 0; j < 100; j++ {
