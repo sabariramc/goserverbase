@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v4/utils"
 
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -60,7 +61,7 @@ func NewMongoClient(ctx context.Context, logger *log.Logger, c *Config, opts ...
 	connectionOptions.SetPoolMonitor(&event.PoolMonitor{
 		Event: mongoLogger.PoolEvent,
 	})
-	opts = append(opts, connectionOptions)
+	opts = utils.Prepend[*options.ClientOptions](opts, connectionOptions)
 	client, err := mongo.Connect(ctx, opts...)
 	if err != nil {
 		logger.Error(ctx, "error creating mongo connection", err)
