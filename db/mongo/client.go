@@ -18,7 +18,6 @@ import (
 type Mongo struct {
 	*mongo.Client
 	log *log.Logger
-	c   *Config
 }
 
 var ErrNoDocuments = mongo.ErrNoDocuments
@@ -31,23 +30,7 @@ func NewWithAWSRoleAuth(ctx context.Context, logger *log.Logger, c Config, opts 
 }
 
 func New(ctx context.Context, logger *log.Logger, c Config, opts ...*options.ClientOptions) (*Mongo, error) {
-	var client *mongo.Client
 	var err error
-	mon := options.Client()
-	mon.Monitor = mongotrace.NewMonitor()
-	opts = append(opts, mon)
-	client, err = NewMongoClient(ctx, logger, &c, opts...)
-	if err != nil {
-		return nil, fmt.Errorf("mongo.NewMongo: %w", err)
-	}
-	return NewWrapper(ctx, logger, c, client), nil
-}
-
-func NewWrapper(ctx context.Context, logger *log.Logger, c Config, client *mongo.Client) *Mongo {
-	return &Mongo{Client: client, log: logger.NewResourceLogger("MongoClient"), c: &c}
-}
-
-func NewMongoClient(ctx context.Context, logger *log.Logger, c *Config, opts ...*options.ClientOptions) (*mongo.Client, error) {
 	connectionOptions := options.Client()
 	connectionOptions.ApplyURI(c.ConnectionString)
 	connectionOptions.SetConnectTimeout(time.Minute)
@@ -55,6 +38,7 @@ func NewMongoClient(ctx context.Context, logger *log.Logger, c *Config, opts ...
 	connectionOptions.SetMaxPoolSize(c.MaxConnectionPool)
 	connectionOptions.SetMaxConnIdleTime(time.Minute * 5)
 	connectionOptions.SetCompressors([]string{"snappy", "zlib", "zstd"})
+	connectionOptions.SetMonitor(mongotrace.NewMonitor())
 	mongoLogger := &MongoLogger{log: logger.NewResourceLogger("MongoInternalLog"), ctx: log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam("MongoInternal"))}
 	connectionOptions.SetLoggerOptions(&options.LoggerOptions{
 		ComponentLevels: map[options.LogComponent]options.LogLevel{
@@ -70,14 +54,21 @@ func NewMongoClient(ctx context.Context, logger *log.Logger, c *Config, opts ...
 	client, err := mongo.Connect(ctx, opts...)
 	if err != nil {
 		logger.Error(ctx, "error creating mongo connection", err)
-		return nil, fmt.Errorf("mongo.NewMongoClient: error creating mongo connection: %w", err)
+		return nil, fmt.Errorf("mongo.New: error creating mongo connection: %w", err)
 	}
 	err = client.Ping(ctx, nil)
 	if err != nil {
 		logger.Error(ctx, "error pinging mongo server", err)
-		return nil, fmt.Errorf("mongo.NewMongoClient: error pinging mongo server: %w", err)
+		return nil, fmt.Errorf("mongo.New: error pinging mongo server: %w", err)
 	}
-	return client, nil
+	if err != nil {
+		return nil, fmt.Errorf("mongo.New: %w", err)
+	}
+	return NewWrapper(ctx, logger, client), nil
+}
+
+func NewWrapper(ctx context.Context, logger *log.Logger, client *mongo.Client) *Mongo {
+	return &Mongo{Client: client, log: logger.NewResourceLogger("MongoClient")}
 }
 
 func (m *Mongo) GetClient() *mongo.Client {

@@ -17,8 +17,7 @@ import (
 
 type Collection struct {
 	*mongo.Collection
-	log          *log.Logger
-	hashFieldMap map[string]interface{}
+	log *log.Logger
 }
 
 var dec, _ = decimal.NewFromString("1.234")
@@ -57,11 +56,4 @@ func init() {
 
 func newCustomBsonRegistry() *bsoncodec.Registry {
 	return newRegistry
-}
-
-func (m *Collection) SetHashList(hasList []string) {
-	m.hashFieldMap = make(map[string]interface{}, len(hasList))
-	for _, val := range hasList {
-		m.hashFieldMap[val] = nil
-	}
 }
