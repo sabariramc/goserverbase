@@ -116,26 +116,3 @@ func TestMongoCollectionFindOne(t *testing.T) {
 	}
 	fmt.Printf("%+v\n", val)
 }
-
-func TestMongoCollectionFindFetch(t *testing.T) {
-	ctx := GetCorrelationContext()
-	client, err := mongo.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
-	if err != nil {
-		assert.NilError(t, err)
-	}
-	coll := client.Database("GOTEST").Collection("Plain")
-	loader := func(count int) []interface{} {
-		val := make([]interface{}, count)
-		for i := 0; i < count; i++ {
-			val[i] = &TestVal{}
-		}
-		return val
-	}
-	data, err := coll.FindFetch(ctx, loader, nil)
-	if err != nil {
-		assert.NilError(t, err)
-	}
-	for _, val := range data {
-		fmt.Printf("%+v\n", val)
-	}
-}

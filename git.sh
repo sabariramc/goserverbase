@@ -1,5 +1,5 @@
-export message="mongo changed option order"
-export version="v4.12.2"
+export message="mongo removed redundant collection methods"
+export version="v4.14.0"
 export branch="master"
 git add .
 git commit -m "$message"

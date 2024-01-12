@@ -67,13 +67,13 @@ func TestCollectionPII(t *testing.T) {
 		assert.NilError(t, err)
 	}
 	csfleMongoClient, err := csfle.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo, keyNamespace, mongoScheme, kmsProvider)
-	csfleClient := mongo.NewWrapper(ctx, MongoTestLogger, *MongoTestConfig.Mongo, csfleMongoClient)
+	csfleClient := mongo.NewWrapper(ctx, MongoTestLogger, csfleMongoClient)
 	piicoll := csfleClient.Database("GOTEST").Collection("PII")
-	piicoll.SetHashList([]string{"pan", "email"})
 	if err != nil {
 		assert.NilError(t, err)
 	}
-	_, err = piicoll.InsertOneWithHash(ctx, map[string]interface{}{
+	uuid := "FAsdfasfsadfsdafs"
+	_, err = piicoll.InsertOne(ctx, map[string]interface{}{
 		"dob":   "1991-08-02",
 		"name":  "Sabariram",
 		"pan":   "ABCDE1234F",
@@ -86,20 +86,20 @@ func TestCollectionPII(t *testing.T) {
 			"pin":          "636351",
 			"country":      "India",
 		},
-		"UUID": "FAsdfasfsadfsdafs",
+		"UUID": uuid,
 	})
 	if err != nil {
 		assert.NilError(t, err)
 	}
-	cur := piicoll.FindOneWithHash(ctx, map[string]interface{}{"email": "sab@sabariram.com"})
+	cur := piicoll.FindOne(ctx, map[string]interface{}{"UUID": uuid})
 	val := &PIITestVal{}
 	err = cur.Decode(val)
 	if err != nil {
 		assert.NilError(t, err)
 	}
 	fmt.Printf("%+v\n", val)
-	piicoll.UpdateByIDWithHash(ctx, val.ID, map[string]map[string]interface{}{"$set": {"email": "iam2@gosabariram.com"}})
-	cur = piicoll.FindOneWithHash(ctx, map[string]interface{}{"email": "iam2@gosabariram.com"})
+	piicoll.UpdateOne(ctx, val.ID, map[string]map[string]interface{}{"$set": {"UUID": uuid}})
+	cur = piicoll.FindOne(ctx, map[string]interface{}{"UUID": uuid})
 	val = &PIITestVal{}
 	err = cur.Decode(val)
 	if err != nil {
@@ -135,8 +135,7 @@ func TestCollectionPII(t *testing.T) {
 	} else {
 		t.Fatal(fmt.Errorf("doc shouldn't exist"))
 	}
-
-	_, err = piicoll.InsertOneWithHash(ctx, map[string]interface{}{
+	_, err = piicoll.InsertOne(ctx, map[string]interface{}{
 		"dob":   "1991-08-02",
 		"name":  "Vamshi Krishna",
 		"pan":   "ABCDE1234F",
