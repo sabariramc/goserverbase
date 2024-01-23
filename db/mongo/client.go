@@ -47,7 +47,7 @@ func New(ctx context.Context, logger *log.Logger, c Config, opts ...*options.Cli
 	connectionOptions.SetPoolMonitor(&event.PoolMonitor{
 		Event: mongoLogger.PoolEvent,
 	})
-	opts = utils.Prepend[*options.ClientOptions](opts, connectionOptions)
+	opts = utils.Prepend(opts, connectionOptions)
 	client, err := mongo.Connect(ctx, opts...)
 	if err != nil {
 		logger.Error(ctx, "error creating mongo connection", err)

@@ -54,6 +54,6 @@ func init() {
 	}))
 }
 
-func newCustomBsonRegistry() *bsoncodec.Registry {
+func NewCustomBsonRegistry() *bsoncodec.Registry {
 	return newRegistry
 }
