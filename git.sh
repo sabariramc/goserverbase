@@ -1,6 +1,6 @@
 export message="fixed option overriding issue"
 export version="v4.14.1"
-export branch="master"
+export branch="v4"
 git add .
 git commit -m "$message"
 git tag $version
