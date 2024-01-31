@@ -57,7 +57,6 @@ services:
       - .env
     environment:
       SERVICE_NAME: gobase_h2c
-      LOG_LEVEL: DEBUG
       DD_SERVICE: gobase_h2c
       KAFKA_BROKER: broker:29092
       DD_AGENT_HOST: datadog

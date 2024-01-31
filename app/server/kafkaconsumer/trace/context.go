@@ -6,12 +6,12 @@ import (
 	"github.com/sabariramc/goserverbase/v4/kafka"
 	ktrace "github.com/sabariramc/goserverbase/v4/kafka/api/trace"
 	"github.com/sabariramc/goserverbase/v4/log"
-	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
-func StartSpan(ctx context.Context, serviceName string, msg *kafka.Message) ddtrace.Span {
+func StartSpan(ctx context.Context, serviceName string, msg *kafka.Message) context.Context {
+	corr := log.GetCorrelationParam(ctx)
 	opts := []tracer.StartSpanOption{
 		tracer.ResourceName(msg.Topic),
 		tracer.SpanType(ext.SpanTypeMessageConsumer),
@@ -23,6 +23,7 @@ func StartSpan(ctx context.Context, serviceName string, msg *kafka.Message) ddtr
 		tracer.Tag(ext.Component, "kafka"),
 		tracer.Tag(ext.SpanKind, ext.SpanKindConsumer),
 		tracer.Tag(ext.MessagingSystem, "kafka"),
+		tracer.Tag("correlationId", corr.CorrelationId),
 		tracer.Measured(),
 	}
 	// kafka supports headers, so try to extract a span context
@@ -30,10 +31,6 @@ func StartSpan(ctx context.Context, serviceName string, msg *kafka.Message) ddtr
 	if spanctx, err := tracer.Extract(carrier); err == nil {
 		opts = append(opts, tracer.ChildOf(spanctx))
 	}
-	span, _ := tracer.StartSpanFromContext(ctx, "kafka.consume", opts...)
-	// reinject the span context so consumers can pick it up
-	tracer.Inject(span.Context(), carrier)
-	corr := log.GetCorrelationParam(ctx)
-	span.SetTag("correlationId", corr.CorrelationId)
-	return span
+	_, ctx = tracer.StartSpanFromContext(ctx, "kafka.consume", opts...)
+	return ctx
 }

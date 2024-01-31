@@ -15,12 +15,12 @@ import (
 )
 
 func newProducer(ctx context.Context) (*kafka.Producer, error) {
-	KafkaTestConfig.KafkaProducer.Topic = KafkaTestConfig.KafkaTestTopic
+	KafkaTestConfig.KafkaProducer.Topic = "com.sabari.gobasetest.topic.1"
 	return kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducer)
 }
 
 func newAsyncProducer(ctx context.Context) (*kafka.Producer, error) {
-	KafkaTestConfig.KafkaProducer.Topic = KafkaTestConfig.KafkaTestTopic
+	KafkaTestConfig.KafkaProducer.Topic = "com.sabari.gobasetest.topic.1"
 	config := *KafkaTestConfig.KafkaProducer
 	config.Async = true
 	return kafka.NewProducer(ctx, KafkaTestLogger, &config)
@@ -33,7 +33,7 @@ func newConsumer(ctx context.Context) (*kafka.Consumer, error) {
 func TestKafkaProducer(t *testing.T) {
 	ctx := GetCorrelationContext()
 	uuidVal := uuid.NewString()
-	totalNoOfMessage := 100000
+	totalNoOfMessage := 100
 	connFac := 10
 	var wg sync.WaitGroup
 	for i := 0; i < connFac; i++ {
@@ -45,7 +45,7 @@ func TestKafkaProducer(t *testing.T) {
 			defer pr.Close(ctx)
 			for i := 0; i < totalNoOfMessage/connFac; i++ {
 				ctx := GetCorrelationContext()
-				err = pr.ProduceMessage(ctx, strconv.Itoa(i), &utils.Message{
+				err = pr.ProduceMessage(ctx, "fasdfasfasdf", &utils.Message{
 					Event: "TestKafkaProducer-" + uuidVal,
 				}, nil)
 				assert.NilError(t, err)

@@ -24,20 +24,25 @@ func callURL(url string) {
 
 func TestRoutes(t *testing.T) {
 	var wg sync.WaitGroup
-	for i := 0; i < 10; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			callURL("https://localhost:60006/service/v1/test/all")
-		}()
-	}
-	wg.Wait()
-	for i := 0; i < 10; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			callURL("http://localhost:60005/service/v1/test/all")
-		}()
-	}
+	connFactor := 10
+	wg.Add(connFactor)
+	go func() {
+		for i := 0; i < connFactor; i++ {
+			go func() {
+				defer wg.Done()
+				callURL("https://localhost:60006/service/v1/test/all")
+			}()
+		}
+	}()
+	wg.Add(connFactor)
+	go func() {
+		for i := 0; i < connFactor; i++ {
+			go func() {
+				defer wg.Done()
+				callURL("http://localhost:60005/service/v1/test/all")
+			}()
+		}
+	}()
+
 	wg.Wait()
 }

@@ -6,7 +6,6 @@ import (
 	"github.com/sabariramc/goserverbase/v4/app/server/kafkaconsumer/trace"
 	"github.com/sabariramc/goserverbase/v4/kafka"
 	"github.com/sabariramc/goserverbase/v4/log"
-	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
 func (k *KafkaConsumerServer) GetCorrelationParams(headers map[string]string) *log.CorrelationParam {
@@ -28,6 +27,5 @@ func (k *KafkaConsumerServer) GetMessageContext(msg *kafka.Message) context.Cont
 	msgCtx := context.Background()
 	msgCtx = k.GetContextWithCorrelation(msgCtx, k.GetCorrelationParams(msg.GetHeaders()))
 	msgCtx = k.GetContextWithCustomerId(msgCtx, k.GetCustomerID(msg.GetHeaders()))
-	span := trace.StartSpan(msgCtx, k.c.ServiceName, msg)
-	return tracer.ContextWithSpan(msgCtx, span)
+	return trace.StartSpan(msgCtx, k.c.ServiceName, msg)
 }
