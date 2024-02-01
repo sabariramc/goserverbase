@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v5/log"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )

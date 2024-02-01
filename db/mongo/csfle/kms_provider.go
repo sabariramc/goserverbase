@@ -6,9 +6,9 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	cuaws "github.com/sabariramc/goserverbase/v4/aws"
-	"github.com/sabariramc/goserverbase/v4/db/mongo"
-	"github.com/sabariramc/goserverbase/v4/log"
+	cuaws "github.com/sabariramc/goserverbase/v5/aws"
+	"github.com/sabariramc/goserverbase/v5/db/mongo"
+	"github.com/sabariramc/goserverbase/v5/log"
 )
 
 type MasterKeyProvider interface {
@@ -17,7 +17,7 @@ type MasterKeyProvider interface {
 	DataKeyOpts() interface{}
 }
 
-type awsKMSDataKeyOpts struct {
+type AWSDataKeyOpts struct {
 	Region   string `bson:"region"`
 	KeyARN   string `bson:"key"`
 	Endpoint string `bson:"endpoint,omitempty"`
@@ -25,17 +25,17 @@ type awsKMSDataKeyOpts struct {
 
 type AWSKMSProvider struct {
 	credentials map[string]interface{}
-	dataKeyOpts awsKMSDataKeyOpts
+	dataKeyOpts AWSDataKeyOpts
 	name        string
 }
 
-func GetDefaultAWSProvider(ctx context.Context, logger *log.Logger, kmsARN string) (*AWSKMSProvider, error) {
+func GetDefaultAWSProvider(ctx context.Context, logger log.Log, kmsARN string) (*AWSKMSProvider, error) {
 	awsConfig := cuaws.GetDefaultAWSConfig()
 	return GetAWSProvider(ctx, logger, awsConfig, kmsARN)
 }
 
-func GetAWSProvider(ctx context.Context, logger *log.Logger, awsConfig *aws.Config, kmsARN string) (provider *AWSKMSProvider, err error) {
-	kms := cuaws.NewKMSClient(logger, cuaws.NewAWSKMSClientWithConfig(*awsConfig), kmsARN)
+func GetAWSProvider(ctx context.Context, logger log.Log, awsConfig *aws.Config, kmsARN string) (provider *AWSKMSProvider, err error) {
+	kms := cuaws.NewKMSClient(logger, cuaws.NewKMSClientWithConfig(*awsConfig), kmsARN)
 	_, err = kms.Encrypt(ctx, []byte("test"))
 	if err != nil {
 		return nil, fmt.Errorf("csfle.GetAWSProvider: error test flight of kms: %w", err)
@@ -44,33 +44,33 @@ func GetAWSProvider(ctx context.Context, logger *log.Logger, awsConfig *aws.Conf
 	if err != nil {
 		return nil, fmt.Errorf("CSFLE.GetAWSProvider: error fetching aws credential: %w", err)
 	}
-	provider = CreateAWSProvider(cred.AccessKeyID, cred.SecretAccessKey, cred.SessionToken, awsConfig.Region)
+	credentials := map[string]interface{}{
+		"accessKeyId":     cred.AccessKeyID,
+		"secretAccessKey": cred.SecretAccessKey,
+	}
+	if cred.SessionToken != "" {
+		credentials["sessionToken"] = cred.SessionToken
+	}
+	provider = NewAWSProvider(credentials, AWSDataKeyOpts{
+		Region: awsConfig.Region,
+		KeyARN: kmsARN,
+	})
 	return provider, nil
 }
 
-func CreateAWSProvider(awsAccessKeyID, awsSecretAccessKey, sessionToken, awsKeyRegion string) *AWSKMSProvider {
-	credentials := map[string]interface{}{
-		"accessKeyId":     awsAccessKeyID,
-		"secretAccessKey": awsSecretAccessKey,
-	}
-	if sessionToken != "" {
-		credentials["sessionToken"] = sessionToken
-	}
+func NewAWSProvider(credentials map[string]interface{}, opts AWSDataKeyOpts) *AWSKMSProvider {
 	return &AWSKMSProvider{
 		credentials: credentials,
 		name:        "aws",
-		dataKeyOpts: awsKMSDataKeyOpts{
-			Region: awsKeyRegion,
-		},
+		dataKeyOpts: opts,
 	}
 }
 
-func GetDefaultAWSKMSProvider(ctx context.Context, logger *log.Logger, kmsARN string) (MasterKeyProvider, error) {
+func GetAWSMasterKeyProvider(ctx context.Context, logger log.Log, kmsARN string) (MasterKeyProvider, error) {
 	provider, err := GetDefaultAWSProvider(ctx, logger, kmsARN)
 	if err != nil {
 		return nil, fmt.Errorf("csfle.GetDefaultAWSKMSProvider: %w", err)
 	}
-	provider.setARN(kmsARN)
 	return provider, nil
 }
 
@@ -86,11 +86,7 @@ func (a *AWSKMSProvider) DataKeyOpts() interface{} {
 	return a.dataKeyOpts
 }
 
-func (a *AWSKMSProvider) setARN(awsKeyARN string) {
-	a.dataKeyOpts.KeyARN = awsKeyARN
-}
-
-func SetEncryptionKey(ctx context.Context, logger *log.Logger, encryptionSchema *string, c mongo.Config, keyVaultNamespace, keyAltName string, kmsProvider MasterKeyProvider) error {
+func SetEncryptionKey(ctx context.Context, logger log.Log, encryptionSchema *string, c mongo.Config, keyVaultNamespace, keyAltName string, kmsProvider MasterKeyProvider) error {
 	schema := make(map[string]interface{})
 	err := json.Unmarshal([]byte(*encryptionSchema), &schema)
 	if err != nil {

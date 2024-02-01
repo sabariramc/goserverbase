@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/sabariramc/goserverbase/v4/kafka"
+	"github.com/sabariramc/goserverbase/v5/kafka"
 	ckafka "github.com/segmentio/kafka-go"
 )
 

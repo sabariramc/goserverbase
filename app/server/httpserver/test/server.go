@@ -9,20 +9,20 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/v4/app/server/httpserver"
-	"github.com/sabariramc/goserverbase/v4/aws"
-	"github.com/sabariramc/goserverbase/v4/db/mongo"
-	"github.com/sabariramc/goserverbase/v4/errors"
-	"github.com/sabariramc/goserverbase/v4/kafka"
-	"github.com/sabariramc/goserverbase/v4/log"
-	"github.com/sabariramc/goserverbase/v4/log/logwriter"
-	"github.com/sabariramc/goserverbase/v4/testutils"
-	"github.com/sabariramc/goserverbase/v4/utils"
-	"github.com/sabariramc/goserverbase/v4/utils/httputil"
+	"github.com/sabariramc/goserverbase/v5/app/server/httpserver"
+	"github.com/sabariramc/goserverbase/v5/aws"
+	"github.com/sabariramc/goserverbase/v5/db/mongo"
+	"github.com/sabariramc/goserverbase/v5/errors"
+	"github.com/sabariramc/goserverbase/v5/kafka"
+	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v5/log/logwriter"
+	"github.com/sabariramc/goserverbase/v5/testutils"
+	"github.com/sabariramc/goserverbase/v5/utils"
+	"github.com/sabariramc/goserverbase/v5/utils/httputil"
 )
 
 var ServerTestConfig *testutils.TestConfig
-var ServerTestLogger *log.Logger
+var ServerTestLogger log.Log
 var ServerTestLMux log.LogMux
 
 func init() {
@@ -42,7 +42,7 @@ func GetCorrelationContext() context.Context {
 
 type server struct {
 	*httpserver.HTTPServer
-	log        *log.Logger
+	log        log.Log
 	pr         *kafka.Producer
 	conn       *mongo.Mongo
 	coll       *mongo.Collection

@@ -14,9 +14,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/v4/crypto/aes"
-	"github.com/sabariramc/goserverbase/v4/log"
-	"github.com/sabariramc/goserverbase/v4/utils"
+	"github.com/sabariramc/goserverbase/v5/crypto/aes"
+	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v5/utils"
 )
 
 const (
@@ -30,7 +30,7 @@ type S3Crypto struct {
 	_ struct{}
 	*S3
 	kms *KMS
-	log *log.Logger
+	log log.Log
 }
 
 type urlCache struct {
@@ -41,11 +41,11 @@ type urlCache struct {
 
 var piiFileCache = make(map[string]*urlCache)
 
-func GetDefaultS3CryptoClient(logger *log.Logger, keyArn string) *S3Crypto {
+func GetDefaultS3CryptoClient(logger log.Log, keyArn string) *S3Crypto {
 	return NewS3CryptoClient(GetDefaultS3Client(logger), GetDefaultKMSClient(logger, keyArn), logger)
 }
 
-func NewS3CryptoClient(s3Client *S3, kms *KMS, logger *log.Logger) *S3Crypto {
+func NewS3CryptoClient(s3Client *S3, kms *KMS, logger log.Log) *S3Crypto {
 	return &S3Crypto{kms: kms, log: logger.NewResourceLogger("S3Crypto"), S3: s3Client}
 }
 

@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"testing"
 
-	server "github.com/sabariramc/goserverbase/v4/app/server/httpserver/test"
+	server "github.com/sabariramc/goserverbase/v5/app/server/httpserver/test"
 	"gotest.tools/assert"
 )
 

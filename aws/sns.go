@@ -8,19 +8,19 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sns/types"
-	"github.com/sabariramc/goserverbase/v4/log"
-	"github.com/sabariramc/goserverbase/v4/utils"
+	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v5/utils"
 )
 
 type SNS struct {
 	_ struct{}
 	*sns.Client
-	log *log.Logger
+	log log.Log
 }
 
 var defaultSNSClient *sns.Client
 
-func GetDefaultSNSClient(logger *log.Logger) *SNS {
+func GetDefaultSNSClient(logger log.Log) *SNS {
 	if defaultSNSClient == nil {
 		defaultSNSClient = NewSNSClientWithConfig(defaultAWSConfig)
 	}
@@ -32,7 +32,7 @@ func NewSNSClientWithConfig(awsConfig *aws.Config) *sns.Client {
 	return client
 }
 
-func NewSNSClient(logger *log.Logger, client *sns.Client) *SNS {
+func NewSNSClient(logger log.Log, client *sns.Client) *SNS {
 	return &SNS{Client: client, log: logger.NewResourceLogger("SNS")}
 }
 

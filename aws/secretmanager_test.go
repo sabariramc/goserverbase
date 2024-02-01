@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/sabariramc/goserverbase/v4/aws"
+	"github.com/sabariramc/goserverbase/v5/aws"
 	"gotest.tools/assert"
 )
 

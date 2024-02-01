@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v5/log"
 	"golang.org/x/net/http2"
 )
 
@@ -27,7 +27,7 @@ type Backoff func(min, max time.Duration, attemptNum int, resp *http.Response) t
 
 type HTTPClient struct {
 	*http.Client
-	log          *log.Logger
+	log          log.Log
 	RetryMax     int
 	RetryWaitMin time.Duration
 	RetryWaitMax time.Duration
@@ -35,11 +35,11 @@ type HTTPClient struct {
 	Backoff      Backoff
 }
 
-func NewDefaultHTTPClient(log *log.Logger) *HTTPClient {
+func NewDefaultHTTPClient(log log.Log) *HTTPClient {
 	return NewHTTPClient(log, 4, time.Second*1, time.Second*5)
 }
 
-func NewHTTPClient(log *log.Logger, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HTTPClient {
+func NewHTTPClient(log log.Log, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HTTPClient {
 	t := http.DefaultTransport.(*http.Transport).Clone()
 	t.MaxIdleConns = 100
 	t.MaxConnsPerHost = 100
@@ -47,7 +47,7 @@ func NewHTTPClient(log *log.Logger, retryMax int, retryWaitMin, retryWaitMax tim
 	return New(log, &http.Client{Transport: t}, retryMax, retryWaitMin, retryWaitMax)
 }
 
-func NewH2CClient(log *log.Logger, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HTTPClient {
+func NewH2CClient(log log.Log, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HTTPClient {
 	return New(log, &http.Client{
 		Transport: &http2.Transport{
 			// So http2.Transport doesn't complain the URL scheme isn't 'https'
@@ -61,7 +61,7 @@ func NewH2CClient(log *log.Logger, retryMax int, retryWaitMin, retryWaitMax time
 	}, retryMax, retryWaitMin, retryWaitMax)
 }
 
-func New(log *log.Logger, c *http.Client, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HTTPClient {
+func New(log log.Log, c *http.Client, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HTTPClient {
 	return &HTTPClient{Client: c, log: log.NewResourceLogger("HttpClient"), RetryMax: retryMax, RetryWaitMin: retryWaitMin, RetryWaitMax: retryWaitMax, CheckRetry: retryablehttp.DefaultRetryPolicy, Backoff: retryablehttp.DefaultBackoff}
 }
 

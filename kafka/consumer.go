@@ -9,23 +9,23 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v4/kafka/api"
-	"github.com/sabariramc/goserverbase/v4/log"
-	"github.com/sabariramc/goserverbase/v4/utils"
+	"github.com/sabariramc/goserverbase/v5/kafka/api"
+	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v5/utils"
 	"github.com/segmentio/kafka-go"
 )
 
 type Consumer struct {
 	*api.Reader
 	config           KafkaConsumerConfig
-	log              *log.Logger
+	log              log.Log
 	topics           []string
 	serviceName      string
 	autoCommitCancel context.CancelFunc
 	wg               sync.WaitGroup
 }
 
-func NewConsumer(ctx context.Context, logger *log.Logger, config KafkaConsumerConfig, topics ...string) (*Consumer, error) {
+func NewConsumer(ctx context.Context, logger log.Log, config KafkaConsumerConfig, topics ...string) (*Consumer, error) {
 	if config.MaxBuffer <= 0 {
 		config.MaxBuffer = 100
 	}
@@ -42,12 +42,12 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config KafkaConsumerCo
 		QueueCapacity:     config.MaxBuffer,
 		MaxBytes:          10e6, // 10MB,
 		Logger: &kafkaLogger{
-			Logger:  logger.NewResourceLogger("KafkaConsumerInfoLog"),
+			Log:     logger.NewResourceLogger("KafkaConsumerInfoLog"),
 			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
 			isError: false,
 		},
 		ErrorLogger: &kafkaLogger{
-			Logger:  logger.NewResourceLogger("KafkaConsumerErrorLog"),
+			Log:     logger.NewResourceLogger("KafkaConsumerErrorLog"),
 			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
 			isError: true,
 		},
@@ -61,7 +61,7 @@ func NewConsumer(ctx context.Context, logger *log.Logger, config KafkaConsumerCo
 	k := &Consumer{
 		log:         logger.NewResourceLogger("KafkaConsumer"),
 		config:      config,
-		Reader:      api.NewReader(ctx, *logger, r, config.MaxBuffer),
+		Reader:      api.NewReader(ctx, logger, r, config.MaxBuffer),
 		topics:      topics,
 		serviceName: config.ServiceName,
 	}

@@ -7,20 +7,20 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/v4/errors"
-	"github.com/sabariramc/goserverbase/v4/errors/message"
-	"github.com/sabariramc/goserverbase/v4/kafka"
-	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v5/errors"
+	"github.com/sabariramc/goserverbase/v5/errors/message"
+	"github.com/sabariramc/goserverbase/v5/kafka"
+	"github.com/sabariramc/goserverbase/v5/log"
 )
 
 type ErrorNotifierKafka struct {
 	producer    *kafka.Producer
-	log         *log.Logger
+	log         log.Log
 	serviceName string
 	topic       string
 }
 
-func New(ctx context.Context, log *log.Logger, serviceName string, topic string, producer *kafka.Producer) *ErrorNotifierKafka {
+func New(ctx context.Context, log log.Log, serviceName string, topic string, producer *kafka.Producer) *ErrorNotifierKafka {
 	return &ErrorNotifierKafka{producer: producer, log: log.NewResourceLogger("ErrorNotifierKafka"), serviceName: serviceName, topic: topic}
 }
 

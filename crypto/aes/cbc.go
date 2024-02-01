@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/v4/crypto"
-	"github.com/sabariramc/goserverbase/v4/crypto/padding"
-	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v5/crypto"
+	"github.com/sabariramc/goserverbase/v5/crypto/padding"
+	"github.com/sabariramc/goserverbase/v5/log"
 )
 
 var ErrBlockError = fmt.Errorf("cipher text is not a multiple of the block size")
@@ -21,11 +21,11 @@ var ErrIVLengthMismatch = fmt.Errorf("IV length is not matching with block size"
 type CBC struct {
 	padder crypto.Padder
 	key    []byte
-	log    *log.Logger
+	log    log.Log
 	iv     []byte
 }
 
-func NewCBCPKCS7(ctx context.Context, log *log.Logger, key string, iv []byte) (*CBC, error) {
+func NewCBCPKCS7(ctx context.Context, log log.Log, key string, iv []byte) (*CBC, error) {
 	keyByte, err := getKeyBytes(key)
 	if err != nil {
 		log.Error(ctx, "erroneous in key", err)
@@ -38,7 +38,7 @@ func NewCBCPKCS7(ctx context.Context, log *log.Logger, key string, iv []byte) (*
 	return NewCBC(ctx, log, key, padding.NewPKCS7(block.BlockSize()), iv)
 }
 
-func NewCBC(ctx context.Context, log *log.Logger, key string, padder crypto.Padder, iv []byte) (*CBC, error) {
+func NewCBC(ctx context.Context, log log.Log, key string, padder crypto.Padder, iv []byte) (*CBC, error) {
 	keyByte, err := getKeyBytes(key)
 	if err != nil {
 		log.Error(ctx, "error in key", err)

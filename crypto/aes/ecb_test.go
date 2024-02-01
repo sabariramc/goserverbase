@@ -5,7 +5,7 @@ import (
 	"encoding/base64"
 	"testing"
 
-	"github.com/sabariramc/goserverbase/v4/crypto/aes"
+	"github.com/sabariramc/goserverbase/v5/crypto/aes"
 	"gotest.tools/assert"
 )
 

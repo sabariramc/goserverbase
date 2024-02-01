@@ -71,7 +71,7 @@ type Logger struct {
 	audit       AuditLogWriter
 }
 
-func (l *Logger) NewResourceLogger(resourceName string) *Logger {
+func (l *Logger) NewResourceLogger(resourceName string) Log {
 	newLog := *l
 	newLog.SetModuleName(resourceName)
 	return &newLog

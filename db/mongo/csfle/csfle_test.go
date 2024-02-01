@@ -1,13 +1,15 @@
 package csfle_test
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
 	"testing"
 
-	"github.com/sabariramc/goserverbase/v4/db/mongo"
-	"github.com/sabariramc/goserverbase/v4/db/mongo/csfle"
+	"github.com/sabariramc/goserverbase/v5/aws"
+	"github.com/sabariramc/goserverbase/v5/db/mongo"
+	"github.com/sabariramc/goserverbase/v5/db/mongo/csfle"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"gotest.tools/assert"
 )
@@ -30,6 +32,22 @@ type PIITestVal struct {
 	Address Address            `bson:"address"`
 }
 
+func getKMSProvider(ctx context.Context, kmsArn string) (csfle.MasterKeyProvider, error) {
+	if os.Getenv("AWS_PROVIDER") == "local" {
+		cred, _ := aws.GetDefaultAWSConfig().Credentials.Retrieve(ctx)
+		kmsProvider := csfle.NewAWSProvider(map[string]interface{}{
+			"accessKeyId":     cred.AccessKeyID,
+			"secretAccessKey": cred.SecretAccessKey,
+		}, csfle.AWSDataKeyOpts{
+			Region:   aws.GetDefaultAWSConfig().Region,
+			KeyARN:   kmsArn,
+			Endpoint: "http://localhost.localstack.cloud:4566",
+		})
+		return kmsProvider, nil
+	}
+	return csfle.GetAWSMasterKeyProvider(ctx, MongoTestLogger, kmsArn)
+}
+
 func TestCollectionPII(t *testing.T) {
 	ctx := GetCorrelationContext()
 	file, err := os.Open("./sample/piischeme.json")
@@ -48,7 +66,7 @@ func TestCollectionPII(t *testing.T) {
 	scheme := string(schemeByte)
 	kmsArn := MongoTestConfig.AWS.KMS_ARN
 	keyAltName := "MongoPIITestKey"
-	kmsProvider, err := csfle.GetDefaultAWSKMSProvider(ctx, MongoTestLogger, kmsArn)
+	kmsProvider, err := getKMSProvider(ctx, kmsArn)
 	if err != nil {
 		assert.NilError(t, err)
 	}

@@ -10,9 +10,9 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/sabariramc/goserverbase/v4/crypto"
-	"github.com/sabariramc/goserverbase/v4/crypto/padding"
-	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v5/crypto"
+	"github.com/sabariramc/goserverbase/v5/crypto/padding"
+	"github.com/sabariramc/goserverbase/v5/log"
 )
 
 type ECB struct {
@@ -20,10 +20,10 @@ type ECB struct {
 	key       []byte
 	blockSize int
 	padder    crypto.Padder
-	log       *log.Logger
+	log       log.Log
 }
 
-func NewECBPKC5(ctx context.Context, key []byte, log *log.Logger) (*ECB, error) {
+func NewECBPKC5(ctx context.Context, key []byte, log log.Log) (*ECB, error) {
 	cipher, err := NewECB(ctx, key, log, padding.NewPKCS7(len(key)))
 	if err != nil {
 		log.Error(ctx, "error creating ECB", err)
@@ -32,7 +32,7 @@ func NewECBPKC5(ctx context.Context, key []byte, log *log.Logger) (*ECB, error) 
 	return cipher, nil
 }
 
-func NewECB(ctx context.Context, key []byte, log *log.Logger, padder crypto.Padder) (*ECB, error) {
+func NewECB(ctx context.Context, key []byte, log log.Log, padder crypto.Padder) (*ECB, error) {
 	cipher, err := aes.NewCipher(key)
 	if err != nil {
 		log.Error(ctx, "error creating cipher", err)

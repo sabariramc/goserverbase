@@ -6,20 +6,20 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	baseapp "github.com/sabariramc/goserverbase/v4/app"
-	"github.com/sabariramc/goserverbase/v4/errors"
-	"github.com/sabariramc/goserverbase/v4/log"
+	baseapp "github.com/sabariramc/goserverbase/v5/app"
+	"github.com/sabariramc/goserverbase/v5/errors"
+	"github.com/sabariramc/goserverbase/v5/log"
 )
 
 type HTTPServer struct {
 	*baseapp.BaseApp
 	handler *gin.Engine
-	log     *log.Logger
+	log     log.Log
 	c       *HTTPServerConfig
 	server  *http.Server
 }
 
-func New(appConfig HTTPServerConfig, logger *log.Logger, errorNotifier errors.ErrorNotifier) *HTTPServer {
+func New(appConfig HTTPServerConfig, logger log.Log, errorNotifier errors.ErrorNotifier) *HTTPServer {
 	b := baseapp.New(appConfig.ServerConfig, logger, errorNotifier)
 	h := &HTTPServer{
 		BaseApp: b,

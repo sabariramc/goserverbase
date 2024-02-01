@@ -13,13 +13,13 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
-	m "github.com/sabariramc/goserverbase/v4/db/mongo"
-	"github.com/sabariramc/goserverbase/v4/log"
+	m "github.com/sabariramc/goserverbase/v5/db/mongo"
+	"github.com/sabariramc/goserverbase/v5/log"
 )
 
 var tmp = "/tmp/mongocryptd"
 
-func New(ctx context.Context, logger *log.Logger, c m.Config, keyVaultNamespace string, schemaMap map[string]interface{}, provider MasterKeyProvider, opts ...*options.ClientOptions) (*mongo.Client, error) {
+func New(ctx context.Context, logger log.Log, c m.Config, keyVaultNamespace string, schemaMap map[string]interface{}, provider MasterKeyProvider, opts ...*options.ClientOptions) (*mongo.Client, error) {
 	extraOptions := map[string]interface{}{
 		"mongocryptdSpawnArgs": []string{fmt.Sprintf("--pidfilepath=%v/mongocryptd.pid", tmp)},
 	}

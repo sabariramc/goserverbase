@@ -7,16 +7,16 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/sabariramc/goserverbase/v4/log"
-	"github.com/sabariramc/goserverbase/v4/utils"
+	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v5/utils"
 )
 
 type GCM struct {
 	key []byte
-	log *log.Logger
+	log log.Log
 }
 
-func NewGCM(ctx context.Context, log *log.Logger, key string) (*GCM, error) {
+func NewGCM(ctx context.Context, log log.Log, key string) (*GCM, error) {
 	keyByte, err := getKeyBytes(key)
 	if err != nil {
 		log.Error(ctx, "error in key", err)

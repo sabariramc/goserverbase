@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v5/log"
 )
 
 func extractKeyValue(r *http.Request, keyList []string) map[string]string {

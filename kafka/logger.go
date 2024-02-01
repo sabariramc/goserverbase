@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v5/log"
 	"github.com/segmentio/kafka-go"
 )
 
 type kafkaLogger struct {
-	*log.Logger
+	log.Log
 	ctx     context.Context
 	isError bool
 }
@@ -33,7 +33,7 @@ func (k *kafkaLogger) Printf(shortMessage string, logMessage ...interface{}) {
 }
 
 type kafkaDeliveryReportLogger struct {
-	*log.Logger
+	log.Log
 	ctx context.Context
 }
 

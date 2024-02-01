@@ -4,14 +4,17 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/v4/aws"
+	"github.com/sabariramc/goserverbase/v5/aws"
 	"gotest.tools/assert"
 )
 
 func TestS3(t *testing.T) {
 	ctx := GetCorrelationContext()
-	s3Client := aws.GetDefaultS3Client(AWSTestLogger)
+	s3Client := aws.NewS3Client(s3.NewFromConfig(*aws.GetDefaultAWSConfig(), func(o *s3.Options) {
+		o.UsePathStyle = true
+	}), AWSTestLogger)
 	path := fmt.Sprintf("dev/temp/goserverbasetest/%v.pdf", uuid.NewString())
 	s3Bucket := AWSTestConfig.AWS.S3_BUCKET
 	_, err := s3Client.PutFile(ctx, s3Bucket, path, "./testdata/sample_aadhaar.pdf")
@@ -36,7 +39,9 @@ func TestS3(t *testing.T) {
 func TestS3PII(t *testing.T) {
 	ctx := GetCorrelationContext()
 	keyArn := AWSTestConfig.AWS.KMS_ARN
-	s3Client := aws.GetDefaultS3CryptoClient(AWSTestLogger, keyArn)
+	s3Client := aws.NewS3CryptoClient(aws.NewS3Client(s3.NewFromConfig(*aws.GetDefaultAWSConfig(), func(o *s3.Options) {
+		o.UsePathStyle = true
+	}), AWSTestLogger), aws.GetDefaultKMSClient(AWSTestLogger, keyArn), AWSTestLogger)
 	path := fmt.Sprintf("dev/temp/goserverbasetest/%v.pdf", uuid.NewString())
 	s3Bucker := AWSTestConfig.AWS.S3_BUCKET
 	err := s3Client.PutFile(ctx, s3Bucker, path, "./testdata/sample_aadhaar.pdf")

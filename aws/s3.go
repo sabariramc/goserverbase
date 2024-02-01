@@ -11,14 +11,14 @@ import (
 	v4 "github.com/aws/aws-sdk-go-v2/aws/signer/v4"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gabriel-vasile/mimetype"
-	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v5/log"
 )
 
 type S3 struct {
 	_ struct{}
 	*s3.Client
 	*s3.PresignClient
-	log *log.Logger
+	log log.Log
 }
 
 var defaultS3Client *s3.Client
@@ -27,14 +27,14 @@ func NewS3ClientWithConfig(awsConfig aws.Config) *s3.Client {
 	return s3.NewFromConfig(awsConfig)
 }
 
-func GetDefaultS3Client(logger *log.Logger) *S3 {
+func GetDefaultS3Client(logger log.Log) *S3 {
 	if defaultS3Client == nil {
 		defaultS3Client = NewS3ClientWithConfig(*defaultAWSConfig)
 	}
 	return NewS3Client(defaultS3Client, logger)
 }
 
-func NewS3Client(client *s3.Client, logger *log.Logger) *S3 {
+func NewS3Client(client *s3.Client, logger log.Log) *S3 {
 	return &S3{Client: client, log: logger.NewResourceLogger("S3"), PresignClient: s3.NewPresignClient(client)}
 }
 
@@ -59,7 +59,7 @@ func (s *S3) PutFile(ctx context.Context, s3Bucket, s3Key, localFilPath string) 
 	if err != nil {
 		s.log.Notice(ctx, "Failed detecting mime type", err)
 	}
-	s.log.Notice(ctx, "File mimetype", mime)
+	s.log.Notice(ctx, "File mimetype", mime.String())
 	return s.PutObject(ctx, s3Bucket, s3Key, fp, mime.String(), nil)
 }
 

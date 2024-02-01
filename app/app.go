@@ -2,11 +2,10 @@ package baseapp
 
 import (
 	"context"
-	"sync"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v4/errors"
-	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v5/errors"
+	"github.com/sabariramc/goserverbase/v5/log"
 )
 
 type ShutdownHook interface {
@@ -16,13 +15,12 @@ type ShutdownHook interface {
 
 type BaseApp struct {
 	c             *ServerConfig
-	log           *log.Logger
+	log           log.Log
 	errorNotifier errors.ErrorNotifier
 	shutdownHooks []ShutdownHook
-	hookLock      sync.Mutex
 }
 
-func New(appConfig ServerConfig, logger *log.Logger, errorNotifier errors.ErrorNotifier) *BaseApp {
+func New(appConfig ServerConfig, logger log.Log, errorNotifier errors.ErrorNotifier) *BaseApp {
 	b := &BaseApp{
 		c:             &appConfig,
 		errorNotifier: errorNotifier,
@@ -39,12 +37,8 @@ func (b *BaseApp) GetConfig() ServerConfig {
 	return *b.c
 }
 
-func (b *BaseApp) GetLogger() *log.Logger {
+func (b *BaseApp) GetLogger() log.Log {
 	return b.log
-}
-
-func (b *BaseApp) SetLogger(l *log.Logger) {
-	b.log = l
 }
 
 func (b *BaseApp) SetErrorNotifier(errorNotifier errors.ErrorNotifier) {

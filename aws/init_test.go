@@ -4,15 +4,13 @@ import (
 	"context"
 	"os"
 
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/sabariramc/goserverbase/v4/aws"
-	"github.com/sabariramc/goserverbase/v4/log"
-	"github.com/sabariramc/goserverbase/v4/log/logwriter"
-	"github.com/sabariramc/goserverbase/v4/testutils"
+	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v5/log/logwriter"
+	"github.com/sabariramc/goserverbase/v5/testutils"
 )
 
 var AWSTestConfig *testutils.TestConfig
-var AWSTestLogger *log.Logger
+var AWSTestLogger log.Log
 
 func init() {
 	testutils.LoadEnv("../.env")
@@ -26,8 +24,6 @@ func init() {
 	consoleLogWriter := logwriter.NewConsoleWriter()
 	lMux := log.NewDefaultLogMux(consoleLogWriter)
 	AWSTestLogger = log.NewLogger(context.TODO(), AWSTestConfig.Logger, "AWSTest", lMux, nil)
-	defaultConfig, _ := config.LoadDefaultConfig(context.TODO())
-	aws.SetDefaultAWSConfig(defaultConfig)
 }
 
 func GetCorrelationContext() context.Context {
