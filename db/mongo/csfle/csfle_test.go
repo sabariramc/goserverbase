@@ -1,36 +1,18 @@
 package csfle_test
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"os"
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/v5/aws"
 	"github.com/sabariramc/goserverbase/v5/db/mongo"
 	"github.com/sabariramc/goserverbase/v5/db/mongo/csfle"
 	"github.com/sabariramc/goserverbase/v5/db/mongo/csfle/sample"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"gotest.tools/assert"
 )
-
-func getKMSProvider(ctx context.Context, kmsArn string) (csfle.MasterKeyProvider, error) {
-	if os.Getenv("AWS_PROVIDER") == "local" {
-		cred, _ := aws.GetDefaultAWSConfig().Credentials.Retrieve(ctx)
-		kmsProvider := csfle.NewAWSProvider(map[string]interface{}{
-			"accessKeyId":     cred.AccessKeyID,
-			"secretAccessKey": cred.SecretAccessKey,
-		}, csfle.AWSDataKeyOpts{
-			Region:   aws.GetDefaultAWSConfig().Region,
-			KeyARN:   kmsArn,
-			Endpoint: "http://localhost.localstack.cloud:4566",
-		})
-		return kmsProvider, nil
-	}
-	return csfle.GetAWSMasterKeyProvider(ctx, MongoTestLogger, kmsArn)
-}
 
 func TestCollectionPII(t *testing.T) {
 	ctx := GetCorrelationContext()
@@ -44,14 +26,13 @@ func TestCollectionPII(t *testing.T) {
 	scheme := string(schemeByte)
 	kmsArn := MongoTestConfig.AWS.KMS_ARN
 	dbName, collName := "GOTEST", "PII"
-	kmsProvider, err := getKMSProvider(ctx, kmsArn)
+	kmsProvider, err := sample.GetKMSProvider(ctx, MongoTestLogger, kmsArn)
 	assert.NilError(t, err)
 	config := MongoTestConfig.CSFLE
 	dbScheme, err := csfle.SetEncryptionKey(ctx, MongoTestLogger, &scheme, *MongoTestConfig.Mongo, config.KeyVaultNamespace, kmsProvider)
 	assert.NilError(t, err)
 	client, err := mongo.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
 	assert.NilError(t, err)
-
 	config.KMSCredentials = kmsProvider.Credentials()
 	config.SchemaMap = dbScheme
 	csfleClient, err := csfle.New(ctx, MongoTestLogger, *config)

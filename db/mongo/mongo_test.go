@@ -39,9 +39,7 @@ func GetSampleData() *TestVal {
 func BenchmarkMongoCollectionInsertOne(b *testing.B) {
 	ctx := GetCorrelationContext()
 	client, err := mongo.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
-	if err != nil {
-		assert.NilError(b, err)
-	}
+	assert.NilError(b, err)
 	coll := client.Database("GOTEST").Collection("Plain")
 	data := GetSampleData()
 	for i := 0; i < b.N; i++ {
@@ -55,32 +53,24 @@ func BenchmarkMongoCollectionInsertOne(b *testing.B) {
 func TestMongoCollectionInsertOne(t *testing.T) {
 	ctx := GetCorrelationContext()
 	client, err := mongo.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 	coll := client.Database("GOTEST").Collection("Plain")
 	data := GetSampleData()
 	_, err = coll.InsertOne(ctx, data)
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 }
 
 func TestMongoCollection(t *testing.T) {
 	ctx := GetCorrelationContext()
 	client, err := mongo.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 	coll := client.Database("GOTEST").Collection("Plain")
 	input := GetSampleData()
 	coll.InsertOne(ctx, input)
 	cur := coll.FindOne(ctx, map[string]string{"testId": input.TestId})
 	res := &TestVal{}
 	err = cur.Decode(res)
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 	res.ID = nil
 	input.BaseMongoDocument = nil
 	res.BaseMongoDocument = nil
@@ -89,30 +79,22 @@ func TestMongoCollection(t *testing.T) {
 	cur = coll.FindOne(ctx, map[string]string{"testId": input.TestId})
 	res = &TestVal{}
 	err = cur.Decode(res)
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 	coll.DeleteOne(ctx, map[string]string{"_id": res.ID.String()})
 	cur = coll.FindOne(ctx, map[string]string{"_id": res.ID.String()})
 	err = cur.Decode(res)
-	if err != nil {
-		fmt.Println(err)
-	}
+	fmt.Println(err)
 
 }
 
 func TestMongoCollectionFindOne(t *testing.T) {
 	ctx := GetCorrelationContext()
 	client, err := mongo.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 	coll := client.Database("GOTEST").Collection("Plain")
 	cur := coll.FindOne(ctx, map[string]string{"strVal": "value1"})
 	val := &TestVal{}
 	err = cur.Decode(val)
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 	fmt.Printf("%+v\n", val)
 }

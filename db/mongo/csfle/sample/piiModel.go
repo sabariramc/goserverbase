@@ -1,7 +1,13 @@
 package sample
 
 import (
+	"context"
+	"os"
 	"time"
+
+	"github.com/sabariramc/goserverbase/v5/aws"
+	"github.com/sabariramc/goserverbase/v5/db/mongo/csfle"
+	"github.com/sabariramc/goserverbase/v5/log"
 )
 
 type Address struct {
@@ -53,4 +59,42 @@ func GetRandomData(uuid string) PIITestVal {
 			Country:      "India",
 		},
 	}
+}
+
+type LocalMaster struct {
+	key string
+}
+
+func (a *LocalMaster) Name() string {
+	return "local"
+}
+
+func (a *LocalMaster) Credentials() map[string]map[string]interface{} {
+	return map[string]map[string]interface{}{
+		"local": {
+			"key": []byte("1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"),
+		},
+	}
+}
+
+func (a *LocalMaster) DataKeyOpts() interface{} {
+	return nil
+}
+
+func GetKMSProvider(ctx context.Context, log log.Log, kmsArn string) (csfle.MasterKeyProvider, error) {
+	if os.Getenv("KMS_PROVIDER") == "localstack" {
+		cred, _ := aws.GetDefaultAWSConfig().Credentials.Retrieve(ctx)
+		kmsProvider := csfle.NewAWSProvider(map[string]interface{}{
+			"accessKeyId":     cred.AccessKeyID,
+			"secretAccessKey": cred.SecretAccessKey,
+		}, csfle.AWSDataKeyOpts{
+			Region:   aws.GetDefaultAWSConfig().Region,
+			KeyARN:   kmsArn,
+			Endpoint: "http://localhost.localstack.cloud:4566",
+		})
+		return kmsProvider, nil
+	} else if os.Getenv("KMS_PROVIDER") == "local" {
+		return &LocalMaster{}, nil
+	}
+	return csfle.GetAWSMasterKeyProvider(ctx, log, kmsArn)
 }

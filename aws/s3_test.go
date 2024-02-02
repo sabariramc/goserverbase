@@ -18,22 +18,14 @@ func TestS3(t *testing.T) {
 	path := fmt.Sprintf("dev/goserverbasetest/plain/%v.pdf", uuid.NewString())
 	s3Bucket := AWSTestConfig.AWS.S3_BUCKET
 	_, err := s3Client.PutFile(ctx, s3Bucket, path, "./testdata/sample.pdf")
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 	err = s3Client.GetFile(ctx, s3Bucket, path, "./testdata/result/test.pdf")
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 	_, err = s3Client.PresignGetObject(ctx, s3Bucket, path, 10*60)
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 	path = fmt.Sprintf("dev/temp/goserverbasetest/%v.pdf", uuid.NewString())
 	_, err = s3Client.PresignPutObject(ctx, s3Bucket, path, 10)
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 }
 
 func TestS3PII(t *testing.T) {
@@ -45,15 +37,9 @@ func TestS3PII(t *testing.T) {
 	path := fmt.Sprintf("dev/goserverbasetest/pii/%v.pdf", uuid.NewString())
 	s3Bucker := AWSTestConfig.AWS.S3_BUCKET
 	err := s3Client.PutFile(ctx, s3Bucker, path, "./testdata/sample.pdf")
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 	err = s3Client.GetFile(ctx, s3Bucker, path, "./testdata/result/testpii.pdf")
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 	_, err = s3Client.GetFileCache(ctx, s3Bucker, path, "testCache")
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 }

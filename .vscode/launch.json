@@ -37,6 +37,17 @@
             "program": "${workspaceFolder}/app/server/kafkaconsumer/test/consumer/main.go",
             "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env",
-        }
+        },{
+            "name": "CSFLE Server",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/db/mongo/csfle/test/http/main.go",
+            "cwd": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env",
+            "buildFlags":[
+                "-tags cse"
+            ]
+        },
     ]
 }

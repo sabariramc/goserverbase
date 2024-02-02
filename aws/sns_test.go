@@ -31,8 +31,6 @@ func TestSNSClient(t *testing.T) {
 		},
 	})
 	_, err := snsClient.Publish(ctx, &arn, nil, message, nil)
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 
 }

@@ -2,16 +2,21 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sabariramc/goserverbase/v5/app/server/httpserver"
 	"github.com/sabariramc/goserverbase/v5/db/mongo"
+	"github.com/sabariramc/goserverbase/v5/db/mongo/csfle"
+	"github.com/sabariramc/goserverbase/v5/db/mongo/csfle/sample"
 	"github.com/sabariramc/goserverbase/v5/log"
 	"github.com/sabariramc/goserverbase/v5/log/logwriter"
 	"github.com/sabariramc/goserverbase/v5/testutils"
+	"github.com/sabariramc/goserverbase/v5/utils"
 )
 
 var ServerTestConfig *testutils.TestConfig
@@ -41,20 +46,25 @@ type server struct {
 	c    *testutils.TestConfig
 }
 
+type body struct {
+	UUID string `json:"UUID`
+}
+
 func (s *server) Post(w http.ResponseWriter, r *http.Request) {
-	id := log.GetCustomerIdentifier(r.Context())
-	corr := log.GetCorrelationParam(r.Context())
-	s.log.Info(r.Context(), "identity", id)
-	s.log.Info(r.Context(), "correlation", corr)
-	data, _ := s.GetRequestBody(r)
-	s.WriteJSONWithStatusCode(r.Context(), w, 200, map[string]string{"body": string(data)})
+	data, _ := io.ReadAll(r.Body)
+	payload := body{}
+	json.Unmarshal(data, &payload)
+	s.coll.InsertOne(r.Context(), sample.GetRandomData(payload.UUID))
+	w.WriteHeader(http.StatusCreated)
 }
 
 func (s *server) Get(c *gin.Context) {
+	param := c.Query("UUID")
+	data := sample.PIITestVal{}
+	cur := s.coll.FindOne(c.Request.Context(), map[string]string{"UUID": param})
+	cur.Decode(&data)
 	w := c.Writer
-	fmt.Println(c.Param("tenantId"))
-	w.WriteHeader(200)
-	w.Write([]byte("World"))
+	s.WriteJSON(c.Request.Context(), w, data)
 }
 
 func (s *server) Name(ctx context.Context) string {
@@ -67,14 +77,37 @@ func (s *server) Shutdown(ctx context.Context) error {
 
 func NewServer() *server {
 	ctx := GetCorrelationContext()
-	conn, err := mongo.New(ctx, ServerTestLogger, *ServerTestConfig.Mongo)
+	loc := utils.GetEnv("SCHEME_LOCATION", "./db/mongo/csfle/sample/piischeme.json")
+	file, err := os.Open(loc)
+	if err != nil {
+		ServerTestLogger.Emergency(ctx, "error opening scheme file", err, nil)
+	}
+	schemeByte, err := io.ReadAll(file)
+	if err != nil {
+		ServerTestLogger.Emergency(ctx, "error reading scheme file", err, nil)
+	}
+	scheme := string(schemeByte)
+	kmsArn := ServerTestConfig.AWS.KMS_ARN
+	dbName, collName := "GOTEST", "PII"
+	kmsProvider, err := sample.GetKMSProvider(ctx, ServerTestLogger, kmsArn)
+	if err != nil {
+		ServerTestLogger.Emergency(ctx, "error creating kms", err, nil)
+	}
+	config := ServerTestConfig.CSFLE
+	dbScheme, err := csfle.SetEncryptionKey(ctx, ServerTestLogger, &scheme, *ServerTestConfig.Mongo, config.KeyVaultNamespace, kmsProvider)
+	if err != nil {
+		ServerTestLogger.Emergency(ctx, "error creating scheme", err, nil)
+	}
+	config.KMSCredentials = kmsProvider.Credentials()
+	config.SchemaMap = dbScheme
+	conn, err := csfle.New(ctx, ServerTestLogger, *ServerTestConfig.CSFLE)
 	if err != nil {
 		ServerTestLogger.Emergency(ctx, "error creating mongo connection", err, nil)
 	}
 	srv := &server{
 		HTTPServer: httpserver.New(*ServerTestConfig.HTTP, ServerTestLogger, nil), log: ServerTestLogger,
 		conn: conn,
-		coll: conn.Database("GOBaseTest").Collection("TestColl"),
+		coll: conn.Database(dbName).Collection(collName),
 		c:    ServerTestConfig,
 	}
 	srv.RegisterOnShutdown(srv)
