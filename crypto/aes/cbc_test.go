@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/v4/crypto"
-	"github.com/sabariramc/goserverbase/v4/crypto/aes"
+	"github.com/sabariramc/goserverbase/v5/crypto"
+	"github.com/sabariramc/goserverbase/v5/crypto/aes"
 	"gotest.tools/assert"
 )
 

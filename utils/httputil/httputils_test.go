@@ -11,15 +11,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v4/log"
-	"github.com/sabariramc/goserverbase/v4/log/logwriter"
-	"github.com/sabariramc/goserverbase/v4/testutils"
-	"github.com/sabariramc/goserverbase/v4/utils/httputil"
+	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v5/log/logwriter"
+	"github.com/sabariramc/goserverbase/v5/testutils"
+	"github.com/sabariramc/goserverbase/v5/utils/httputil"
 	"gotest.tools/assert"
 )
 
 var HttpUtilTestConfig *testutils.TestConfig
-var HttpUtilTestLogger *log.Logger
+var HttpUtilTestLogger log.Log
 
 func init() {
 	testutils.LoadEnv("../../.env")

@@ -3,7 +3,7 @@ package httpserver
 import (
 	"fmt"
 
-	"github.com/sabariramc/goserverbase/v4/utils"
+	"github.com/sabariramc/goserverbase/v5/utils"
 )
 
 type Filter struct {

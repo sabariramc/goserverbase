@@ -7,16 +7,16 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v4/kafka/api"
-	"github.com/sabariramc/goserverbase/v4/log"
-	"github.com/sabariramc/goserverbase/v4/utils"
+	"github.com/sabariramc/goserverbase/v5/kafka/api"
+	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v5/utils"
 	"github.com/segmentio/kafka-go"
 )
 
 type Producer struct {
 	*api.Writer
 	config                  KafkaProducerConfig
-	log                     *log.Logger
+	log                     log.Log
 	topic                   string
 	serviceName             string
 	autoFlushCancel         context.CancelFunc
@@ -25,7 +25,7 @@ type Producer struct {
 	isBatch                 bool
 }
 
-func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerConfig) (*Producer, error) {
+func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfig) (*Producer, error) {
 	if config.Batch && config.Async {
 		return nil, fmt.Errorf("NewProducer: `Batch` and `Async` are mutually exclusive")
 	}
@@ -43,8 +43,8 @@ func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerC
 	logger = logger.NewResourceLogger("KafkaProducer")
 	defaultCorrelationParam := &log.CorrelationParam{CorrelationId: config.ServiceName + ":KafkaProducer"}
 	kLog := &kafkaDeliveryReportLogger{
-		Logger: logger.NewResourceLogger("KafkaProducerDeliveryLog"),
-		ctx:    log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
+		Log: logger.NewResourceLogger("KafkaProducerDeliveryLog"),
+		ctx: log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
 	}
 	if config.Acknowledge == 0 {
 		logger.Warning(ctx, "Kafka replica acknowledgement is set to None", nil)
@@ -58,20 +58,20 @@ func NewProducer(ctx context.Context, logger *log.Logger, config *KafkaProducerC
 			TLS:  config.TLSConfig,
 		},
 		Logger: &kafkaLogger{
-			Logger:  logger.NewResourceLogger("KafkaProducerInfoLog"),
+			Log:     logger.NewResourceLogger("KafkaProducerInfoLog"),
 			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
 			isError: false,
 		},
 		ErrorLogger: &kafkaLogger{
 			isError: true,
-			Logger:  logger.NewResourceLogger("KafkaProducerErrorLog"),
+			Log:     logger.NewResourceLogger("KafkaProducerErrorLog"),
 			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
 		},
 		Completion:   kLog.DeliveryReport,
 		RequiredAcks: kafka.RequiredAcks(config.Acknowledge),
 		Async:        config.Async,
 	}
-	writer := api.NewWriter(ctx, p, config.BatchMaxBuffer, *logger)
+	writer := api.NewWriter(ctx, p, config.BatchMaxBuffer, logger)
 	isTopicSpecificProducer := false
 	if config.Topic != "" {
 		isTopicSpecificProducer = true

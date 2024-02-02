@@ -4,51 +4,42 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/v4/aws"
+	"github.com/sabariramc/goserverbase/v5/aws"
 	"gotest.tools/assert"
 )
 
 func TestS3(t *testing.T) {
 	ctx := GetCorrelationContext()
-	s3Client := aws.GetDefaultS3Client(AWSTestLogger)
-	path := fmt.Sprintf("dev/temp/goserverbasetest/%v.pdf", uuid.NewString())
+	s3Client := aws.NewS3Client(s3.NewFromConfig(*aws.GetDefaultAWSConfig(), func(o *s3.Options) {
+		o.UsePathStyle = true
+	}), AWSTestLogger)
+	path := fmt.Sprintf("dev/goserverbasetest/plain/%v.pdf", uuid.NewString())
 	s3Bucket := AWSTestConfig.AWS.S3_BUCKET
-	_, err := s3Client.PutFile(ctx, s3Bucket, path, "./testdata/sample_aadhaar.pdf")
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	_, err := s3Client.PutFile(ctx, s3Bucket, path, "./testdata/sample.pdf")
+	assert.NilError(t, err)
 	err = s3Client.GetFile(ctx, s3Bucket, path, "./testdata/result/test.pdf")
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 	_, err = s3Client.PresignGetObject(ctx, s3Bucket, path, 10*60)
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 	path = fmt.Sprintf("dev/temp/goserverbasetest/%v.pdf", uuid.NewString())
 	_, err = s3Client.PresignPutObject(ctx, s3Bucket, path, 10)
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 }
 
 func TestS3PII(t *testing.T) {
 	ctx := GetCorrelationContext()
 	keyArn := AWSTestConfig.AWS.KMS_ARN
-	s3Client := aws.GetDefaultS3CryptoClient(AWSTestLogger, keyArn)
-	path := fmt.Sprintf("dev/temp/goserverbasetest/%v.pdf", uuid.NewString())
+	s3Client := aws.NewS3CryptoClient(aws.NewS3Client(s3.NewFromConfig(*aws.GetDefaultAWSConfig(), func(o *s3.Options) {
+		o.UsePathStyle = true
+	}), AWSTestLogger), aws.GetDefaultKMSClient(AWSTestLogger, keyArn), AWSTestLogger)
+	path := fmt.Sprintf("dev/goserverbasetest/pii/%v.pdf", uuid.NewString())
 	s3Bucker := AWSTestConfig.AWS.S3_BUCKET
-	err := s3Client.PutFile(ctx, s3Bucker, path, "./testdata/sample_aadhaar.pdf")
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	err := s3Client.PutFile(ctx, s3Bucker, path, "./testdata/sample.pdf")
+	assert.NilError(t, err)
 	err = s3Client.GetFile(ctx, s3Bucker, path, "./testdata/result/testpii.pdf")
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 	_, err = s3Client.GetFileCache(ctx, s3Bucker, path, "testCache")
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 }

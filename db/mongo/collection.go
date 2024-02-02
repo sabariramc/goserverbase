@@ -6,7 +6,7 @@ import (
 
 	"github.com/shopspring/decimal"
 
-	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v5/log"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/bsoncodec"
@@ -17,7 +17,7 @@ import (
 
 type Collection struct {
 	*mongo.Collection
-	log *log.Logger
+	log log.Log
 }
 
 var dec, _ = decimal.NewFromString("1.234")

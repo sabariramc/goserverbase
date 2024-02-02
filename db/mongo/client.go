@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v5/utils"
 	mongotrace "gopkg.in/DataDog/dd-trace-go.v1/contrib/go.mongodb.org/mongo-driver/mongo"
-
-	"github.com/sabariramc/goserverbase/v4/log"
-	"github.com/sabariramc/goserverbase/v4/utils"
 
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -17,19 +16,19 @@ import (
 
 type Mongo struct {
 	*mongo.Client
-	log *log.Logger
+	log log.Log
 }
 
 var ErrNoDocuments = mongo.ErrNoDocuments
 
-func NewWithAWSRoleAuth(ctx context.Context, logger *log.Logger, c Config, opts ...*options.ClientOptions) (*Mongo, error) {
+func NewWithAWSRoleAuth(ctx context.Context, logger log.Log, c Config, opts ...*options.ClientOptions) (*Mongo, error) {
 	opts = append(opts, options.Client().SetAuth(options.Credential{
 		AuthMechanism: "MONGODB-AWS",
 	}))
 	return New(ctx, logger, c, opts...)
 }
 
-func New(ctx context.Context, logger *log.Logger, c Config, opts ...*options.ClientOptions) (*Mongo, error) {
+func New(ctx context.Context, logger log.Log, c Config, opts ...*options.ClientOptions) (*Mongo, error) {
 	var err error
 	connectionOptions := options.Client()
 	connectionOptions.ApplyURI(c.ConnectionString)
@@ -39,6 +38,7 @@ func New(ctx context.Context, logger *log.Logger, c Config, opts ...*options.Cli
 	connectionOptions.SetMaxConnIdleTime(time.Minute * 5)
 	connectionOptions.SetCompressors([]string{"snappy", "zlib", "zstd"})
 	connectionOptions.SetMonitor(mongotrace.NewMonitor())
+	connectionOptions.SetAppName(c.AppName)
 	mongoLogger := &MongoLogger{log: logger.NewResourceLogger("MongoInternalLog"), ctx: log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam("MongoInternal"))}
 	connectionOptions.SetLoggerOptions(&options.LoggerOptions{
 		ComponentLevels: map[options.LogComponent]options.LogLevel{
@@ -67,14 +67,14 @@ func New(ctx context.Context, logger *log.Logger, c Config, opts ...*options.Cli
 	return NewWrapper(ctx, logger, client), nil
 }
 
-func NewWrapper(ctx context.Context, logger *log.Logger, client *mongo.Client) *Mongo {
+func NewWrapper(ctx context.Context, logger log.Log, client *mongo.Client) *Mongo {
 	return &Mongo{Client: client, log: logger.NewResourceLogger("MongoClient")}
 }
 
 func (m *Mongo) GetClient() *mongo.Client {
 	return m.Client
 }
-func (m *Mongo) GetLogger() *log.Logger {
+func (m *Mongo) GetLogger() log.Log {
 	return m.log
 }
 
@@ -94,7 +94,7 @@ func (m *Mongo) Disconnect(ctx context.Context) error {
 }
 
 type MongoLogger struct {
-	log *log.Logger
+	log log.Log
 	ctx context.Context
 }
 

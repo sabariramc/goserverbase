@@ -1,15 +1,15 @@
 package mongo
 
 import (
-	"github.com/sabariramc/goserverbase/v4/log"
-	"github.com/sabariramc/goserverbase/v4/utils"
+	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v5/utils"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type Database struct {
 	*mongo.Database
-	log *log.Logger
+	log log.Log
 }
 
 var customRegistryOption = options.Collection().SetRegistry(NewCustomBsonRegistry())

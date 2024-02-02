@@ -14,9 +14,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/v4/crypto/aes"
-	"github.com/sabariramc/goserverbase/v4/log"
-	"github.com/sabariramc/goserverbase/v4/utils"
+	"github.com/sabariramc/goserverbase/v5/crypto/aes"
+	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v5/utils"
 )
 
 const (
@@ -30,7 +30,7 @@ type S3Crypto struct {
 	_ struct{}
 	*S3
 	kms *KMS
-	log *log.Logger
+	log log.Log
 }
 
 type urlCache struct {
@@ -41,11 +41,11 @@ type urlCache struct {
 
 var piiFileCache = make(map[string]*urlCache)
 
-func GetDefaultS3CryptoClient(logger *log.Logger, keyArn string) *S3Crypto {
+func GetDefaultS3CryptoClient(logger log.Log, keyArn string) *S3Crypto {
 	return NewS3CryptoClient(GetDefaultS3Client(logger), GetDefaultKMSClient(logger, keyArn), logger)
 }
 
-func NewS3CryptoClient(s3Client *S3, kms *KMS, logger *log.Logger) *S3Crypto {
+func NewS3CryptoClient(s3Client *S3, kms *KMS, logger log.Log) *S3Crypto {
 	return &S3Crypto{kms: kms, log: logger.NewResourceLogger("S3Crypto"), S3: s3Client}
 }
 
@@ -198,7 +198,7 @@ func (s *S3Crypto) GetFileCache(ctx context.Context, s3Bucket, s3Key, tempPathPa
 			return nil, fmt.Errorf("S3Crypto.GetFileCache: error downloading file: %w", err)
 		}
 		filePath := strings.Split(s3Key, "/")
-		tempS3Key := fmt.Sprintf("/temp/%v/%v-%v", tempPathPart, uuid.NewString(), filePath[len(filePath)-1])
+		tempS3Key := fmt.Sprintf("temp/%v/%v-%v", tempPathPart, uuid.NewString(), filePath[len(filePath)-1])
 		mime := mimetype.Detect(blob)
 		_, err = s.S3.PutObject(ctx, s3Bucket, tempS3Key, bytes.NewReader(blob), mime.String(), nil)
 		if err != nil {

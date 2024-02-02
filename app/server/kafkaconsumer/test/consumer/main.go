@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	server "github.com/sabariramc/goserverbase/v4/app/server/kafkaconsumer/test"
+	server "github.com/sabariramc/goserverbase/v5/app/server/kafkaconsumer/test"
 )
 
 func main() {

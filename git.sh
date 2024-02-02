@@ -1,5 +1,5 @@
-export message="reworked kafka custom tracing"
-export version="v4.14.1.ddtracev1"
+export message="tracing"
+export version="v5.0.0.ddtrace.1"
 export branch="ddtrace"
 git add .
 git commit -m "$message"

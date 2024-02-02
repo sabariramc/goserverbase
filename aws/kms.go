@@ -6,31 +6,31 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kms"
-	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v5/log"
 )
 
 type KMS struct {
 	_ struct{}
 	*kms.Client
 	keyArn *string
-	log    *log.Logger
+	log    log.Log
 }
 
 var defaultKMSClient *kms.Client
 
-func NewAWSKMSClientWithConfig(awsConfig aws.Config) *kms.Client {
+func NewKMSClientWithConfig(awsConfig aws.Config) *kms.Client {
 	client := kms.NewFromConfig(awsConfig)
 	return client
 }
 
-func GetDefaultKMSClient(logger *log.Logger, keyArn string) *KMS {
+func GetDefaultKMSClient(logger log.Log, keyArn string) *KMS {
 	if defaultKMSClient == nil {
-		defaultKMSClient = NewAWSKMSClientWithConfig(*defaultAWSConfig)
+		defaultKMSClient = NewKMSClientWithConfig(*defaultAWSConfig)
 	}
 	return NewKMSClient(logger, defaultKMSClient, keyArn)
 }
 
-func NewKMSClient(logger *log.Logger, client *kms.Client, keyArn string) *KMS {
+func NewKMSClient(logger log.Log, client *kms.Client, keyArn string) *KMS {
 	return &KMS{Client: client, keyArn: &keyArn, log: logger.NewResourceLogger("KMS")}
 }
 

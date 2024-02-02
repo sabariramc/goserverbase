@@ -8,13 +8,13 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
-	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v5/log"
 )
 
 type SecretManager struct {
 	_ struct{}
 	*secretsmanager.Client
-	log *log.Logger
+	log log.Log
 }
 
 type secretManagerCache struct {
@@ -31,14 +31,14 @@ func NewSecretManagerClientWithSession(awsConfig aws.Config) *secretsmanager.Cli
 	return client
 }
 
-func GetDefaultSecretManagerClient(logger *log.Logger) *SecretManager {
+func GetDefaultSecretManagerClient(logger log.Log) *SecretManager {
 	if defaultSecretManagerClient == nil {
 		defaultSecretManagerClient = NewSecretManagerClientWithSession(*defaultAWSConfig)
 	}
 	return NewSecretManagerClient(logger, defaultSecretManagerClient)
 }
 
-func NewSecretManagerClient(logger *log.Logger, client *secretsmanager.Client) *SecretManager {
+func NewSecretManagerClient(logger log.Log, client *secretsmanager.Client) *SecretManager {
 	return &SecretManager{Client: client, log: logger.NewResourceLogger("SecretManager")}
 }
 

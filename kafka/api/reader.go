@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v5/log"
 	"github.com/segmentio/kafka-go"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
@@ -13,7 +13,7 @@ import (
 
 type Reader struct {
 	*kafka.Reader
-	log              log.Logger
+	log              log.Log
 	commitLock       sync.Mutex
 	consumedMessages []kafka.Message
 	bufferSize       int
@@ -22,10 +22,10 @@ type Reader struct {
 
 var ErrReaderBufferFull = fmt.Errorf("Reader.StoreMessage: Buffer full")
 
-func NewReader(ctx context.Context, log log.Logger, r *kafka.Reader, bufferSize int) *Reader {
+func NewReader(ctx context.Context, log log.Log, r *kafka.Reader, bufferSize int) *Reader {
 	return &Reader{
 		Reader:           r,
-		log:              *log.NewResourceLogger("KafkaReader"),
+		log:              log.NewResourceLogger("KafkaReader"),
 		consumedMessages: make([]kafka.Message, bufferSize),
 		bufferSize:       bufferSize,
 		idx:              0,

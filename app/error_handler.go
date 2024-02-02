@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"github.com/sabariramc/goserverbase/v4/errors"
+	"github.com/sabariramc/goserverbase/v5/errors"
 )
 
 func (b *BaseApp) PanicRecovery(ctx context.Context, rec any) (int, []byte) {

@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"sync"
 
-	"github.com/sabariramc/goserverbase/v4/kafka/api/trace"
-	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v5/kafka/api/trace"
+	"github.com/sabariramc/goserverbase/v5/log"
 	"github.com/segmentio/kafka-go"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
@@ -17,7 +17,7 @@ type Writer struct {
 	messageList []kafka.Message
 	produceLock sync.Mutex
 	bufferLen   int
-	log         log.Logger
+	log         log.Log
 	msgCh       chan kafka.Message
 	wg          sync.WaitGroup
 	idx         int
@@ -25,7 +25,7 @@ type Writer struct {
 
 var ErrWriterBufferFull = fmt.Errorf("Reader.Send: Buffer full")
 
-func NewWriter(ctx context.Context, w *kafka.Writer, bufferLen int, log log.Logger) *Writer {
+func NewWriter(ctx context.Context, w *kafka.Writer, bufferLen int, log log.Log) *Writer {
 	if w.Async {
 		log.Notice(ctx, "Kafak writer is set to async mode", nil)
 	}
@@ -33,7 +33,7 @@ func NewWriter(ctx context.Context, w *kafka.Writer, bufferLen int, log log.Logg
 		Writer:      w,
 		messageList: make([]kafka.Message, bufferLen),
 		bufferLen:   bufferLen,
-		log:         *log.NewResourceLogger("KafkaWriter"),
+		log:         log.NewResourceLogger("KafkaWriter"),
 		idx:         0,
 	}
 }

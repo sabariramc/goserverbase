@@ -7,8 +7,8 @@ import (
 
 	e "errors"
 
-	"github.com/sabariramc/goserverbase/v4/kafka"
-	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v5/kafka"
+	"github.com/sabariramc/goserverbase/v5/log"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 

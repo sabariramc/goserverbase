@@ -3,9 +3,9 @@ package trace
 import (
 	"context"
 
-	"github.com/sabariramc/goserverbase/v4/kafka"
-	ktrace "github.com/sabariramc/goserverbase/v4/kafka/api/trace"
-	"github.com/sabariramc/goserverbase/v4/log"
+	"github.com/sabariramc/goserverbase/v5/kafka"
+	ktrace "github.com/sabariramc/goserverbase/v5/kafka/api/trace"
+	"github.com/sabariramc/goserverbase/v5/log"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )

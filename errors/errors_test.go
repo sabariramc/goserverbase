@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/sabariramc/goserverbase/v4/errors"
+	"github.com/sabariramc/goserverbase/v5/errors"
 )
 
 func TestCustomeErrorPrint(t *testing.T) {

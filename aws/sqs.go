@@ -8,14 +8,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
-	"github.com/sabariramc/goserverbase/v4/log"
-	"github.com/sabariramc/goserverbase/v4/utils"
+	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v5/utils"
 )
 
 type SQS struct {
 	_ struct{}
 	*sqs.Client
-	log      *log.Logger
+	log      log.Log
 	queueURL *string
 }
 
@@ -23,7 +23,7 @@ var defaultSQSClient *sqs.Client
 var ErrTooManyMessageToDelete = fmt.Errorf("too many message in receiptHandlerMap(should be less that 10)")
 var DefaultMaxMessages int64 = 10
 
-func GetDefaultSQSClient(logger *log.Logger, queueURL string) *SQS {
+func GetDefaultSQSClient(logger log.Log, queueURL string) *SQS {
 	if defaultSQSClient == nil {
 		defaultSQSClient = NewSQSClientWithConfig(*defaultAWSConfig)
 	}
@@ -35,7 +35,7 @@ func NewSQSClientWithConfig(awsConfig aws.Config) *sqs.Client {
 	return client
 }
 
-func NewSQSClient(logger *log.Logger, client *sqs.Client, queueURL string) *SQS {
+func NewSQSClient(logger log.Log, client *sqs.Client, queueURL string) *SQS {
 	return &SQS{Client: client, queueURL: &queueURL, log: logger}
 }
 
@@ -43,7 +43,7 @@ func (s *SQS) IsFIFO() bool {
 	return strings.HasSuffix(*s.queueURL, ".fifo")
 }
 
-func GetQueueURL(ctx context.Context, logger *log.Logger, queueName string, sqsClient *sqs.Client) (*string, error) {
+func GetQueueURL(ctx context.Context, logger log.Log, queueName string, sqsClient *sqs.Client) (*string, error) {
 	req := &sqs.GetQueueUrlInput{
 		QueueName: &queueName}
 	res, err := sqsClient.GetQueueUrl(ctx, req)

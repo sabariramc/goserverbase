@@ -4,10 +4,10 @@ import (
 	"context"
 	"sync"
 
-	baseapp "github.com/sabariramc/goserverbase/v4/app"
-	"github.com/sabariramc/goserverbase/v4/errors"
-	"github.com/sabariramc/goserverbase/v4/kafka"
-	"github.com/sabariramc/goserverbase/v4/log"
+	baseapp "github.com/sabariramc/goserverbase/v5/app"
+	"github.com/sabariramc/goserverbase/v5/errors"
+	"github.com/sabariramc/goserverbase/v5/kafka"
+	"github.com/sabariramc/goserverbase/v5/log"
 	ckafka "github.com/segmentio/kafka-go"
 )
 
@@ -17,14 +17,14 @@ type KafkaConsumerServer struct {
 	*baseapp.BaseApp
 	client                 *kafka.Consumer
 	handler                map[string]KafkaEventProcessor
-	log                    *log.Logger
+	log                    log.Log
 	ch                     chan *ckafka.Message
 	c                      *KafkaConsumerServerConfig
 	shutdown, shutdownPoll context.CancelFunc
 	requestWG, shutdownWG  sync.WaitGroup
 }
 
-func New(appConfig KafkaConsumerServerConfig, logger *log.Logger, errorNotifier errors.ErrorNotifier) *KafkaConsumerServer {
+func New(appConfig KafkaConsumerServerConfig, logger log.Log, errorNotifier errors.ErrorNotifier) *KafkaConsumerServer {
 	b := baseapp.New(appConfig.ServerConfig, logger, errorNotifier)
 	h := &KafkaConsumerServer{
 		BaseApp: b,

@@ -1,4 +1,4 @@
-module github.com/sabariramc/goserverbase/v4
+module github.com/sabariramc/goserverbase/v5
 
 go 1.21
 
