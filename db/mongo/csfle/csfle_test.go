@@ -6,11 +6,13 @@ import (
 	"io"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/sabariramc/goserverbase/v5/aws"
 	"github.com/sabariramc/goserverbase/v5/db/mongo"
 	"github.com/sabariramc/goserverbase/v5/db/mongo/csfle"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"gotest.tools/assert"
 )
 
@@ -23,12 +25,20 @@ type Address struct {
 	Country      string `bson:"country"`
 }
 
+type Name struct {
+	First  string `bson:"first"`
+	Middle string `bson:"middle"`
+	Last   string `bson:"last"`
+	Full   string `bson:"full"`
+}
+
 type PIITestVal struct {
 	ID      primitive.ObjectID `bson:"_id"`
-	DOB     string             `bson:"dob"`
-	Name    string             `bson:"name"`
+	DOB     time.Time          `bson:"dob"`
+	Name    Name               `bson:"name"`
 	Pan     string             `bson:"pan"`
 	Email   string             `bson:"email"`
+	Phone   []string           `bson:"phone"`
 	Address Address            `bson:"address"`
 }
 
@@ -51,98 +61,80 @@ func getKMSProvider(ctx context.Context, kmsArn string) (csfle.MasterKeyProvider
 func TestCollectionPII(t *testing.T) {
 	ctx := GetCorrelationContext()
 	file, err := os.Open("./sample/piischeme.json")
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 	defer func() {
-		if err = file.Close(); err != nil {
-			assert.NilError(t, err)
-		}
+		assert.NilError(t, file.Close())
 	}()
 	schemeByte, err := io.ReadAll(file)
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 	scheme := string(schemeByte)
 	kmsArn := MongoTestConfig.AWS.KMS_ARN
-	keyAltName := "MongoPIITestKey"
+	dbName, collName := "GOTEST", "PII"
 	kmsProvider, err := getKMSProvider(ctx, kmsArn)
-	if err != nil {
-		assert.NilError(t, err)
-	}
-	keyNamespace := "__TestNameSpace.__Coll"
-	err = csfle.SetEncryptionKey(ctx, MongoTestLogger, &scheme, *MongoTestConfig.Mongo, keyNamespace, keyAltName, kmsProvider)
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
+	config := MongoTestConfig.CSFLE
+	dbScheme, err := csfle.SetEncryptionKey(ctx, MongoTestLogger, &scheme, *MongoTestConfig.Mongo, config.KeyVaultNamespace, kmsProvider)
+	assert.NilError(t, err)
 	client, err := mongo.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
-	if err != nil {
-		assert.NilError(t, err)
-	}
-	coll := client.Database("GOTEST").Collection("PII")
-	mongoScheme, err := csfle.CreateBSONSchema(&scheme, "GOTEST", "PII")
-	if err != nil {
-		assert.NilError(t, err)
-	}
-	csfleMongoClient, err := csfle.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo, keyNamespace, mongoScheme, kmsProvider)
-	csfleClient := mongo.NewWrapper(ctx, MongoTestLogger, csfleMongoClient)
-	piicoll := csfleClient.Database("GOTEST").Collection("PII")
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
+
+	config.KMSCredentials = kmsProvider.Credentials()
+	config.SchemaMap = dbScheme
+	csfleClient, err := csfle.New(ctx, MongoTestLogger, *config)
+	assert.NilError(t, err)
+	// csfleClient.Database(dbName).Collection(collName).Drop(context.TODO())
+	// assert.NilError(t, err)
+	// err = csfleClient.Database(dbName).CreateCollection(context.TODO(), collName)
+	// assert.NilError(t, err)
+	piicoll := csfleClient.Database(dbName).Collection(collName, options.Collection())
 	uuid := "FAsdfasfsadfsdafs"
+	dob, err := time.Parse(time.DateOnly, "1991-08-02")
+	coll := client.Database(dbName).Collection(collName)
+	assert.NilError(t, err)
 	_, err = piicoll.InsertOne(ctx, map[string]interface{}{
-		"dob":   "1991-08-02",
-		"name":  "Sabariram",
+		"dob": dob,
+		"name": map[string]any{
+			"first":  "first name person 1",
+			"middle": "middle name person 1",
+			"last":   "last name person 1",
+			"full":   "full name person 1",
+		},
 		"pan":   "ABCDE1234F",
 		"email": "sab@sabariram.com",
 		"address": map[string]string{
 			"addressLine1": "door no with street name",
 			"addressLine2": "taluk and postal office",
 			"addressLine3": "Optional landmark",
-			"state":        "Tamil Nadu",
-			"pin":          "636351",
+			"state":        "TEST",
+			"pin":          "TEST",
 			"country":      "India",
 		},
 		"UUID": uuid,
 	})
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 	cur := piicoll.FindOne(ctx, map[string]interface{}{"UUID": uuid})
 	val := &PIITestVal{}
 	err = cur.Decode(val)
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 	fmt.Printf("%+v\n", val)
 	piicoll.UpdateOne(ctx, val.ID, map[string]map[string]interface{}{"$set": {"UUID": uuid}})
 	cur = piicoll.FindOne(ctx, map[string]interface{}{"UUID": uuid})
 	val = &PIITestVal{}
 	err = cur.Decode(val)
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 	fmt.Printf("%+v\n", val)
 	cur = piicoll.FindOne(ctx, map[string]interface{}{"_id": val.ID})
 	err = cur.Decode(val)
-	if err != nil {
-		assert.NilError(t, err)
-	}
-
+	assert.NilError(t, err)
 	data, err := coll.Find(ctx, map[string]map[string]interface{}{"pan": {"$exists": true}})
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 	for data.Next(ctx) {
 		decodeData := make(map[string]interface{})
 		data.Decode(&decodeData)
 		fmt.Printf("%+v\n", decodeData)
 	}
 	res, err := piicoll.DeleteOne(ctx, map[string]interface{}{"_id": val.ID})
-	if err != nil {
-		assert.NilError(t, err)
-	}
+	assert.NilError(t, err)
 	if res.DeletedCount != 1 {
 		t.Fatal("Delete count is not matching")
 	}
@@ -154,22 +146,24 @@ func TestCollectionPII(t *testing.T) {
 		t.Fatal(fmt.Errorf("doc shouldn't exist"))
 	}
 	_, err = piicoll.InsertOne(ctx, map[string]interface{}{
-		"dob":   "1991-08-02",
-		"name":  "Vamshi Krishna",
+		"dob": dob,
+		"name": map[string]any{
+			"first":  "first name person 2",
+			"middle": "middle name person 2",
+			"last":   "last name person 2",
+			"full":   "full name person 2",
+		},
 		"pan":   "ABCDE1234F",
 		"email": "sab@sabariram.com",
 		"address": map[string]string{
 			"addressLine1": "door no with street name",
 			"addressLine2": "taluk and postal office",
 			"addressLine3": "Optional landmark",
-			"state":        "Tamil Nadu",
-			"pin":          "636351",
+			"state":        "TEST",
+			"pin":          "TEST",
 			"country":      "India",
 		},
 		"UUID": "FAsdfasfsadfsdafs",
 	})
-	if err != nil {
-		assert.NilError(t, err)
-	}
-
+	assert.NilError(t, err)
 }

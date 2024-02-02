@@ -2,12 +2,10 @@ package csfle
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	cuaws "github.com/sabariramc/goserverbase/v5/aws"
-	"github.com/sabariramc/goserverbase/v5/db/mongo"
 	"github.com/sabariramc/goserverbase/v5/log"
 )
 
@@ -84,43 +82,4 @@ func (a *AWSKMSProvider) Credentials() map[string]map[string]interface{} {
 
 func (a *AWSKMSProvider) DataKeyOpts() interface{} {
 	return a.dataKeyOpts
-}
-
-func SetEncryptionKey(ctx context.Context, logger log.Log, encryptionSchema *string, c mongo.Config, keyVaultNamespace, keyAltName string, kmsProvider MasterKeyProvider) error {
-	schema := make(map[string]interface{})
-	err := json.Unmarshal([]byte(*encryptionSchema), &schema)
-	if err != nil {
-		return fmt.Errorf("csfle.SetEncryptionKey: error unmarshalling csfle schema: %w", err)
-	}
-	client, err := mongo.New(ctx, logger, c)
-	if err != nil {
-		return err
-	}
-	keyID, err := GetDataKey(ctx, client, keyVaultNamespace, keyAltName, kmsProvider)
-	if err != nil {
-		return err
-	}
-	encryptMetadataIn, ok := schema["encryptMetadata"]
-	encryptionKeyID := []interface{}{
-		map[string]interface{}{"$binary": map[string]interface{}{"base64": keyID, "subType": "04"}},
-	}
-	if ok {
-		encryptMetadata, ok := encryptMetadataIn.(map[string]interface{})
-		if !ok {
-			errorMsg := "key `encryptMetadata` should be a compatible with `map[string]interface{}` in param `encryptionSchema`"
-			logger.Error(ctx, errorMsg, schema)
-			return fmt.Errorf("csfle.SetEncryptionKey: %v", errorMsg)
-		}
-		encryptMetadata["keyId"] = encryptionKeyID
-	} else {
-		schema["encryptMetadata"] = map[string]interface{}{
-			"keyId": encryptionKeyID,
-		}
-	}
-	blob, err := json.Marshal(schema)
-	if err != nil {
-		return fmt.Errorf("csfle.SetEncryptionKey: error marshaling csfle scheme: %w", err)
-	}
-	*encryptionSchema = string(blob)
-	return nil
 }

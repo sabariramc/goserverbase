@@ -7,6 +7,7 @@ import (
 	"github.com/sabariramc/goserverbase/v5/app/server/httpserver"
 	"github.com/sabariramc/goserverbase/v5/app/server/kafkaconsumer"
 	"github.com/sabariramc/goserverbase/v5/db/mongo"
+	"github.com/sabariramc/goserverbase/v5/db/mongo/csfle"
 	"github.com/sabariramc/goserverbase/v5/kafka"
 	"github.com/sabariramc/goserverbase/v5/log"
 	"github.com/sabariramc/goserverbase/v5/log/logwriter"
@@ -29,6 +30,7 @@ type TestConfig struct {
 	HTTP              *httpserver.HTTPServerConfig
 	Kafka             *kafkaconsumer.KafkaConsumerServerConfig
 	Mongo             *mongo.Config
+	CSFLE             *csfle.Config
 	AWS               *AWSConfig
 	KafkaConsumer     kafka.KafkaConsumerConfig
 	KafkaProducer     *kafka.KafkaProducerConfig
@@ -71,6 +73,12 @@ func NewConfig() *TestConfig {
 			MinVersion: tls.VersionTLS12,
 		}
 	}
+	mongo := &mongo.Config{
+		AppName:           serviceName,
+		ConnectionString:  utils.GetEnv("MONGO_URL", "mongodb://localhost:60001"),
+		MinConnectionPool: uint64(utils.GetEnvInt("MONGO_MIN_CONNECTION_POOL", 10)),
+		MaxConnectionPool: uint64(utils.GetEnvInt("MONGO_MAX_CONNECTION_POOL", 50)),
+	}
 	return &TestConfig{
 		Logger: &log.Config{
 			ServiceName:      serviceName,
@@ -96,10 +104,11 @@ func NewConfig() *TestConfig {
 			ServerConfig:        *appConfig,
 			KafkaConsumerConfig: consumer,
 		},
-		Mongo: &mongo.Config{
-			ConnectionString:  utils.GetEnv("MONGO_URL", "mongodb://localhost:60001"),
-			MinConnectionPool: uint64(utils.GetEnvInt("MONGO_MIN_CONNECTION_POOL", 10)),
-			MaxConnectionPool: uint64(utils.GetEnvInt("MONGO_MAX_CONNECTION_POOL", 50)),
+		Mongo: mongo,
+		CSFLE: &csfle.Config{
+			Config:             mongo,
+			CryptSharedLibPath: utils.GetEnv("CSFLE_CRYPT_SHARED_LIB_PATH", ""),
+			KeyVaultNamespace:  utils.GetEnv("CSFLE_KEY_VAULT_NAMESPACE", ""),
 		},
 		AWS: &AWSConfig{
 			KMS_ARN:      utils.GetEnv("KMS_ARN", ""),

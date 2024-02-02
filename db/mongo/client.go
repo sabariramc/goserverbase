@@ -36,6 +36,7 @@ func New(ctx context.Context, logger log.Log, c Config, opts ...*options.ClientO
 	connectionOptions.SetMaxPoolSize(c.MaxConnectionPool)
 	connectionOptions.SetMaxConnIdleTime(time.Minute * 5)
 	connectionOptions.SetCompressors([]string{"snappy", "zlib", "zstd"})
+	connectionOptions.SetAppName(c.AppName)
 	mongoLogger := &MongoLogger{log: logger.NewResourceLogger("MongoInternalLog"), ctx: log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam("MongoInternal"))}
 	connectionOptions.SetLoggerOptions(&options.LoggerOptions{
 		ComponentLevels: map[options.LogComponent]options.LogLevel{

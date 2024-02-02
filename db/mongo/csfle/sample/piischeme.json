@@ -1,48 +1,46 @@
 {
-    "bsonType": "object",
-    "encryptMetadata": {
-        "algorithm": "AEAD_AES_256_CBC_HMAC_SHA_512-Random"
-    },
-    "properties": {
-        "dob": {
-            "encrypt": {
-                "bsonType": "string"
+    "GOTEST.PII": {
+        "fields": [
+            {
+                "path": "dob",
+                "bsonType": "date",
+                "keyAltName":"piiDob"
+            },
+            {
+                "path": "name",
+                "bsonType": "object",
+                "keyAltName":"piiName"
+            },
+            {
+                "path": "pan",
+                "bsonType": "string",
+                "keyAltName":"piiPan"
+            },
+            {
+                "path": "email",
+                "bsonType": "string",
+                "keyAltName":"piiEmail"
+            },
+            {
+                "path": "phone",
+                "bsonType": "array",
+                "keyAltName":"piiPhone"
+            },
+            {
+                "path": "address.addressLine1",
+                "bsonType": "string",
+                "keyAltName":"piiAdd1"
+            },
+            {
+                "path": "address.addressLine2",
+                "bsonType": "string",
+                "keyAltName":"piiAdd2"
+            },
+            {
+                "path": "address.addressLine3",
+                "bsonType": "string",
+                "keyAltName":"piiAdd3"
             }
-        },
-        "name": {
-            "encrypt": {
-                "bsonType": "string"
-            }
-        },
-        "pan": {
-            "encrypt": {
-                "bsonType": "string"
-            }
-        },
-        "email": {
-            "encrypt": {
-                "bsonType": "string"
-            }
-        },
-        "address": {
-            "bsonType": "object",
-            "properties": {
-                "addressLine1": {
-                    "encrypt": {
-                        "bsonType": "string"
-                    }
-                },
-                "addressLine2": {
-                    "encrypt": {
-                        "bsonType": "string"
-                    }
-                },
-                "addressLine3": {
-                    "encrypt": {
-                        "bsonType": "string"
-                    }
-                }
-            }
-        }
+        ]
     }
 }

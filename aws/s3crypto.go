@@ -198,7 +198,7 @@ func (s *S3Crypto) GetFileCache(ctx context.Context, s3Bucket, s3Key, tempPathPa
 			return nil, fmt.Errorf("S3Crypto.GetFileCache: error downloading file: %w", err)
 		}
 		filePath := strings.Split(s3Key, "/")
-		tempS3Key := fmt.Sprintf("/temp/%v/%v-%v", tempPathPart, uuid.NewString(), filePath[len(filePath)-1])
+		tempS3Key := fmt.Sprintf("temp/%v/%v-%v", tempPathPart, uuid.NewString(), filePath[len(filePath)-1])
 		mime := mimetype.Detect(blob)
 		_, err = s.S3.PutObject(ctx, s3Bucket, tempS3Key, bytes.NewReader(blob), mime.String(), nil)
 		if err != nil {
