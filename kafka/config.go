@@ -20,6 +20,7 @@ type KafkaConsumerConfig struct {
 	AutoCommit             bool
 	MaxBuffer              int
 	AutoCommitIntervalInMs uint64
+	EnableLog              bool
 }
 
 type KafkaProducerConfig struct {
@@ -30,4 +31,5 @@ type KafkaProducerConfig struct {
 	Async                  bool
 	Batch                  bool
 	Topic                  string
+	EnableLog              bool
 }

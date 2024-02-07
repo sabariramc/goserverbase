@@ -63,7 +63,7 @@ type LogMessage struct {
 }
 
 type Logger struct {
-	logLevel    LogLevelCode
+	logLevel    *LogLevel
 	lMux        LogMux
 	moduleName  string
 	serviceName string
@@ -79,7 +79,7 @@ func (l *Logger) NewResourceLogger(resourceName string) Log {
 
 func NewLogger(ctx context.Context, lc *Config, moduleName string, lMux LogMux, audit AuditLogWriter) *Logger {
 	l := &Logger{
-		logLevel:    INFO,
+		logLevel:    logLevelMap[INFO],
 		lMux:        lMux,
 		moduleName:  moduleName,
 		serviceName: lc.ServiceName,
@@ -94,12 +94,12 @@ func NewLogger(ctx context.Context, lc *Config, moduleName string, lMux LogMux, 
 	if logLevel.Level == TRACE {
 		l.Notice(ctx, "log level is set as TRACE", nil)
 	}
-	l.logLevel = logLevel.Level
+	l.logLevel = logLevel
 	return l
 }
 
 func (l *Logger) GetLogLevel() LogLevel {
-	return GetLogLevelMap(l.logLevel)
+	return *l.logLevel
 }
 
 func (l *Logger) SetModuleName(moduleName string) {
@@ -140,7 +140,6 @@ func (l *Logger) Error(ctx context.Context, message string, logObject interface{
 func (l *Logger) Emergency(ctx context.Context, message string, err error, logObject interface{}) {
 	l.print(ctx, logLevelMap[EMERGENCY], message, logObject)
 	panic(fmt.Errorf("%v : %w", message, err))
-
 }
 
 func (l *Logger) Fatal(ctx context.Context, message string, exitCode int, logObject interface{}) {
@@ -149,7 +148,7 @@ func (l *Logger) Fatal(ctx context.Context, message string, exitCode int, logObj
 }
 
 func (l *Logger) print(ctx context.Context, level *LogLevel, message string, logObject interface{}) {
-	if level.Level > l.logLevel {
+	if level.Level > l.logLevel.Level {
 		return
 	}
 	l.lMux.Print(ctx, &LogMessage{
