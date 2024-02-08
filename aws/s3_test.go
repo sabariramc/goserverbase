@@ -14,7 +14,7 @@ func TestS3(t *testing.T) {
 	s3Client := aws.GetDefaultS3Client(AWSTestLogger)
 	path := fmt.Sprintf("dev/temp/goserverbasetest/%v.pdf", uuid.NewString())
 	s3Bucket := AWSTestConfig.AWS.S3_BUCKET
-	_, err := s3Client.PutFile(ctx, s3Bucket, path, "./testdata/sample_aadhaar.pdf")
+	_, err := s3Client.PutFile(ctx, s3Bucket, path, "./testdata/sample.txt")
 	if err != nil {
 		assert.NilError(t, err)
 	}
@@ -39,7 +39,7 @@ func TestS3PII(t *testing.T) {
 	s3Client := aws.GetDefaultS3CryptoClient(AWSTestLogger, keyArn)
 	path := fmt.Sprintf("dev/temp/goserverbasetest/%v.pdf", uuid.NewString())
 	s3Bucker := AWSTestConfig.AWS.S3_BUCKET
-	err := s3Client.PutFile(ctx, s3Bucker, path, "./testdata/sample_aadhaar.pdf")
+	err := s3Client.PutFile(ctx, s3Bucker, path, "./testdata/sample.txt")
 	if err != nil {
 		assert.NilError(t, err)
 	}

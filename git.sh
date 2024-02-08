@@ -1,5 +1,5 @@
-export message="downgrading mongo driver"
-export version="v4.14.2"
+export message="Updated dependency version"
+export version="v4.14.3"
 export branch="v4"
 git add .
 git commit -m "$message"
