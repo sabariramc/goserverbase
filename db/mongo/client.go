@@ -39,17 +39,19 @@ func New(ctx context.Context, logger log.Log, c Config, opts ...*options.ClientO
 	connectionOptions.SetCompressors([]string{"snappy", "zlib", "zstd"})
 	connectionOptions.SetMonitor(mongotrace.NewMonitor())
 	connectionOptions.SetAppName(c.AppName)
-	mongoLogger := &MongoLogger{log: logger.NewResourceLogger("MongoInternalLog"), ctx: log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam("MongoInternal"))}
-	connectionOptions.SetLoggerOptions(&options.LoggerOptions{
-		ComponentLevels: map[options.LogComponent]options.LogLevel{
-			options.LogComponentAll: options.LogLevelDebug,
-		},
-		Sink:              mongoLogger,
-		MaxDocumentLength: 1024,
-	})
-	connectionOptions.SetPoolMonitor(&event.PoolMonitor{
-		Event: mongoLogger.PoolEvent,
-	})
+	if c.EnableLog {
+		mongoLogger := &MongoLogger{log: logger.NewResourceLogger("MongoInternalLog"), ctx: log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam("MongoInternal"))}
+		connectionOptions.SetLoggerOptions(&options.LoggerOptions{
+			ComponentLevels: map[options.LogComponent]options.LogLevel{
+				options.LogComponentAll: options.LogLevelDebug,
+			},
+			Sink:              mongoLogger,
+			MaxDocumentLength: 1024,
+		})
+		connectionOptions.SetPoolMonitor(&event.PoolMonitor{
+			Event: mongoLogger.PoolEvent,
+		})
+	}
 	opts = utils.Prepend(opts, connectionOptions)
 	client, err := mongo.Connect(ctx, opts...)
 	if err != nil {

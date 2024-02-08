@@ -57,19 +57,22 @@ func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfi
 			SASL: config.SASLMechanism,
 			TLS:  config.TLSConfig,
 		},
-		Logger: &kafkaLogger{
-			Log:     logger.NewResourceLogger("KafkaProducerInfoLog"),
-			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
-			isError: false,
-		},
-		ErrorLogger: &kafkaLogger{
-			isError: true,
-			Log:     logger.NewResourceLogger("KafkaProducerErrorLog"),
-			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
-		},
+
 		Completion:   kLog.DeliveryReport,
 		RequiredAcks: kafka.RequiredAcks(config.Acknowledge),
 		Async:        config.Async,
+	}
+	if config.EnableLog {
+		p.Logger = &kafkaLogger{
+			Log:     logger.NewResourceLogger("KafkaProducerInfoLog"),
+			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
+			isError: false,
+		}
+		p.ErrorLogger = &kafkaLogger{
+			isError: true,
+			Log:     logger.NewResourceLogger("KafkaProducerErrorLog"),
+			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
+		}
 	}
 	writer := api.NewWriter(ctx, p, config.BatchMaxBuffer, logger)
 	isTopicSpecificProducer := false

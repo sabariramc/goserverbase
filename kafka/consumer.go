@@ -34,30 +34,33 @@ func NewConsumer(ctx context.Context, logger log.Log, config KafkaConsumerConfig
 	}
 	logger = logger.NewResourceLogger("KafkaConsumer")
 	defaultCorrelationParam := &log.CorrelationParam{CorrelationId: config.ServiceName + ":KafkaConsumer"}
-	r := kafka.NewReader(kafka.ReaderConfig{
+	readerConfig := kafka.ReaderConfig{
 		Brokers:           config.Brokers,
 		GroupID:           config.GroupID,
 		GroupTopics:       topics,
 		HeartbeatInterval: time.Second,
 		QueueCapacity:     config.MaxBuffer,
 		MaxBytes:          10e6, // 10MB,
-		Logger: &kafkaLogger{
-			Log:     logger.NewResourceLogger("KafkaConsumerInfoLog"),
-			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
-			isError: false,
-		},
-		ErrorLogger: &kafkaLogger{
-			Log:     logger.NewResourceLogger("KafkaConsumerErrorLog"),
-			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
-			isError: true,
-		},
 		Dialer: &kafka.Dialer{
 			Timeout:       10 * time.Second,
 			DualStack:     true,
 			SASLMechanism: config.SASLMechanism,
 			TLS:           config.TLSConfig,
 		},
-	})
+	}
+	if config.EnableLog {
+		readerConfig.Logger = &kafkaLogger{
+			Log:     logger.NewResourceLogger("KafkaConsumerInfoLog"),
+			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
+			isError: false,
+		}
+		readerConfig.ErrorLogger = &kafkaLogger{
+			Log:     logger.NewResourceLogger("KafkaConsumerErrorLog"),
+			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
+			isError: true,
+		}
+	}
+	r := kafka.NewReader(readerConfig)
 	k := &Consumer{
 		log:         logger.NewResourceLogger("KafkaConsumer"),
 		config:      config,
