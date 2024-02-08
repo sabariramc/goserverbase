@@ -12,5 +12,5 @@
         "sabariramc",
         "testutils"
     ],
-    "go.buildTags": "cse"
+    "go.buildTags": ""
 }
