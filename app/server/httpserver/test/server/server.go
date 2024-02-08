@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/sabariramc/goserverbase/v3/app/server/httpserver"
 	"github.com/sabariramc/goserverbase/v3/errors"
 	"github.com/sabariramc/goserverbase/v3/log"
@@ -68,11 +69,18 @@ func (s *server) Func5(w http.ResponseWriter, r *http.Request) {
 	s.SetHandlerErrorInContext(r.Context(), errors.NewHTTPClientError(403, "hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil))
 }
 
+func (s *server) benc(c *gin.Context) {
+	w := c.Writer
+	w.WriteHeader(200)
+	w.Write([]byte(uuid.New().String()))
+}
+
 func NewServer() *server {
 	srv := &server{
 		HttpServer: httpserver.New(*ServerTestConfig.Http, ServerTestLogger, nil), log: ServerTestLogger,
 	}
 	r := srv.GetRouter().Group("/service/v1")
+	r.POST("/benc", srv.benc)
 	tenant := r.Group("/tenant")
 	tenant.GET("", gin.WrapF(srv.Func1))
 	tenant.POST("", gin.WrapF(srv.Func1))
