@@ -15,6 +15,7 @@ type span struct {
 
 func (t *tracer) NewSpanFromContext(ctx context.Context, operationName string) (context.Context, instrumentation.Span) {
 	tr := otel.Tracer("")
+	
 	ctx, sp := tr.Start(ctx, operationName)
 	return ctx, &span{Span: sp}
 }

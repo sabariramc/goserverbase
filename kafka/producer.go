@@ -13,6 +13,10 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
+type ProduceTracer interface {
+	KafkaInject(ctx context.Context, msg *kafka.Message)
+}
+
 type Producer struct {
 	*api.Writer
 	config                  KafkaProducerConfig

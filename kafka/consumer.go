@@ -15,6 +15,10 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
+type ConsumerTracer interface {
+	KafkaExtract(ctx context.Context, msg *kafka.Message) context.Context
+}
+
 type Consumer struct {
 	*api.Reader
 	config           KafkaConsumerConfig
