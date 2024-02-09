@@ -33,36 +33,51 @@ type HTTPClient struct {
 	RetryWaitMax time.Duration
 	CheckRetry   CheckRetry
 	Backoff      Backoff
+	tr           Tracer
 }
 
-func NewDefaultHTTPClient(log log.Log) *HTTPClient {
-	return NewHTTPClient(log, 4, time.Second*1, time.Second*5)
+type Tracer interface {
+	HTTPWrapTransport(http.RoundTripper) http.RoundTripper
+	HTTPRequestTrace(context.Context) *httptrace.ClientTrace
 }
 
-func NewHTTPClient(log log.Log, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HTTPClient {
+func NewDefaultHTTPClient(log log.Log, t Tracer) *HTTPClient {
+	return NewHTTPClient(log, t, 4, time.Second*1, time.Second*5)
+}
+
+func NewHTTPClient(log log.Log, tr Tracer, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HTTPClient {
+	var rt http.RoundTripper
 	t := http.DefaultTransport.(*http.Transport).Clone()
 	t.MaxIdleConns = 100
 	t.MaxConnsPerHost = 100
 	t.MaxIdleConnsPerHost = 100
-	return New(log, &http.Client{Transport: t}, retryMax, retryWaitMin, retryWaitMax)
+	rt = t
+	if tr != nil {
+		rt = tr.HTTPWrapTransport(t)
+	}
+	return New(log, tr, &http.Client{Transport: rt}, retryMax, retryWaitMin, retryWaitMax)
 }
 
-func NewH2CClient(log log.Log, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HTTPClient {
-	return New(log, &http.Client{
-		Transport: &http2.Transport{
-			// So http2.Transport doesn't complain the URL scheme isn't 'https'
-			AllowHTTP: false,
-			// Pretend we are dialing a TLS endpoint.
-			// Note, we ignore the passed tls.Config
-			DialTLS: func(network, addr string, cfg *tls.Config) (net.Conn, error) {
-				return net.Dial(network, addr)
-			},
+func NewH2CClient(log log.Log, tr Tracer, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HTTPClient {
+	var rt http.RoundTripper
+	t := &http2.Transport{
+		// So http2.Transport doesn't complain the URL scheme isn't 'https'
+		AllowHTTP: false,
+		// Pretend we are dialing a TLS endpoint.
+		// Note, we ignore the passed tls.Config
+		DialTLS: func(network, addr string, cfg *tls.Config) (net.Conn, error) {
+			return net.Dial(network, addr)
 		},
-	}, retryMax, retryWaitMin, retryWaitMax)
+	}
+	rt = t
+	if tr != nil {
+		rt = tr.HTTPWrapTransport(t)
+	}
+	return New(log, tr, &http.Client{Transport: rt}, retryMax, retryWaitMin, retryWaitMax)
 }
 
-func New(log log.Log, c *http.Client, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HTTPClient {
-	return &HTTPClient{Client: c, log: log.NewResourceLogger("HttpClient"), RetryMax: retryMax, RetryWaitMin: retryWaitMin, RetryWaitMax: retryWaitMax, CheckRetry: retryablehttp.DefaultRetryPolicy, Backoff: retryablehttp.DefaultBackoff}
+func New(log log.Log, tr Tracer, c *http.Client, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HTTPClient {
+	return &HTTPClient{Client: c, log: log.NewResourceLogger("HttpClient"), RetryMax: retryMax, RetryWaitMin: retryWaitMin, RetryWaitMax: retryWaitMax, CheckRetry: retryablehttp.DefaultRetryPolicy, Backoff: retryablehttp.DefaultBackoff, tr: tr}
 }
 
 func (h *HTTPClient) Validator(resBody interface{}) error {
@@ -150,11 +165,11 @@ func (h *HTTPClient) Call(ctx context.Context, method, url string, reqBody, resB
 	if err != nil {
 		return nil, err
 	}
-	clientTrace := &httptrace.ClientTrace{
-		GotConn: func(info httptrace.GotConnInfo) { h.log.Debug(ctx, "is conn reused:", info.Reused) },
+	reqCtx := ctx
+	if h.tr != nil {
+		reqCtx = httptrace.WithClientTrace(ctx, h.tr.HTTPRequestTrace(ctx))
 	}
-	traceCtx := httptrace.WithClientTrace(ctx, clientTrace)
-	req, err = http.NewRequestWithContext(traceCtx, method, url, body)
+	req, err = http.NewRequestWithContext(reqCtx, method, url, body)
 	if err != nil {
 		return nil, fmt.Errorf("HttpClient.Call: error creating request: %w", err)
 	}

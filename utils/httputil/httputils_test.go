@@ -41,7 +41,7 @@ const RetryURL = "http://localhost:64000/service/v1/echo/error/b"
 const ErrURL = "http://localhost:80/service/v1/echo/error/b"
 
 func TestHttpUtilGet(t *testing.T) {
-	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger)
+	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger, nil)
 	data := make(map[string]any)
 	res, err := client.Get(GetCorrelationContext(), URL, nil, &data, nil)
 	assert.NilError(t, err)
@@ -49,7 +49,7 @@ func TestHttpUtilGet(t *testing.T) {
 }
 
 func TestHttpUtilGetWithBody(t *testing.T) {
-	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger)
+	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger, nil)
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -62,7 +62,7 @@ func TestHttpUtilGetWithBody(t *testing.T) {
 }
 
 func TestHttpUtilUnwrapError(t *testing.T) {
-	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger)
+	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger, nil)
 	data := 0
 	body := map[string]string{
 		"tag": "Test",
@@ -75,7 +75,7 @@ func TestHttpUtilUnwrapError(t *testing.T) {
 }
 
 func TestHttpUtilPost(t *testing.T) {
-	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger)
+	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger, nil)
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -88,7 +88,7 @@ func TestHttpUtilPost(t *testing.T) {
 }
 
 func TestHttpUtilPatch(t *testing.T) {
-	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger)
+	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger, nil)
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -101,7 +101,7 @@ func TestHttpUtilPatch(t *testing.T) {
 }
 
 func TestHttpUtilPut(t *testing.T) {
-	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger)
+	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger, nil)
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -114,7 +114,7 @@ func TestHttpUtilPut(t *testing.T) {
 }
 
 func TestHttpUtilDelete(t *testing.T) {
-	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger)
+	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger, nil)
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -127,7 +127,7 @@ func TestHttpUtilDelete(t *testing.T) {
 }
 
 func TestHttpUtilRetry(t *testing.T) {
-	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger)
+	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger, nil)
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -137,7 +137,7 @@ func TestHttpUtilRetry(t *testing.T) {
 }
 
 func TestHttpUtilRetryError(t *testing.T) {
-	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger)
+	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger, nil)
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -151,7 +151,7 @@ func TestHttpUtilRetryError(t *testing.T) {
 func TestConnectionReuse(t *testing.T) {
 	ht := http.DefaultTransport.(*http.Transport).Clone()
 	ht.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	client := httputil.New(HttpUtilTestLogger, &http.Client{Transport: ht}, 4, time.Second*1, time.Second*5)
+	client := httputil.New(HttpUtilTestLogger, nil, &http.Client{Transport: ht}, 4, time.Second*1, time.Second*5)
 	var wg sync.WaitGroup
 	body, _ := json.Marshal(map[string]string{"fasdfsda": "fasdfas", "fasdfas": "fasdfas"})
 	for i := 0; i < 10; i++ {
@@ -171,7 +171,7 @@ func TestConnectionReuse(t *testing.T) {
 }
 
 func TestH2CClient(t *testing.T) {
-	client := httputil.NewH2CClient(HttpUtilTestLogger, 4, time.Second, 4*time.Second)
+	client := httputil.NewH2CClient(HttpUtilTestLogger, nil, 4, time.Second, 4*time.Second)
 	var wg sync.WaitGroup
 	ctx := GetCorrelationContext()
 	body, _ := json.Marshal(map[string]any{"sabariram": 10})

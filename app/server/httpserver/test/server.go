@@ -176,7 +176,7 @@ func NewServer(t instrumentation.Tracer) *server {
 		HTTPServer: httpserver.New(*ServerTestConfig.HTTP, ServerTestLogger, nil), log: ServerTestLogger,
 		pr:         pr,
 		sns:        aws.GetDefaultSNSClient(ServerTestLogger),
-		httpClient: httputil.NewDefaultHTTPClient(ServerTestLogger),
+		httpClient: httputil.NewDefaultHTTPClient(ServerTestLogger, t),
 		conn:       conn,
 		coll:       conn.Database("GOBaseTest").Collection("TestColl"),
 		c:          ServerTestConfig,

@@ -96,7 +96,7 @@ func NewServer(t instrumentation.Tracer) *server {
 		KafkaConsumerServer: kafkaconsumer.New(*ServerTestConfig.Kafka, ServerTestLogger, nil),
 		pr:                  pr,
 		sns:                 aws.GetDefaultSNSClient(ServerTestLogger),
-		httpClient:          httputil.NewDefaultHTTPClient(ServerTestLogger),
+		httpClient:          httputil.NewDefaultHTTPClient(ServerTestLogger, t),
 		conn:                conn,
 		coll:                conn.Database("GOBaseTest").Collection("TestColl"),
 	}
