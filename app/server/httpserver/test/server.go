@@ -164,7 +164,7 @@ func (s *server) printHttpVersion() gin.HandlerFunc {
 
 func NewServer(t instrumentation.Tracer) *server {
 	ctx := GetCorrelationContext()
-	pr, err := kafka.NewProducer(ctx, ServerTestLogger, ServerTestConfig.KafkaProducer)
+	pr, err := kafka.NewProducer(ctx, ServerTestLogger, ServerTestConfig.KafkaProducer, t)
 	if err != nil {
 		ServerTestLogger.Emergency(ctx, "error creating producer1", err, nil)
 	}

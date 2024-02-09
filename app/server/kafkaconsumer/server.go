@@ -15,7 +15,7 @@ type KafkaEventProcessor func(context.Context, *kafka.Message) error
 
 type KafkaConsumerServer struct {
 	*baseapp.BaseApp
-	client                 *kafka.Consumer
+	client                 *kafka.Poller
 	handler                map[string]KafkaEventProcessor
 	log                    log.Log
 	ch                     chan *ckafka.Message

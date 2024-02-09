@@ -15,11 +15,7 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-type ConsumerTracer interface {
-	KafkaExtract(ctx context.Context, msg *kafka.Message) context.Context
-}
-
-type Consumer struct {
+type Poller struct {
 	*api.Reader
 	config           KafkaConsumerConfig
 	log              log.Log
@@ -29,7 +25,7 @@ type Consumer struct {
 	wg               sync.WaitGroup
 }
 
-func NewConsumer(ctx context.Context, logger log.Log, config KafkaConsumerConfig, topics ...string) (*Consumer, error) {
+func NewPoller(ctx context.Context, logger log.Log, config KafkaConsumerConfig, topics ...string) (*Poller, error) {
 	if config.MaxBuffer <= 0 {
 		config.MaxBuffer = 100
 	}
@@ -65,7 +61,7 @@ func NewConsumer(ctx context.Context, logger log.Log, config KafkaConsumerConfig
 		}
 	}
 	r := kafka.NewReader(readerConfig)
-	k := &Consumer{
+	k := &Poller{
 		log:         logger.NewResourceLogger("KafkaConsumer"),
 		config:      config,
 		Reader:      api.NewReader(ctx, logger, r, config.MaxBuffer),
@@ -81,7 +77,7 @@ func NewConsumer(ctx context.Context, logger log.Log, config KafkaConsumerConfig
 	return k, nil
 }
 
-func (k *Consumer) Poll(ctx context.Context, ch chan<- *kafka.Message) error {
+func (k *Poller) Poll(ctx context.Context, ch chan<- *kafka.Message) error {
 	var pollErr, commitErr error
 	defer close(ch)
 	k.log.Info(ctx, fmt.Sprintf("Polling started for topics : %v", k.topics), nil)
@@ -124,7 +120,7 @@ outer:
 	return pollErr
 }
 
-func (k *Consumer) storeMessage(ctx context.Context, msg *kafka.Message) error {
+func (k *Poller) storeMessage(ctx context.Context, msg *kafka.Message) error {
 	if k.config.AutoCommit {
 		err := k.StoreMessage(ctx, msg)
 		if err == api.ErrReaderBufferFull {
@@ -144,14 +140,14 @@ func (k *Consumer) storeMessage(ctx context.Context, msg *kafka.Message) error {
 	return nil
 }
 
-func (k *Consumer) commit(ctx context.Context) error {
+func (k *Poller) commit(ctx context.Context) error {
 	if k.config.AutoCommit {
 		return k.Commit(ctx)
 	}
 	return nil
 }
 
-func (k *Consumer) autoCommit(ctx context.Context) {
+func (k *Poller) autoCommit(ctx context.Context) {
 	timeout, _ := context.WithTimeout(context.Background(), time.Duration(k.config.AutoCommitIntervalInMs*uint64(time.Millisecond)))
 	defer k.wg.Done()
 	defer k.log.Warning(ctx, "auto commit stopped", nil)
@@ -174,7 +170,7 @@ func (k *Consumer) autoCommit(ctx context.Context) {
 	}
 }
 
-func (k *Consumer) Close(ctx context.Context) error {
+func (k *Poller) Close(ctx context.Context) error {
 	k.log.Notice(ctx, "Consumer closer initiated for topic", k.topics)
 	if k.config.AutoCommit {
 		k.autoCommitCancel()

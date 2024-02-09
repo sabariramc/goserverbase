@@ -16,18 +16,18 @@ import (
 
 func newProducer(ctx context.Context) (*kafka.Producer, error) {
 	KafkaTestConfig.KafkaProducer.Topic = KafkaTestConfig.KafkaTestTopic
-	return kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducer)
+	return kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducer, nil)
 }
 
 func newAsyncProducer(ctx context.Context) (*kafka.Producer, error) {
 	KafkaTestConfig.KafkaProducer.Topic = KafkaTestConfig.KafkaTestTopic
 	config := *KafkaTestConfig.KafkaProducer
 	config.Async = true
-	return kafka.NewProducer(ctx, KafkaTestLogger, &config)
+	return kafka.NewProducer(ctx, KafkaTestLogger, &config, nil)
 }
 
-func newConsumer(ctx context.Context) (*kafka.Consumer, error) {
-	return kafka.NewConsumer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaConsumer, KafkaTestConfig.KafkaTestTopic)
+func newPoller(ctx context.Context) (*kafka.Poller, error) {
+	return kafka.NewPoller(ctx, KafkaTestLogger, KafkaTestConfig.KafkaConsumer, KafkaTestConfig.KafkaTestTopic)
 }
 
 func TestKafkaProducer(t *testing.T) {
@@ -57,11 +57,11 @@ func TestKafkaProducer(t *testing.T) {
 	wg.Wait()
 }
 
-func TestKafkaConsumer(t *testing.T) {
+func TestKafkaPoller(t *testing.T) {
 	ctx := GetCorrelationContext()
 	config := KafkaTestConfig.KafkaConsumer
 	config.AutoCommit = false
-	co, err := kafka.NewConsumer(ctx, KafkaTestLogger, config, KafkaTestConfig.KafkaTestTopic, KafkaTestConfig.KafkaTestTopic2)
+	co, err := kafka.NewPoller(ctx, KafkaTestLogger, config, KafkaTestConfig.KafkaTestTopic, KafkaTestConfig.KafkaTestTopic2)
 	assert.NilError(t, err)
 	defer co.Close(ctx)
 	ch := make(chan *cKafka.Message, 100)
@@ -94,7 +94,7 @@ func TestKafkaConsumer(t *testing.T) {
 	KafkaTestLogger.Notice(ctx, "Time taken in ms", time.Now().Sub(st)/1000000)
 }
 
-func testKafkaPoll(ctx context.Context, t *testing.T, co *kafka.Consumer, pr *kafka.Producer, totalCount int) {
+func testKafkaPoll(ctx context.Context, t *testing.T, co *kafka.Poller, pr *kafka.Producer, totalCount int) {
 	ch := make(chan *cKafka.Message, 100)
 	var wg sync.WaitGroup
 	wg.Add(1)
@@ -140,7 +140,7 @@ func testKafkaPoll(ctx context.Context, t *testing.T, co *kafka.Consumer, pr *ka
 
 func TestKafkaPoll(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := newConsumer(ctx)
+	co, err := newPoller(ctx)
 	assert.NilError(t, err)
 	defer co.Close(ctx)
 	pr, err := newProducer(ctx)
@@ -151,7 +151,7 @@ func TestKafkaPoll(t *testing.T) {
 
 func TestKafkaPollAsyncWriter(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := newConsumer(ctx)
+	co, err := newPoller(ctx)
 	assert.NilError(t, err)
 	defer co.Close(ctx)
 	pr, err := newAsyncProducer(ctx)
@@ -162,7 +162,7 @@ func TestKafkaPollAsyncWriter(t *testing.T) {
 
 func TestKafkaPollWithDelay(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := newConsumer(ctx)
+	co, err := newPoller(ctx)
 	assert.NilError(t, err)
 	defer co.Close(ctx)
 	pr, err := newProducer(ctx)

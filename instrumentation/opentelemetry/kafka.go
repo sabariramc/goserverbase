@@ -3,6 +3,7 @@ package opentelemetry
 import (
 	"context"
 
+	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
 	cKafka "github.com/sabariramc/goserverbase/v5/kafka"
 	"github.com/segmentio/kafka-go"
 	"go.opentelemetry.io/otel"
@@ -57,4 +58,8 @@ func (t *tracer) KafkaInject(ctx context.Context, msg *kafka.Message) {
 
 func (t *tracer) KafkaExtract(ctx context.Context, msg *kafka.Message) context.Context {
 	return otel.GetTextMapPropagator().Extract(ctx, NewKafkaCarrier(msg))
+}
+
+func (t *tracer) InitiateKafkaMessageSpanFromContext(ctx context.Context, msg *kafka.Message) span.Span {
+
 }

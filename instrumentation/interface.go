@@ -3,8 +3,10 @@ package instrumentation
 import (
 	"context"
 
+	"github.com/sabariramc/goserverbase/v5/app/server/kafkaconsumer"
 	"github.com/sabariramc/goserverbase/v5/aws"
 	"github.com/sabariramc/goserverbase/v5/db/mongo"
+	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
 	"github.com/sabariramc/goserverbase/v5/kafka"
 	"github.com/sabariramc/goserverbase/v5/utils/httputil"
 )
@@ -14,12 +16,6 @@ type Tracer interface {
 	mongo.Tracer
 	httputil.Tracer
 	kafka.ProduceTracer
-	kafka.ConsumerTracer
-	NewSpanFromContext(ctx context.Context, operationName string) (context.Context, Span)
-}
-
-type Span interface {
-	SetTag(name string, value string)
-	SetError(err error)
-	Finish()
+	kafkaconsumer.ConsumerTracer
+	NewSpanFromContext(ctx context.Context, operationName string) (context.Context, span.Span)
 }

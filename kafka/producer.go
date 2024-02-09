@@ -27,9 +27,10 @@ type Producer struct {
 	isTopicSpecificProducer bool
 	wg                      sync.WaitGroup
 	isBatch                 bool
+	t                       ProduceTracer
 }
 
-func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfig) (*Producer, error) {
+func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfig, t ProduceTracer) (*Producer, error) {
 	if config.Batch && config.Async {
 		return nil, fmt.Errorf("NewProducer: `Batch` and `Async` are mutually exclusive")
 	}
@@ -91,6 +92,7 @@ func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfi
 		topic:                   config.Topic,
 		isTopicSpecificProducer: isTopicSpecificProducer,
 		isBatch:                 config.Batch,
+		t:                       t,
 	}
 	if config.Batch {
 		autoFlushContext, cancel := context.WithCancel(log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam))
@@ -148,6 +150,9 @@ func (k *Producer) ProduceToTopic(ctx context.Context, topic, key string, messag
 		Value:   message,
 		Headers: messageHeader,
 		Time:    time.Now(),
+	}
+	if k.t != nil {
+		k.t.KafkaInject(ctx, msg)
 	}
 	if !k.isTopicSpecificProducer {
 		msg.Topic = topic

@@ -7,9 +7,17 @@ import (
 
 	e "errors"
 
+	sKafka "github.com/segmentio/kafka-go"
+
+	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
 	"github.com/sabariramc/goserverbase/v5/kafka"
 	"github.com/sabariramc/goserverbase/v5/log"
 )
+
+type ConsumerTracer interface {
+	KafkaExtract(ctx context.Context, msg *sKafka.Message) context.Context
+	InitiateKafkaMessageSpanFromContext(ctx context.Context, msg *sKafka.Message) span.Span
+}
 
 func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 	corr := &log.CorrelationParam{CorrelationId: fmt.Sprintf("%v:KafkaConsumerServer", k.c.ServiceName)}
