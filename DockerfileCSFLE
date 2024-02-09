@@ -1,7 +1,7 @@
 FROM golang:1.21-bullseye AS builder
 RUN apt-get update && apt-get install tzdata
 WORKDIR /myapp
-COPY ./pkg/debian/bullseye ./pkg
+COPY ./pkg/mongo/debian/bullseye ./pkg
 COPY ./app ./app
 COPY ./aws ./aws
 COPY ./crypto ./crypto
@@ -19,7 +19,7 @@ RUN go mod tidy
 FROM debian:bullseye-slim AS csflerunner
 RUN apt-get install tzdata
 WORKDIR /service
-COPY ./pkg/debian/bullseye ./pkg
+COPY ./pkg/mongo/debian/bullseye ./pkg
 COPY ./db/mongo/csfle/sample/piischeme.json ./piischeme.json
 RUN apt-get install /service/pkg/libmongocrypt-dev_1.8.4-0_amd64.deb /service/pkg/libmongocrypt0_1.8.4-0_amd64.deb
 ENV CSFLE_CRYPT_SHARED_LIB_PATH=/service/pkg/mongo_crypt_shared_v1-7.0.5/lib/mongo_crypt_v1.so

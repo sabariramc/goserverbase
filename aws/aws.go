@@ -6,7 +6,14 @@ import (
 
 var defaultAWSConfig *aws.Config
 
-func SetDefaultAWSConfig(defaultConfig aws.Config) {
+type Tracer interface {
+	AWS(*aws.Config)
+}
+
+func SetDefaultAWSConfig(defaultConfig aws.Config, t Tracer) {
+	if t != nil {
+		t.AWS(&defaultConfig)
+	}
 	defaultAWSConfig = &defaultConfig
 }
 

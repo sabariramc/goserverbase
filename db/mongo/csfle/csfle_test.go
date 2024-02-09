@@ -29,13 +29,13 @@ func TestCollectionPII(t *testing.T) {
 	kmsProvider, err := sample.GetKMSProvider(ctx, MongoTestLogger, kmsArn)
 	assert.NilError(t, err)
 	config := MongoTestConfig.CSFLE
-	dbScheme, err := csfle.SetEncryptionKey(ctx, MongoTestLogger, &scheme, *MongoTestConfig.Mongo, config.KeyVaultNamespace, kmsProvider)
+	client, err := mongo.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo, nil)
 	assert.NilError(t, err)
-	client, err := mongo.New(ctx, MongoTestLogger, *MongoTestConfig.Mongo)
+	dbScheme, err := csfle.SetEncryptionKey(ctx, MongoTestLogger, &scheme, client, config.KeyVaultNamespace, kmsProvider)
 	assert.NilError(t, err)
 	config.KMSCredentials = kmsProvider.Credentials()
 	config.SchemaMap = dbScheme
-	csfleClient, err := csfle.New(ctx, MongoTestLogger, *config)
+	csfleClient, err := csfle.New(ctx, MongoTestLogger, *config, nil)
 	assert.NilError(t, err)
 	// csfleClient.Database(dbName).Collection(collName).Drop(context.TODO())
 	// assert.NilError(t, err)

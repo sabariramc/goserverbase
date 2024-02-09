@@ -9,13 +9,13 @@ import (
 	"github.com/sabariramc/goserverbase/v5/log"
 )
 
-func SetEncryptionKey(ctx context.Context, logger log.Log, encryptionSchema *string, c mongo.Config, keyVaultNamespace string, kmsProvider MasterKeyProvider) (map[string]interface{}, error) {
+func SetEncryptionKey(ctx context.Context, logger log.Log, encryptionSchema *string, client *mongo.Mongo, keyVaultNamespace string, kmsProvider MasterKeyProvider) (map[string]interface{}, error) {
 	schema := make(map[string]interface{})
 	err := json.Unmarshal([]byte(*encryptionSchema), &schema)
 	if err != nil {
 		return nil, fmt.Errorf("csfle.SetEncryptionKey: error unmarshalling schema: %w", err)
 	}
-	client, err := mongo.New(ctx, logger, c)
+
 	if err != nil {
 		return nil, err
 	}

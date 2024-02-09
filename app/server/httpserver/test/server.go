@@ -13,6 +13,7 @@ import (
 	"github.com/sabariramc/goserverbase/v5/aws"
 	"github.com/sabariramc/goserverbase/v5/db/mongo"
 	"github.com/sabariramc/goserverbase/v5/errors"
+	"github.com/sabariramc/goserverbase/v5/instrumentation"
 	"github.com/sabariramc/goserverbase/v5/kafka"
 	"github.com/sabariramc/goserverbase/v5/log"
 	"github.com/sabariramc/goserverbase/v5/log/logwriter"
@@ -161,13 +162,13 @@ func (s *server) printHttpVersion() gin.HandlerFunc {
 	}
 }
 
-func NewServer() *server {
+func NewServer(t instrumentation.Tracer) *server {
 	ctx := GetCorrelationContext()
 	pr, err := kafka.NewProducer(ctx, ServerTestLogger, ServerTestConfig.KafkaProducer)
 	if err != nil {
 		ServerTestLogger.Emergency(ctx, "error creating producer1", err, nil)
 	}
-	conn, err := mongo.New(ctx, ServerTestLogger, *ServerTestConfig.Mongo)
+	conn, err := mongo.New(ctx, ServerTestLogger, *ServerTestConfig.Mongo, t)
 	if err != nil {
 		ServerTestLogger.Emergency(ctx, "error creating mongo connection", err, nil)
 	}

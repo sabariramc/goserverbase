@@ -7,6 +7,6 @@ import (
 )
 
 func main() {
-	s := server.NewServer()
+	s := server.NewServer(nil)
 	s.StartConsumer(context.Background())
 }

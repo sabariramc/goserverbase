@@ -18,16 +18,20 @@ type Mongo struct {
 	log log.Log
 }
 
+type Tracer interface {
+	MongoDB() *event.CommandMonitor
+}
+
 var ErrNoDocuments = mongo.ErrNoDocuments
 
-func NewWithAWSRoleAuth(ctx context.Context, logger log.Log, c Config, opts ...*options.ClientOptions) (*Mongo, error) {
+func NewWithAWSRoleAuth(ctx context.Context, logger log.Log, c Config, t Tracer, opts ...*options.ClientOptions) (*Mongo, error) {
 	opts = append(opts, options.Client().SetAuth(options.Credential{
 		AuthMechanism: "MONGODB-AWS",
 	}))
-	return New(ctx, logger, c, opts...)
+	return New(ctx, logger, c, t, opts...)
 }
 
-func New(ctx context.Context, logger log.Log, c Config, opts ...*options.ClientOptions) (*Mongo, error) {
+func New(ctx context.Context, logger log.Log, c Config, t Tracer, opts ...*options.ClientOptions) (*Mongo, error) {
 	var err error
 	connectionOptions := options.Client()
 	connectionOptions.ApplyURI(c.ConnectionString)
@@ -37,6 +41,9 @@ func New(ctx context.Context, logger log.Log, c Config, opts ...*options.ClientO
 	connectionOptions.SetMaxConnIdleTime(time.Minute * 5)
 	connectionOptions.SetCompressors([]string{"snappy", "zlib", "zstd"})
 	connectionOptions.SetAppName(c.AppName)
+	if t != nil {
+		connectionOptions.SetMonitor(t.MongoDB())
+	}
 	if c.EnableLog {
 		mongoLogger := &MongoLogger{log: logger.NewResourceLogger("MongoInternalLog"), ctx: log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam("MongoInternal"))}
 		connectionOptions.SetLoggerOptions(&options.LoggerOptions{

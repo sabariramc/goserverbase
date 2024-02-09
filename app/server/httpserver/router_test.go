@@ -15,7 +15,7 @@ import (
 )
 
 func TestRouter(t *testing.T) {
-	srv := server.NewServer()
+	srv := server.NewServer(nil)
 	req := httptest.NewRequest(http.MethodGet, "/service/v1/tenant", nil)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
@@ -49,7 +49,7 @@ func TestRouter(t *testing.T) {
 }
 
 func TestRouterCustomError(t *testing.T) {
-	srv := server.NewServer()
+	srv := server.NewServer(nil)
 	req := httptest.NewRequest(http.MethodGet, "/service/v1/error/error1", nil)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
@@ -63,7 +63,7 @@ func TestRouterCustomError(t *testing.T) {
 }
 
 func TestRouterPanic(t *testing.T) {
-	srv := server.NewServer()
+	srv := server.NewServer(nil)
 	req := httptest.NewRequest(http.MethodGet, "/service/v1/error/error2", nil)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
@@ -76,7 +76,7 @@ func TestRouterPanic(t *testing.T) {
 }
 
 func TestRouterClientError(t *testing.T) {
-	srv := server.NewServer()
+	srv := server.NewServer(nil)
 	req := httptest.NewRequest(http.MethodGet, "/service/v1/error/error3", nil)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
@@ -90,7 +90,7 @@ func TestRouterClientError(t *testing.T) {
 }
 
 func TestRouterHealthCheck(t *testing.T) {
-	srv := server.NewServer()
+	srv := server.NewServer(nil)
 	req := httptest.NewRequest(http.MethodGet, "/meta/health", nil)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
@@ -98,7 +98,7 @@ func TestRouterHealthCheck(t *testing.T) {
 }
 
 func TestPost(t *testing.T) {
-	srv := server.NewServer()
+	srv := server.NewServer(nil)
 	payload, _ := json.Marshal(map[string]string{"fasdfas": "FASDFASf"})
 	buff := bytes.NewBuffer(payload)
 	req := httptest.NewRequest(http.MethodPost, "/service/v1/tenant", buff)
@@ -115,7 +115,7 @@ func TestPost(t *testing.T) {
 }
 
 func TestIntegration(t *testing.T) {
-	srv := server.NewServer()
+	srv := server.NewServer(nil)
 	payload, _ := json.Marshal(map[string]string{"fasdfas": "FASDFASf"})
 	buff := bytes.NewBuffer(payload)
 	req := httptest.NewRequest(http.MethodPost, "/service/v1/test/all", buff)
@@ -125,7 +125,7 @@ func TestIntegration(t *testing.T) {
 }
 
 func TestRequestCache(t *testing.T) {
-	srv := server.NewServer()
+	srv := server.NewServer(nil)
 	payload, _ := json.Marshal(map[string]string{"fasdfas": "FASDFASf"})
 	buff := bytes.NewBuffer(payload)
 	req := httptest.NewRequest(http.MethodPost, "/service/v1/test/req", buff)
@@ -143,7 +143,7 @@ const (
 var goprocs = runtime.GOMAXPROCS(0) // 8
 
 func TestBencRoute(t *testing.T) {
-	srv := server.NewServer()
+	srv := server.NewServer(nil)
 	payload, _ := json.Marshal(map[string]string{"fasdfas": "FASDFASf"})
 	buff := bytes.NewBuffer(payload)
 	req := httptest.NewRequest(http.MethodPost, "/service/v1/benc", buff)
@@ -153,7 +153,7 @@ func TestBencRoute(t *testing.T) {
 }
 
 func BenchmarkRoutes(b *testing.B) {
-	srv := server.NewServer()
+	srv := server.NewServer(nil)
 	payload, _ := json.Marshal(map[string]string{"fasdfas": "FASDFASf"})
 	buff := bytes.NewBuffer(payload)
 	for i := start; i < end; i += step {

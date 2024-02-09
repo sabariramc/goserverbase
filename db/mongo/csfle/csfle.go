@@ -15,7 +15,7 @@ import (
 	"github.com/sabariramc/goserverbase/v5/utils"
 )
 
-func New(ctx context.Context, logger log.Log, c Config, opts ...*options.ClientOptions) (*m.Mongo, error) {
+func New(ctx context.Context, logger log.Log, c Config, t m.Tracer, opts ...*options.ClientOptions) (*m.Mongo, error) {
 	extraOptions := map[string]interface{}{
 		"cryptSharedLibPath":     c.CryptSharedLibPath,
 		"mongocryptdBypassSpawn": true,
@@ -29,7 +29,7 @@ func New(ctx context.Context, logger log.Log, c Config, opts ...*options.ClientO
 	connectionOptions := options.Client()
 	connectionOptions.SetAutoEncryptionOptions(autoEncryptionOpts)
 	opts = utils.Prepend(opts, connectionOptions)
-	return m.New(ctx, logger, *c.Config, opts...)
+	return m.New(ctx, logger, *c.Config, t, opts...)
 }
 
 func GetDataKey(ctx context.Context, m *m.Mongo, keyVaultNamespace, keyAltName string, provider MasterKeyProvider) (res *primitive.Binary, err error) {

@@ -40,7 +40,7 @@ func setAWSSession() {
 		}
 		os.Setenv("AWS_PROVIDER", "local")
 	}
-	base.SetDefaultAWSConfig(cnf)
+	base.SetDefaultAWSConfig(cnf, nil)
 }
 
 func LoadEnv(path string) {

@@ -75,7 +75,7 @@ func (s *server) Shutdown(ctx context.Context) error {
 	return s.conn.Disconnect(ctx)
 }
 
-func NewServer() *server {
+func NewServer(t mongo.Tracer) *server {
 	ctx := GetCorrelationContext()
 	loc := utils.GetEnv("SCHEME_LOCATION", "./db/mongo/csfle/sample/piischeme.json")
 	file, err := os.Open(loc)
@@ -94,13 +94,17 @@ func NewServer() *server {
 		ServerTestLogger.Emergency(ctx, "error creating kms", err, nil)
 	}
 	config := ServerTestConfig.CSFLE
-	dbScheme, err := csfle.SetEncryptionKey(ctx, ServerTestLogger, &scheme, *ServerTestConfig.Mongo, config.KeyVaultNamespace, kmsProvider)
+	client, err := mongo.New(ctx, ServerTestLogger, *ServerTestConfig.Mongo, t)
+	if err != nil {
+		ServerTestLogger.Emergency(ctx, "error creating mongo client", err, nil)
+	}
+	dbScheme, err := csfle.SetEncryptionKey(ctx, ServerTestLogger, &scheme, client, config.KeyVaultNamespace, kmsProvider)
 	if err != nil {
 		ServerTestLogger.Emergency(ctx, "error creating scheme", err, nil)
 	}
 	config.KMSCredentials = kmsProvider.Credentials()
 	config.SchemaMap = dbScheme
-	conn, err := csfle.New(ctx, ServerTestLogger, *ServerTestConfig.CSFLE)
+	conn, err := csfle.New(ctx, ServerTestLogger, *ServerTestConfig.CSFLE, t)
 	if err != nil {
 		ServerTestLogger.Emergency(ctx, "error creating mongo connection", err, nil)
 	}
