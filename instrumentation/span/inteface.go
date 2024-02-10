@@ -3,9 +3,9 @@ package span
 import "context"
 
 type Span interface {
-	SetTag(name string, value string)
+	SetAttribute(name string, value string)
 	SetStatus(statusCode int, description string)
-	SetError(stackTrace string, err error)
+	SetError(err error, stackTrace string)
 	Finish()
 }
 

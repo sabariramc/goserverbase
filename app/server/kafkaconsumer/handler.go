@@ -32,7 +32,7 @@ func (k *KafkaConsumerServer) ProcessEvent(ctx context.Context, msg *kafka.Messa
 			stackTrace, err := k.PanicRecovery(ctx, rec)
 			statusCode, _ := k.ProcessError(ctx, stackTrace, err)
 			if spanOk {
-				span.SetError(stackTrace, err)
+				span.SetError(err, stackTrace)
 				span.SetStatus(statusCode, http.StatusText(statusCode))
 			}
 		}
@@ -41,7 +41,7 @@ func (k *KafkaConsumerServer) ProcessEvent(ctx context.Context, msg *kafka.Messa
 	if err != nil {
 		statusCode, _ := k.ProcessError(ctx, "", err)
 		if spanOk {
-			span.SetError("", err)
+			span.SetError(err, "")
 			span.SetStatus(statusCode, http.StatusText(statusCode))
 		}
 		return

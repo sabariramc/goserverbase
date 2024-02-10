@@ -32,11 +32,11 @@ func (k *KafkaConsumerServer) GetMessageContext(msg *kafka.Message) context.Cont
 	if k.tracer != nil {
 		var span span.Span
 		msgCtx, span = k.tracer.InitiateKafkaMessageSpanFromContext(msgCtx, msg.Message)
-		span.SetTag("correlationId", corr.CorrelationId)
+		span.SetAttribute("correlationId", corr.CorrelationId)
 		data := identity.GetPayload()
 		for key, value := range data {
 			if value != "" {
-				span.SetTag("customer."+key, value)
+				span.SetAttribute("customer."+key, value)
 			}
 		}
 	}

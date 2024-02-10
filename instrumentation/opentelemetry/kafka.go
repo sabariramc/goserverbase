@@ -5,7 +5,6 @@ import (
 
 	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
 	cKafka "github.com/sabariramc/goserverbase/v5/kafka"
-	"github.com/sabariramc/goserverbase/v5/log"
 	"github.com/segmentio/kafka-go"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -73,7 +72,6 @@ func (t *tracer) InitiateKafkaMessageSpanFromContext(ctx context.Context, msg *k
 			attribute.Int64("messaging.kafka.offset", msg.Offset),
 			attribute.String("messaging.kafka.key", string(msg.Key)),
 			attribute.Int64("messaging.kafka.key", msg.Time.UnixMilli()),
-			
 		),
 		trace.WithNewRoot(),
 		trace.WithSpanKind(trace.SpanKindConsumer),

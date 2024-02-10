@@ -2,9 +2,11 @@ package httpserver
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
 )
 
 func (h *HTTPServer) SetContextMiddleware() gin.HandlerFunc {
@@ -21,7 +23,7 @@ func (h *HTTPServer) SetContextMiddleware() gin.HandlerFunc {
 				data := identity.GetPayload()
 				for key, value := range data {
 					if value != "" {
-						span.SetTag("customer."+key, value)
+						span.SetAttribute("customer."+key, value)
 					}
 				}
 			}
@@ -71,14 +73,22 @@ func (h *HTTPServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 func (h *HTTPServer) HandleExceptionMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		w, r := c.Writer, c.Request
+		ctx := r.Context()
+		span, spanOk := h.GetSpanFromContext(ctx)
 		defer func() {
 			if rec := recover(); rec != nil {
-				stackTrace, err := h.PanicRecovery(r.Context(), rec)
-				statusCode, body := h.ProcessError(r.Context(), stackTrace, err)
+				stackTrace, err := h.PanicRecovery(ctx, rec)
+				statusCode, body := h.ProcessError(ctx, stackTrace, err)
 				h.WriteJSONWithStatusCode(r.Context(), w, statusCode, body)
+				if spanOk {
+					err, errOk := rec.(error)
+					if !errOk {
+						err = fmt.Errorf("panic during execution")
+					}
+					span.SetError(err, stackTrace)
+				}
 			}
 		}()
-		ctx := r.Context()
 		var handlerError error
 		var stackTrace string
 		ctx = context.WithValue(ctx, ContextKeyHandlerError, func(err error) { handlerError = err })
@@ -88,6 +98,16 @@ func (h *HTTPServer) HandleExceptionMiddleware() gin.HandlerFunc {
 		if handlerError != nil {
 			statusCode, body := h.ProcessError(ctx, stackTrace, handlerError)
 			h.WriteJSONWithStatusCode(r.Context(), w, statusCode, body)
+			if spanOk && statusCode > 299 {
+				span.SetError(handlerError, "")
+			}
 		}
 	}
+}
+
+func (h *HTTPServer) GetSpanFromContext(ctx context.Context) (span.Span, bool) {
+	if h.tracer != nil {
+		return h.tracer.GetSpanFromContext(ctx)
+	}
+	return nil, false
 }

@@ -29,12 +29,17 @@ func (s *otelSpan) Finish() {
 	s.End()
 }
 
-func (s *otelSpan) SetTag(name string, value string) {
+func (s *otelSpan) SetAttribute(name string, value string) {
 	s.SetAttributes(attribute.String(name, value))
 }
 
-func (s *otelSpan) SetError(stackTrace string, err error) {
-	s.Span.RecordError(err, trace.WithStackTrace(true))
+func (s *otelSpan) SetError(err error, stackTrace string) {
+	opts := []trace.EventOption{}
+	if stackTrace == "" {
+		opts = append(opts, trace.WithStackTrace(true))
+	}
+	s.Span.RecordError(err, opts...)
+
 }
 
 func (s *otelSpan) SetStatus(statusCode int, description string) {
