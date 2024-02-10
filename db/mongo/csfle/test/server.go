@@ -75,7 +75,12 @@ func (s *server) Shutdown(ctx context.Context) error {
 	return s.conn.Disconnect(ctx)
 }
 
-func NewServer(t mongo.Tracer) *server {
+type Tracer interface {
+	mongo.Tracer
+	httpserver.Tracer
+}
+
+func NewServer(t Tracer) *server {
 	ctx := GetCorrelationContext()
 	loc := utils.GetEnv("SCHEME_LOCATION", "./db/mongo/csfle/sample/piischeme.json")
 	file, err := os.Open(loc)
@@ -109,7 +114,7 @@ func NewServer(t mongo.Tracer) *server {
 		ServerTestLogger.Emergency(ctx, "error creating mongo connection", err, nil)
 	}
 	srv := &server{
-		HTTPServer: httpserver.New(*ServerTestConfig.HTTP, ServerTestLogger, nil), log: ServerTestLogger,
+		HTTPServer: httpserver.New(*ServerTestConfig.HTTP, ServerTestLogger, t, nil), log: ServerTestLogger,
 		conn: conn,
 		coll: conn.Database(dbName).Collection(collName),
 		c:    ServerTestConfig,

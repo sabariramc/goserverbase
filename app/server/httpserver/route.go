@@ -43,6 +43,9 @@ func (h *HTTPServer) SetupRouter(ctx context.Context) {
 	h.handler.GET("/meta/health", gin.WrapF(HealthCheck))
 	h.handler.HandleMethodNotAllowed = true
 	h.SetupDocumentation(ctx)
+	if h.tracer != nil {
+		h.handler.Use(h.tracer.GetGinMiddleware(h.c.ServiceName))
+	}
 	h.handler.Use(h.SetContextMiddleware(), h.RequestTimerMiddleware(), h.LogRequestResponseMiddleware(), h.HandleExceptionMiddleware())
 }
 

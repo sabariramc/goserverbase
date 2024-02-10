@@ -75,8 +75,8 @@ func (k *KafkaConsumerServer) Subscribe(ctx context.Context) {
 }
 
 func (k *KafkaConsumerServer) GetSpanFromContext(ctx context.Context) (span.Span, bool) {
-	if k.t != nil {
-		return k.t.GetSpanFromContext(ctx)
+	if k.tracer != nil {
+		return k.tracer.GetSpanFromContext(ctx)
 	}
 	return nil, false
 }

@@ -3,6 +3,7 @@ package kafkaconsumer
 import (
 	"context"
 
+	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
 	"github.com/sabariramc/goserverbase/v5/kafka"
 	"github.com/sabariramc/goserverbase/v5/log"
 )
@@ -24,10 +25,20 @@ func (k *KafkaConsumerServer) GetCustomerID(headers map[string]string) *log.Cust
 
 func (k *KafkaConsumerServer) GetMessageContext(msg *kafka.Message) context.Context {
 	msgCtx := context.Background()
+	corr := k.GetCorrelationParams(msg.GetHeaders())
+	identity := k.GetCustomerID(msg.GetHeaders())
 	msgCtx = k.GetContextWithCorrelation(msgCtx, k.GetCorrelationParams(msg.GetHeaders()))
-	msgCtx = k.GetContextWithCustomerId(msgCtx, k.GetCustomerID(msg.GetHeaders()))
-	if k.t != nil {
-		msgCtx, _ = k.t.InitiateKafkaMessageSpanFromContext(msgCtx, msg.Message)
+	msgCtx = k.GetContextWithCustomerId(msgCtx, identity)
+	if k.tracer != nil {
+		var span span.Span
+		msgCtx, span = k.tracer.InitiateKafkaMessageSpanFromContext(msgCtx, msg.Message)
+		span.SetTag("correlationId", corr.CorrelationId)
+		data := identity.GetPayload()
+		for key, value := range data {
+			if value != "" {
+				span.SetTag("customer."+key, value)
+			}
+		}
 	}
 	return msgCtx
 }

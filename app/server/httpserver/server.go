@@ -8,8 +8,14 @@ import (
 	"github.com/gin-gonic/gin"
 	baseapp "github.com/sabariramc/goserverbase/v5/app"
 	"github.com/sabariramc/goserverbase/v5/errors"
+	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
 	"github.com/sabariramc/goserverbase/v5/log"
 )
+
+type Tracer interface {
+	GetGinMiddleware(serviceName string) gin.HandlerFunc
+	span.SpanOp
+}
 
 type HTTPServer struct {
 	*baseapp.BaseApp
@@ -17,15 +23,17 @@ type HTTPServer struct {
 	log     log.Log
 	c       *HTTPServerConfig
 	server  *http.Server
+	tracer  Tracer
 }
 
-func New(appConfig HTTPServerConfig, logger log.Log, errorNotifier errors.ErrorNotifier) *HTTPServer {
+func New(appConfig HTTPServerConfig, logger log.Log, tr Tracer, errorNotifier errors.ErrorNotifier) *HTTPServer {
 	b := baseapp.New(appConfig.ServerConfig, logger, errorNotifier)
 	h := &HTTPServer{
 		BaseApp: b,
 		handler: gin.New(),
 		log:     b.GetLogger().NewResourceLogger("HTTPServer"),
 		c:       &appConfig,
+		tracer:  tr,
 	}
 	ctx := b.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(appConfig.ServiceName))
 	h.SetupRouter(ctx)

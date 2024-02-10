@@ -14,7 +14,7 @@ import (
 
 type KafkaEventProcessor func(context.Context, *kafka.Message) error
 
-type ConsumerTracer interface {
+type Tracer interface {
 	InitiateKafkaMessageSpanFromContext(ctx context.Context, msg *ckafka.Message) (context.Context, span.Span)
 	span.SpanOp
 }
@@ -28,17 +28,17 @@ type KafkaConsumerServer struct {
 	c                      *KafkaConsumerServerConfig
 	shutdown, shutdownPoll context.CancelFunc
 	requestWG, shutdownWG  sync.WaitGroup
-	t                      ConsumerTracer
+	tracer                 Tracer
 }
 
-func New(appConfig KafkaConsumerServerConfig, logger log.Log, t ConsumerTracer, errorNotifier errors.ErrorNotifier) *KafkaConsumerServer {
+func New(appConfig KafkaConsumerServerConfig, logger log.Log, t Tracer, errorNotifier errors.ErrorNotifier) *KafkaConsumerServer {
 	b := baseapp.New(appConfig.ServerConfig, logger, errorNotifier)
 	h := &KafkaConsumerServer{
 		BaseApp: b,
 		log:     logger.NewResourceLogger("KafkaConsumerServer"),
 		c:       &appConfig,
 		handler: make(map[string]KafkaEventProcessor),
-		t:       t,
+		tracer:  t,
 	}
 	h.RegisterOnShutdown(h)
 	return h

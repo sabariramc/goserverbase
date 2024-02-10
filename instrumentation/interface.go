@@ -1,6 +1,7 @@
 package instrumentation
 
 import (
+	"github.com/sabariramc/goserverbase/v5/app/server/httpserver"
 	"github.com/sabariramc/goserverbase/v5/app/server/kafkaconsumer"
 	"github.com/sabariramc/goserverbase/v5/aws"
 	"github.com/sabariramc/goserverbase/v5/db/mongo"
@@ -14,6 +15,7 @@ type Tracer interface {
 	mongo.Tracer
 	httputil.Tracer
 	kafka.ProduceTracer
-	kafkaconsumer.ConsumerTracer
+	kafkaconsumer.Tracer
+	httpserver.Tracer
 	span.SpanOp
 }

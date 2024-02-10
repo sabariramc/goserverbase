@@ -66,7 +66,6 @@ func (t *tracer) KafkaExtract(ctx context.Context, msg *kafka.Message) context.C
 func (t *tracer) InitiateKafkaMessageSpanFromContext(ctx context.Context, msg *kafka.Message) (context.Context, span.Span) {
 	msgCtx := t.KafkaExtract(ctx, msg)
 	tr := otel.Tracer("")
-	corr := log.GetCorrelationParam(ctx)
 	opts := []trace.SpanStartOption{
 		trace.WithAttributes(
 			attribute.String("messaging.kafka.topic", msg.Topic),
@@ -74,7 +73,7 @@ func (t *tracer) InitiateKafkaMessageSpanFromContext(ctx context.Context, msg *k
 			attribute.Int64("messaging.kafka.offset", msg.Offset),
 			attribute.String("messaging.kafka.key", string(msg.Key)),
 			attribute.Int64("messaging.kafka.key", msg.Time.UnixMilli()),
-			attribute.String("correlationId", corr.CorrelationId),
+			
 		),
 		trace.WithNewRoot(),
 		trace.WithSpanKind(trace.SpanKindConsumer),

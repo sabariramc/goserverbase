@@ -10,9 +10,22 @@ import (
 func (h *HTTPServer) SetContextMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		r := c.Request
-		ctx := h.GetContextWithCorrelation(r.Context(), h.GetCorrelationParams(r))
-		ctx = h.GetContextWithCustomerId(ctx, h.GetCustomerID(r))
+		corr := h.GetCorrelationParams(r)
+		identity := h.GetCustomerID(r)
+		ctx := h.GetContextWithCorrelation(r.Context(), corr)
+		ctx = h.GetContextWithCustomerId(ctx, identity)
 		c.Request = r.WithContext(ctx)
+		if h.tracer != nil {
+			span, ok := h.tracer.GetSpanFromContext(ctx)
+			if ok {
+				data := identity.GetPayload()
+				for key, value := range data {
+					if value != "" {
+						span.SetTag("customer."+key, value)
+					}
+				}
+			}
+		}
 		c.Next()
 	}
 }
