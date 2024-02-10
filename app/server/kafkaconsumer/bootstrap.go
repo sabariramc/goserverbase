@@ -7,16 +7,9 @@ import (
 
 	e "errors"
 
-	sKafka "github.com/segmentio/kafka-go"
-
-	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
 	"github.com/sabariramc/goserverbase/v5/kafka"
 	"github.com/sabariramc/goserverbase/v5/log"
 )
-
-type ConsumerTracer interface {
-	InitiateKafkaMessageSpanFromContext(ctx context.Context, msg *sKafka.Message) (context.Context, span.Span)
-}
 
 func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 	corr := &log.CorrelationParam{CorrelationId: fmt.Sprintf("%v:KafkaConsumerServer", k.c.ServiceName)}
@@ -29,8 +22,10 @@ func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 	k.log.Notice(ctx, "Starting kafka consumer", nil)
 	defer func() {
 		if rec := recover(); rec != nil {
-			k.shutdown()
-			k.PanicRecovery(ctx, rec)
+			defer k.shutdown()
+			stackTrace, err := k.PanicRecovery(ctx, rec)
+			k.log.Error(ctx, "Panic error", err)
+			k.log.Error(ctx, "Panic stack tace", stackTrace)
 		}
 	}()
 	k.Subscribe(ctx)

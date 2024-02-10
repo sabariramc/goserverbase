@@ -60,7 +60,8 @@ func (h *HTTPServer) HandleExceptionMiddleware() gin.HandlerFunc {
 		w, r := c.Writer, c.Request
 		defer func() {
 			if rec := recover(); rec != nil {
-				statusCode, body := h.PanicRecovery(r.Context(), rec)
+				stackTrace, err := h.PanicRecovery(r.Context(), rec)
+				statusCode, body := h.ProcessError(r.Context(), stackTrace, err)
 				h.WriteJSONWithStatusCode(r.Context(), w, statusCode, body)
 			}
 		}()

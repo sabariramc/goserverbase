@@ -11,7 +11,7 @@ import (
 	"github.com/sabariramc/goserverbase/v5/errors"
 )
 
-func (b *BaseApp) PanicRecovery(ctx context.Context, rec any) (int, []byte) {
+func (b *BaseApp) PanicRecovery(ctx context.Context, rec any) (string, error) {
 	stackTrace := string(debug.Stack())
 	b.log.Error(ctx, "Recovered - Panic", rec)
 	b.log.Error(ctx, "Recovered - StackTrace", stackTrace)
@@ -20,7 +20,7 @@ func (b *BaseApp) PanicRecovery(ctx context.Context, rec any) (int, []byte) {
 		blob, _ := json.Marshal(rec)
 		err = fmt.Errorf("non error panic: %v", string(blob))
 	}
-	return b.ProcessError(ctx, stackTrace, err)
+	return stackTrace, err
 }
 
 func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error) (int, []byte) {
@@ -55,6 +55,7 @@ func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error
 		b.log.Error(ctx, "Error occurred during marshal of errors", parseErr)
 	}
 	b.log.Error(ctx, "Error", err)
+	b.log.Error(ctx, "Stack trace", stackTrace)
 	if notify && b.errorNotifier != nil {
 		if statusCode >= 500 {
 			b.errorNotifier.Send5XX(ctx, errorCode, err, stackTrace, errorData)

@@ -3,7 +3,9 @@ package kafkaconsumer
 import (
 	"context"
 	"fmt"
+	"net/http"
 
+	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
 	"github.com/sabariramc/goserverbase/v5/kafka"
 	ckafka "github.com/segmentio/kafka-go"
 )
@@ -19,15 +21,32 @@ func (k *KafkaConsumerServer) AddHandler(ctx context.Context, topicName string, 
 }
 
 func (k *KafkaConsumerServer) ProcessEvent(ctx context.Context, msg *kafka.Message, handler KafkaEventProcessor) {
+	span, spanOk := k.GetSpanFromContext(ctx)
+	defer func() {
+		if spanOk {
+			span.Finish()
+		}
+	}()
 	defer func() {
 		if rec := recover(); rec != nil {
-			k.PanicRecovery(ctx, rec)
+			stackTrace, err := k.PanicRecovery(ctx, rec)
+			statusCode, _ := k.ProcessError(ctx, stackTrace, err)
+			if spanOk {
+				span.SetError(stackTrace, err)
+				span.SetStatus(statusCode, http.StatusText(statusCode))
+			}
 		}
 	}()
 	err := handler(ctx, msg)
 	if err != nil {
-		k.ProcessError(ctx, "", err)
+		statusCode, _ := k.ProcessError(ctx, "", err)
+		if spanOk {
+			span.SetError("", err)
+			span.SetStatus(statusCode, http.StatusText(statusCode))
+		}
+		return
 	}
+	span.SetStatus(http.StatusOK, http.StatusText(http.StatusOK))
 }
 
 func (k *KafkaConsumerServer) Commit(ctx context.Context) error {
@@ -53,4 +72,11 @@ func (k *KafkaConsumerServer) Subscribe(ctx context.Context) {
 		})
 	}
 	k.client = client
+}
+
+func (k *KafkaConsumerServer) GetSpanFromContext(ctx context.Context) (span.Span, bool) {
+	if k.t != nil {
+		return k.t.GetSpanFromContext(ctx)
+	}
+	return nil, false
 }

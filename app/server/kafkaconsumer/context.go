@@ -26,5 +26,8 @@ func (k *KafkaConsumerServer) GetMessageContext(msg *kafka.Message) context.Cont
 	msgCtx := context.Background()
 	msgCtx = k.GetContextWithCorrelation(msgCtx, k.GetCorrelationParams(msg.GetHeaders()))
 	msgCtx = k.GetContextWithCustomerId(msgCtx, k.GetCustomerID(msg.GetHeaders()))
+	if k.t != nil {
+		msgCtx, _ = k.t.InitiateKafkaMessageSpanFromContext(msgCtx, msg.Message)
+	}
 	return msgCtx
 }

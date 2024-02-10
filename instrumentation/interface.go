@@ -1,8 +1,6 @@
 package instrumentation
 
 import (
-	"context"
-
 	"github.com/sabariramc/goserverbase/v5/app/server/kafkaconsumer"
 	"github.com/sabariramc/goserverbase/v5/aws"
 	"github.com/sabariramc/goserverbase/v5/db/mongo"
@@ -17,5 +15,5 @@ type Tracer interface {
 	httputil.Tracer
 	kafka.ProduceTracer
 	kafkaconsumer.ConsumerTracer
-	NewSpanFromContext(ctx context.Context, operationName string) (context.Context, span.Span)
+	span.SpanOp
 }

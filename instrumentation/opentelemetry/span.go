@@ -6,18 +6,23 @@ import (
 	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 )
 
-type otelSpan struct {
-	trace.Span
-}
-
 func (t *tracer) NewSpanFromContext(ctx context.Context, operationName string) (context.Context, span.Span) {
 	tr := otel.Tracer("")
-
 	ctx, sp := tr.Start(ctx, operationName)
 	return ctx, &otelSpan{Span: sp}
+}
+
+func (t *tracer) GetSpanFromContext(ctx context.Context) (span.Span, bool) {
+	sp := trace.SpanFromContext(ctx)
+	return &otelSpan{Span: sp}, sp.IsRecording()
+}
+
+type otelSpan struct {
+	trace.Span
 }
 
 func (s *otelSpan) Finish() {
@@ -28,4 +33,14 @@ func (s *otelSpan) SetTag(name string, value string) {
 	s.SetAttributes(attribute.String(name, value))
 }
 
-func (s *otelSpan) SetError(err error) {}
+func (s *otelSpan) SetError(stackTrace string, err error) {
+	s.Span.RecordError(err, trace.WithStackTrace(true))
+}
+
+func (s *otelSpan) SetStatus(statusCode int, description string) {
+	if statusCode <= 299 {
+		s.Span.SetStatus(codes.Ok, description)
+	} else {
+		s.Span.SetStatus(codes.Error, description)
+	}
+}
