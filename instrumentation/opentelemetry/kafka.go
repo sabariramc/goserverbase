@@ -5,8 +5,11 @@ import (
 
 	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
 	cKafka "github.com/sabariramc/goserverbase/v5/kafka"
+	"github.com/sabariramc/goserverbase/v5/log"
 	"github.com/segmentio/kafka-go"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // HeaderCarrier adapts kafka.Message to satisfy the TextMapCarrier interface.
@@ -60,6 +63,23 @@ func (t *tracer) KafkaExtract(ctx context.Context, msg *kafka.Message) context.C
 	return otel.GetTextMapPropagator().Extract(ctx, NewKafkaCarrier(msg))
 }
 
-func (t *tracer) InitiateKafkaMessageSpanFromContext(ctx context.Context, msg *kafka.Message) span.Span {
-
+func (t *tracer) InitiateKafkaMessageSpanFromContext(ctx context.Context, msg *kafka.Message) (context.Context, span.Span) {
+	msgCtx := t.KafkaExtract(ctx, msg)
+	tr := otel.Tracer("")
+	corr := log.GetCorrelationParam(ctx)
+	opts := []trace.SpanStartOption{
+		trace.WithAttributes(
+			attribute.String("messaging.kafka.topic", msg.Topic),
+			attribute.Int("messaging.kafka.partition", msg.Partition),
+			attribute.Int64("messaging.kafka.offset", msg.Offset),
+			attribute.String("messaging.kafka.key", string(msg.Key)),
+			attribute.Int64("messaging.kafka.key", msg.Time.UnixMilli()),
+			attribute.String("correlationId", corr.CorrelationId),
+		),
+		trace.WithNewRoot(),
+		trace.WithSpanKind(trace.SpanKindConsumer),
+		trace.WithTimestamp(msg.Time),
+	}
+	spanCtx, span := tr.Start(msgCtx, "kafka.consume", opts...)
+	return spanCtx, &otelSpan{Span: span}
 }

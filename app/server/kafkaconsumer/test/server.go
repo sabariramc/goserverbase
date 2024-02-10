@@ -93,7 +93,7 @@ func NewServer(t instrumentation.Tracer) *server {
 		ServerTestLogger.Emergency(ctx, "error creating mongo connection", err, nil)
 	}
 	srv := &server{
-		KafkaConsumerServer: kafkaconsumer.New(*ServerTestConfig.Kafka, ServerTestLogger, nil),
+		KafkaConsumerServer: kafkaconsumer.New(*ServerTestConfig.Kafka, ServerTestLogger, t, nil),
 		pr:                  pr,
 		sns:                 aws.GetDefaultSNSClient(ServerTestLogger),
 		httpClient:          httputil.NewDefaultHTTPClient(ServerTestLogger, t),

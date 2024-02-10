@@ -15,8 +15,7 @@ import (
 )
 
 type ConsumerTracer interface {
-	KafkaExtract(ctx context.Context, msg *sKafka.Message) context.Context
-	InitiateKafkaMessageSpanFromContext(ctx context.Context, msg *sKafka.Message) span.Span
+	InitiateKafkaMessageSpanFromContext(ctx context.Context, msg *sKafka.Message) (context.Context, span.Span)
 }
 
 func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
