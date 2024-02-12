@@ -3,6 +3,7 @@ services:
   http:
     build:
       context: .
+      dockerfile: ./DockerfileWithddtrace
       target: http
     container_name: gobase_http
     env_file:
@@ -26,6 +27,7 @@ services:
   http2:
     build:
       context: .
+      dockerfile: ./DockerfileWithddtrace
       target: http2
     container_name: gobase_http2
     env_file:
@@ -51,6 +53,7 @@ services:
   h2c:
     build:
       context: .
+      dockerfile: ./DockerfileWithddtrace
       target: h2c
     container_name: gobase_h2c
     env_file:
@@ -74,6 +77,7 @@ services:
   kafka:
     build:
       context: .
+      dockerfile: ./DockerfileWithddtrace
       target: kafka
     deploy:
       mode: replicated
@@ -96,8 +100,8 @@ services:
       - common
   csfle:
     build:
-      context: ./
-      dockerfile: ./DockerfileCSFLE
+      context: .
+      dockerfile: ./DockerfileWithddtrace
       target: httpcsfle
     env_file:
       - .env

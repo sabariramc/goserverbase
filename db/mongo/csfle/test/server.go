@@ -13,6 +13,7 @@ import (
 	"github.com/sabariramc/goserverbase/v5/db/mongo"
 	"github.com/sabariramc/goserverbase/v5/db/mongo/csfle"
 	"github.com/sabariramc/goserverbase/v5/db/mongo/csfle/sample"
+	"github.com/sabariramc/goserverbase/v5/instrumentation"
 	"github.com/sabariramc/goserverbase/v5/log"
 	"github.com/sabariramc/goserverbase/v5/log/logwriter"
 	"github.com/sabariramc/goserverbase/v5/testutils"
@@ -26,7 +27,6 @@ var ServerTestLMux log.LogMux
 func init() {
 	fmt.Println(os.Getwd())
 	testutils.LoadEnv("../../../.env")
-	testutils.Initialize()
 	ServerTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter()
 	ServerTestLMux = log.NewDefaultLogMux(consoleLogWriter)
@@ -75,12 +75,8 @@ func (s *server) Shutdown(ctx context.Context) error {
 	return s.conn.Disconnect(ctx)
 }
 
-type Tracer interface {
-	mongo.Tracer
-	httpserver.Tracer
-}
-
-func NewServer(t Tracer) *server {
+func NewServer(t instrumentation.Tracer) *server {
+	testutils.SetAWSSession(t)
 	ctx := GetCorrelationContext()
 	loc := utils.GetEnv("SCHEME_LOCATION", "./db/mongo/csfle/sample/piischeme.json")
 	file, err := os.Open(loc)
