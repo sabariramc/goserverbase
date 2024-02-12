@@ -15,7 +15,7 @@ import (
 type KafkaEventProcessor func(context.Context, *kafka.Message) error
 
 type Tracer interface {
-	InitiateKafkaMessageSpanFromContext(ctx context.Context, msg *ckafka.Message) (context.Context, span.Span)
+	StartKafkaSpanFromMessage(ctx context.Context, msg *ckafka.Message) (context.Context, span.Span)
 	span.SpanOp
 }
 

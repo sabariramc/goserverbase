@@ -1,38 +1,44 @@
-package opentelemetry
+package ddtrace
 
 import (
 	"context"
 
 	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
-	"go.opentelemetry.io/otel/trace"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
 	ddtrace "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
-func (t *tracer) NewSpanFromContext(ctx context.Context, operationName string) (context.Context, span.Span) {
-	 ddtrace.StartSpanFromContext(ctx, operationName)
+func (t *tracer) NewSpanFromContext(ctx context.Context, operationName string, kind string, resourceName string) (context.Context, span.Span) {
+	opts := []ddtrace.StartSpanOption{
+		ddtrace.Tag(ext.SpanKind, kind),
+		ddtrace.Tag(ext.MessagingSystem, "kafka"),
+		ddtrace.Measured(),
+	}
+	sp, ctx := ddtrace.StartSpanFromContext(ctx, operationName, opts...)
+	return ctx, &ddtraceSpan{Span: sp}
 }
 
 func (t *tracer) GetSpanFromContext(ctx context.Context) (span.Span, bool) {
-	sp := trace.SpanFromContext(ctx)
-	return &otelSpan{Span: sp}, sp.IsRecording()
+	sp, spanOk := ddtrace.SpanFromContext(ctx)
+	return &ddtraceSpan{Span: sp}, spanOk
 }
 
-type otelSpan struct {
+type ddtraceSpan struct {
 	ddtrace.Span
 }
 
-func (s *otelSpan) Finish() {
-	s.Finish()
+func (s *ddtraceSpan) Finish() {
+	s.Span.Finish()
 }
 
-func (s *otelSpan) SetAttribute(name string, value string) {
+func (s *ddtraceSpan) SetAttribute(name string, value any) {
 	s.SetTag(name, value)
 }
 
-func (s *otelSpan) SetError(err error, stackTrace string) {
-	s.SetError(err, stackTrace)
+func (s *ddtraceSpan) SetError(err error, stackTrace string) {
+	s.Span.SetTag(ext.Error, err)
 }
 
-func (s *otelSpan) SetStatus(statusCode int, description string) {
-	s.SetStatus(statusCode, description)
+func (s *ddtraceSpan) SetStatus(statusCode int, description string) {
+	s.Span.SetTag(ext.HTTPCode, statusCode)
 }

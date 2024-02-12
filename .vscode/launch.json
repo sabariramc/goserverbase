@@ -11,6 +11,15 @@
             "envFile": "${workspaceFolder}/.env",
         },
         {
+            "name": "HTTP Server(ddtrace)",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "${workspaceFolder}/app/server/httpserver/test/http/ddtrace/main.go",
+            "cwd": "${workspaceFolder}",
+            "envFile": "${workspaceFolder}/.env",
+        },
+        {
             "name": "HTTP TLS Server",
             "type": "go",
             "request": "launch",
@@ -37,7 +46,8 @@
             "program": "${workspaceFolder}/app/server/kafkaconsumer/test/consumer/main.go",
             "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env",
-        },{
+        },
+        {
             "name": "CSFLE Server",
             "type": "go",
             "request": "launch",
@@ -45,7 +55,7 @@
             "program": "${workspaceFolder}/db/mongo/csfle/test/http/main.go",
             "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env",
-            "buildFlags":[
+            "buildFlags": [
                 "-tags cse"
             ]
         },

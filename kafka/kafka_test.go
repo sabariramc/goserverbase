@@ -27,7 +27,7 @@ func newAsyncProducer(ctx context.Context) (*kafka.Producer, error) {
 }
 
 func newPoller(ctx context.Context) (*kafka.Poller, error) {
-	return kafka.NewPoller(ctx, KafkaTestLogger, KafkaTestConfig.KafkaConsumer, KafkaTestConfig.KafkaTestTopic)
+	return kafka.NewPoller(ctx, KafkaTestLogger, KafkaTestConfig.KafkaConsumer, nil, KafkaTestConfig.KafkaTestTopic)
 }
 
 func TestKafkaProducer(t *testing.T) {
@@ -61,7 +61,7 @@ func TestKafkaPoller(t *testing.T) {
 	ctx := GetCorrelationContext()
 	config := KafkaTestConfig.KafkaConsumer
 	config.AutoCommit = false
-	co, err := kafka.NewPoller(ctx, KafkaTestLogger, config, KafkaTestConfig.KafkaTestTopic, KafkaTestConfig.KafkaTestTopic2)
+	co, err := kafka.NewPoller(ctx, KafkaTestLogger, config, nil, KafkaTestConfig.KafkaTestTopic, KafkaTestConfig.KafkaTestTopic2)
 	assert.NilError(t, err)
 	defer co.Close(ctx)
 	ch := make(chan *cKafka.Message, 100)

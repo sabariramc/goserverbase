@@ -5,9 +5,14 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
 	"github.com/sabariramc/goserverbase/v5/log"
 	"github.com/segmentio/kafka-go"
 )
+
+type ConsumerTracer interface {
+	span.SpanOp
+}
 
 type Reader struct {
 	*kafka.Reader
@@ -16,17 +21,19 @@ type Reader struct {
 	consumedMessages []kafka.Message
 	bufferSize       int
 	idx              int
+	tr               ConsumerTracer
 }
 
 var ErrReaderBufferFull = fmt.Errorf("Reader.StoreMessage: Buffer full")
 
-func NewReader(ctx context.Context, log log.Log, r *kafka.Reader, bufferSize int) *Reader {
+func NewReader(ctx context.Context, log log.Log, r *kafka.Reader, bufferSize int, tr ConsumerTracer) *Reader {
 	return &Reader{
 		Reader:           r,
 		log:              log.NewResourceLogger("KafkaReader"),
 		consumedMessages: make([]kafka.Message, bufferSize),
 		bufferSize:       bufferSize,
 		idx:              0,
+		tr:               tr,
 	}
 }
 
@@ -35,6 +42,11 @@ func (k *Reader) Commit(ctx context.Context) error {
 	defer k.commitLock.Unlock()
 	if k.idx == 0 {
 		return nil
+	}
+	if k.tr != nil {
+		var crSpan span.Span
+		ctx, crSpan = k.tr.NewSpanFromContext(ctx, "kafka.consumer.commit", span.SpanKindConsumer, "")
+		defer crSpan.Finish()
 	}
 	k.log.Notice(ctx, "committing messages", k.idx)
 	err := k.CommitMessages(ctx, k.consumedMessages[:k.idx]...)

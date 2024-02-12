@@ -9,12 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	base "github.com/sabariramc/goserverbase/v5/aws"
+	"github.com/sabariramc/goserverbase/v5/instrumentation"
 	"github.com/sabariramc/goserverbase/v5/utils"
 
 	"github.com/joho/godotenv"
 )
 
-func setAWSSession() {
+func SetAWSSession(tr instrumentation.Tracer) {
 	cnf, _ := config.LoadDefaultConfig(context.TODO())
 	if os.Getenv("AWS_PROVIDER") == "local" {
 		awsEndpoint := utils.GetEnvMust("AWS_ENDPOINT")
@@ -40,7 +41,7 @@ func setAWSSession() {
 		}
 		os.Setenv("AWS_PROVIDER", "local")
 	}
-	base.SetDefaultAWSConfig(cnf, nil)
+	base.SetDefaultAWSConfig(cnf, tr)
 }
 
 func LoadEnv(path string) {
@@ -50,5 +51,5 @@ func LoadEnv(path string) {
 }
 
 func Initialize() {
-	setAWSSession()
+	SetAWSSession(nil)
 }

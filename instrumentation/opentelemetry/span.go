@@ -2,6 +2,8 @@ package opentelemetry
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
 	"go.opentelemetry.io/otel"
@@ -10,9 +12,29 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-func (t *tracer) NewSpanFromContext(ctx context.Context, operationName string) (context.Context, span.Span) {
+var spanKindMap = map[string]trace.SpanKind{
+	span.SpanKindClient:   trace.SpanKindClient,
+	span.SpanKindConsumer: trace.SpanKindConsumer,
+	span.SpanKindInternal: trace.SpanKindInternal,
+	span.SpanKindProducer: trace.SpanKindProducer,
+	span.SpanKindServer:   trace.SpanKindServer,
+}
+
+func (t *tracer) NewSpanFromContext(ctx context.Context, operationName string, kind string, resourceName string) (context.Context, span.Span) {
+	spanKind, ok := spanKindMap[kind]
+	if !ok {
+		spanKind = trace.SpanKindUnspecified
+	}
 	tr := otel.Tracer("")
-	ctx, sp := tr.Start(ctx, operationName)
+	opts := []trace.SpanStartOption{
+		trace.WithAttributes(
+			attribute.String("resource", resourceName),
+		),
+		trace.WithNewRoot(),
+		trace.WithSpanKind(spanKind),
+		trace.WithTimestamp(time.Now()),
+	}
+	ctx, sp := tr.Start(ctx, operationName, opts...)
 	return ctx, &otelSpan{Span: sp}
 }
 
@@ -29,8 +51,35 @@ func (s *otelSpan) Finish() {
 	s.End()
 }
 
-func (s *otelSpan) SetAttribute(name string, value string) {
-	s.SetAttributes(attribute.String(name, value))
+func (s *otelSpan) SetAttribute(key string, value any) {
+	var at attribute.KeyValue
+	switch v := value.(type) {
+	case string:
+		at = attribute.String(key, v)
+	case []string:
+		at = attribute.StringSlice(key, v)
+	case int:
+		at = attribute.Int(key, v)
+	case []int:
+		at = attribute.IntSlice(key, v)
+	case int64:
+		at = attribute.Int64(key, v)
+	case []int64:
+		at = attribute.Int64Slice(key, v)
+	case bool:
+		at = attribute.Bool(key, v)
+	case []bool:
+		at = attribute.BoolSlice(key, v)
+	case float64:
+		at = attribute.Float64(key, v)
+	case []float64:
+		at = attribute.Float64Slice(key, v)
+	case fmt.Stringer:
+		at = attribute.Stringer(key, v)
+	default:
+		at = attribute.String(key, fmt.Sprintf("%v", v))
+	}
+	s.SetAttributes(at)
 }
 
 func (s *otelSpan) SetError(err error, stackTrace string) {

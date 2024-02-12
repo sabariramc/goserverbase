@@ -31,8 +31,13 @@ func (k *KafkaConsumerServer) GetMessageContext(msg *kafka.Message) context.Cont
 	msgCtx = k.GetContextWithCustomerId(msgCtx, identity)
 	if k.tracer != nil {
 		var span span.Span
-		msgCtx, span = k.tracer.InitiateKafkaMessageSpanFromContext(msgCtx, msg.Message)
+		msgCtx, span = k.tracer.StartKafkaSpanFromMessage(msgCtx, msg.Message)
 		span.SetAttribute("correlationId", corr.CorrelationId)
+		span.SetAttribute("messaging.kafka.topic", msg.Topic)
+		span.SetAttribute("messaging.kafka.partition", msg.Partition)
+		span.SetAttribute("messaging.kafka.offset", msg.Offset)
+		span.SetAttribute("messaging.kafka.key", string(msg.Key))
+		span.SetAttribute("messaging.kafka.timestamp", msg.Time.UnixMilli())
 		data := identity.GetPayload()
 		for key, value := range data {
 			if value != "" {

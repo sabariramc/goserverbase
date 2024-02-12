@@ -1,4 +1,4 @@
-package opentelemetry
+package ddtrace
 
 import (
 	"github.com/sabariramc/goserverbase/v5/instrumentation"

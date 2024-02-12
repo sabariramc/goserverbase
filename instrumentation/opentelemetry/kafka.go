@@ -58,24 +58,14 @@ func (t *tracer) KafkaInject(ctx context.Context, msg *kafka.Message) {
 	otel.GetTextMapPropagator().Inject(ctx, NewKafkaCarrier(msg))
 }
 
-func (t *tracer) KafkaExtract(ctx context.Context, msg *kafka.Message) context.Context {
-	return otel.GetTextMapPropagator().Extract(ctx, NewKafkaCarrier(msg))
-}
-
-func (t *tracer) InitiateKafkaMessageSpanFromContext(ctx context.Context, msg *kafka.Message) (context.Context, span.Span) {
-	msgCtx := t.KafkaExtract(ctx, msg)
+func (t *tracer) StartKafkaSpanFromMessage(ctx context.Context, msg *kafka.Message) (context.Context, span.Span) {
+	msgCtx := otel.GetTextMapPropagator().Extract(ctx, NewKafkaCarrier(msg))
 	tr := otel.Tracer("")
 	opts := []trace.SpanStartOption{
-		trace.WithAttributes(
-			attribute.String("messaging.kafka.topic", msg.Topic),
-			attribute.Int("messaging.kafka.partition", msg.Partition),
-			attribute.Int64("messaging.kafka.offset", msg.Offset),
-			attribute.String("messaging.kafka.key", string(msg.Key)),
-			attribute.Int64("messaging.kafka.key", msg.Time.UnixMilli()),
-		),
 		trace.WithNewRoot(),
 		trace.WithSpanKind(trace.SpanKindConsumer),
 		trace.WithTimestamp(msg.Time),
+		trace.WithAttributes(attribute.String("messaging.system", "kafka")),
 	}
 	spanCtx, span := tr.Start(msgCtx, "kafka.consume", opts...)
 	return spanCtx, &otelSpan{Span: span}

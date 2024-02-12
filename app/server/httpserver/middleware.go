@@ -20,6 +20,8 @@ func (h *HTTPServer) SetContextMiddleware() gin.HandlerFunc {
 		if h.tracer != nil {
 			span, ok := h.tracer.GetSpanFromContext(ctx)
 			if ok {
+				span.SetAttribute("correlationId", corr.CorrelationId)
+				defer span.Finish()
 				data := identity.GetPayload()
 				for key, value := range data {
 					if value != "" {

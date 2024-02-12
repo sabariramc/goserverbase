@@ -25,7 +25,7 @@ var ServerTestLMux log.LogMux
 
 func init() {
 	testutils.LoadEnv("../../../.env")
-	testutils.Initialize()
+
 	ServerTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter()
 	ServerTestLMux = log.NewDefaultLogMux(consoleLogWriter)
@@ -69,7 +69,6 @@ func (s *server) Func1(ctx context.Context, event *kafka.Message) error {
 		s.log.Info(ctx, "http response", res)
 	}()
 	s.pr.ProduceMessageWithTopic(ctx, ServerTestConfig.KafkaTestTopic2, uuid.NewString(), msg, nil)
-	// s.pr.Flush(ctx)
 	wg.Wait()
 	return nil
 }
@@ -83,6 +82,7 @@ func (s *server) Name(ctx context.Context) string {
 }
 
 func NewServer(t instrumentation.Tracer) *server {
+	testutils.SetAWSSession(t)
 	ctx := GetCorrelationContext()
 	pr, err := kafka.NewProducer(ctx, ServerTestLogger, ServerTestConfig.KafkaProducer, t)
 	if err != nil {

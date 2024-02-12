@@ -25,7 +25,7 @@ type Poller struct {
 	wg               sync.WaitGroup
 }
 
-func NewPoller(ctx context.Context, logger log.Log, config KafkaConsumerConfig, topics ...string) (*Poller, error) {
+func NewPoller(ctx context.Context, logger log.Log, config KafkaConsumerConfig, tr api.ConsumerTracer, topics ...string) (*Poller, error) {
 	if config.MaxBuffer <= 0 {
 		config.MaxBuffer = 100
 	}
@@ -64,7 +64,7 @@ func NewPoller(ctx context.Context, logger log.Log, config KafkaConsumerConfig, 
 	k := &Poller{
 		log:         logger.NewResourceLogger("KafkaConsumer"),
 		config:      config,
-		Reader:      api.NewReader(ctx, logger, r, config.MaxBuffer),
+		Reader:      api.NewReader(ctx, logger, r, config.MaxBuffer, tr),
 		topics:      topics,
 		serviceName: config.ServiceName,
 	}

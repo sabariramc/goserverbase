@@ -13,10 +13,6 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-type ProduceTracer interface {
-	KafkaInject(ctx context.Context, msg *kafka.Message)
-}
-
 type Producer struct {
 	*api.Writer
 	config                  KafkaProducerConfig
@@ -27,10 +23,9 @@ type Producer struct {
 	isTopicSpecificProducer bool
 	wg                      sync.WaitGroup
 	isBatch                 bool
-	t                       ProduceTracer
 }
 
-func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfig, t ProduceTracer) (*Producer, error) {
+func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfig, tr api.ProduceTracer) (*Producer, error) {
 	if config.Batch && config.Async {
 		return nil, fmt.Errorf("NewProducer: `Batch` and `Async` are mutually exclusive")
 	}
@@ -79,7 +74,7 @@ func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfi
 			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
 		}
 	}
-	writer := api.NewWriter(ctx, p, config.BatchMaxBuffer, logger)
+	writer := api.NewWriter(ctx, p, config.BatchMaxBuffer, logger, tr)
 	isTopicSpecificProducer := false
 	if config.Topic != "" {
 		isTopicSpecificProducer = true
@@ -92,7 +87,6 @@ func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfi
 		topic:                   config.Topic,
 		isTopicSpecificProducer: isTopicSpecificProducer,
 		isBatch:                 config.Batch,
-		t:                       t,
 	}
 	if config.Batch {
 		autoFlushContext, cancel := context.WithCancel(log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam))
@@ -150,9 +144,6 @@ func (k *Producer) ProduceToTopic(ctx context.Context, topic, key string, messag
 		Value:   message,
 		Headers: messageHeader,
 		Time:    time.Now(),
-	}
-	if k.t != nil {
-		k.t.KafkaInject(ctx, msg)
 	}
 	if !k.isTopicSpecificProducer {
 		msg.Topic = topic

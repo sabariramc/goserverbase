@@ -29,7 +29,6 @@ var ServerTestLMux log.LogMux
 func init() {
 	fmt.Println(os.Getwd())
 	testutils.LoadEnv("../../../.env")
-	testutils.Initialize()
 	ServerTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter()
 	ServerTestLMux = log.NewDefaultLogMux(consoleLogWriter)
@@ -163,6 +162,7 @@ func (s *server) printHttpVersion() gin.HandlerFunc {
 }
 
 func NewServer(t instrumentation.Tracer) *server {
+	testutils.SetAWSSession(t)
 	ctx := GetCorrelationContext()
 	pr, err := kafka.NewProducer(ctx, ServerTestLogger, ServerTestConfig.KafkaProducer, t)
 	if err != nil {

@@ -5,9 +5,15 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
 	"github.com/sabariramc/goserverbase/v5/log"
 	"github.com/segmentio/kafka-go"
 )
+
+type ProduceTracer interface {
+	KafkaInject(ctx context.Context, msg *kafka.Message)
+	span.SpanOp
+}
 
 type Writer struct {
 	*kafka.Writer
@@ -18,13 +24,14 @@ type Writer struct {
 	msgCh       chan kafka.Message
 	wg          sync.WaitGroup
 	idx         int
+	tr          ProduceTracer
 }
 
 var ErrWriterBufferFull = fmt.Errorf("Reader.Send: Buffer full")
 
-func NewWriter(ctx context.Context, w *kafka.Writer, bufferLen int, log log.Log) *Writer {
+func NewWriter(ctx context.Context, w *kafka.Writer, bufferLen int, log log.Log, tr ProduceTracer) *Writer {
 	if w.Async {
-		log.Notice(ctx, "Kafak writer is set to async mode", nil)
+		log.Notice(ctx, "Kafka writer is set to async mode", nil)
 	}
 	return &Writer{
 		Writer:      w,
@@ -32,10 +39,20 @@ func NewWriter(ctx context.Context, w *kafka.Writer, bufferLen int, log log.Log)
 		bufferLen:   bufferLen,
 		log:         log.NewResourceLogger("KafkaWriter"),
 		idx:         0,
+		tr:          tr,
 	}
 }
 
 func (w *Writer) Send(ctx context.Context, msg *kafka.Message) error {
+	if w.tr != nil {
+		var crSpan span.Span
+		ctx, crSpan = w.tr.NewSpanFromContext(ctx, "kafka.produce", span.SpanKindProducer, msg.Topic)
+		crSpan.SetAttribute("messaging.kafka.topic", msg.Topic)
+		crSpan.SetAttribute("messaging.kafka.key", string(msg.Key))
+		crSpan.SetAttribute("messaging.kafka.timestamp", msg.Time)
+		defer crSpan.Finish()
+		w.tr.KafkaInject(ctx, msg)
+	}
 	if w.Async {
 		return w.WriteMessages(ctx, *msg)
 	}
@@ -54,6 +71,11 @@ func (w *Writer) Flush(ctx context.Context) error {
 	defer w.produceLock.Unlock()
 	if w.idx == 0 {
 		return nil
+	}
+	if w.tr != nil {
+		var crSpan span.Span
+		ctx, crSpan = w.tr.NewSpanFromContext(ctx, "kafka.producer.flush", span.SpanKindProducer, "")
+		defer crSpan.Finish()
 	}
 	w.log.Notice(ctx, "Flushing messages", w.idx)
 	err := w.WriteMessages(context.Background(), w.messageList[:w.idx]...)

@@ -1,13 +1,11 @@
-package opentelemetry
+package ddtrace
 
 import (
 	"context"
 
 	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
 	"github.com/segmentio/kafka-go"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
+	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
 	ddtrace "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
@@ -53,29 +51,33 @@ func NewKafkaCarrier(msg *kafka.Message) MessageCarrier {
 }
 
 func (t *tracer) KafkaInject(ctx context.Context, msg *kafka.Message) {
-	traceMsg := trace.NewMessageCarrier(msg)
-	ddtrace.Inject(ctx, traceMsg)
+	traceMsg := NewKafkaCarrier(msg)
+	sp, _ := ddtrace.SpanFromContext(ctx)
+	ddtrace.Inject(sp.Context(), traceMsg)
 }
 
 func (t *tracer) KafkaExtract(ctx context.Context, msg *kafka.Message) context.Context {
-	return otel.GetTextMapPropagator().Extract(ctx, NewKafkaCarrier(msg))
+	spanCtx, err := ddtrace.Extract(NewKafkaCarrier(msg))
+	if err != nil {
+		return ctx
+	}
+	span := ddtrace.StartSpan("", ddtrace.ChildOf(spanCtx))
+	return ddtrace.ContextWithSpan(ctx, span)
 }
 
-func (t *tracer) InitiateKafkaMessageSpanFromContext(ctx context.Context, msg *kafka.Message) (context.Context, span.Span) {
-	msgCtx := t.KafkaExtract(ctx, msg)
-	tr := otel.Tracer("")
-	opts := []trace.SpanStartOption{
-		trace.WithAttributes(
-			attribute.String("messaging.kafka.topic", msg.Topic),
-			attribute.Int("messaging.kafka.partition", msg.Partition),
-			attribute.Int64("messaging.kafka.offset", msg.Offset),
-			attribute.String("messaging.kafka.key", string(msg.Key)),
-			attribute.Int64("messaging.kafka.key", msg.Time.UnixMilli()),
-		),
-		trace.WithNewRoot(),
-		trace.WithSpanKind(trace.SpanKindConsumer),
-		trace.WithTimestamp(msg.Time),
+func (t *tracer) StartKafkaSpanFromMessage(ctx context.Context, msg *kafka.Message) (context.Context, span.Span) {
+
+	opts := []ddtrace.StartSpanOption{
+		ddtrace.ResourceName(msg.Topic),
+		ddtrace.SpanType(ext.SpanTypeMessageConsumer),
+		ddtrace.Tag(ext.SpanKind, ext.SpanKindConsumer),
+		ddtrace.Tag(ext.MessagingSystem, "kafka"),
+		ddtrace.Measured(),
 	}
-	spanCtx, span := tr.Start(msgCtx, "kafka.consume", opts...)
-	return spanCtx, &otelSpan{Span: span}
+	carrier := NewKafkaCarrier(msg)
+	if spanCtx, err := ddtrace.Extract(carrier); err == nil {
+		opts = append(opts, ddtrace.ChildOf(spanCtx))
+	}
+	sp, ctx := ddtrace.StartSpanFromContext(ctx, "kafka.consume", opts...)
+	return ctx, &ddtraceSpan{Span: sp}
 }
