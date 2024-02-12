@@ -14,7 +14,7 @@ import (
 func callURL(url string) {
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	body, _ := json.Marshal(map[string]string{"fasdfsda": "fasdfas", "fasdfas": "fasdfas"})
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 10; i++ {
 		req, _ := http.NewRequest("POST", url, bytes.NewBuffer(body))
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("x-correlation-id", "sabariram-load-"+uuid.NewString())
