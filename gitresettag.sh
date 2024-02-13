@@ -1,4 +1,4 @@
-export tagname="v4.12.0.ddtrace"
+export tagname="v5.0.0"
 git push origin :$tagname
 git push bitbucket :$tagname
 git tag --delete $tagname
