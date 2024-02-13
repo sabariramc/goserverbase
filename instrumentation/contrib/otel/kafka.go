@@ -1,4 +1,4 @@
-package opentelemetry
+package otel
 
 import (
 	"context"
@@ -34,7 +34,7 @@ func (kc *KafkaCarrier) Get(key string) string {
 	if !ok {
 		return ""
 	}
-	return string(val)
+	return val
 }
 
 // Set stores the key-value pair.
@@ -54,18 +54,18 @@ func (kc *KafkaCarrier) Keys() []string {
 	return keys
 }
 
-func (t *tracer) KafkaInject(ctx context.Context, msg *kafka.Message) {
+func (t *tracerManager) KafkaInject(ctx context.Context, msg *kafka.Message) {
 	otel.GetTextMapPropagator().Inject(ctx, NewKafkaCarrier(msg))
 }
 
-func (t *tracer) StartKafkaSpanFromMessage(ctx context.Context, msg *kafka.Message) (context.Context, span.Span) {
+func (t *tracerManager) StartKafkaSpanFromMessage(ctx context.Context, msg *kafka.Message) (context.Context, span.Span) {
 	msgCtx := otel.GetTextMapPropagator().Extract(ctx, NewKafkaCarrier(msg))
 	tr := otel.Tracer("")
 	opts := []trace.SpanStartOption{
 		trace.WithNewRoot(),
 		trace.WithSpanKind(trace.SpanKindConsumer),
 		trace.WithTimestamp(msg.Time),
-		trace.WithAttributes(attribute.String("messaging.system", "kafka")),
+		trace.WithAttributes(attribute.String("messaging.system", "kafka"), attribute.String("resource.name", msg.Topic)),
 	}
 	spanCtx, span := tr.Start(msgCtx, "kafka.consume", opts...)
 	return spanCtx, &otelSpan{Span: span}

@@ -33,7 +33,7 @@ func NewPoller(ctx context.Context, logger log.Log, config KafkaConsumerConfig, 
 		config.AutoCommitIntervalInMs = 1000
 	}
 	logger = logger.NewResourceLogger("KafkaConsumer")
-	defaultCorrelationParam := &log.CorrelationParam{CorrelationId: config.ServiceName + ":KafkaConsumer"}
+	defaultCorrelationParam := &log.CorrelationParam{CorrelationID: config.ServiceName + ":KafkaConsumer"}
 	readerConfig := kafka.ReaderConfig{
 		Brokers:           config.Brokers,
 		GroupID:           config.GroupID,

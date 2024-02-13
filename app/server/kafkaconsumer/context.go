@@ -11,7 +11,7 @@ import (
 func (k *KafkaConsumerServer) GetCorrelationParams(headers map[string]string) *log.CorrelationParam {
 	cr := &log.CorrelationParam{}
 	cr.LoadFromHeader(headers)
-	if cr.CorrelationId == "" {
+	if cr.CorrelationID == "" {
 		return log.GetDefaultCorrelationParam(k.c.ServiceName)
 	}
 	return cr
@@ -32,7 +32,7 @@ func (k *KafkaConsumerServer) GetMessageContext(msg *kafka.Message) context.Cont
 	if k.tracer != nil {
 		var span span.Span
 		msgCtx, span = k.tracer.StartKafkaSpanFromMessage(msgCtx, msg.Message)
-		span.SetAttribute("correlationId", corr.CorrelationId)
+		span.SetAttribute("correlationId", corr.CorrelationID)
 		span.SetAttribute("messaging.kafka.topic", msg.Topic)
 		span.SetAttribute("messaging.kafka.partition", msg.Partition)
 		span.SetAttribute("messaging.kafka.offset", msg.Offset)
@@ -41,7 +41,7 @@ func (k *KafkaConsumerServer) GetMessageContext(msg *kafka.Message) context.Cont
 		data := identity.GetPayload()
 		for key, value := range data {
 			if value != "" {
-				span.SetAttribute("customer."+key, value)
+				span.SetAttribute("user."+key, value)
 			}
 		}
 	}

@@ -34,12 +34,12 @@ func TestErrorNotification(t *testing.T) {
 	notifier := kafka.New(context.TODO(), TestLogger, "Test", TestConfig.KafkaTestTopic, p)
 	ctx := GetCorrelationContext()
 	custId := "cust_test_id"
-	err := notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{CustomerId: &custId}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
+	err := notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{UserID: &custId}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
 	assert.NilError(t, err)
 	custId = "app_user_id"
-	err = notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{AppUserId: &custId}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
+	err = notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{UserClientID: &custId}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
 	assert.NilError(t, err)
 	custId = "entity_id"
-	err = notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{Id: &custId}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
+	err = notifier.Send4XX(log.GetContextWithCustomerId(ctx, &log.CustomerIdentifier{EntityID: &custId}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
 	assert.NilError(t, err)
 }

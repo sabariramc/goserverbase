@@ -1,22 +1,43 @@
-package opentelemetry
+package otel
 
 import (
 	"context"
 
 	"github.com/sabariramc/goserverbase/v5/instrumentation"
+	"github.com/sabariramc/goserverbase/v5/utils"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/metric"
-	"go.opentelemetry.io/otel/sdk/trace"
+	sdkTrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/trace"
 )
 
-type tracer struct {
-	*trace.TracerProvider
+type tracerManager struct {
+	*sdkTrace.TracerProvider
+	env     string
+	version string
 }
 
-var global *tracer
+type tracer struct {
+	trace.Tracer
+	env     string
+	version string
+}
+
+func (tm *tracerManager) Tracer(name string, opts ...trace.TracerOption) trace.Tracer {
+	tr := tm.TracerProvider.Tracer(name, opts...)
+	return &tracer{Tracer: tr, env: tm.env, version: tm.version}
+}
+
+func (t *tracer) Start(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {
+	opts = append(opts, trace.WithAttributes(attribute.String("env", t.env), attribute.String("version", t.version)))
+	return t.Tracer.Start(ctx, spanName, opts...)
+}
+
+var global *tracerManager
 
 func Init() (instrumentation.Tracer, error) {
 	if global != nil {
@@ -26,17 +47,18 @@ func Init() (instrumentation.Tracer, error) {
 	if err != nil {
 		return nil, err
 	}
+	global = &tracerManager{
+		TracerProvider: tp,
+		env:            utils.GetEnv("OTEL_ENV", ""),
+		version:        utils.GetEnv("OTEL_SERVICE_VERSION", ""),
+	}
 	meterProvider, err := newMeterProvider()
 	if err != nil {
 		return nil, err
 	}
-	otel.SetTracerProvider(tp)
+	otel.SetTracerProvider(global)
 	otel.SetTextMapPropagator(newPropagator())
 	otel.SetMeterProvider(meterProvider)
-	global = &tracer{
-		TracerProvider: tp,
-	}
-
 	return global, nil
 }
 
@@ -54,16 +76,16 @@ func newPropagator() propagation.TextMapPropagator {
 	)
 }
 
-func newTraceProvider() (*trace.TracerProvider, error) {
+func newTraceProvider() (*sdkTrace.TracerProvider, error) {
 	exporter, err := otlptracegrpc.New(context.Background())
 	if err != nil {
 		return nil, err
 	}
-	bsp := trace.NewBatchSpanProcessor(exporter)
-	tp := trace.NewTracerProvider(
-		trace.WithSampler(trace.AlwaysSample()),
-		trace.WithBatcher(exporter),
-		trace.WithSpanProcessor(bsp),
+	bsp := sdkTrace.NewBatchSpanProcessor(exporter)
+	tp := sdkTrace.NewTracerProvider(
+		sdkTrace.WithSampler(sdkTrace.AlwaysSample()),
+		sdkTrace.WithBatcher(exporter),
+		sdkTrace.WithSpanProcessor(bsp),
 	)
 	return tp, nil
 }

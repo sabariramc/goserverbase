@@ -1,0 +1,141 @@
+version: '2'
+services:
+  http:
+    build:
+      context: .
+      dockerfile: ./DockerfileWithotel
+      target: http
+    container_name: gobase_http
+    env_file:
+      - .env
+    environment:
+      SERVICE_NAME: gobase_http
+      OTEL_SERVICE_NAME: gobase_http
+      OTEL_EXPORTER_OTLP_ENDPOINT:  http://datadog:4317
+      DD_SERVICE: gobase_http
+      KAFKA_BROKER: broker:29092
+      DD_AGENT_HOST: datadog
+      DOC_HOST: http://localhost:60005
+      KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
+      KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
+      TEST_URL_1: "http://echo-nginx-1"
+      TEST_URL_2: "http://gobase_http:8080/service/v1/tenant"
+    ports:
+      - 60005:8080
+    networks:
+      - mongo_mongodb
+      - kafka_default
+      - common
+  http2:
+    build:
+      context: .
+      dockerfile: ./DockerfileWithotel
+      target: http2
+    container_name: gobase_http2
+    env_file:
+      - .env
+    environment:
+      SERVICE_NAME: gobase_http2
+      OTEL_SERVICE_NAME: gobase_http2
+      OTEL_EXPORTER_OTLP_ENDPOINT:  http://datadog:4317
+      DD_SERVICE: gobase_http2
+      KAFKA_BROKER: broker:29092
+      DD_AGENT_HOST: datadog
+      DOC_HOST: https://localhost:60006
+      HTTP2_PUBLIC_KEY: /service/server.crt
+      HTTP2_PRIVATE_KEY: /service/server.key
+      KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
+      KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
+      TEST_URL_1: "http://echo-nginx-1"
+      TEST_URL_2: "http://gobase_http:8080/service/v1/tenant"
+    ports:
+      - 60006:8080
+    networks:
+      - mongo_mongodb
+      - kafka_default
+      - common
+  h2c:
+    build:
+      context: .
+      dockerfile: ./DockerfileWithotel
+      target: h2c
+    container_name: gobase_h2c
+    env_file:
+      - .env
+    environment:
+      SERVICE_NAME: gobase_h2c
+      OTEL_SERVICE_NAME: gobase_h2c
+      OTEL_EXPORTER_OTLP_ENDPOINT:  http://datadog:4317
+      DD_SERVICE: gobase_h2c
+      KAFKA_BROKER: broker:29092
+      DD_AGENT_HOST: datadog
+      DOC_HOST: http://localhost:60007
+      KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
+      KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
+      TEST_URL_1: "http://echo-nginx-1"
+      TEST_URL_2: "http://gobase_http:8080/service/v1/tenant"
+    ports:
+      - 60007:8080
+    networks:
+      - mongo_mongodb
+      - kafka_default
+      - common
+  kafka:
+    build:
+      context: .
+      dockerfile: ./DockerfileWithotel
+      target: kafka
+    deploy:
+      mode: replicated
+      replicas: 3
+    env_file:
+      - .env
+    environment:
+      SERVICE_NAME: gobase_kafka
+      OTEL_SERVICE_NAME: gobase_kafka
+      OTEL_EXPORTER_OTLP_ENDPOINT:  http://datadog:4317
+      DD_SERVICE: gobase_kafka
+      KAFKA_BROKER: broker:29092
+      DD_AGENT_HOST: datadog
+      KAFKA_CONSUMER_ID: gobase-test-docker-consumer
+      KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
+      KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
+      TEST_URL_1: "http://echo-nginx-1"
+      TEST_URL_2: "http://gobase_http:8080/service/v1/tenant"
+    networks:
+      - mongo_mongodb
+      - kafka_default
+      - common
+  csfle:
+    build:
+      context: .
+      dockerfile: ./DockerfileWithotel
+      target: httpcsfle
+    env_file:
+      - .env
+    environment:
+      KMS_PROVIDER: local
+      SERVICE_NAME: gobase_csfle
+      OTEL_SERVICE_NAME: gobase_csfle
+      OTEL_EXPORTER_OTLP_ENDPOINT:  http://datadog:4317
+      DD_SERVICE: gobase_csfle
+      KAFKA_BROKER: broker:29092
+      DD_AGENT_HOST: datadog
+      KAFKA_CONSUMER_ID: gobase-test-docker-consumer
+      KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
+      KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
+      TEST_URL_1: "http://echo-nginx-1"
+      TEST_URL_2: "http://gobase_http:8080/service/v1/tenant"
+    ports:
+      - 60008:8080
+    networks:
+      - mongo_mongodb
+      - kafka_default
+      - common
+networks:
+  mongo_mongodb:
+    external: true
+  kafka_default:
+    external: true
+  common:
+    external: true

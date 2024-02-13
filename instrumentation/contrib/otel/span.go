@@ -1,4 +1,4 @@
-package opentelemetry
+package otel
 
 import (
 	"context"
@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -20,17 +19,16 @@ var spanKindMap = map[string]trace.SpanKind{
 	span.SpanKindServer:   trace.SpanKindServer,
 }
 
-func (t *tracer) NewSpanFromContext(ctx context.Context, operationName string, kind string, resourceName string) (context.Context, span.Span) {
+func (t *tracerManager) NewSpanFromContext(ctx context.Context, operationName string, kind string, resourceName string) (context.Context, span.Span) {
 	spanKind, ok := spanKindMap[kind]
 	if !ok {
 		spanKind = trace.SpanKindUnspecified
 	}
-	tr := otel.Tracer("")
+	tr := t.Tracer("")
 	opts := []trace.SpanStartOption{
 		trace.WithAttributes(
-			attribute.String("resource", resourceName),
+			attribute.String("resource.name", resourceName),
 		),
-		trace.WithNewRoot(),
 		trace.WithSpanKind(spanKind),
 		trace.WithTimestamp(time.Now()),
 	}
@@ -38,7 +36,7 @@ func (t *tracer) NewSpanFromContext(ctx context.Context, operationName string, k
 	return ctx, &otelSpan{Span: sp}
 }
 
-func (t *tracer) GetSpanFromContext(ctx context.Context) (span.Span, bool) {
+func (t *tracerManager) GetSpanFromContext(ctx context.Context) (span.Span, bool) {
 	sp := trace.SpanFromContext(ctx)
 	return &otelSpan{Span: sp}, sp.IsRecording()
 }

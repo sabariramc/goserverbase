@@ -26,14 +26,14 @@ func (h *HTTPServer) GetCorrelationParams(r *http.Request) *log.CorrelationParam
 	headers := extractKeyValue(r, keyList)
 	cr := &log.CorrelationParam{}
 	cr.LoadFromHeader(headers)
-	if cr.CorrelationId == "" {
+	if cr.CorrelationID == "" {
 		return log.GetDefaultCorrelationParam(h.c.ServiceName)
 	}
 	return cr
 }
 
 func (h *HTTPServer) GetCustomerID(r *http.Request) *log.CustomerIdentifier {
-	keyList := []string{"x-app-user-id", "x-customer-id", "x-entity-id"}
+	keyList := []string{"x-user-id", "x-user-client-id", "x-entity-id"}
 	headers := extractKeyValue(r, keyList)
 	id := &log.CustomerIdentifier{}
 	id.LoadFromHeader(headers)

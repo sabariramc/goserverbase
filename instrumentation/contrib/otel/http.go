@@ -1,4 +1,4 @@
-package opentelemetry
+package otel
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
-func (t *tracer) HTTPWrapTransport(rt http.RoundTripper) http.RoundTripper {
+func (t *tracerManager) HTTPWrapTransport(rt http.RoundTripper) http.RoundTripper {
 	return otelhttp.NewTransport(
 		rt,
 		otelhttp.WithClientTrace(func(ctx context.Context) *httptrace.ClientTrace {
@@ -18,6 +18,6 @@ func (t *tracer) HTTPWrapTransport(rt http.RoundTripper) http.RoundTripper {
 	)
 }
 
-func (t *tracer) HTTPRequestTrace(ctx context.Context) *httptrace.ClientTrace {
+func (t *tracerManager) HTTPRequestTrace(ctx context.Context) *httptrace.ClientTrace {
 	return otelhttptrace.NewClientTrace(ctx)
 }

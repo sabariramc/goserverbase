@@ -91,9 +91,9 @@ func (g *GraylogWriter) WriteMessage(ctx context.Context, msg *log.LogMessage) (
 		TimeUnix: float64(msg.Timestamp.UnixMilli()) / 1000,
 		Level:    int32(msg.Level),
 		Extra: map[string]interface{}{
-			"x-correlation-id":    cr.CorrelationId,
-			"x-scenario-id":       cr.ScenarioId,
-			"x-session-id":        cr.SessionId,
+			"x-correlation-id":    cr.CorrelationID,
+			"x-scenario-id":       cr.ScenarioID,
+			"x-session-id":        cr.SessionID,
 			"x-scenario-name":     cr.ScenarioName,
 			"service-name":        msg.ServiceName,
 			"module-name":         msg.ModuleName,

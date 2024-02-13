@@ -14,7 +14,7 @@ func DefaultLogMapper(ctx context.Context, msg *log.LogMessage) map[string]any {
 	return map[string]any{
 		"LogMessage":       msg,
 		"CorrelationParam": cr,
-		"CorrelationID":    cr.CorrelationId,
+		"CorrelationID":    cr.CorrelationID,
 		"Level":            msg.LogLevelName,
 		"Message":          msg.Message,
 		"LogObject":        ParseLogObject(msg.LogObject, false),

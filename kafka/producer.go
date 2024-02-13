@@ -41,7 +41,7 @@ func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfi
 		}
 	}
 	logger = logger.NewResourceLogger("KafkaProducer")
-	defaultCorrelationParam := &log.CorrelationParam{CorrelationId: config.ServiceName + ":KafkaProducer"}
+	defaultCorrelationParam := &log.CorrelationParam{CorrelationID: config.ServiceName + ":KafkaProducer"}
 	kLog := &kafkaDeliveryReportLogger{
 		Log: logger.NewResourceLogger("KafkaProducerDeliveryLog"),
 		ctx: log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),

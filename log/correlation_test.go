@@ -19,9 +19,9 @@ func TestCustomJsonBody(t *testing.T) {
 	}
 	data, _ := json.Marshal(bodyData)
 	utils.BodyJson.Unmarshal(data, &x)
-	assert.Equal(t, x.CorrelationId, bodyData["correlationId"])
-	assert.Equal(t, *x.ScenarioId, bodyData["scenarioId"])
-	assert.Equal(t, *x.SessionId, bodyData["sessionId"])
+	assert.Equal(t, x.CorrelationID, bodyData["correlationId"])
+	assert.Equal(t, *x.ScenarioID, bodyData["scenarioId"])
+	assert.Equal(t, *x.SessionID, bodyData["sessionId"])
 	assert.Equal(t, *x.ScenarioName, bodyData["scenarioName"])
 	encodedData, _ := utils.BodyJson.Marshal(x)
 	newBodyData := map[string]string{}
@@ -39,9 +39,9 @@ func TestCustomJsonHeader(t *testing.T) {
 	}
 	data, _ := json.Marshal(headerData)
 	utils.HeaderJson.Unmarshal(data, &x)
-	assert.Equal(t, x.CorrelationId, headerData["x-correlation-id"])
-	assert.Equal(t, *x.ScenarioId, headerData["x-scenario-id"])
-	assert.Equal(t, *x.SessionId, headerData["x-session-id"])
+	assert.Equal(t, x.CorrelationID, headerData["x-correlation-id"])
+	assert.Equal(t, *x.ScenarioID, headerData["x-scenario-id"])
+	assert.Equal(t, *x.SessionID, headerData["x-session-id"])
 	assert.Equal(t, *x.ScenarioName, headerData["x-scenario-name"])
 	encodedData, _ := utils.HeaderJson.Marshal(x)
 	newHeaderData := map[string]string{}

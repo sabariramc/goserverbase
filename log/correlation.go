@@ -11,9 +11,9 @@ import (
 )
 
 type CorrelationParam struct {
-	CorrelationId string  `header:"x-correlation-id" body:"correlationId"`
-	ScenarioId    *string `header:"x-scenario-id,omitempty" body:"scenarioId,omitempty"`
-	SessionId     *string `header:"x-session-id,omitempty" body:"sessionId,omitempty"`
+	CorrelationID string  `header:"x-correlation-id" body:"correlationId"`
+	ScenarioID    *string `header:"x-scenario-id,omitempty" body:"scenarioId,omitempty"`
+	SessionID     *string `header:"x-session-id,omitempty" body:"sessionId,omitempty"`
 	ScenarioName  *string `header:"x-scenario-name,omitempty" body:"scenarioName,omitempty"`
 }
 
@@ -44,9 +44,9 @@ func (c *CorrelationParam) LoadFromHeader(header map[string]string) error {
 }
 
 type CustomerIdentifier struct {
-	CustomerId *string `header:"x-customer-id,omitempty" body:"customerId,omitempty"`
-	AppUserId  *string `header:"x-app-user-id,omitempty" body:"appUserId,omitempty"`
-	Id         *string `header:"x-entity-id,omitempty" body:"Id,omitempty"`
+	UserID       *string `header:"x-user-id,omitempty" body:"userId,omitempty"`
+	UserClientID *string `header:"x-user-client-id,omitempty" body:"userClientId,omitempty"`
+	EntityID     *string `header:"x-entity-id,omitempty" body:"entityId,omitempty"`
 }
 
 func (c *CustomerIdentifier) GetPayload() map[string]string {
@@ -77,7 +77,7 @@ func (c *CustomerIdentifier) LoadFromHeader(header map[string]string) error {
 
 func GetDefaultCorrelationParam(serviceName string) *CorrelationParam {
 	return &CorrelationParam{
-		CorrelationId: fmt.Sprintf("%v-%v", serviceName, uuid.New().String()),
+		CorrelationID: fmt.Sprintf("%v-%v", serviceName, uuid.New().String()),
 	}
 }
 
