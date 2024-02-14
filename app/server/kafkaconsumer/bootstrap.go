@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	e "errors"
 
@@ -14,6 +15,7 @@ import (
 func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 	corr := &log.CorrelationParam{CorrelationID: fmt.Sprintf("%v:KafkaConsumerServer", k.c.ServiceName)}
 	ctx, k.shutdown = context.WithCancel(log.GetContextWithCorrelation(ctx, corr))
+	defer time.Sleep(2 * time.Second)
 	k.shutdownWG.Add(1)
 	defer k.shutdownWG.Wait()
 	k.StartSignalMonitor(ctx)
@@ -28,6 +30,7 @@ func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 			k.log.Error(ctx, "Panic stack tace", stackTrace)
 		}
 	}()
+	go k.HealthCheckMonitor(pollCtx)
 	k.Subscribe(ctx)
 	var pollWg sync.WaitGroup
 	defer pollWg.Wait()

@@ -72,7 +72,7 @@ func (s *server) Name(ctx context.Context) string {
 }
 
 func (s *server) Shutdown(ctx context.Context) error {
-	return s.conn.Disconnect(ctx)
+	return s.conn.Shutdown(ctx)
 }
 
 func NewServer(t instrumentation.Tracer) *server {
@@ -115,7 +115,7 @@ func NewServer(t instrumentation.Tracer) *server {
 		coll: conn.Database(dbName).Collection(collName),
 		c:    ServerTestConfig,
 	}
-	srv.RegisterOnShutdown(srv)
+	srv.RegisterOnShutdownHook(srv)
 	r := srv.GetRouter().Group("/vault/v1")
 	r.GET("", srv.Get)
 	r.POST("", gin.WrapF(srv.Post))

@@ -15,16 +15,16 @@ func (b *BaseApp) StartSignalMonitor(ctx context.Context) error {
 	return nil
 }
 
-func (b *BaseApp) RegisterOnShutdown(handler ShutdownHook) {
+func (b *BaseApp) RegisterOnShutdownHook(handler ShutdownHook) {
 	b.shutdownHooks = append(b.shutdownHooks, handler)
 }
 
 func (b *BaseApp) Shutdown(ctx context.Context) {
 	b.log.Notice(ctx, "Gracefully shutting down server", nil)
 	hooksCount := len(b.shutdownHooks)
-	for i := 0; i < hooksCount; i++ {
+	for i, hand := range b.shutdownHooks {
 		b.log.Notice(ctx, fmt.Sprintf("starting step %v of %v", i+1, hooksCount), nil)
-		b.processShutdownHook(ctx, b.shutdownHooks[i])
+		b.processShutdownHook(ctx, hand)
 		b.log.Notice(ctx, fmt.Sprintf("completed step %v of %v", i+1, hooksCount), nil)
 	}
 	b.log.Notice(ctx, "server shutdown completed", nil)

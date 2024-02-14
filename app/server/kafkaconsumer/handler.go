@@ -46,7 +46,9 @@ func (k *KafkaConsumerServer) ProcessEvent(ctx context.Context, msg *kafka.Messa
 		}
 		return
 	}
-	span.SetStatus(http.StatusOK, http.StatusText(http.StatusOK))
+	if spanOk {
+		span.SetStatus(http.StatusOK, http.StatusText(http.StatusOK))
+	}
 }
 
 func (k *KafkaConsumerServer) Commit(ctx context.Context) error {

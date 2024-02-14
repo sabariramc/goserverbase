@@ -9,6 +9,7 @@
             "program": "${workspaceFolder}/app/server/httpserver/test/http/main.go",
             "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env",
+            "console": "integratedTerminal"
         },
         {
             "name": "HTTP Server(ddtrace)",
@@ -44,8 +45,7 @@
             "mode": "debug",
             "program": "${workspaceFolder}/app/server/httpserver/test/h2c/main.go",
             "cwd": "${workspaceFolder}",
-            "envFile": "${workspaceFolder}/.env",
-            "console": "integratedTerminal"
+            "envFile": "${workspaceFolder}/.env"
         },
         {
             "name": "Kafka Consumer",
@@ -55,6 +55,7 @@
             "program": "${workspaceFolder}/app/server/kafkaconsumer/test/consumer/main.go",
             "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env",
+            "console": "integratedTerminal"
         },
         {
             "name": "Kafka Consumer(otel)",

@@ -2,6 +2,8 @@ package kafkaconsumer
 
 import (
 	"context"
+	"io/fs"
+	"os"
 	"sync"
 
 	baseapp "github.com/sabariramc/goserverbase/v5/app"
@@ -32,6 +34,13 @@ type KafkaConsumerServer struct {
 }
 
 func New(appConfig KafkaConsumerServerConfig, logger log.Log, t Tracer, errorNotifier errors.ErrorNotifier) *KafkaConsumerServer {
+	if appConfig.HealthCheckInSec <= 0 {
+		appConfig.HealthCheckInSec = 5 * 60
+	}
+	if appConfig.HealthFilePath == "" {
+		appConfig.HealthFilePath = "/tmp/healthCheck"
+	}
+	os.WriteFile(appConfig.HealthFilePath, []byte("Hello"), fs.ModeAppend)
 	b := baseapp.New(appConfig.ServerConfig, logger, errorNotifier)
 	h := &KafkaConsumerServer{
 		BaseApp: b,
@@ -40,7 +49,7 @@ func New(appConfig KafkaConsumerServerConfig, logger log.Log, t Tracer, errorNot
 		handler: make(map[string]KafkaEventProcessor),
 		tracer:  t,
 	}
-	h.RegisterOnShutdown(h)
+	h.RegisterOnShutdownHook(h)
 	return h
 }
 

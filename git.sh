@@ -1,5 +1,5 @@
-export message="Added status code for http "
-export version="v5.0.1"
+export message="Added health check hook and masterhook registor "
+export version="v5.0.2"
 export branch="master"
 git add .
 git commit -m "$message"

@@ -11,11 +11,13 @@ import (
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 type Mongo struct {
 	*mongo.Client
-	log log.Log
+	log  log.Log
+	name string
 }
 
 type Tracer interface {
@@ -41,6 +43,7 @@ func New(ctx context.Context, logger log.Log, c Config, t Tracer, opts ...*optio
 	connectionOptions.SetMaxConnIdleTime(time.Minute * 5)
 	connectionOptions.SetCompressors([]string{"snappy", "zlib", "zstd"})
 	connectionOptions.SetAppName(c.AppName)
+	connectionOptions.SetReadPreference(readpref.SecondaryPreferred())
 	if t != nil {
 		connectionOptions.SetMonitor(t.MongoDB())
 	}
@@ -71,11 +74,10 @@ func New(ctx context.Context, logger log.Log, c Config, t Tracer, opts ...*optio
 	if err != nil {
 		return nil, fmt.Errorf("mongo.New: %w", err)
 	}
-	return NewWrapper(ctx, logger, client), nil
-}
-
-func NewWrapper(ctx context.Context, logger log.Log, client *mongo.Client) *Mongo {
-	return &Mongo{Client: client, log: logger.NewResourceLogger("MongoClient")}
+	if c.Name == "" {
+		c.Name = "MongoClient"
+	}
+	return &Mongo{Client: client, name: c.Name, log: logger.NewResourceLogger("MongoClient")}, nil
 }
 
 func (m *Mongo) GetClient() *mongo.Client {
@@ -90,7 +92,7 @@ func (m *Mongo) Database(name string, opts ...*options.DatabaseOptions) *Databas
 	return &Database{Database: db, log: m.log.NewResourceLogger("MongoDatabase")}
 }
 
-func (m *Mongo) Disconnect(ctx context.Context) error {
+func (m *Mongo) Shutdown(ctx context.Context) error {
 	m.log.Notice(ctx, "Mongo client closure initiated", nil)
 	err := m.Client.Disconnect(ctx)
 	if err != nil {
@@ -98,6 +100,14 @@ func (m *Mongo) Disconnect(ctx context.Context) error {
 	}
 	m.log.Notice(ctx, "Mongo client closed", nil)
 	return nil
+}
+
+func (m *Mongo) Name(ctx context.Context) string {
+	return m.name
+}
+
+func (m *Mongo) HealthCheck(ctx context.Context) error {
+	return m.Ping(ctx, nil)
 }
 
 type MongoLogger struct {

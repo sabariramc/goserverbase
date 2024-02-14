@@ -25,7 +25,7 @@ func (h *HTTPServer) StartServer() {
 		h.log.Emergency(context.Background(), "Server bootstrap failed", err, nil)
 	}
 	err = h.server.ListenAndServe()
-	time.Sleep(time.Second)
+	time.Sleep(2 * time.Second)
 	if err != nil && err != http.ErrServerClosed {
 		h.log.Emergency(context.Background(), "Server crashed", err, nil)
 	}
@@ -40,7 +40,7 @@ func (h *HTTPServer) StartTLSServer() {
 		h.log.Emergency(context.Background(), "Server bootstrap failed", err, nil)
 	}
 	err = h.server.ListenAndServeTLS(h.c.HTTP2Config.PublicKeyPath, h.c.HTTP2Config.PrivateKeyPath)
-	time.Sleep(time.Second)
+	time.Sleep(2 * time.Second)
 	if err != nil && err != http.ErrServerClosed {
 		h.log.Emergency(context.Background(), "Server crashed", err, nil)
 	}
@@ -56,7 +56,7 @@ func (h *HTTPServer) StartH2CServer() {
 		h.log.Emergency(context.Background(), "Server bootstrap failed", err, nil)
 	}
 	err = h.server.ListenAndServe()
-	time.Sleep(time.Second)
+	time.Sleep(2 * time.Second)
 	if err != nil && err != http.ErrServerClosed {
 		h.log.Emergency(context.Background(), "Server crashed", err, nil)
 	}

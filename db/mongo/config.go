@@ -6,4 +6,5 @@ type Config struct {
 	MinConnectionPool uint64
 	MaxConnectionPool uint64
 	EnableLog         bool
+	Name              string
 }

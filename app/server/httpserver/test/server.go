@@ -148,9 +148,8 @@ func (s *server) Name(ctx context.Context) string {
 	return s.c.HTTP.ServiceName
 }
 
-func (s *server) Shutdown(ctx context.Context) error {
-	s.pr.Close(ctx)
-	return s.conn.Disconnect(ctx)
+func (s *server) HealthCheck(ctx context.Context) error {
+	return s.conn.Ping(ctx, nil)
 }
 
 func (s *server) printHttpVersion() gin.HandlerFunc {
@@ -182,7 +181,8 @@ func NewServer(t instrumentation.Tracer) *server {
 		c:          ServerTestConfig,
 	}
 	srv.AddMiddleware(srv.printHttpVersion())
-	srv.RegisterOnShutdown(srv)
+	srv.RegisterHooks(conn)
+	srv.RegisterHooks(pr)
 	r := srv.GetRouter().Group("/service/v1")
 	r.POST("/benc", srv.benc)
 	tenant := r.Group("/tenant")

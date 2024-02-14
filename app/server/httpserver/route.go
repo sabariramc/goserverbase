@@ -33,14 +33,19 @@ func MethodNotAllowed() http.HandlerFunc {
 	}
 }
 
-func HealthCheck(w http.ResponseWriter, r *http.Request) {
+func (h *HTTPServer) HealthCheck(w http.ResponseWriter, r *http.Request) {
+	err := h.RunHealthCheck(r.Context())
+	if err != nil {
+		w.WriteHeader(500)
+		return
+	}
 	w.WriteHeader(204)
 }
 
 func (h *HTTPServer) SetupRouter(ctx context.Context) {
 	h.handler.NoRoute(gin.WrapF(NotFound()))
 	h.handler.NoMethod(gin.WrapF(MethodNotAllowed()))
-	h.handler.GET("/meta/health", gin.WrapF(HealthCheck))
+	h.handler.GET("/meta/health", gin.WrapF(h.HealthCheck))
 	h.handler.HandleMethodNotAllowed = true
 	h.SetupDocumentation(ctx)
 	if h.tracer != nil {

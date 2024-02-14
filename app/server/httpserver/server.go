@@ -37,7 +37,7 @@ func New(appConfig HTTPServerConfig, logger log.Log, tr Tracer, errorNotifier er
 	}
 	ctx := b.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(appConfig.ServiceName))
 	h.SetupRouter(ctx)
-	h.BaseApp.RegisterOnShutdown(h)
+	h.RegisterOnShutdownHook(h)
 	return h
 }
 

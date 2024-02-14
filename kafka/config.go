@@ -32,4 +32,5 @@ type KafkaProducerConfig struct {
 	Batch                  bool
 	Topic                  string
 	EnableLog              bool
+	Name                   string
 }

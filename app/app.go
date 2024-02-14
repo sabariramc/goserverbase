@@ -8,16 +8,12 @@ import (
 	"github.com/sabariramc/goserverbase/v5/log"
 )
 
-type ShutdownHook interface {
-	Name(ctx context.Context) string
-	Shutdown(ctx context.Context) error
-}
-
 type BaseApp struct {
 	c             *ServerConfig
 	log           log.Log
 	errorNotifier errors.ErrorNotifier
 	shutdownHooks []ShutdownHook
+	healthHooks   []HealthCheckHook
 }
 
 func New(appConfig ServerConfig, logger log.Log, errorNotifier errors.ErrorNotifier) *BaseApp {

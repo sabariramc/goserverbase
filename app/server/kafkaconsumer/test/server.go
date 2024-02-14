@@ -100,6 +100,8 @@ func NewServer(t instrumentation.Tracer) *server {
 		conn:                conn,
 		coll:                conn.Database("GOBaseTest").Collection("TestColl"),
 	}
+	srv.RegisterHooks(conn)
+	srv.RegisterHooks(pr)
 	srv.log = srv.GetLogger().NewResourceLogger("KafkaTestServer")
 	srv.log.Trace(ctx, "config", ServerTestConfig)
 	srv.AddHandler(GetCorrelationContext(), ServerTestConfig.KafkaTestTopic, srv.Func1)
