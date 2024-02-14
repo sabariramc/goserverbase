@@ -35,7 +35,7 @@ type KafkaConsumerServer struct {
 
 func New(appConfig KafkaConsumerServerConfig, logger log.Log, t Tracer, errorNotifier errors.ErrorNotifier) *KafkaConsumerServer {
 	if appConfig.HealthCheckInSec <= 0 {
-		appConfig.HealthCheckInSec = 5 * 60
+		appConfig.HealthCheckInSec = 30
 	}
 	if appConfig.HealthFilePath == "" {
 		appConfig.HealthFilePath = "/tmp/healthCheck"

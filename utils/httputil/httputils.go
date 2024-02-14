@@ -28,11 +28,11 @@ type Backoff func(min, max time.Duration, attemptNum int, resp *http.Response) t
 type HTTPClient struct {
 	*http.Client
 	log          log.Log
-	RetryMax     int
-	RetryWaitMin time.Duration
-	RetryWaitMax time.Duration
-	CheckRetry   CheckRetry
-	Backoff      Backoff
+	retryMax     int
+	retryWaitMin time.Duration
+	retryWaitMax time.Duration
+	checkRetry   CheckRetry
+	backoff      Backoff
 	tr           Tracer
 }
 
@@ -77,7 +77,7 @@ func NewH2CClient(log log.Log, tr Tracer, retryMax int, retryWaitMin, retryWaitM
 }
 
 func New(log log.Log, tr Tracer, c *http.Client, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HTTPClient {
-	return &HTTPClient{Client: c, log: log.NewResourceLogger("HttpClient"), RetryMax: retryMax, RetryWaitMin: retryWaitMin, RetryWaitMax: retryWaitMax, CheckRetry: retryablehttp.DefaultRetryPolicy, Backoff: retryablehttp.DefaultBackoff, tr: tr}
+	return &HTTPClient{Client: c, log: log.NewResourceLogger("HttpClient"), retryMax: retryMax, retryWaitMin: retryWaitMin, retryWaitMax: retryWaitMax, checkRetry: retryablehttp.DefaultRetryPolicy, backoff: retryablehttp.DefaultBackoff, tr: tr}
 }
 
 func (h *HTTPClient) Validator(resBody interface{}) error {
@@ -218,23 +218,23 @@ func (h *HTTPClient) Do(req *http.Request) (*http.Response, error) {
 		attempt++
 		req.Body = io.NopCloser(bytes.NewReader(reqBody))
 		resp, doErr = h.Client.Do(req)
-		shouldRetry, checkErr = h.CheckRetry(req.Context(), resp, doErr)
+		shouldRetry, checkErr = h.checkRetry(req.Context(), resp, doErr)
 		if !shouldRetry || checkErr != nil {
 			break
 		}
-		remain := h.RetryMax - i
+		remain := h.retryMax - i
 		if remain <= 0 {
 			break
 		}
-		wait := h.Backoff(h.RetryWaitMin, h.RetryWaitMax, i, resp)
+		wait := h.backoff(h.retryWaitMin, h.retryWaitMax, i, resp)
 		if resp != nil && resp.ContentLength > 0 {
 			defer resp.Body.Close()
 			resBlob, _ = io.ReadAll(resp.Body)
-			h.log.Notice(req.Context(), fmt.Sprintf("request failed with status code %v retry %v of %v in %vms", resp.StatusCode, i+1, h.RetryMax, wait.Milliseconds()), string(resBlob))
+			h.log.Notice(req.Context(), fmt.Sprintf("request failed with status code %v retry %v of %v in %vms", resp.StatusCode, i+1, h.retryMax, wait.Milliseconds()), string(resBlob))
 		} else if doErr != nil {
-			h.log.Notice(req.Context(), fmt.Sprintf("request failed with error - retry %v of %v in %vms", i+1, h.RetryMax, wait.Milliseconds()), doErr)
+			h.log.Notice(req.Context(), fmt.Sprintf("request failed with error - retry %v of %v in %vms", i+1, h.retryMax, wait.Milliseconds()), doErr)
 		} else {
-			h.log.Notice(req.Context(), fmt.Sprintf("request failed - retry %v of %v in %vms", i+1, h.RetryMax, wait.Milliseconds()), nil)
+			h.log.Notice(req.Context(), fmt.Sprintf("request failed - retry %v of %v in %vms", i+1, h.retryMax, wait.Milliseconds()), nil)
 		}
 		timer := time.NewTimer(wait)
 		select {

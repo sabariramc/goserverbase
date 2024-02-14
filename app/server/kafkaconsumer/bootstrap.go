@@ -30,7 +30,7 @@ func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 			k.log.Error(ctx, "Panic stack tace", stackTrace)
 		}
 	}()
-	go k.HealthCheckMonitor(pollCtx)
+	k.HealthCheckMonitor(pollCtx)
 	k.Subscribe(ctx)
 	var pollWg sync.WaitGroup
 	defer pollWg.Wait()

@@ -1,4 +1,4 @@
-export message="Added health check hook and masterhook registor "
+export message="Kafka health check fix"
 export version="v5.0.2"
 export branch="master"
 git add .
