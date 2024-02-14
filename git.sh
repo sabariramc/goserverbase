@@ -1,4 +1,4 @@
-export message="Http health check fix"
+export message="Added timelimit for health check"
 export version="v5.0.3"
 export branch="master"
 git add .
