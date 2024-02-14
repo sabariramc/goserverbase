@@ -31,7 +31,14 @@ func (s *ddtraceSpan) Finish() {
 	s.Span.Finish()
 }
 
+var spanAttributeMap = map[string]string{
+	span.HTTPStatusCode: ext.HTTPCode,
+}
+
 func (s *ddtraceSpan) SetAttribute(name string, value any) {
+	if mapName, ok := spanAttributeMap[name]; ok {
+		name = mapName
+	}
 	s.SetTag(name, value)
 }
 

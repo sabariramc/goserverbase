@@ -11,10 +11,11 @@ services:
     environment:
       SERVICE_NAME: gobase_http
       OTEL_SERVICE_NAME: gobase_http
-      OTEL_EXPORTER_OTLP_ENDPOINT:  http://datadog:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT:  http://collector-otel-collector-1:4317
       DD_SERVICE: gobase_http
       KAFKA_BROKER: broker:29092
       DD_AGENT_HOST: datadog
+      AWS_ENDPOINT: http://localstack-main:4566
       DOC_HOST: http://localhost:60005
       KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
       KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
@@ -26,6 +27,7 @@ services:
       - mongo_mongodb
       - kafka_default
       - common
+      - localstack_localstack
   http2:
     build:
       context: .
@@ -37,10 +39,11 @@ services:
     environment:
       SERVICE_NAME: gobase_http2
       OTEL_SERVICE_NAME: gobase_http2
-      OTEL_EXPORTER_OTLP_ENDPOINT:  http://datadog:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT:  http://collector-otel-collector-1:4317
       DD_SERVICE: gobase_http2
       KAFKA_BROKER: broker:29092
       DD_AGENT_HOST: datadog
+      AWS_ENDPOINT: http://localstack-main:4566
       DOC_HOST: https://localhost:60006
       HTTP2_PUBLIC_KEY: /service/server.crt
       HTTP2_PRIVATE_KEY: /service/server.key
@@ -54,6 +57,7 @@ services:
       - mongo_mongodb
       - kafka_default
       - common
+      - localstack_localstack
   h2c:
     build:
       context: .
@@ -65,10 +69,11 @@ services:
     environment:
       SERVICE_NAME: gobase_h2c
       OTEL_SERVICE_NAME: gobase_h2c
-      OTEL_EXPORTER_OTLP_ENDPOINT:  http://datadog:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT:  http://collector-otel-collector-1:4317
       DD_SERVICE: gobase_h2c
       KAFKA_BROKER: broker:29092
       DD_AGENT_HOST: datadog
+      AWS_ENDPOINT: http://localstack-main:4566
       DOC_HOST: http://localhost:60007
       KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
       KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
@@ -80,6 +85,7 @@ services:
       - mongo_mongodb
       - kafka_default
       - common
+      - localstack_localstack
   kafka:
     build:
       context: .
@@ -93,10 +99,11 @@ services:
     environment:
       SERVICE_NAME: gobase_kafka
       OTEL_SERVICE_NAME: gobase_kafka
-      OTEL_EXPORTER_OTLP_ENDPOINT:  http://datadog:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT:  http://collector-otel-collector-1:4317
       DD_SERVICE: gobase_kafka
       KAFKA_BROKER: broker:29092
       DD_AGENT_HOST: datadog
+      AWS_ENDPOINT: http://localstack-main:4566
       KAFKA_CONSUMER_ID: gobase-test-docker-consumer
       KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
       KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
@@ -106,6 +113,7 @@ services:
       - mongo_mongodb
       - kafka_default
       - common
+      - localstack_localstack
   csfle:
     build:
       context: .
@@ -117,10 +125,11 @@ services:
       KMS_PROVIDER: local
       SERVICE_NAME: gobase_csfle
       OTEL_SERVICE_NAME: gobase_csfle
-      OTEL_EXPORTER_OTLP_ENDPOINT:  http://datadog:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT:  http://collector-otel-collector-1:4317
       DD_SERVICE: gobase_csfle
       KAFKA_BROKER: broker:29092
       DD_AGENT_HOST: datadog
+      AWS_ENDPOINT: http://localstack-main:4566
       KAFKA_CONSUMER_ID: gobase-test-docker-consumer
       KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
       KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
@@ -132,10 +141,13 @@ services:
       - mongo_mongodb
       - kafka_default
       - common
+      - localstack_localstack
 networks:
   mongo_mongodb:
     external: true
   kafka_default:
     external: true
   common:
+    external: true
+  localstack_localstack:
     external: true

@@ -3,6 +3,7 @@ package httpserver
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -59,6 +60,12 @@ func (h *HTTPServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 		body, _ := h.CopyRequestBody(r)
 		bodyBlob = &body
 		h.log.Info(ctx, "RequestMeta", req)
+		cs, spanOk := h.GetSpanFromContext(ctx)
+		defer func() {
+			if spanOk {
+				cs.SetAttribute(span.HTTPStatusCode, strconv.Itoa(logResWri.status))
+			}
+		}()
 		c.Next()
 		res := map[string]any{"statusCode": logResWri.status, "headers": logResWri.Header()}
 		if logResWri.status > 299 {

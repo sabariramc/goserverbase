@@ -1,5 +1,5 @@
-export message="V5"
-export version="v5.0.0"
+export message="Added status code for http "
+export version="v5.0.1"
 export branch="master"
 git add .
 git commit -m "$message"

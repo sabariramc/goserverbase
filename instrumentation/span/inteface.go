@@ -25,3 +25,7 @@ const (
 
 	SpanKindInternal = "internal"
 )
+
+const (
+	HTTPStatusCode = "http.response.status_code"
+)
