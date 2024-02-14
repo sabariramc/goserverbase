@@ -10,7 +10,7 @@ func (k *KafkaConsumerServer) HealthCheckMonitor(ctx context.Context) {
 	go func() {
 		defer func() {
 			if rec := recover(); rec != nil {
-				defer k.shutdown()
+				k.BaseApp.Shutdown(ctx)
 			}
 		}()
 		timeoutContext, _ := context.WithTimeout(ctx, time.Second*time.Duration(k.c.HealthCheckInSec))
