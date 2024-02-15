@@ -1,5 +1,5 @@
-export message="Updated log interface "
-export version="v5.0.5"
+export message="Updated log level of health check log "
+export version="v5.0.6"
 export branch="master"
 git add .
 git commit -m "$message"

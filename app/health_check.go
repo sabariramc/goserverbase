@@ -11,7 +11,7 @@ func (b *BaseApp) RegisterHealthCheckHook(handler HealthCheckHook) {
 }
 
 func (b *BaseApp) RunHealthCheck(ctx context.Context) error {
-	b.log.Info(ctx, "Starting health check", nil)
+	b.log.Debug(ctx, "Starting health check", nil)
 	n := len(b.healthHooks)
 	for i, hook := range b.healthHooks {
 		b.log.Info(ctx, fmt.Sprintf("Running health check %v of %v : %v", i+1, n, hook.Name(ctx)), nil)
@@ -23,6 +23,6 @@ func (b *BaseApp) RunHealthCheck(ctx context.Context) error {
 		}
 		b.log.Info(ctx, fmt.Sprintf("Completed health check %v of %v : %v", i+1, n, hook.Name(ctx)), nil)
 	}
-	b.log.Info(ctx, "Completed health check", nil)
+	b.log.Debug(ctx, "Completed health check", nil)
 	return nil
 }
