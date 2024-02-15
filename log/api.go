@@ -13,4 +13,5 @@ type Log interface {
 	Error(ctx context.Context, message string, logObject interface{})
 	Emergency(ctx context.Context, message string, err error, logObject interface{})
 	Fatal(ctx context.Context, message string, exitCode int, logObject interface{})
+	GetLogLevel() LogLevel
 }

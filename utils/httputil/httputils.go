@@ -1,3 +1,4 @@
+// Package httputil implements utility for httpClient with request retry and optional tracing
 package httputil
 
 import (
@@ -80,7 +81,7 @@ func New(log log.Log, tr Tracer, c *http.Client, retryMax int, retryWaitMin, ret
 	return &HTTPClient{Client: c, log: log.NewResourceLogger("HttpClient"), retryMax: retryMax, retryWaitMin: retryWaitMin, retryWaitMax: retryWaitMax, checkRetry: retryablehttp.DefaultRetryPolicy, backoff: retryablehttp.DefaultBackoff, tr: tr}
 }
 
-func (h *HTTPClient) Validator(resBody interface{}) error {
+func (h *HTTPClient) validateResBodyObj(resBody interface{}) error {
 	if resBody != nil {
 		v := reflect.ValueOf(resBody)
 		if v.Kind() != reflect.Ptr {
@@ -156,7 +157,7 @@ func (h *HTTPClient) Delete(ctx context.Context, url string, reqBody, resBody in
 }
 
 func (h *HTTPClient) Call(ctx context.Context, method, url string, reqBody, resBody interface{}, headers map[string]string) (*http.Response, error) {
-	err := h.Validator(resBody)
+	err := h.validateResBodyObj(resBody)
 	if err != nil {
 		return nil, err
 	}

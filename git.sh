@@ -1,5 +1,5 @@
-export message="Reworked kafka health check intraction with shutdown and added WG for shutdown timer"
-export version="v5.0.4"
+export message="Updated log interface "
+export version="v5.0.5"
 export branch="master"
 git add .
 git commit -m "$message"
