@@ -1,3 +1,9 @@
+# GOSERVERBASE
+
+- Test servers are present under folder `app/server/httpserver/test` and `app/server/kafkaconsumer/test`
+
+
+
 ## Steps for setting up private repo
 
 ### Git
