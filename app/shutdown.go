@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 func (b *BaseApp) StartSignalMonitor(ctx context.Context) error {
@@ -22,12 +23,14 @@ func (b *BaseApp) RegisterOnShutdownHook(handler ShutdownHook) {
 func (b *BaseApp) Shutdown(ctx context.Context) {
 	b.log.Notice(ctx, "Gracefully shutting down server", nil)
 	hooksCount := len(b.shutdownHooks)
-	for i, hand := range b.shutdownHooks {
+	for i, hook := range b.shutdownHooks {
+		shutdownCtx, _ := context.WithTimeout(ctx, time.Second*2)
 		b.log.Notice(ctx, fmt.Sprintf("starting step %v of %v", i+1, hooksCount), nil)
-		b.processShutdownHook(ctx, hand)
+		b.processShutdownHook(shutdownCtx, hook)
 		b.log.Notice(ctx, fmt.Sprintf("completed step %v of %v", i+1, hooksCount), nil)
 	}
 	b.log.Notice(ctx, "server shutdown completed", nil)
+	b.shutdownWg.Done()
 }
 
 func (b *BaseApp) processShutdownHook(ctx context.Context, handler ShutdownHook) {

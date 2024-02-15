@@ -2,6 +2,7 @@ package baseapp
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/sabariramc/goserverbase/v5/errors"
@@ -14,6 +15,7 @@ type BaseApp struct {
 	errorNotifier errors.ErrorNotifier
 	shutdownHooks []ShutdownHook
 	healthHooks   []HealthCheckHook
+	shutdownWg    sync.WaitGroup
 }
 
 func New(appConfig ServerConfig, logger log.Log, errorNotifier errors.ErrorNotifier) *BaseApp {
@@ -26,6 +28,7 @@ func New(appConfig ServerConfig, logger log.Log, errorNotifier errors.ErrorNotif
 	b.log = logger.NewResourceLogger("BaseApp")
 	zone, _ := time.Now().Zone()
 	b.log.Notice(ctx, "Timezone", zone)
+	b.shutdownWg.Add(1)
 	return b
 }
 
@@ -39,4 +42,8 @@ func (b *BaseApp) GetLogger() log.Log {
 
 func (b *BaseApp) SetErrorNotifier(errorNotifier errors.ErrorNotifier) {
 	b.errorNotifier = errorNotifier
+}
+
+func (b *BaseApp) WaitForCompleteShutDown() {
+	b.shutdownWg.Wait()
 }

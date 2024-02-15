@@ -36,7 +36,6 @@ func MethodNotAllowed() http.HandlerFunc {
 func (h *HTTPServer) HealthCheck(w http.ResponseWriter, r *http.Request) {
 	err := h.RunHealthCheck(r.Context())
 	if err != nil {
-		go h.BaseApp.Shutdown(r.Context())
 		w.WriteHeader(500)
 		return
 	}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"sync"
-	"time"
 
 	e "errors"
 
@@ -15,7 +14,7 @@ import (
 func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 	corr := &log.CorrelationParam{CorrelationID: fmt.Sprintf("%v:KafkaConsumerServer", k.c.ServiceName)}
 	ctx, k.shutdown = context.WithCancel(log.GetContextWithCorrelation(ctx, corr))
-	defer time.Sleep(2 * time.Second)
+	defer k.WaitForCompleteShutDown()
 	k.shutdownWG.Add(1)
 	defer k.shutdownWG.Wait()
 	k.StartSignalMonitor(ctx)

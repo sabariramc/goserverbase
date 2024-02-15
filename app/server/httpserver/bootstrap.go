@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/sabariramc/goserverbase/v5/log"
 	"golang.org/x/net/http2"
@@ -25,10 +24,10 @@ func (h *HTTPServer) StartServer() {
 		h.log.Emergency(context.Background(), "Server bootstrap failed", err, nil)
 	}
 	err = h.server.ListenAndServe()
-	time.Sleep(2 * time.Second)
 	if err != nil && err != http.ErrServerClosed {
 		h.log.Emergency(context.Background(), "Server crashed", err, nil)
 	}
+	h.WaitForCompleteShutDown()
 }
 
 func (h *HTTPServer) StartTLSServer() {
@@ -40,10 +39,10 @@ func (h *HTTPServer) StartTLSServer() {
 		h.log.Emergency(context.Background(), "Server bootstrap failed", err, nil)
 	}
 	err = h.server.ListenAndServeTLS(h.c.HTTP2Config.PublicKeyPath, h.c.HTTP2Config.PrivateKeyPath)
-	time.Sleep(2 * time.Second)
 	if err != nil && err != http.ErrServerClosed {
 		h.log.Emergency(context.Background(), "Server crashed", err, nil)
 	}
+	h.WaitForCompleteShutDown()
 }
 
 func (h *HTTPServer) StartH2CServer() {
@@ -56,8 +55,8 @@ func (h *HTTPServer) StartH2CServer() {
 		h.log.Emergency(context.Background(), "Server bootstrap failed", err, nil)
 	}
 	err = h.server.ListenAndServe()
-	time.Sleep(2 * time.Second)
 	if err != nil && err != http.ErrServerClosed {
 		h.log.Emergency(context.Background(), "Server crashed", err, nil)
 	}
+	h.WaitForCompleteShutDown()
 }
