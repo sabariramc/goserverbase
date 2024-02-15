@@ -12,6 +12,7 @@ COPY ./log ./log
 COPY ./utils ./utils
 COPY ./testutils ./testutils
 COPY ./go.mod ./go.mod
+COPY ./instrumentation ./instrumentation
 
 RUN go mod tidy
 
@@ -65,4 +66,44 @@ ENTRYPOINT ["/service/app"]
 
 FROM runner AS kafka
 COPY --from=kafkabuilder /app /service/app
+ENTRYPOINT ["/service/app"]
+
+
+
+FROM golang:1.21-bullseye AS bullseyebuilder
+RUN apt-get update && apt-get install tzdata
+WORKDIR /myapp
+COPY ./pkg/mongo/debian/bullseye ./pkg
+COPY ./app ./app
+COPY ./aws ./aws
+COPY ./crypto ./crypto
+COPY ./db ./db
+COPY ./errors ./errors
+COPY ./kafka ./kafka
+COPY ./log ./log
+COPY ./utils ./utils
+COPY ./testutils ./testutils
+COPY ./go.mod ./go.mod
+COPY ./instrumentation ./instrumentation
+RUN apt-get install ./pkg/libmongocrypt-dev_1.8.4-0_amd64.deb ./pkg/libmongocrypt0_1.8.4-0_amd64.deb
+RUN go mod tidy
+
+
+FROM debian:bullseye-slim AS csflerunner
+RUN apt-get install tzdata
+WORKDIR /service
+COPY ./pkg/mongo/debian/bullseye ./pkg
+COPY ./db/mongo/csfle/sample/piischeme.json ./piischeme.json
+RUN apt-get install /service/pkg/libmongocrypt-dev_1.8.4-0_amd64.deb /service/pkg/libmongocrypt0_1.8.4-0_amd64.deb
+ENV CSFLE_CRYPT_SHARED_LIB_PATH=/service/pkg/mongo_crypt_shared_v1-7.0.5/lib/mongo_crypt_v1.so
+ENV SCHEME_LOCATION=/service/piischeme.json
+
+
+FROM bullseyebuilder AS csfle
+WORKDIR /myapp/db/mongo/csfle/test/http
+RUN go build -tags cse -o /app
+
+FROM csflerunner AS httpcsfle
+COPY --from=csfle /app /service/app
+EXPOSE 8080
 ENTRYPOINT ["/service/app"]

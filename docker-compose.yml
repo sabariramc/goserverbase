@@ -104,8 +104,7 @@ services:
       - localstack_localstack
   csfle:
     build:
-      context: ./
-      dockerfile: ./DockerfileCSFLE
+      context: .
       target: httpcsfle
     env_file:
       - .env
