@@ -125,6 +125,7 @@ services:
       TEST_URL_1: "http://echo-nginx-1"
       TEST_URL_2: "http://gobase_http:8080/service/v1/tenant"
       KMS_PROVIDER: local
+      CSFLE_CRYPT_SHARED_LIB_PATH: /service/pkg/mongo_crypt_shared_v1-7.0.5/lib/mongo_crypt_v1.so
     ports:
       - 60008:8080
     networks:

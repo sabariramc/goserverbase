@@ -11,7 +11,7 @@ services:
     environment:
       SERVICE_NAME: gobase_http
       OTEL_SERVICE_NAME: gobase_http
-      OTEL_EXPORTER_OTLP_ENDPOINT:  http://collector-otel-collector-1:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT:  http://signoz-otel-collector-1:4317
       DD_SERVICE: gobase_http
       KAFKA_BROKER: broker:29092
       DD_AGENT_HOST: datadog
@@ -39,7 +39,7 @@ services:
     environment:
       SERVICE_NAME: gobase_http2
       OTEL_SERVICE_NAME: gobase_http2
-      OTEL_EXPORTER_OTLP_ENDPOINT:  http://collector-otel-collector-1:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT:  http://signoz-otel-collector-1:4317
       DD_SERVICE: gobase_http2
       KAFKA_BROKER: broker:29092
       DD_AGENT_HOST: datadog
@@ -69,7 +69,7 @@ services:
     environment:
       SERVICE_NAME: gobase_h2c
       OTEL_SERVICE_NAME: gobase_h2c
-      OTEL_EXPORTER_OTLP_ENDPOINT:  http://collector-otel-collector-1:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT:  http://signoz-otel-collector-1:4317
       DD_SERVICE: gobase_h2c
       KAFKA_BROKER: broker:29092
       DD_AGENT_HOST: datadog
@@ -99,7 +99,7 @@ services:
     environment:
       SERVICE_NAME: gobase_kafka
       OTEL_SERVICE_NAME: gobase_kafka
-      OTEL_EXPORTER_OTLP_ENDPOINT:  http://collector-otel-collector-1:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT:  http://signoz-otel-collector-1:4317
       DD_SERVICE: gobase_kafka
       KAFKA_BROKER: broker:29092
       DD_AGENT_HOST: datadog
@@ -125,7 +125,7 @@ services:
       KMS_PROVIDER: local
       SERVICE_NAME: gobase_csfle
       OTEL_SERVICE_NAME: gobase_csfle
-      OTEL_EXPORTER_OTLP_ENDPOINT:  http://collector-otel-collector-1:4317
+      OTEL_EXPORTER_OTLP_ENDPOINT:  http://signoz-otel-collector-1:4317
       DD_SERVICE: gobase_csfle
       KAFKA_BROKER: broker:29092
       DD_AGENT_HOST: datadog
@@ -135,6 +135,7 @@ services:
       KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
       TEST_URL_1: "http://echo-nginx-1"
       TEST_URL_2: "http://gobase_http:8080/service/v1/tenant"
+      CSFLE_CRYPT_SHARED_LIB_PATH: /service/pkg/mongo_crypt_shared_v1-7.0.5/lib/mongo_crypt_v1.so
     ports:
       - 60008:8080
     networks:

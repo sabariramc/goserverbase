@@ -1,5 +1,5 @@
-export message="Fixed bug in linking trace with kafka consumer"
-export version="v5.0.7"
+export message="dependency update"
+export version="v5.0.8"
 export branch="master"
 git add .
 git commit -m "$message"
