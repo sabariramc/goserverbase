@@ -1,5 +1,5 @@
-export message="Updated log level of health check log "
-export version="v5.0.6"
+export message="Fixed bug in linking trace with kafka consumer"
+export version="v5.0.7"
 export branch="master"
 git add .
 git commit -m "$message"

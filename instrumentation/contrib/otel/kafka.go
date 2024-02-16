@@ -62,7 +62,6 @@ func (t *tracerManager) StartKafkaSpanFromMessage(ctx context.Context, msg *kafk
 	msgCtx := otel.GetTextMapPropagator().Extract(ctx, NewKafkaCarrier(msg))
 	tr := otel.Tracer("")
 	opts := []trace.SpanStartOption{
-		trace.WithNewRoot(),
 		trace.WithSpanKind(trace.SpanKindConsumer),
 		trace.WithTimestamp(msg.Time),
 		trace.WithAttributes(attribute.String("messaging.system", "kafka"), attribute.String("resource.name", msg.Topic)),
