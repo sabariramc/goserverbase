@@ -4,9 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	base "github.com/sabariramc/goserverbase/v5/aws"
 	"github.com/sabariramc/goserverbase/v5/instrumentation"
@@ -17,29 +15,12 @@ import (
 
 func SetAWSSession(tr instrumentation.Tracer) {
 	cnf, _ := config.LoadDefaultConfig(context.TODO())
-	if os.Getenv("AWS_PROVIDER") == "local" {
-		awsEndpoint := utils.GetEnvMust("AWS_ENDPOINT")
-		awsRegion := utils.GetEnvMust("AWS_REGION")
+	if utils.GetEnv("AWS_PROVIDER", "") == "local" {
 		var err error
-		customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-			if awsEndpoint != "" {
-				return aws.Endpoint{
-					PartitionID:   "aws",
-					URL:           awsEndpoint,
-					SigningRegion: awsRegion,
-				}, nil
-			}
-			// returning EndpointNotFoundError will allow the service to fallback to its default resolution
-			return aws.Endpoint{}, &aws.EndpointNotFoundError{}
-		})
-		cnf, err = config.LoadDefaultConfig(context.TODO(),
-			config.WithRegion(awsRegion),
-			config.WithEndpointResolverWithOptions(customResolver),
-		)
+		cnf, err = base.GetLocalStackConfig()
 		if err != nil {
-			log.Fatalf("Cannot load the AWS configs: %s", err)
+			log.Fatal(err)
 		}
-		os.Setenv("AWS_PROVIDER", "local")
 	}
 	base.SetDefaultAWSConfig(cnf, tr)
 }
