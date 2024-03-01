@@ -2,8 +2,11 @@ package server_test
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"sync"
 	"testing"
@@ -24,6 +27,24 @@ func callURL(url string) {
 
 func TestRoutes(t *testing.T) {
 	var wg sync.WaitGroup
+	ctx, cancel := context.WithCancel(context.Background())
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				res, err := http.Get("http://localhost:60005/meta/status")
+				if err != nil {
+					fmt.Printf("status call error: %v\n", err)
+				} else {
+					blob, _ := io.ReadAll(res.Body)
+					fmt.Printf("status: %v\n", string(blob))
+				}
+			}
+		}
+
+	}()
 	for i := 0; i < 10; i++ {
 		wg.Add(1)
 		go func() {
@@ -39,5 +60,6 @@ func TestRoutes(t *testing.T) {
 			callURL("http://localhost:60005/service/v1/test/all")
 		}()
 	}
+	cancel()
 	wg.Wait()
 }
