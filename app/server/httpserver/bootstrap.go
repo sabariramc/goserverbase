@@ -11,7 +11,7 @@ import (
 )
 
 func (h *HTTPServer) BootstrapServer(ctx context.Context, handler http.Handler) error {
-	h.server = &http.Server{Addr: h.GetPort(), Handler: handler}
+	h.server = &http.Server{Addr: h.GetPort(), Handler: handler, ConnState: h.onStateChange}
 	return h.StartSignalMonitor(ctx)
 }
 

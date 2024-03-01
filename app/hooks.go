@@ -12,11 +12,19 @@ type HealthCheckHook interface {
 	HealthCheck(ctx context.Context) error
 }
 
+type StatusCheckHook interface {
+	Name(ctx context.Context) string
+	StatusCheck(ctx context.Context) (any, error)
+}
+
 func (b *BaseApp) RegisterHooks(hook any) {
 	if hHook, ok := hook.(HealthCheckHook); ok {
 		b.RegisterHealthCheckHook(hHook)
 	}
 	if sHook, ok := hook.(ShutdownHook); ok {
 		b.RegisterOnShutdownHook(sHook)
+	}
+	if sHook, ok := hook.(StatusCheckHook); ok {
+		b.RegisterStatusCheckHook(sHook)
 	}
 }

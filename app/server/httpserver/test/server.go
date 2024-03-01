@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -149,7 +150,13 @@ func (s *server) Name(ctx context.Context) string {
 }
 
 func (s *server) HealthCheck(ctx context.Context) error {
+	time.Sleep(2 * time.Second)
 	return s.conn.Ping(ctx, nil)
+}
+
+func (s *server) StatusCheck(ctx context.Context) (any, error) {
+	time.Sleep(2 * time.Second)
+	return nil, nil
 }
 
 func (s *server) printHttpVersion() gin.HandlerFunc {
@@ -183,6 +190,7 @@ func NewServer(t instrumentation.Tracer) *server {
 	srv.AddMiddleware(srv.printHttpVersion())
 	srv.RegisterHooks(conn)
 	srv.RegisterHooks(pr)
+	srv.RegisterHooks(srv)
 	r := srv.GetRouter().Group("/service/v1")
 	r.POST("/benc", srv.benc)
 	tenant := r.Group("/tenant")

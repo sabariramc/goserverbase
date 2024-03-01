@@ -15,6 +15,7 @@ type BaseApp struct {
 	errorNotifier errors.ErrorNotifier
 	shutdownHooks []ShutdownHook
 	healthHooks   []HealthCheckHook
+	statusHooks   []StatusCheckHook
 	shutdownWg    sync.WaitGroup
 }
 

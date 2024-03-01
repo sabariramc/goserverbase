@@ -19,11 +19,12 @@ type Tracer interface {
 
 type HTTPServer struct {
 	*baseapp.BaseApp
-	handler *gin.Engine
-	log     log.Log
-	c       *HTTPServerConfig
-	server  *http.Server
-	tracer  Tracer
+	handler         *gin.Engine
+	log             log.Log
+	c               *HTTPServerConfig
+	server          *http.Server
+	tracer          Tracer
+	connectionCount int64
 }
 
 func New(appConfig HTTPServerConfig, logger log.Log, tr Tracer, errorNotifier errors.ErrorNotifier) *HTTPServer {
@@ -38,6 +39,7 @@ func New(appConfig HTTPServerConfig, logger log.Log, tr Tracer, errorNotifier er
 	ctx := b.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(appConfig.ServiceName))
 	h.SetupRouter(ctx)
 	h.RegisterOnShutdownHook(h)
+	h.RegisterStatusCheckHook(h)
 	return h
 }
 
