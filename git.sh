@@ -1,5 +1,5 @@
-export message="support for local stack"
-export version="v5.0.9"
+export message="version change"
+export version="v5.0.10"
 export branch="master"
 git add .
 git commit -m "$message"
