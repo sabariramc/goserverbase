@@ -1,5 +1,5 @@
-export message="Removed unused context"
-export version="v5.0.14"
+export message="Removed unused serviceNamespace"
+export version="v5.0.15"
 export branch="master"
 git add .
 git commit -m "$message"
