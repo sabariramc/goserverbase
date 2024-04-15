@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"maps"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
@@ -43,7 +44,7 @@ func (s *SNS) Publish(ctx context.Context, topicArn, subject *string, payload *u
 		TopicArn:          topicArn,
 		Subject:           subject,
 		Message:           &message,
-		MessageAttributes: s.GetAttribute(attributes),
+		MessageAttributes: s.GenerateAttribute(ctx, attributes),
 	}
 	res, err := s.Client.Publish(ctx, req)
 	if err != nil {
@@ -53,9 +54,14 @@ func (s *SNS) Publish(ctx context.Context, topicArn, subject *string, payload *u
 	return res, nil
 }
 
-func (s *SNS) GetAttribute(attribute map[string]string) map[string]types.MessageAttributeValue {
+func (s *SNS) GenerateAttribute(ctx context.Context, attribute map[string]string) map[string]types.MessageAttributeValue {
 	if len(attribute) == 0 {
 		return nil
+	}
+	correlation := log.GetCorrelationParam(ctx)
+	if correlation != nil {
+		headers := correlation.GetHeader()
+		maps.Copy(headers, attribute)
 	}
 	messageAttributes := make(map[string]types.MessageAttributeValue, len(attribute))
 	for key, value := range attribute {
@@ -65,4 +71,15 @@ func (s *SNS) GetAttribute(attribute map[string]string) map[string]types.Message
 		}
 	}
 	return messageAttributes
+}
+
+func (s *SNS) ParseAttribute(messageAttributes map[string]types.MessageAttributeValue) map[string]string {
+	if len(messageAttributes) == 0 {
+		return nil
+	}
+	attributes := make(map[string]string, len(messageAttributes))
+	for key, value := range messageAttributes {
+		attributes[key] = *value.StringValue
+	}
+	return attributes
 }

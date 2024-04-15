@@ -1,5 +1,5 @@
-export message="package updates and log interface update"
-export version="v5.0.11"
+export message="Added utility method to SQS and SNS wrapper"
+export version="v5.0.12"
 export branch="master"
 git add .
 git commit -m "$message"

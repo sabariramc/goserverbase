@@ -3,6 +3,7 @@ package aws
 import (
 	"context"
 	"fmt"
+	"maps"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -59,7 +60,7 @@ func (s *SQS) SendMessage(ctx context.Context, message *utils.Message, attribute
 	if err != nil {
 		return nil, fmt.Errorf("SQS.SendMessage: %w", err)
 	}
-	messageAttributes := s.GetAttribute(attribute)
+	messageAttributes := s.GenerateAttribute(ctx, attribute)
 	req := &sqs.SendMessageInput{
 		QueueUrl:          s.queueURL,
 		DelaySeconds:      delayInSeconds,
@@ -79,7 +80,7 @@ func (s *SQS) SendMessageFIFO(ctx context.Context, message *utils.Message, attri
 	if err != nil {
 		return nil, fmt.Errorf("SQS.SendMessage: %w", err)
 	}
-	messageAttributes := s.GetAttribute(attribute)
+	messageAttributes := s.GenerateAttribute(ctx, attribute)
 	req := &sqs.SendMessageInput{
 		QueueUrl:               s.queueURL,
 		DelaySeconds:           delayInSeconds,
@@ -116,7 +117,7 @@ func (s *SQS) SendMessageBatch(ctx context.Context, messageList []*BatchQueueMes
 		m := types.SendMessageBatchRequestEntry{
 			Id:                message.ID,
 			DelaySeconds:      delayInSeconds,
-			MessageAttributes: s.GetAttribute(message.Attribute), MessageBody: body,
+			MessageAttributes: s.GenerateAttribute(ctx, message.Attribute), MessageBody: body,
 		}
 		if isFifo {
 			m.MessageDeduplicationId = message.MessageDeduplicationID
@@ -137,9 +138,14 @@ func (s *SQS) SendMessageBatch(ctx context.Context, messageList []*BatchQueueMes
 	return res, nil
 }
 
-func (s *SQS) GetAttribute(attribute map[string]string) map[string]types.MessageAttributeValue {
+func (s *SQS) GenerateAttribute(ctx context.Context, attribute map[string]string) map[string]types.MessageAttributeValue {
 	if len(attribute) == 0 {
 		return nil
+	}
+	correlation := log.GetCorrelationParam(ctx)
+	if correlation != nil {
+		headers := correlation.GetHeader()
+		maps.Copy(headers, attribute)
 	}
 	messageAttributes := make(map[string]types.MessageAttributeValue, len(attribute))
 	for key, value := range attribute {
@@ -149,6 +155,17 @@ func (s *SQS) GetAttribute(attribute map[string]string) map[string]types.Message
 		}
 	}
 	return messageAttributes
+}
+
+func (s *SQS) ParseAttribute(messageAttributes map[string]types.MessageAttributeValue) map[string]string {
+	if len(messageAttributes) == 0 {
+		return nil
+	}
+	attributes := make(map[string]string, len(messageAttributes))
+	for key, value := range messageAttributes {
+		attributes[key] = *value.StringValue
+	}
+	return attributes
 }
 
 func (s *SQS) ReceiveMessage(ctx context.Context, timeoutInSeconds int32, maxNumberOfMessages int32, waitTimeInSeconds int32) (*sqs.ReceiveMessageOutput, error) {
