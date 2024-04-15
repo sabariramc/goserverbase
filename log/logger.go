@@ -56,7 +56,7 @@ func GetLogLevelMap(level LogLevelCode) LogLevel {
 type LogMessage struct {
 	LogLevel
 	Message     string
-	LogObject   interface{}
+	LogObject   []interface{}
 	Timestamp   time.Time
 	ModuleName  string
 	ServiceName string
@@ -113,41 +113,41 @@ func (l *Logger) Audit(ctx context.Context, msg interface{}) error {
 	return l.audit.WriteMessage(ctx, msg)
 }
 
-func (l *Logger) Trace(ctx context.Context, message string, logObject interface{}) {
+func (l *Logger) Trace(ctx context.Context, message string, logObject ...interface{}) {
 	l.print(ctx, logLevelMap[TRACE], message, logObject)
 }
 
-func (l *Logger) Debug(ctx context.Context, message string, logObject interface{}) {
+func (l *Logger) Debug(ctx context.Context, message string, logObject ...interface{}) {
 	l.print(ctx, logLevelMap[DEBUG], message, logObject)
 }
 
-func (l *Logger) Info(ctx context.Context, message string, logObject interface{}) {
+func (l *Logger) Info(ctx context.Context, message string, logObject ...interface{}) {
 	l.print(ctx, logLevelMap[INFO], message, logObject)
 }
 
-func (l *Logger) Notice(ctx context.Context, message string, logObject interface{}) {
+func (l *Logger) Notice(ctx context.Context, message string, logObject ...interface{}) {
 	l.print(ctx, logLevelMap[NOTICE], message, logObject)
 }
 
-func (l *Logger) Warning(ctx context.Context, message string, logObject interface{}) {
+func (l *Logger) Warning(ctx context.Context, message string, logObject ...interface{}) {
 	l.print(ctx, logLevelMap[WARNING], message, logObject)
 }
 
-func (l *Logger) Error(ctx context.Context, message string, logObject interface{}) {
+func (l *Logger) Error(ctx context.Context, message string, logObject ...interface{}) {
 	l.print(ctx, logLevelMap[ERROR], message, logObject)
 }
 
-func (l *Logger) Emergency(ctx context.Context, message string, err error, logObject interface{}) {
+func (l *Logger) Emergency(ctx context.Context, message string, err error, logObject ...interface{}) {
 	l.print(ctx, logLevelMap[EMERGENCY], message, logObject)
 	panic(fmt.Errorf("%v : %w", message, err))
 }
 
-func (l *Logger) Fatal(ctx context.Context, message string, exitCode int, logObject interface{}) {
+func (l *Logger) Fatal(ctx context.Context, message string, exitCode int, logObject ...interface{}) {
 	l.print(ctx, logLevelMap[FATAL], message, logObject)
 	os.Exit(exitCode)
 }
 
-func (l *Logger) print(ctx context.Context, level *LogLevel, message string, logObject interface{}) {
+func (l *Logger) print(ctx context.Context, level *LogLevel, message string, logObject []interface{}) {
 	if level.Level > l.logLevel.Level {
 		return
 	}

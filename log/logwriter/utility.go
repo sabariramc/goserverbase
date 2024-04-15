@@ -8,7 +8,7 @@ import (
 
 const ParseErrorMsg = "******************ERROR DURING MARSHAL OF FULL MESSAGE*******************"
 
-func ParseLogObject(fullMessage any, indent bool) string {
+func ParseObject(fullMessage any, indent bool) string {
 	if fullMessage == nil {
 		return ""
 	}
@@ -37,6 +37,17 @@ func ParseLogObject(fullMessage any, indent bool) string {
 		}
 	}
 	return msg
+}
+
+func ParseLogObject(logObj []any, indent bool) string {
+	if len(logObj) == 1 {
+		return ParseObject(logObj[0], indent)
+	}
+	msg := make([]string, 0, len(logObj))
+	for _, val := range logObj {
+		msg = append(msg, ParseObject(val, indent))
+	}
+	return ParseObject(msg, indent)
 }
 
 func GetLogObjectType(object any) string {

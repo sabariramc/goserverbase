@@ -60,7 +60,6 @@ func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfi
 			SASL: config.SASLMechanism,
 			TLS:  config.TLSConfig,
 		},
-
 		Completion:   kLog.DeliveryReport,
 		RequiredAcks: kafka.RequiredAcks(config.Acknowledge),
 		Async:        config.Async,

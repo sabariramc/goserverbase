@@ -54,7 +54,7 @@ func GetQueueURL(ctx context.Context, logger log.Log, queueName string, sqsClien
 	return res.QueueUrl, nil
 }
 
-func (s *SQS) SendMessage(ctx context.Context, message *utils.Message, attribute map[string]string, delayInSeconds int32, messageDeduplicationID, messageGroupID *string) (*sqs.SendMessageOutput, error) {
+func (s *SQS) SendMessage(ctx context.Context, message *utils.Message, attribute map[string]string, delayInSeconds int32) (*sqs.SendMessageOutput, error) {
 	body, err := utils.LoadString(message)
 	if err != nil {
 		return nil, fmt.Errorf("SQS.SendMessage: %w", err)
@@ -66,9 +66,27 @@ func (s *SQS) SendMessage(ctx context.Context, message *utils.Message, attribute
 		MessageBody:       body,
 		MessageAttributes: messageAttributes,
 	}
-	if s.IsFIFO() {
-		req.MessageDeduplicationId = messageDeduplicationID
-		req.MessageGroupId = messageGroupID
+	res, err := s.Client.SendMessage(ctx, req)
+	if err != nil {
+		s.log.Error(ctx, "Error sending message", err)
+		return res, fmt.Errorf("SQS.SendMessage: error sending message: %w", err)
+	}
+	return res, nil
+}
+
+func (s *SQS) SendMessageFIFO(ctx context.Context, message *utils.Message, attribute map[string]string, delayInSeconds int32, messageDeduplicationID, messageGroupID *string) (*sqs.SendMessageOutput, error) {
+	body, err := utils.LoadString(message)
+	if err != nil {
+		return nil, fmt.Errorf("SQS.SendMessage: %w", err)
+	}
+	messageAttributes := s.GetAttribute(attribute)
+	req := &sqs.SendMessageInput{
+		QueueUrl:               s.queueURL,
+		DelaySeconds:           delayInSeconds,
+		MessageBody:            body,
+		MessageAttributes:      messageAttributes,
+		MessageDeduplicationId: messageDeduplicationID,
+		MessageGroupId:         messageGroupID,
 	}
 	res, err := s.Client.SendMessage(ctx, req)
 	if err != nil {

@@ -12,5 +12,6 @@
         "sabariramc",
         "testutils"
     ],
-    "go.buildTags": "cse"
+    "go.buildTags": "cse",
+    "gopls": { "ui.semanticTokens": true }
 }

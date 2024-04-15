@@ -25,21 +25,20 @@ type AWSConfig struct {
 }
 
 type TestConfig struct {
-	Logger            *log.Config
-	App               *baseapp.ServerConfig
-	HTTP              *httpserver.HTTPServerConfig
-	Kafka             *kafkaconsumer.KafkaConsumerServerConfig
-	Mongo             *mongo.Config
-	CSFLE             *csfle.Config
-	AWS               *AWSConfig
-	KafkaConsumer     kafka.KafkaConsumerConfig
-	KafkaProducer     *kafka.KafkaProducerConfig
-	KafkaTestTopic    string
-	KafkaTestTopic2   string
-	KafkaHTTPProxyURL string
-	Graylog           logwriter.GraylogConfig
-	TestURL1          string
-	TestURL2          string
+	Logger          *log.Config
+	App             *baseapp.ServerConfig
+	HTTP            *httpserver.HTTPServerConfig
+	Kafka           *kafkaconsumer.KafkaConsumerServerConfig
+	Mongo           *mongo.Config
+	CSFLE           *csfle.Config
+	AWS             *AWSConfig
+	KafkaConsumer   kafka.KafkaConsumerConfig
+	KafkaProducer   *kafka.KafkaProducerConfig
+	KafkaTestTopic  string
+	KafkaTestTopic2 string
+	Graylog         logwriter.GraylogConfig
+	TestURL1        string
+	TestURL2        string
 }
 
 func (t *TestConfig) GetLoggerConfig() *log.Config {
@@ -124,10 +123,9 @@ func NewConfig() *TestConfig {
 			BatchMaxBuffer:  utils.GetEnvInt("KAFKA_PRODUCER_MAX_BUFFER", 1000),
 			Async:           true,
 		},
-		KafkaConsumer:     consumer,
-		KafkaTestTopic:    utils.GetEnvMust("KAFKA_TEST_TOPIC"),
-		KafkaTestTopic2:   utils.GetEnvMust("KAFKA_TEST_TOPIC_2"),
-		KafkaHTTPProxyURL: utils.GetEnvMust("KAFKA_HTTP_PROXY"),
+		KafkaConsumer:   consumer,
+		KafkaTestTopic:  utils.GetEnvMust("KAFKA_TEST_TOPIC"),
+		KafkaTestTopic2: utils.GetEnvMust("KAFKA_TEST_TOPIC_2"),
 		Graylog: logwriter.GraylogConfig{
 			Address: utils.GetEnv("GRAYLOG_URL", ""),
 			Port:    utils.GetEnvInt("GRAYLOG_PORT", 12001),

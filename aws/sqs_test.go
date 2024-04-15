@@ -41,7 +41,7 @@ func TestSQSClient(t *testing.T) {
 	id := uuid.NewString()
 	_, err := sqsClient.SendMessage(ctx, message, map[string]string{
 		"id": id,
-	}, 1, nil, nil)
+	}, 0)
 	assert.NilError(t, err)
 	messageRes, err := sqsClient.ReceiveMessage(ctx, 10, 10, 3)
 	assert.NilError(t, err)
@@ -87,7 +87,7 @@ func TestSQSFIFOClient(t *testing.T) {
 	groupID, dedupeID := uuid.NewString(), uuid.NewString()
 	ctx := GetCorrelationContext()
 	message := GetMessage()
-	_, err := sqsClient.SendMessage(ctx, message, map[string]string{
+	_, err := sqsClient.SendMessageFIFO(ctx, message, map[string]string{
 		"id": uuid.NewString(),
 	}, 0, &groupID, &dedupeID)
 	assert.NilError(t, err)

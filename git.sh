@@ -1,5 +1,5 @@
-export message="version change"
-export version="v5.0.10"
+export message="package updates and log interface update"
+export version="v5.0.11"
 export branch="master"
 git add .
 git commit -m "$message"

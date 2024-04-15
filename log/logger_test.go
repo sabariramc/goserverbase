@@ -20,7 +20,7 @@ type LogWriter struct {
 }
 
 type TestVal struct {
-	TestId     string
+	TestID     string
 	IntVal     int64
 	DecimalVal decimal.Decimal
 	StrVal     string
@@ -31,7 +31,7 @@ type TestVal struct {
 func GetSampleData() *TestVal {
 	val1, _ := decimal.NewFromString("123.1232")
 	data := &TestVal{}
-	data.TestId = "fasdfa"
+	data.TestID = "fasdfa"
 	data.StrVal = "value1"
 	data.IntVal = 123
 	data.BoolVal = true
@@ -44,7 +44,7 @@ func GetSampleData() *TestVal {
 func NewLogWriter(ch chan []string) *LogWriter {
 	return &LogWriter{
 		i:         -1,
-		valueList: []string{"0", "1.234", "\"123.1232\"", "true", "abcd", "[\"asdf\",10]", "{\"a\":\"fadsf\",\"b\":10}", "{\"TestId\":\"fasdfa\",\"IntVal\":123,\"DecimalVal\":\"123.1232\",\"StrVal\":\"value1\",\"BoolVal\":true,\"TimeVal\":\"2006-01-02T15:04:05+05:30\"}"},
+		valueList: []string{"0", "1.234", "\"123.1232\"", "true", "abcd", "[\"asdf\",10]", "{\"a\":\"fadsf\",\"b\":10}", "{\"TestID\":\"fasdfa\",\"IntVal\":123,\"DecimalVal\":\"123.1232\",\"StrVal\":\"value1\",\"BoolVal\":true,\"TimeVal\":\"2006-01-02T15:04:05+05:30\"}"},
 		ch:        ch,
 	}
 }
@@ -59,7 +59,6 @@ func (c *LogWriter) WriteMessage(ctx context.Context, l *log.LogMessage) error {
 
 func TestLogWriter(t *testing.T) {
 	dec, _ := decimal.NewFromString("123.1232")
-	dec.MarshalJSON()
 	valueList := []any{0, 1.234, dec, true, "abcd", []any{"asdf", 10}, map[string]any{"a": "fadsf", "b": 10}, GetSampleData()}
 	ch := make(chan []string, len(valueList))
 	lmux := log.NewDefaultLogMux(NewLogWriter(ch))
@@ -111,7 +110,7 @@ func BenchmarkParseLogObject(b *testing.B) {
 			b.SetParallelism(i)
 			b.RunParallel(func(pb *testing.PB) {
 				for pb.Next() {
-					logwriter.ParseLogObject(GetSampleData(), false)
+					logwriter.ParseObject(GetSampleData(), false)
 				}
 			})
 		})
