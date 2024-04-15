@@ -28,7 +28,7 @@ type JSONLConsoleWriter struct {
 	logMapper        LogMapper
 }
 
-func NewJSONLConsoleWriter(ctx context.Context, serviceNamespace string, mapper LogMapper) *JSONLConsoleWriter {
+func NewJSONLConsoleWriter(serviceNamespace string, mapper LogMapper) *JSONLConsoleWriter {
 	if mapper == nil {
 		mapper = DefaultLogMapper
 	}
