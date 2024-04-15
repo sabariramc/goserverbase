@@ -1,5 +1,5 @@
-export message="Added utility method to SQS and SNS wrapper"
-export version="v5.0.12"
+export message="Default message attributes"
+export version="v5.0.13"
 export branch="master"
 git add .
 git commit -m "$message"

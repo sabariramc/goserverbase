@@ -55,8 +55,8 @@ func (s *SNS) Publish(ctx context.Context, topicArn, subject *string, payload *u
 }
 
 func (s *SNS) GenerateAttribute(ctx context.Context, attribute map[string]string) map[string]types.MessageAttributeValue {
-	if len(attribute) == 0 {
-		return nil
+	if attribute == nil {
+		attribute = map[string]string{}
 	}
 	correlation := log.GetCorrelationParam(ctx)
 	if correlation != nil {
