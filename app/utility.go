@@ -11,5 +11,5 @@ func (b *BaseApp) GetContextWithCorrelation(ctx context.Context, c *log.Correlat
 }
 
 func (b *BaseApp) GetContextWithCustomerId(ctx context.Context, c *log.CustomerIdentifier) context.Context {
-	return log.GetContextWithCustomerId(ctx, c)
+	return log.GetContextWithCustomerID(ctx, c)
 }

@@ -14,7 +14,7 @@ func GetContextWithCorrelation(ctx context.Context, c *CorrelationParam) context
 	return ctx
 }
 
-func GetContextWithCustomerId(ctx context.Context, c *CustomerIdentifier) context.Context {
+func GetContextWithCustomerID(ctx context.Context, c *CustomerIdentifier) context.Context {
 	ctx = context.WithValue(ctx, ContextKeyCustomerIdentifier, c)
 	return ctx
 }

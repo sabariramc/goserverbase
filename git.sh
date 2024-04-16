@@ -1,5 +1,5 @@
-export message="Removed unused serviceNamespace"
-export version="v5.0.15"
+export message="Reorgonized customer identity file"
+export version="v5.0.16"
 export branch="master"
 git add .
 git commit -m "$message"
