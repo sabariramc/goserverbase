@@ -80,9 +80,8 @@ func NewConfig() *TestConfig {
 	}
 	return &TestConfig{
 		Logger: &log.Config{
-			ServiceName:      serviceName,
-			ServiceNamespace: utils.GetEnv("SERVICE_NAMESPACE", ""),
-			LogLevelName:     utils.GetEnv("LOG_LEVEL", "INFO"),
+			ServiceName:  serviceName,
+			LogLevelName: utils.GetEnv("LOG_LEVEL", "INFO"),
 		},
 		App: appConfig,
 		HTTP: &httpserver.HTTPServerConfig{

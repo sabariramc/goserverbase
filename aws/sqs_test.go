@@ -39,7 +39,7 @@ func TestSQSClient(t *testing.T) {
 	sqsClient := aws.GetDefaultSQSClient(AWSTestLogger, queueURL)
 	message := GetMessage()
 	id := uuid.NewString()
-	_, err := sqsClient.SendMessage(ctx, message, map[string]string{
+	_, err := sqsClient.SendMessage(ctx, message, map[string]any{
 		"id": id,
 	}, 0)
 	assert.NilError(t, err)
@@ -57,7 +57,7 @@ func TestSQSClient(t *testing.T) {
 		sqsMessageList[i] = &aws.BatchQueueMessage{
 			ID:      &id,
 			Message: message,
-			Attribute: map[string]string{
+			Attribute: map[string]any{
 				"id": id,
 			},
 		}
@@ -87,7 +87,7 @@ func TestSQSFIFOClient(t *testing.T) {
 	groupID, dedupeID := uuid.NewString(), uuid.NewString()
 	ctx := GetCorrelationContext()
 	message := GetMessage()
-	_, err := sqsClient.SendMessageFIFO(ctx, message, map[string]string{
+	_, err := sqsClient.SendMessageFIFO(ctx, message, map[string]any{
 		"id": uuid.NewString(),
 	}, 0, &groupID, &dedupeID)
 	assert.NilError(t, err)
@@ -103,7 +103,7 @@ func TestSQSFIFOClient(t *testing.T) {
 		sqsMessageList[i] = &aws.BatchQueueMessage{
 			ID:      &id,
 			Message: GetMessage(),
-			Attribute: map[string]string{
+			Attribute: map[string]any{
 				"id": uuid.NewString(),
 			},
 			MessageDeduplicationID: &id,

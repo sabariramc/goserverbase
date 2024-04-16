@@ -59,7 +59,7 @@ func (h *HTTPServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 		c.Request = r
 		body, _ := h.CopyRequestBody(r)
 		bodyBlob = &body
-		h.log.Info(ctx, "RequestMeta", req)
+		h.log.Info(ctx, "Request", req)
 		cs, spanOk := h.GetSpanFromContext(ctx)
 		defer func() {
 			if spanOk {
@@ -69,12 +69,11 @@ func (h *HTTPServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 		c.Next()
 		res := map[string]any{"statusCode": logResWri.status, "headers": logResWri.Header()}
 		if logResWri.status > 299 {
-			req["Body"] = string(body)
 			res["Body"] = logResWri.body
-			h.log.Error(ctx, "Request", req)
+			h.log.Error(ctx, "RequestBody", string(body))
 			h.log.Error(ctx, "Response", res)
 		} else {
-			h.log.Info(ctx, "ResponseMeta", res)
+			h.log.Info(ctx, "Response", res)
 		}
 	}
 }

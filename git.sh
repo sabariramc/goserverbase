@@ -1,5 +1,5 @@
-export message="Reorgonized customer identity file"
-export version="v5.0.16"
+export message="Refactoring and removing unused configs"
+export version="v5.0.17"
 export branch="master"
 git add .
 git commit -m "$message"

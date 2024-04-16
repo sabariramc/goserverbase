@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"maps"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
@@ -37,7 +36,7 @@ func NewSNSClient(logger log.Log, client *sns.Client) *SNS {
 	return &SNS{Client: client, log: logger.NewResourceLogger("SNS")}
 }
 
-func (s *SNS) Publish(ctx context.Context, topicArn, subject *string, payload *utils.Message, attributes map[string]string) (*sns.PublishOutput, error) {
+func (s *SNS) Publish(ctx context.Context, topicArn, subject *string, payload *utils.Message, attributes map[string]any) (*sns.PublishOutput, error) {
 	blob, _ := json.Marshal(payload)
 	message := string(blob)
 	req := &sns.PublishInput{
@@ -54,32 +53,36 @@ func (s *SNS) Publish(ctx context.Context, topicArn, subject *string, payload *u
 	return res, nil
 }
 
-func (s *SNS) GenerateAttribute(ctx context.Context, attribute map[string]string) map[string]types.MessageAttributeValue {
+func (s *SNS) GenerateAttribute(ctx context.Context, attribute map[string]any) map[string]types.MessageAttributeValue {
 	if attribute == nil {
-		attribute = map[string]string{}
+		attribute = map[string]any{}
 	}
 	correlation := log.GetCorrelationParam(ctx)
 	if correlation != nil {
 		headers := correlation.GetHeader()
-		maps.Copy(headers, attribute)
+		for key, val := range headers {
+			attribute[key] = val
+		}
 	}
 	messageAttributes := make(map[string]types.MessageAttributeValue, len(attribute))
 	for key, value := range attribute {
-		messageAttributes[key] = types.MessageAttributeValue{
-			DataType:    aws.String("String"),
-			StringValue: aws.String(value),
+		switch v := value.(type) {
+		case string:
+			messageAttributes[key] = types.MessageAttributeValue{
+				DataType:    aws.String("String"),
+				StringValue: aws.String(v),
+			}
+		case []byte:
+			messageAttributes[key] = types.MessageAttributeValue{
+				DataType:    aws.String("Binary"),
+				BinaryValue: v,
+			}
+		default:
+			messageAttributes[key] = types.MessageAttributeValue{
+				DataType:    aws.String("String"),
+				StringValue: aws.String(fmt.Sprintf("%v", v)),
+			}
 		}
 	}
 	return messageAttributes
-}
-
-func (s *SNS) ParseAttribute(messageAttributes map[string]types.MessageAttributeValue) map[string]string {
-	if len(messageAttributes) == 0 {
-		return nil
-	}
-	attributes := make(map[string]string, len(messageAttributes))
-	for key, value := range messageAttributes {
-		attributes[key] = *value.StringValue
-	}
-	return attributes
 }
