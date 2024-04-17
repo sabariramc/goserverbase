@@ -18,6 +18,7 @@ func DefaultLogMapper(ctx context.Context, msg *log.LogMessage) map[string]any {
 		"Level":            msg.LogLevelName,
 		"Message":          msg.Message,
 		"LogObject":        ParseLogObject(msg.LogObject, false),
+		"FilePtr":          msg.File,
 	}
 }
 

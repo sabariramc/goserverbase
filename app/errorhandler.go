@@ -13,12 +13,13 @@ import (
 
 func (b *BaseApp) PanicRecovery(ctx context.Context, rec any) (string, error) {
 	stackTrace := string(debug.Stack())
-	b.log.Error(ctx, "Recovered - Panic", rec)
-	b.log.Error(ctx, "Recovered - StackTrace", stackTrace)
 	err, ok := rec.(error)
 	if !ok {
+		b.log.Error(ctx, "Recovered - Panic", rec)
 		blob, _ := json.Marshal(rec)
 		err = fmt.Errorf("non error panic: %v", string(blob))
+	} else {
+		b.log.Error(ctx, "Recovered - Panic")
 	}
 	return stackTrace, err
 }

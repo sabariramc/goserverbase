@@ -31,7 +31,7 @@ func ParseObject(fullMessage any, indent bool) string {
 			blob, err = json.Marshal(v)
 		}
 		if err != nil {
-			msg = fmt.Sprintf("%v - %v", ParseErrorMsg, err)
+			msg = fmt.Sprintf("%v", v)
 		} else {
 			msg = string(blob)
 		}

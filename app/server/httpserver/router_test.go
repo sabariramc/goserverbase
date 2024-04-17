@@ -75,6 +75,19 @@ func TestRouterPanic(t *testing.T) {
 	assert.DeepEqual(t, res, expectedResponse)
 }
 
+func TestRouterPanic2(t *testing.T) {
+	srv := server.NewServer(nil)
+	req := httptest.NewRequest(http.MethodGet, "/service/v1/error/error4", nil)
+	w := httptest.NewRecorder()
+	srv.ServeHTTP(w, req)
+	blob, _ := io.ReadAll(w.Body)
+	res := make(map[string]any)
+	json.Unmarshal(blob, &res)
+	expectedResponse := map[string]any{"errorDescription": map[string]any{"error": "Internal error occurred, if persist contact technical team"}, "errorMessage": "Unknown error", "errorCode": "UNKNOWN"}
+	assert.Equal(t, w.Result().StatusCode, http.StatusInternalServerError)
+	assert.DeepEqual(t, res, expectedResponse)
+}
+
 func TestRouterClientError(t *testing.T) {
 	srv := server.NewServer(nil)
 	req := httptest.NewRequest(http.MethodGet, "/service/v1/error/error3", nil)

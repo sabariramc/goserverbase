@@ -62,7 +62,7 @@ func (s *server) Func1(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) Func2(c *gin.Context) {
 	w := c.Writer
-	fmt.Println(c.Param("tenantId"))
+	s.log.Debug(c.Request.Context(), c.Param("tenantId"))
 	w.WriteHeader(200)
 	w.Write([]byte("World"))
 }
@@ -140,6 +140,10 @@ func (s *server) Func4(w http.ResponseWriter, r *http.Request) {
 	s.log.Emergency(r.Context(), "random panic at Func4", nil, nil)
 }
 
+func (s *server) Func6(w http.ResponseWriter, r *http.Request) {
+	panic("fasdfasfsadf")
+}
+
 func (s *server) Func5(w http.ResponseWriter, r *http.Request) {
 	s.SetErrorInContext(r.Context(), errors.NewHTTPClientError(403, "hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, nil))
 }
@@ -190,5 +194,6 @@ func NewServer(t instrumentation.Tracer) *server {
 	errorRoute.GET("/error1", gin.WrapF(srv.Func3))
 	errorRoute.GET("/error2", gin.WrapF(srv.Func4))
 	errorRoute.GET("/error3", gin.WrapF(srv.Func5))
+	errorRoute.GET("/error4", gin.WrapF(srv.Func6))
 	return srv
 }

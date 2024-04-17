@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"runtime"
 	"time"
 )
 
@@ -60,6 +61,7 @@ type LogMessage struct {
 	Timestamp   time.Time
 	ModuleName  string
 	ServiceName string
+	File        string
 }
 
 type Logger struct {
@@ -151,12 +153,17 @@ func (l *Logger) print(ctx context.Context, level *LogLevel, message string, log
 	if level.Level > l.logLevel.Level {
 		return
 	}
-	l.lMux.Print(ctx, &LogMessage{
+	msg := &LogMessage{
 		LogLevel:    *level,
 		Message:     message,
 		LogObject:   logObject,
 		Timestamp:   time.Now(),
 		ModuleName:  l.moduleName,
 		ServiceName: l.serviceName,
-	})
+	}
+	if l.config.FileTrace {
+		_, fileName, lineNumber, _ := runtime.Caller(2)
+		msg.File = fmt.Sprintf("%v:%v", fileName, lineNumber)
+	}
+	l.lMux.Print(ctx, msg)
 }

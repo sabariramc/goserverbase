@@ -1,5 +1,5 @@
-export message="Log object type identifier fix for multi log object"
-export version="v5.0.19"
+export message="Log: Added file trace, update logging for panic recovery, support for unknown object logging"
+export version="v5.0.21"
 export branch="master"
 git add .
 git commit -m "$message"

@@ -41,13 +41,6 @@ type TestConfig struct {
 	TestURL2        string
 }
 
-func (t *TestConfig) GetLoggerConfig() *log.Config {
-	return t.Logger
-}
-func (t *TestConfig) GetAppConfig() *baseapp.ServerConfig {
-	return t.App
-}
-
 func NewConfig() *TestConfig {
 	serviceName := utils.GetEnv("SERVICE_NAME", "go-base")
 	kafkaBaseConfig := kafka.KafkaCredConfig{Brokers: []string{utils.GetEnv("KAFKA_BROKER", "")},
