@@ -1,5 +1,5 @@
 export message="Moved local stack helper to test utils"
-export version="v5.0.16"
+export version="v5.0.18"
 export branch="master"
 git add .
 git commit -m "$message"
