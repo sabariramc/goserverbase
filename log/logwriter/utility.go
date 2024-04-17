@@ -50,10 +50,21 @@ func ParseLogObject(logObj []any, indent bool) string {
 	return ParseObject(msg, indent)
 }
 
-func GetLogObjectType(object any) string {
+func GetLogObjectType(logObj []any) string {
+	if len(logObj) == 1 {
+		return GetObjectType(logObj[0])
+	}
+	msg := make([]string, 0, len(logObj))
+	for _, val := range logObj {
+		msg = append(msg, GetObjectType(val))
+	}
+	return ParseObject(msg, false)
+}
+
+func GetObjectType(obj any) string {
 	msgType := "nil"
-	if object != nil {
-		msgType = reflect.TypeOf(object).String()
+	if obj != nil {
+		msgType = reflect.TypeOf(obj).String()
 	}
 	return msgType
 }
