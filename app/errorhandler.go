@@ -2,7 +2,6 @@ package baseapp
 
 import (
 	"context"
-	"encoding/json"
 	e "errors"
 	"fmt"
 	"net/http"
@@ -16,8 +15,7 @@ func (b *BaseApp) PanicRecovery(ctx context.Context, rec any) (string, error) {
 	err, ok := rec.(error)
 	if !ok {
 		b.log.Error(ctx, "Recovered - Panic", rec)
-		blob, _ := json.Marshal(rec)
-		err = fmt.Errorf("non error panic: %v", string(blob))
+		err = fmt.Errorf("panic: %v", rec)
 	} else {
 		b.log.Error(ctx, "Recovered - Panic")
 	}
@@ -35,7 +33,7 @@ func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error
 	var customError *errors.CustomError
 	var httpErr *errors.HTTPError
 	if e.As(err, &httpErr) {
-		statusCode = httpErr.ErrorStatusCode
+		statusCode = httpErr.StatusCode
 		notify = httpErr.Notify
 		body, parseErr = httpErr.GetErrorResponse()
 		errorCode = httpErr.ErrorCode
@@ -48,7 +46,7 @@ func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error
 		errorCode = customError.ErrorCode
 	} else {
 		statusCode = http.StatusInternalServerError
-		customError = errors.NewCustomError("UNKNOWN", "Unknown error", nil, map[string]string{"error": "Internal error occurred, if persist contact technical team"}, true, err)
+		customError = errors.NewCustomError("com.base.internalServerError", "Unknown error", nil, map[string]string{"error": "Internal error occurred, if persist contact technical team"}, true, err)
 		body, parseErr = customError.GetErrorResponse()
 		err = customError
 	}
@@ -56,12 +54,14 @@ func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error
 		b.log.Error(ctx, "Error occurred during marshal of errors", parseErr)
 	}
 	b.log.Error(ctx, "Error", err)
-	b.log.Error(ctx, "Stack trace", stackTrace)
-	if notify && b.errorNotifier != nil {
+	if stackTrace != "" {
+		b.log.Error(ctx, "Stack trace", stackTrace)
+	}
+	if notify && b.notifier != nil {
 		if statusCode >= 500 {
-			b.errorNotifier.Send5XX(ctx, errorCode, err, stackTrace, errorData)
+			b.notifier.Send5XX(ctx, errorCode, err, stackTrace, errorData)
 		} else {
-			b.errorNotifier.Send4XX(ctx, errorCode, err, stackTrace, errorData)
+			b.notifier.Send4XX(ctx, errorCode, err, stackTrace, errorData)
 		}
 	}
 	return statusCode, body

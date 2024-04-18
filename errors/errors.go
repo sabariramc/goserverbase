@@ -48,7 +48,7 @@ func NewCustomError(errorCode, errorMessage string, errorData interface{}, error
 
 type HTTPError struct {
 	CustomError
-	ErrorStatusCode int `json:"statusCode"`
+	StatusCode int `json:"statusCode"`
 }
 
 func NewHTTPError(statusCode int, errorCode, errorMessage string, errorData interface{}, errorDescription interface{}, notify bool, err error) *HTTPError {
@@ -56,7 +56,7 @@ func NewHTTPError(statusCode int, errorCode, errorMessage string, errorData inte
 		errorCode = http.StatusText(statusCode)
 	}
 	custErr := NewCustomError(errorCode, errorMessage, errorData, errorDescription, notify, err)
-	return &HTTPError{CustomError: *custErr, ErrorStatusCode: statusCode}
+	return &HTTPError{CustomError: *custErr, StatusCode: statusCode}
 }
 
 func NewHTTPClientError(statusCode int, errorCode, errorMessage string, errorData interface{}, errorDescription interface{}, err error) *HTTPError {

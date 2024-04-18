@@ -1,5 +1,5 @@
-export message="Log: Added file trace, update logging for panic recovery, support for unknown object logging"
-export version="v5.0.21"
+export message="BaseApp: added GetNotifier and update log print flow for PanicRecovery and ProcessError method"
+export version="v5.0.22"
 export branch="master"
 git add .
 git commit -m "$message"

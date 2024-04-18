@@ -12,17 +12,17 @@ import (
 type BaseApp struct {
 	c             *ServerConfig
 	log           log.Log
-	errorNotifier errors.ErrorNotifier
+	notifier      errors.ErrorNotifier
 	shutdownHooks []ShutdownHook
 	healthHooks   []HealthCheckHook
 	statusHooks   []StatusCheckHook
 	shutdownWg    sync.WaitGroup
 }
 
-func New(appConfig ServerConfig, logger log.Log, errorNotifier errors.ErrorNotifier) *BaseApp {
+func New(appConfig ServerConfig, logger log.Log, notifier errors.ErrorNotifier) *BaseApp {
 	b := &BaseApp{
 		c:             &appConfig,
-		errorNotifier: errorNotifier,
+		notifier:      notifier,
 		shutdownHooks: make([]ShutdownHook, 0, 10),
 	}
 	ctx := b.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(appConfig.ServiceName))
@@ -42,9 +42,13 @@ func (b *BaseApp) GetLogger() log.Log {
 }
 
 func (b *BaseApp) SetErrorNotifier(errorNotifier errors.ErrorNotifier) {
-	b.errorNotifier = errorNotifier
+	b.notifier = errorNotifier
 }
 
 func (b *BaseApp) WaitForCompleteShutDown() {
 	b.shutdownWg.Wait()
+}
+
+func (b *BaseApp) GetNotifier() errors.ErrorNotifier {
+	return b.notifier
 }
