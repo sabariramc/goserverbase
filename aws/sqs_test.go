@@ -1,9 +1,11 @@
 package aws_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/google/uuid"
 	"github.com/sabariramc/goserverbase/v5/aws"
 	"github.com/sabariramc/goserverbase/v5/utils"
@@ -35,8 +37,10 @@ func GetMessage() *utils.Message {
 func TestSQSClient(t *testing.T) {
 	queueURL := AWSTestConfig.AWS.SQS_URL
 	ctx := GetCorrelationContext()
-
 	sqsClient := aws.GetDefaultSQSClient(AWSTestLogger, queueURL)
+	sqsClient.PurgeQueue(context.Background(), &sqs.PurgeQueueInput{
+		QueueUrl: &queueURL,
+	})
 	message := GetMessage()
 	id := uuid.NewString()
 	_, err := sqsClient.SendMessage(ctx, message, map[string]any{
@@ -84,6 +88,9 @@ func TestSQSClient(t *testing.T) {
 func TestSQSFIFOClient(t *testing.T) {
 	queueURL := AWSTestConfig.AWS.FIFO_SQS_URL
 	sqsClient := aws.GetDefaultSQSClient(AWSTestLogger, queueURL)
+	sqsClient.PurgeQueue(context.Background(), &sqs.PurgeQueueInput{
+		QueueUrl: &queueURL,
+	})
 	groupID, dedupeID := uuid.NewString(), uuid.NewString()
 	ctx := GetCorrelationContext()
 	message := GetMessage()

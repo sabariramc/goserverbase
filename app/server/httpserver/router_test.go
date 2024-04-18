@@ -70,7 +70,7 @@ func TestRouterPanic(t *testing.T) {
 	blob, _ := io.ReadAll(w.Body)
 	res := make(map[string]any)
 	json.Unmarshal(blob, &res)
-	expectedResponse := map[string]any{"errorDescription": map[string]any{"error": "Internal error occurred, if persist contact technical team"}, "errorMessage": "Unknown error", "errorCode": "UNKNOWN"}
+	expectedResponse := map[string]any{"errorDescription": map[string]any{"error": "Internal error occurred, if persist contact technical team"}, "errorMessage": "Unknown error", "errorCode": "com.base.internalServerError"}
 	assert.Equal(t, w.Result().StatusCode, http.StatusInternalServerError)
 	assert.DeepEqual(t, res, expectedResponse)
 }
@@ -83,7 +83,7 @@ func TestRouterPanic2(t *testing.T) {
 	blob, _ := io.ReadAll(w.Body)
 	res := make(map[string]any)
 	json.Unmarshal(blob, &res)
-	expectedResponse := map[string]any{"errorDescription": map[string]any{"error": "Internal error occurred, if persist contact technical team"}, "errorMessage": "Unknown error", "errorCode": "UNKNOWN"}
+	expectedResponse := map[string]any{"errorDescription": map[string]any{"error": "Internal error occurred, if persist contact technical team"}, "errorMessage": "Unknown error", "errorCode": "com.base.internalServerError"}
 	assert.Equal(t, w.Result().StatusCode, http.StatusInternalServerError)
 	assert.DeepEqual(t, res, expectedResponse)
 }
