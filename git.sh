@@ -1,5 +1,5 @@
-export message="BaseApp: added GetNotifier and update log print flow for PanicRecovery and ProcessError method"
-export version="v5.0.22"
+export message="Mongo twicked default options and config"
+export version="v5.1.0"
 export branch="master"
 git add .
 git commit -m "$message"

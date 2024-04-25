@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 )
 
 type Mongo struct {
@@ -38,12 +39,13 @@ func New(ctx context.Context, logger log.Log, c Config, t Tracer, opts ...*optio
 	connectionOptions := options.Client()
 	connectionOptions.ApplyURI(c.ConnectionString)
 	connectionOptions.SetConnectTimeout(time.Minute)
-	connectionOptions.SetMinPoolSize(c.MinConnectionPool)
-	connectionOptions.SetMaxPoolSize(c.MaxConnectionPool)
+	connectionOptions.SetMinPoolSize(5)
+	connectionOptions.SetMaxPoolSize(10)
 	connectionOptions.SetMaxConnIdleTime(time.Minute * 5)
 	connectionOptions.SetCompressors([]string{"snappy", "zlib", "zstd"})
-	connectionOptions.SetAppName(c.AppName)
+	connectionOptions.SetAppName(c.ServiceName)
 	connectionOptions.SetReadPreference(readpref.SecondaryPreferred())
+	connectionOptions.SetWriteConcern(writeconcern.W1())
 	if t != nil {
 		connectionOptions.SetMonitor(t.MongoDB())
 	}

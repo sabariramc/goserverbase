@@ -66,10 +66,8 @@ func NewConfig() *TestConfig {
 		}
 	}
 	mongo := &mongo.Config{
-		AppName:           serviceName,
-		ConnectionString:  utils.GetEnv("MONGO_URL", "mongodb://localhost:60001"),
-		MinConnectionPool: uint64(utils.GetEnvInt("MONGO_MIN_CONNECTION_POOL", 10)),
-		MaxConnectionPool: uint64(utils.GetEnvInt("MONGO_MAX_CONNECTION_POOL", 50)),
+		ServiceName:      serviceName,
+		ConnectionString: utils.GetEnv("MONGO_URL", "mongodb://localhost:60001"),
 	}
 	return &TestConfig{
 		Logger: &log.Config{
