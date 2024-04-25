@@ -2,6 +2,7 @@ package aws
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -55,7 +56,7 @@ func GetQueueURL(ctx context.Context, logger log.Log, queueName string, sqsClien
 }
 
 func (s *SQS) SendMessage(ctx context.Context, message *utils.Message, attribute map[string]any, delayInSeconds int32) (*sqs.SendMessageOutput, error) {
-	body, err := utils.LoadString(message)
+	body, err := marshal(message)
 	if err != nil {
 		return nil, fmt.Errorf("SQS.SendMessage: %w", err)
 	}
@@ -75,7 +76,7 @@ func (s *SQS) SendMessage(ctx context.Context, message *utils.Message, attribute
 }
 
 func (s *SQS) SendMessageFIFO(ctx context.Context, message *utils.Message, attribute map[string]any, delayInSeconds int32, messageDeduplicationID, messageGroupID *string) (*sqs.SendMessageOutput, error) {
-	body, err := utils.LoadString(message)
+	body, err := marshal(message)
 	if err != nil {
 		return nil, fmt.Errorf("SQS.SendMessage: %w", err)
 	}
@@ -109,7 +110,7 @@ func (s *SQS) SendMessageBatch(ctx context.Context, messageList []*BatchQueueMes
 	messageReq := make([]types.SendMessageBatchRequestEntry, len(messageList))
 	i := 0
 	for _, message := range messageList {
-		body, err := utils.LoadString(message.Message)
+		body, err := marshal(message.Message)
 		if err != nil {
 			return nil, fmt.Errorf("SQS.SendMessageBatch: %w", err)
 		}
@@ -229,4 +230,13 @@ func (s *SQS) DeleteMessageBatch(ctx context.Context, receiptHandlerMap map[stri
 		return nil, fmt.Errorf("SQS.DeleteMessage: %w", err)
 	}
 	return res, nil
+}
+
+func marshal(val interface{}) (*string, error) {
+	blob, err := json.Marshal(val)
+	if err != nil {
+		return nil, fmt.Errorf("aws.LoadString: %w", err)
+	}
+	str := string(blob)
+	return &str, nil
 }

@@ -17,6 +17,7 @@ const (
 var src = rand.New(rand.NewSource(time.Now().UnixNano()))
 var mu sync.Mutex
 
+// GenerateRandomString generates a random string of n characters, the generated string will of form ^[A-Za-z0-9]{n}$
 func GenerateRandomString(n int) string {
 	b := make([]byte, n)
 	mu.Lock()
@@ -36,6 +37,14 @@ func GenerateRandomString(n int) string {
 	return string(b)
 }
 
+/*
+GenerateID generates a id with the prefix and totalLength
+
+x := GenerateID(20, "cust_")
+
+In the above example
+len(x) would be equal to 20, prefix "cust_" of length 5 and the remaining slots(15) will be filled by random characters regex: ^cust_[a-zA-Z0-9]{15}$
+*/
 func GenerateID(totalLength int, prefix string) string {
 	n := totalLength - len(prefix)
 	return fmt.Sprintf("%v%v", prefix, GenerateRandomString(n))

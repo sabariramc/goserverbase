@@ -15,7 +15,7 @@ type Filter struct {
 
 func SetDefaultPagination(filter interface{}, defaultSortBy string) error {
 	var defaultFilter Filter
-	err := utils.StrictJsonTransformer(filter, &defaultFilter)
+	err := utils.StrictJSONTransformer(filter, &defaultFilter)
 	if err != nil {
 		return fmt.Errorf("baseapp.SetDefaultPagination: format mismatch: %w", err)
 	}
@@ -28,7 +28,7 @@ func SetDefaultPagination(filter interface{}, defaultSortBy string) error {
 	if defaultFilter.SortBy == "" {
 		defaultFilter.SortBy = defaultSortBy
 	}
-	err = utils.StrictJsonTransformer(&defaultFilter, filter)
+	err = utils.StrictJSONTransformer(&defaultFilter, filter)
 	if err != nil {
 		return fmt.Errorf("baseapp.SetDefaultPagination: error transforming filter: %w", err)
 	}

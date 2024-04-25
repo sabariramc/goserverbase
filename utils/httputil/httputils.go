@@ -15,6 +15,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
+	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
 	"github.com/sabariramc/goserverbase/v5/log"
 	"golang.org/x/net/http2"
 )
@@ -40,6 +41,7 @@ type HTTPClient struct {
 type Tracer interface {
 	HTTPWrapTransport(http.RoundTripper) http.RoundTripper
 	HTTPRequestTrace(context.Context) *httptrace.ClientTrace
+	span.SpanOp
 }
 
 func NewDefaultHTTPClient(log log.Log, t Tracer) *HTTPClient {
@@ -237,13 +239,17 @@ func (h *HTTPClient) Do(req *http.Request) (*http.Response, error) {
 		} else {
 			h.log.Notice(req.Context(), fmt.Sprintf("request failed - retry %v of %v in %vms", i+1, h.retryMax, wait.Milliseconds()), nil)
 		}
+		_, span := h.tr.NewSpanFromContext(req.Context(), "http.Backoff", span.SpanKindInternal, "")
+		span.SetAttribute("http.retryCount", i+1)
 		timer := time.NewTimer(wait)
 		select {
 		case <-req.Context().Done():
 			timer.Stop()
+			span.Finish()
 			h.Client.CloseIdleConnections()
 			return nil, req.Context().Err()
 		case <-timer.C:
+			span.Finish()
 		}
 
 	}
@@ -252,8 +258,6 @@ func (h *HTTPClient) Do(req *http.Request) (*http.Response, error) {
 	if doErr == nil && respErr == nil && checkErr == nil && !shouldRetry {
 		return resp, nil
 	}
-
-	defer h.Client.CloseIdleConnections()
 
 	var err error
 	if checkErr != nil {
