@@ -211,58 +211,29 @@ func (h *HTTPClient) Do(req *http.Request) (*http.Response, error) {
 	var resp *http.Response
 	var attempt int
 	var shouldRetry bool
-	var doErr, respErr, checkErr error
-	var reqBody, resBlob []byte
+	var doErr, respErr error
+	var reqBody []byte
 	if req.ContentLength > 0 {
 		reqBody, _ = io.ReadAll(req.Body)
 	}
 	for i := 0; ; i++ {
-		doErr, respErr = nil, nil
+		doErr = nil
 		attempt++
 		req.Body = io.NopCloser(bytes.NewReader(reqBody))
 		resp, doErr = h.Client.Do(req)
-		shouldRetry, checkErr = h.checkRetry(req.Context(), resp, doErr)
-		if !shouldRetry || checkErr != nil {
+		shouldRetry, respErr = h.backOffAndRetry(i, req, resp, doErr)
+		if !shouldRetry {
 			break
 		}
-		remain := h.retryMax - i
-		if remain <= 0 {
-			break
-		}
-		wait := h.backoff(h.retryWaitMin, h.retryWaitMax, i, resp)
-		if resp != nil && resp.ContentLength > 0 {
-			defer resp.Body.Close()
-			resBlob, _ = io.ReadAll(resp.Body)
-			h.log.Notice(req.Context(), fmt.Sprintf("request failed with status code %v retry %v of %v in %vms", resp.StatusCode, i+1, h.retryMax, wait.Milliseconds()), string(resBlob))
-		} else if doErr != nil {
-			h.log.Notice(req.Context(), fmt.Sprintf("request failed with error - retry %v of %v in %vms", i+1, h.retryMax, wait.Milliseconds()), doErr)
-		} else {
-			h.log.Notice(req.Context(), fmt.Sprintf("request failed - retry %v of %v in %vms", i+1, h.retryMax, wait.Milliseconds()), nil)
-		}
-		_, span := h.tr.NewSpanFromContext(req.Context(), "http.Backoff", span.SpanKindInternal, "")
-		span.SetAttribute("http.retryCount", i+1)
-		timer := time.NewTimer(wait)
-		select {
-		case <-req.Context().Done():
-			timer.Stop()
-			span.Finish()
-			h.Client.CloseIdleConnections()
-			return nil, req.Context().Err()
-		case <-timer.C:
-			span.Finish()
-		}
-
 	}
 
 	// this is the closest we have to success criteria
-	if doErr == nil && respErr == nil && checkErr == nil && !shouldRetry {
+	if doErr == nil && respErr == nil && !shouldRetry {
 		return resp, nil
 	}
 
 	var err error
-	if checkErr != nil {
-		err = checkErr
-	} else if respErr != nil {
+	if respErr != nil {
 		err = respErr
 	} else {
 		err = doErr
@@ -270,4 +241,43 @@ func (h *HTTPClient) Do(req *http.Request) (*http.Response, error) {
 
 	return resp, err
 
+}
+
+func (h *HTTPClient) backOffAndRetry(i int, req *http.Request, resp *http.Response, doErr error) (bool, error) {
+	shouldRetry, respErr := h.checkRetry(req.Context(), resp, doErr)
+	if !shouldRetry || respErr != nil {
+		return shouldRetry, respErr
+	}
+	remain := h.retryMax - i
+	if remain <= 0 {
+		return false, respErr
+	}
+	wait := h.backoff(h.retryWaitMin, h.retryWaitMax, i, resp)
+	if resp != nil && resp.ContentLength > 0 {
+		defer resp.Body.Close()
+		resBlob, _ := io.ReadAll(resp.Body)
+		h.log.Notice(req.Context(), fmt.Sprintf("request failed with status code %v retry %v of %v in %vms", resp.StatusCode, i+1, h.retryMax, wait.Milliseconds()), string(resBlob))
+	} else if doErr != nil {
+		h.log.Notice(req.Context(), fmt.Sprintf("request failed with error - retry %v of %v in %vms", i+1, h.retryMax, wait.Milliseconds()), doErr)
+	} else {
+		h.log.Notice(req.Context(), fmt.Sprintf("request failed - retry %v of %v in %vms", i+1, h.retryMax, wait.Milliseconds()), nil)
+	}
+	if h.tr != nil {
+		_, span := h.tr.NewSpanFromContext(req.Context(), "http.Backoff", span.SpanKindInternal, "")
+		if span != nil {
+			span.SetAttribute("http.retryCount", i+1)
+			span.SetAttribute("http.maxRetryCount", h.retryMax)
+			span.SetAttribute("http.retryBackoffDurationMS", wait.Milliseconds())
+			defer span.Finish()
+		}
+	}
+	timer := time.NewTimer(wait)
+	select {
+	case <-req.Context().Done():
+		timer.Stop()
+		h.Client.CloseIdleConnections()
+		return false, req.Context().Err()
+	case <-timer.C:
+	}
+	return true, nil
 }
