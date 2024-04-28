@@ -1,5 +1,5 @@
-export message="Mongo twicked default options and config"
-export version="v5.1.0"
+export message="Added documentations changes"
+export version="v5.1.1"
 export branch="master"
 git add .
 git commit -m "$message"
