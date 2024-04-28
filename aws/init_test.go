@@ -23,7 +23,7 @@ func init() {
 	AWSTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter()
 	lMux := log.NewDefaultLogMux(consoleLogWriter)
-	AWSTestLogger = log.NewLogger(context.TODO(), AWSTestConfig.Logger, "AWSTest", lMux, nil)
+	AWSTestLogger = log.New(context.TODO(), AWSTestConfig.Logger, "AWSTest", lMux, nil)
 }
 
 func GetCorrelationContext() context.Context {

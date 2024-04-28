@@ -79,7 +79,11 @@ func (l *Logger) NewResourceLogger(resourceName string) Log {
 	return &newLog
 }
 
-func NewLogger(ctx context.Context, lc *Config, moduleName string, lMux LogMux, audit AuditLogWriter) *Logger {
+func NewWithDefaultConfig(ctx context.Context, lc *Config, moduleName string) *Logger {
+	return New(ctx, lc, moduleName, NewDefaultLogMux(), nil)
+}
+
+func New(ctx context.Context, lc *Config, moduleName string, lMux LogMux, audit AuditLogWriter) *Logger {
 	l := &Logger{
 		logLevel:    logLevelMap[INFO],
 		lMux:        lMux,
@@ -98,6 +102,10 @@ func NewLogger(ctx context.Context, lc *Config, moduleName string, lMux LogMux, 
 	}
 	l.logLevel = logLevel
 	return l
+}
+
+func (l *Logger) AddLogWriter(ctx context.Context, w LogWriter) {
+	l.lMux.AddLogWriter(ctx, w)
 }
 
 func (l *Logger) GetLogLevel() LogLevel {

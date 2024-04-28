@@ -18,7 +18,7 @@ func init() {
 	ServerTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter()
 	ServerTestLMux = log.NewDefaultLogMux(consoleLogWriter)
-	ServerTestLogger = log.NewLogger(context.TODO(), ServerTestConfig.Logger, "BaseTest", ServerTestLMux, nil)
+	ServerTestLogger = log.New(context.TODO(), ServerTestConfig.Logger, "BaseTest", ServerTestLMux, nil)
 }
 
 func GetCorrelationContext() context.Context {

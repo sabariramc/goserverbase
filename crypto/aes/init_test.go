@@ -18,7 +18,7 @@ func init() {
 	ServerTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter()
 	lmux := log.NewDefaultLogMux(consoleLogWriter)
-	ServerTestLogger = log.NewLogger(context.TODO(), ServerTestConfig.Logger, "CRYPTOTEST", lmux, nil)
+	ServerTestLogger = log.New(context.TODO(), ServerTestConfig.Logger, "CRYPTOTEST", lmux, nil)
 	ServerTestLMux = lmux
 }
 

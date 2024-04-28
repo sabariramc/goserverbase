@@ -21,7 +21,7 @@ func init() {
 	TestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter()
 	lMux := log.NewDefaultLogMux(consoleLogWriter)
-	TestLogger = log.NewLogger(context.TODO(), TestConfig.Logger, "KafkaTest", lMux, nil)
+	TestLogger = log.New(context.TODO(), TestConfig.Logger, "KafkaTest", lMux, nil)
 }
 
 func GetCorrelationContext() context.Context {

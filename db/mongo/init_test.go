@@ -17,7 +17,7 @@ func init() {
 	MongoTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter()
 	lMux := log.NewDefaultLogMux(consoleLogWriter)
-	MongoTestLogger = log.NewLogger(context.TODO(), MongoTestConfig.Logger, "MongoTest", lMux, nil)
+	MongoTestLogger = log.New(context.TODO(), MongoTestConfig.Logger, "MongoTest", lMux, nil)
 }
 
 func GetCorrelationContext() context.Context {

@@ -28,7 +28,7 @@ func init() {
 	HttpUtilTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter()
 	lMux := log.NewDefaultLogMux(consoleLogWriter)
-	HttpUtilTestLogger = log.NewLogger(context.TODO(), HttpUtilTestConfig.Logger, "AWSTest", lMux, nil)
+	HttpUtilTestLogger = log.New(context.TODO(), HttpUtilTestConfig.Logger, "AWSTest", lMux, nil)
 }
 
 func GetCorrelationContext() context.Context {
