@@ -51,32 +51,24 @@ type server struct {
 	c          *testutils.TestConfig
 }
 
-func (s *server) Func1(w http.ResponseWriter, r *http.Request) {
+func (s *server) echo(c *gin.Context) {
+	w, r := c.Writer, c.Request
 	id := log.GetCustomerIdentifier(r.Context())
 	corr := log.GetCorrelationParam(r.Context())
 	s.log.Info(r.Context(), "identity", id)
 	s.log.Info(r.Context(), "correlation", corr)
 	data, _ := s.GetRequestBody(r)
-	s.WriteJSONWithStatusCode(r.Context(), w, 200, map[string]string{"body": string(data)})
-}
-
-func (s *server) Func2(c *gin.Context) {
-	w := c.Writer
-	s.log.Debug(c.Request.Context(), c.Param("tenantId"))
-	w.WriteHeader(200)
-	w.Write([]byte("World"))
+	s.WriteJSONWithStatusCode(r.Context(), w, 200, map[string]any{
+		"body":        string(data),
+		"headers":     r.Header,
+		"queryParams": r.URL.Query(),
+		"pathParams":  c.Param("any"),
+	})
 }
 
 func (s *server) benc(c *gin.Context) {
+	c.Status(http.StatusNoContent)
 	return
-}
-
-func (s *server) testRequest(c *gin.Context) {
-	body, _ := s.GetCacheRequestBody(c.Request)
-	s.log.Notice(c.Request.Context(), "request body", string(body))
-	w := c.Writer
-	w.WriteHeader(200)
-	w.Write([]byte(uuid.New().String()))
 }
 
 func (s *server) testAll(w http.ResponseWriter, r *http.Request) {
@@ -132,19 +124,19 @@ func (s *server) testKafka(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(204)
 }
 
-func (s *server) Func3(w http.ResponseWriter, r *http.Request) {
+func (s *server) internalServerError(w http.ResponseWriter, r *http.Request) {
 	s.SetErrorInContext(r.Context(), errors.NewCustomError("hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, true, nil))
 }
 
-func (s *server) Func4(w http.ResponseWriter, r *http.Request) {
-	s.log.Emergency(r.Context(), "random panic at Func4", nil, nil)
+func (s *server) panicUsingLog(w http.ResponseWriter, r *http.Request) {
+	s.log.Emergency(r.Context(), "random panic at Func4", errors.NewHTTPClientError(503, "hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, nil))
 }
 
-func (s *server) Func6(w http.ResponseWriter, r *http.Request) {
+func (s *server) panic(w http.ResponseWriter, r *http.Request) {
 	panic("fasdfasfsadf")
 }
 
-func (s *server) Func5(w http.ResponseWriter, r *http.Request) {
+func (s *server) unauthorizedAccess(w http.ResponseWriter, r *http.Request) {
 	s.SetErrorInContext(r.Context(), errors.NewHTTPClientError(403, "hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, nil))
 }
 
@@ -179,21 +171,18 @@ func NewServer(t instrumentation.Tracer) *server {
 	srv.AddMiddleware(srv.printHttpVersion())
 	srv.RegisterHooks(conn)
 	srv.RegisterHooks(pr)
-	r := srv.GetRouter().Group("/service/v1")
-	r.POST("/benc", srv.benc)
-	tenant := r.Group("/tenant")
-	tenant.GET("", gin.WrapF(srv.Func1))
-	tenant.POST("", gin.WrapF(srv.Func1))
-	tenant.GET("/:tenantId", srv.Func2)
-	resource := r.Group("/test")
-	resource.POST("/all", gin.WrapF(srv.testAll))
-	resource.POST("/kafka", gin.WrapF(srv.testKafka))
-	resource.POST("/req", srv.testRequest)
-	resource.GET("/req", srv.testRequest)
-	errorRoute := r.Group("/error")
-	errorRoute.GET("/error1", gin.WrapF(srv.Func3))
-	errorRoute.GET("/error2", gin.WrapF(srv.Func4))
-	errorRoute.GET("/error3", gin.WrapF(srv.Func5))
-	errorRoute.GET("/error4", gin.WrapF(srv.Func6))
+	srv.GetRouter().GET("/meta/bench", srv.benc)
+	service := srv.GetRouter().Group("/service")
+	echo := service.Group("/echo")
+	echo.Any("", srv.echo)
+	echo.GET("/*any", srv.echo)
+	integrationTest := service.Group("/test")
+	integrationTest.POST("/all", gin.WrapF(srv.testAll))
+	integrationTest.POST("/kafka", gin.WrapF(srv.testKafka))
+	errorRoute := service.Group("/error")
+	errorRoute.GET("/error500", gin.WrapF(srv.internalServerError))
+	errorRoute.GET("/errorWithPanic", gin.WrapF(srv.panicUsingLog))
+	errorRoute.GET("/errorUnauthorized", gin.WrapF(srv.unauthorizedAccess))
+	errorRoute.GET("/panic", gin.WrapF(srv.panic))
 	return srv
 }

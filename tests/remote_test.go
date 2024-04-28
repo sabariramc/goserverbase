@@ -49,7 +49,7 @@ func TestRoutes(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			callURL("https://localhost:60006/service/v1/test/all")
+			callURL("https://localhost:60006/service/test/all")
 		}()
 	}
 	wg.Wait()
@@ -57,7 +57,7 @@ func TestRoutes(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			callURL("http://localhost:60005/service/v1/test/all")
+			callURL("http://localhost:60005/service/test/all")
 		}()
 	}
 	cancel()

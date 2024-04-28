@@ -1,7 +1,0 @@
-CorrelationId:
-  name: x-fd-ABC-transaction-request-id
-  in: header
-  description: unique transaction request id
-  required: true
-  type: string
-  default: sample-request-id-31241234-41234123

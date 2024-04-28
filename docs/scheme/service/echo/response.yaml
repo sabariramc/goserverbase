@@ -1,0 +1,9 @@
+value:
+  body:
+    Key1: value1
+  headers:
+    x-correlation-id: sample-correlation-id-31241234-41234123
+  queryParams:
+    qParam1: value1
+  pathParams:
+    pParam1: value1

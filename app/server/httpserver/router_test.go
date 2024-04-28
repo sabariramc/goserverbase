@@ -16,41 +16,41 @@ import (
 
 func TestRouter(t *testing.T) {
 	srv := server.NewServer(nil)
-	req := httptest.NewRequest(http.MethodGet, "/service/v1/tenant", nil)
+	req := httptest.NewRequest(http.MethodGet, "/service/echo", nil)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
 	blob, _ := io.ReadAll(w.Body)
-	assert.Equal(t, string(blob), "{\"body\":\"\"}")
+	assert.Equal(t, string(blob), `{"body":"","headers":{},"pathParams":"","queryParams":{}}`)
 	assert.Equal(t, w.Result().StatusCode, http.StatusOK)
-	req = httptest.NewRequest(http.MethodGet, "/service/v1/tenants/search", nil)
+	req = httptest.NewRequest(http.MethodGet, "/service/echos/search", nil)
 	w = httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
 	blob, _ = io.ReadAll(w.Body)
 	assert.Equal(t, w.Result().StatusCode, http.StatusNotFound)
 	res := make(map[string]any)
 	json.Unmarshal(blob, &res)
-	expectedResponse := map[string]any{"errorDescription": map[string]any{"path": "/service/v1/tenants/search"}, "errorMessage": "Invalid path", "errorCode": "URL_NOT_FOUND"}
+	expectedResponse := map[string]any{"errorDescription": map[string]any{"path": "/service/echos/search"}, "errorMessage": "Invalid path", "errorCode": "URL_NOT_FOUND"}
 	assert.DeepEqual(t, res, expectedResponse)
-	req = httptest.NewRequest(http.MethodGet, "/service/v1/tenant/tenant_ABC4567890abc", nil)
+	req = httptest.NewRequest(http.MethodGet, "/service/echo/tenant_ABC4567890abc", nil)
 	w = httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
 	blob, _ = io.ReadAll(w.Body)
 	assert.Equal(t, w.Result().StatusCode, http.StatusOK)
-	assert.Equal(t, string(blob), "World")
-	req = httptest.NewRequest(http.MethodPost, "/service/v1/tenant/tenant_ABC4567890abc", nil)
+	assert.Equal(t, string(blob), `{"body":"","headers":{},"pathParams":"/tenant_ABC4567890abc","queryParams":{}}`)
+	req = httptest.NewRequest(http.MethodPost, "/service/echo/tenant_ABC4567890abc", nil)
 	w = httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
 	blob, _ = io.ReadAll(w.Body)
 	res = make(map[string]any)
 	json.Unmarshal(blob, &res)
-	expectedResponse = map[string]any{"errorDescription": map[string]any{"method": "POST", "path": "/service/v1/tenant/tenant_ABC4567890abc"}, "errorMessage": "Invalid method", "errorCode": "METHOD_NOT_ALLOWED"}
+	expectedResponse = map[string]any{"errorDescription": map[string]any{"method": "POST", "path": "/service/echo/tenant_ABC4567890abc"}, "errorMessage": "Invalid method", "errorCode": "METHOD_NOT_ALLOWED"}
 	assert.Equal(t, w.Result().StatusCode, http.StatusMethodNotAllowed)
 	assert.DeepEqual(t, res, expectedResponse)
 }
 
 func TestRouterCustomError(t *testing.T) {
 	srv := server.NewServer(nil)
-	req := httptest.NewRequest(http.MethodGet, "/service/v1/error/error1", nil)
+	req := httptest.NewRequest(http.MethodGet, "/service/error/error500", nil)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
 	blob, _ := io.ReadAll(w.Body)
@@ -64,20 +64,20 @@ func TestRouterCustomError(t *testing.T) {
 
 func TestRouterPanic(t *testing.T) {
 	srv := server.NewServer(nil)
-	req := httptest.NewRequest(http.MethodGet, "/service/v1/error/error2", nil)
+	req := httptest.NewRequest(http.MethodGet, "/service/error/errorWithPanic", nil)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
 	blob, _ := io.ReadAll(w.Body)
 	res := make(map[string]any)
 	json.Unmarshal(blob, &res)
-	expectedResponse := map[string]any{"errorDescription": map[string]any{"error": "Internal error occurred, if persist contact technical team"}, "errorMessage": "Unknown error", "errorCode": "com.base.internalServerError"}
-	assert.Equal(t, w.Result().StatusCode, http.StatusInternalServerError)
+	expectedResponse := map[string]any{"errorDescription": nil, "errorMessage": "display this", "errorCode": "hello.new.custom.error"}
+	assert.Equal(t, w.Result().StatusCode, http.StatusServiceUnavailable)
 	assert.DeepEqual(t, res, expectedResponse)
 }
 
 func TestRouterPanic2(t *testing.T) {
 	srv := server.NewServer(nil)
-	req := httptest.NewRequest(http.MethodGet, "/service/v1/error/error4", nil)
+	req := httptest.NewRequest(http.MethodGet, "/service/error/panic", nil)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
 	blob, _ := io.ReadAll(w.Body)
@@ -90,7 +90,7 @@ func TestRouterPanic2(t *testing.T) {
 
 func TestRouterClientError(t *testing.T) {
 	srv := server.NewServer(nil)
-	req := httptest.NewRequest(http.MethodGet, "/service/v1/error/error3", nil)
+	req := httptest.NewRequest(http.MethodGet, "/service/error/errorUnauthorized", nil)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
 	blob, _ := io.ReadAll(w.Body)
@@ -114,12 +114,15 @@ func TestPost(t *testing.T) {
 	srv := server.NewServer(nil)
 	payload, _ := json.Marshal(map[string]string{"fasdfas": "FASDFASf"})
 	buff := bytes.NewBuffer(payload)
-	req := httptest.NewRequest(http.MethodPost, "/service/v1/tenant", buff)
+	req := httptest.NewRequest(http.MethodPost, "/service/echo", buff)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
 	blob, _ := io.ReadAll(w.Body)
 	expectedResponse := map[string]any{
-		"body": "{\"fasdfas\":\"FASDFASf\"}",
+		"body":        `{"fasdfas":"FASDFASf"}`,
+		"headers":     map[string]any{},
+		"pathParams":  "",
+		"queryParams": map[string]any{},
 	}
 	res := make(map[string]any)
 	json.Unmarshal(blob, &res)
@@ -131,20 +134,10 @@ func TestIntegration(t *testing.T) {
 	srv := server.NewServer(nil)
 	payload, _ := json.Marshal(map[string]string{"fasdfas": "FASDFASf"})
 	buff := bytes.NewBuffer(payload)
-	req := httptest.NewRequest(http.MethodPost, "/service/v1/test/all", buff)
+	req := httptest.NewRequest(http.MethodPost, "/service/test/all", buff)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
 	assert.Equal(t, w.Result().StatusCode, http.StatusNoContent)
-}
-
-func TestRequestCache(t *testing.T) {
-	srv := server.NewServer(nil)
-	payload, _ := json.Marshal(map[string]string{"fasdfas": "FASDFASf"})
-	buff := bytes.NewBuffer(payload)
-	req := httptest.NewRequest(http.MethodPost, "/service/v1/test/req", buff)
-	w := httptest.NewRecorder()
-	srv.ServeHTTP(w, req)
-	assert.Equal(t, w.Result().StatusCode, http.StatusOK)
 }
 
 const (
@@ -159,10 +152,10 @@ func TestBencRoute(t *testing.T) {
 	srv := server.NewServer(nil)
 	payload, _ := json.Marshal(map[string]string{"fasdfas": "FASDFASf"})
 	buff := bytes.NewBuffer(payload)
-	req := httptest.NewRequest(http.MethodPost, "/service/v1/benc", buff)
+	req := httptest.NewRequest(http.MethodGet, "/meta/bench", buff)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
-	assert.Equal(t, w.Result().StatusCode, http.StatusOK)
+	assert.Equal(t, w.Result().StatusCode, http.StatusNoContent)
 }
 
 func BenchmarkRoutes(b *testing.B) {
@@ -174,10 +167,10 @@ func BenchmarkRoutes(b *testing.B) {
 			b.SetParallelism(i)
 			b.RunParallel(func(pb *testing.PB) {
 				for pb.Next() {
-					req := httptest.NewRequest(http.MethodPost, "/service/v1/benc", buff)
+					req := httptest.NewRequest(http.MethodGet, "/meta/bench", buff)
 					w := httptest.NewRecorder()
 					srv.ServeHTTP(w, req)
-					assert.Equal(b, w.Result().StatusCode, http.StatusOK)
+					assert.Equal(b, w.Result().StatusCode, http.StatusNoContent)
 				}
 			})
 		})

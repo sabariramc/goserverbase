@@ -1,0 +1,18 @@
+{
+    "customError": {
+        "value": {
+            "errorCode": "hello.new.custom.error",
+            "errorDescription": null,
+            "errorMessage": "display this"
+        }
+    },
+    "internalServerError": {
+        "value": {
+            "errorCode": "com.base.internalServerError",
+            "errorDescription": {
+                "error": "Internal error occurred, if persist contact technical team"
+            },
+            "errorMessage": "Unknown error"
+        }
+    }
+}

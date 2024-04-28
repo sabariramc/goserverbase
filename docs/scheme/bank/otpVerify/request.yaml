@@ -1,6 +1,0 @@
-value:
-  ValidateOTPRq:
-    msgBdy:
-      mblNmb: "916999999999"
-      otp: "360928"
-      ID: "TPA FD New Acc Open"

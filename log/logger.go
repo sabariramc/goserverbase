@@ -141,7 +141,10 @@ func (l *Logger) Error(ctx context.Context, message string, logObject ...interfa
 
 func (l *Logger) Emergency(ctx context.Context, message string, err error, logObject ...interface{}) {
 	l.print(ctx, logLevelMap[EMERGENCY], message, logObject)
-	panic(fmt.Errorf("%v : %w", message, err))
+	if err == nil {
+		err = fmt.Errorf("%v", message)
+	}
+	panic(err)
 }
 
 func (l *Logger) Fatal(ctx context.Context, message string, exitCode int, logObject ...interface{}) {

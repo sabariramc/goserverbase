@@ -1,0 +1,10 @@
+post:
+  $ref: "./component.yaml"
+get:
+  $ref: "./component.yaml"
+put:
+  $ref: "./component.yaml"
+patch:
+  $ref: "./component.yaml"
+delete:
+  $ref: "./component.yaml"

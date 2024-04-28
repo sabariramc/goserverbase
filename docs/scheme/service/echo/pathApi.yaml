@@ -1,21 +1,20 @@
-post:
-  summary: Deposit Calculator
+get:
+  summary: echo endpoint
   parameters:
     - $ref: "../../headers.yaml#/CorrelationId"
+    - name: pathId
+      in: path
+      required: true
   responses:
     "200":
       description: OK
-      headers:
-        X-TPA-Fd-ABC-Request-Id:
-          schema:
-            type: string
-          description: Bank request id
       content:
         application/json:
           examples:
             success:
               $ref: "./response.yaml"
   requestBody:
+    description: any json object is accepted
     content:
       application/json:
         schema:
@@ -24,5 +23,4 @@ post:
           sample:
             $ref: "./request.yaml"
   tags:
-    - Proxy
-    - ABC
+    - Service

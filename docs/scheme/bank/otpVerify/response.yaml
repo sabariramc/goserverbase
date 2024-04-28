@@ -1,7 +1,0 @@
-success:
-  value:
-    ValidateOTPRp:
-      msgHdr:
-        rslt: SUCCESS
-      msgBdy:
-        Msg: Code matched successfully and user has been verified

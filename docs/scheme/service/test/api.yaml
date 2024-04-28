@@ -1,0 +1,17 @@
+post:
+  requestBody:
+    description: any json object is accepted
+    content:
+      application/json:
+        schema:
+          type: object
+        examples:
+          sample:
+            key1: value1
+    required: "true"
+  responses:
+    "204":
+      description: No Content
+  summary: Test integration
+  tags:
+    - Integration Test

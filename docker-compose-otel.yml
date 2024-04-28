@@ -20,7 +20,7 @@ services:
       KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
       KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
       TEST_URL_1: "http://echo-nginx-1"
-      TEST_URL_2: "http://gobase_http:8080/service/v1/tenant"
+      TEST_URL_2: "http://gobase_http:8080/service/echo"
     ports:
       - 60005:8080
     networks:
@@ -50,7 +50,7 @@ services:
       KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
       KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
       TEST_URL_1: "http://echo-nginx-1"
-      TEST_URL_2: "http://gobase_http:8080/service/v1/tenant"
+      TEST_URL_2: "http://gobase_http:8080/service/echo"
     ports:
       - 60006:8080
     networks:
@@ -78,7 +78,7 @@ services:
       KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
       KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
       TEST_URL_1: "http://echo-nginx-1"
-      TEST_URL_2: "http://gobase_http:8080/service/v1/tenant"
+      TEST_URL_2: "http://gobase_http:8080/service/echo"
     ports:
       - 60007:8080
     networks:
@@ -108,7 +108,7 @@ services:
       KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
       KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
       TEST_URL_1: "http://echo-nginx-1"
-      TEST_URL_2: "http://gobase_http:8080/service/v1/tenant"
+      TEST_URL_2: "http://gobase_http:8080/service/echo"
     networks:
       - mongo_mongodb
       - kafka_default
@@ -134,7 +134,7 @@ services:
       KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
       KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
       TEST_URL_1: "http://echo-nginx-1"
-      TEST_URL_2: "http://gobase_http:8080/service/v1/tenant"
+      TEST_URL_2: "http://gobase_http:8080/service/echo"
       CSFLE_CRYPT_SHARED_LIB_PATH: /service/pkg/mongo_crypt_shared_v1-7.0.5/lib/mongo_crypt_v1.so
     ports:
       - 60008:8080

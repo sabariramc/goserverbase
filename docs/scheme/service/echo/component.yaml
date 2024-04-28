@@ -1,0 +1,23 @@
+summary: echo endpoint
+parameters:
+  - $ref: "../../headers.yaml#/CorrelationId"
+responses:
+  "200":
+    description: OK
+    content:
+      application/json:
+        examples:
+          success:
+            $ref: "./response.yaml"
+requestBody:
+  description: any json object is accepted
+  content:
+    application/json:
+      schema:
+        type: object
+      examples:
+        sample:
+          $ref: "./request.yaml"
+  required: 'true'
+tags:
+  - Service
