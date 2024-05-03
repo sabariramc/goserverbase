@@ -43,5 +43,5 @@ func (b *BaseMongoModel) SetUpdateParam(actionBy string) {
 	if b.BaseMongoDocument == nil {
 		b.BaseMongoDocument = &BaseMongoDocument{}
 	}
-	b.BaseMongoDocument.SetCreateParam(actionBy)
+	b.BaseMongoDocument.SetUpdateParam(actionBy)
 }
