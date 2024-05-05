@@ -1,5 +1,5 @@
-export message="Streamlined config: removed probagation of service"
-export version="v5.1.3"
+export message="Streamlined config: config should not be passed as pointer"
+export version="v5.1.4"
 export branch="master"
 git add .
 git commit -m "$message"

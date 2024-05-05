@@ -62,7 +62,7 @@ func TestLogWriter(t *testing.T) {
 	valueList := []any{0, 1.234, dec, true, "abcd", []any{"asdf", 10}, map[string]any{"a": "fadsf", "b": 10}, GetSampleData()}
 	ch := make(chan []string, len(valueList)+1)
 	lmux := log.NewDefaultLogMux(NewLogWriter(ch))
-	log := log.New(context.Background(), &log.Config{LogLevelName: "DEBUG"}, "Test Logger", lmux, nil)
+	log := log.New(context.Background(), log.Config{LogLevelName: "DEBUG"}, "Test Logger", lmux, nil)
 	for _, v := range valueList {
 		log.Debug(context.Background(), "test", v)
 	}
@@ -87,7 +87,7 @@ func (b *BenchLogWriter) WriteMessage(context.Context, *log.LogMessage) error {
 func BenchmarkLogger(b *testing.B) {
 	k := 0
 	lmux := log.NewDefaultLogMux(&BenchLogWriter{i: &k})
-	log := log.New(context.Background(), &log.Config{LogLevelName: "DEBUG"}, "Test Logger", lmux, nil)
+	log := log.New(context.Background(), log.Config{LogLevelName: "DEBUG"}, "Test Logger", lmux, nil)
 	ctx := context.Background()
 	for i := 1; i < 8; i += 2 {
 		b.Run(fmt.Sprintf("goroutines-%d", i*goprocs), func(b *testing.B) {

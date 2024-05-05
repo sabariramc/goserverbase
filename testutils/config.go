@@ -25,7 +25,7 @@ type AWSConfig struct {
 }
 
 type TestConfig struct {
-	Logger          *log.Config
+	Logger          log.Config
 	App             *baseapp.ServerConfig
 	HTTP            *httpserver.HTTPServerConfig
 	Kafka           *kafkaconsumer.KafkaConsumerServerConfig
@@ -68,7 +68,7 @@ func NewConfig() *TestConfig {
 		ConnectionString: utils.GetEnv("MONGO_URL", "mongodb://localhost:60001"),
 	}
 	return &TestConfig{
-		Logger: &log.Config{
+		Logger: log.Config{
 			ServiceName:  serviceName,
 			LogLevelName: utils.GetEnv("LOG_LEVEL", "INFO"),
 		},
