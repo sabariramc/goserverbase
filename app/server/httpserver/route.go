@@ -43,7 +43,7 @@ func (h *HTTPServer) SetupRouter(ctx context.Context) {
 	if h.tracer != nil {
 		h.handler.Use(h.tracer.GetGinMiddleware(h.c.ServiceName))
 	}
-	h.handler.Use(h.SetContextMiddleware(), h.RequestTimerMiddleware(), h.LogRequestResponseMiddleware(), h.HandleExceptionMiddleware())
+	h.handler.Use(h.SetContextMiddleware(), h.RequestTimerMiddleware(), h.LogRequestResponseMiddleware(), h.PanicHandleMiddleware())
 }
 
 func (h *HTTPServer) SetupDocumentation(ctx context.Context) {

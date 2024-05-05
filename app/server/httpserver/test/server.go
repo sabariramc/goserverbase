@@ -76,7 +76,8 @@ func (s *server) testAll(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]any)
 	err := s.LoadRequestJSONBody(r, &data)
 	if err != nil {
-		s.SetErrorInContext(ctx, errors.NewHTTPClientError(400, "invalidJsonBody", "error marshalling json body", nil, nil, err))
+		s.WriteErrorResponse(ctx, w, errors.NewHTTPClientError(400, "invalidJsonBody", "error marshalling json body", nil, nil, err), false)
+		return
 	}
 	s.coll.InsertOne(ctx, data)
 	msg := utils.NewMessage("testFlight", "test")
@@ -116,7 +117,8 @@ func (s *server) testKafka(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]any)
 	err := s.LoadRequestJSONBody(r, &data)
 	if err != nil {
-		s.SetErrorInContext(ctx, errors.NewHTTPClientError(400, "invalidJsonBody", "error marshalling json body", nil, nil, err))
+		s.WriteErrorResponse(ctx, w, errors.NewHTTPClientError(400, "invalidJsonBody", "error marshalling json body", nil, nil, err), false)
+		return
 	}
 	msg := utils.NewMessage("testFlight", "test")
 	msg.AddPayload("content", data)
@@ -125,7 +127,7 @@ func (s *server) testKafka(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) internalServerError(w http.ResponseWriter, r *http.Request) {
-	s.SetErrorInContext(r.Context(), errors.NewCustomError("hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, true, nil))
+	s.WriteErrorResponse(r.Context(), w, errors.NewCustomError("hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, true, nil), false)
 }
 
 func (s *server) panicUsingLog(w http.ResponseWriter, r *http.Request) {
@@ -137,7 +139,7 @@ func (s *server) panic(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) unauthorizedAccess(w http.ResponseWriter, r *http.Request) {
-	s.SetErrorInContext(r.Context(), errors.NewHTTPClientError(403, "hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, nil))
+	s.WriteErrorResponse(r.Context(), w, errors.NewHTTPClientError(403, "hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, nil), false)
 }
 
 func (s *server) printHttpVersion() gin.HandlerFunc {

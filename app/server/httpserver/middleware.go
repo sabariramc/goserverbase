@@ -78,7 +78,7 @@ func (h *HTTPServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 	}
 }
 
-func (h *HTTPServer) HandleExceptionMiddleware() gin.HandlerFunc {
+func (h *HTTPServer) PanicHandleMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		w, r := c.Writer, c.Request
 		ctx := r.Context()
@@ -97,19 +97,7 @@ func (h *HTTPServer) HandleExceptionMiddleware() gin.HandlerFunc {
 				}
 			}
 		}()
-		var handlerError error
-		var stackTrace string
-		ctx = context.WithValue(ctx, ContextKeyHandlerError, func(err error) { handlerError = err })
-		ctx = context.WithValue(ctx, ContextKeyHandlerErrorStackTrace, func(st string) { stackTrace = st })
-		c.Request = r.WithContext(ctx)
 		c.Next()
-		if handlerError != nil {
-			statusCode, body := h.ProcessError(ctx, stackTrace, handlerError)
-			h.WriteJSONWithStatusCode(r.Context(), w, statusCode, body)
-			if spanOk && statusCode > 299 {
-				span.SetError(handlerError, "")
-			}
-		}
 	}
 }
 

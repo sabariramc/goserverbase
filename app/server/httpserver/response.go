@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"runtime"
 
 	"github.com/gin-gonic/gin"
 )
@@ -51,4 +52,19 @@ func (h *HTTPServer) WriteResponseWithStatusCode(ctx context.Context, w http.Res
 
 func (h *HTTPServer) WriteResponse(ctx context.Context, w http.ResponseWriter, contentType string, responseBody []byte) {
 	h.WriteResponseWithStatusCode(ctx, w, http.StatusOK, contentType, responseBody)
+}
+
+func (h *HTTPServer) WriteErrorResponse(ctx context.Context, w http.ResponseWriter, err error, includeStackTrace bool) {
+	stackTrace := ""
+	if includeStackTrace {
+		stack := []byte{}
+		runtime.Stack(stack, false)
+		stackTrace = string(stack)
+	}
+	statusCode, body := h.ProcessError(ctx, stackTrace, err)
+	span, spanOk := h.GetSpanFromContext(ctx)
+	if spanOk {
+		span.SetError(err, stackTrace)
+	}
+	h.WriteJSONWithStatusCode(ctx, w, statusCode, body)
 }
