@@ -18,7 +18,6 @@ type Producer struct {
 	config                  KafkaProducerConfig
 	log                     log.Log
 	topic                   string
-	serviceName             string
 	autoFlushCancel         context.CancelFunc
 	isTopicSpecificProducer bool
 	wg                      sync.WaitGroup
@@ -40,13 +39,13 @@ func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfi
 			config.BatchFlushIntervalInMs = 1000
 		}
 	}
-	if config.Name == "" {
-		config.Name = "KafkaProducer"
+	if config.ModuleName == "" {
+		config.ModuleName = "KafkaProducer"
 	}
-	logger = logger.NewResourceLogger(config.Name)
-	defaultCorrelationParam := &log.CorrelationParam{CorrelationID: config.ServiceName + ":" + config.Name}
+	logger = logger.NewResourceLogger(config.ModuleName)
+	defaultCorrelationParam := &log.CorrelationParam{CorrelationID: config.ModuleName}
 	kLog := &kafkaDeliveryReportLogger{
-		Log: logger.NewResourceLogger(config.Name + ":DeliveryLog"),
+		Log: logger.NewResourceLogger(config.ModuleName + ":DeliveryLog"),
 		ctx: log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
 	}
 	if config.Acknowledge == 0 {
@@ -66,13 +65,13 @@ func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfi
 	}
 	if config.EnableLog {
 		p.Logger = &kafkaLogger{
-			Log:     logger.NewResourceLogger(config.Name + ":InfoLog"),
+			Log:     logger.NewResourceLogger(config.ModuleName + ":InfoLog"),
 			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
 			isError: false,
 		}
 		p.ErrorLogger = &kafkaLogger{
 			isError: true,
-			Log:     logger.NewResourceLogger(config.Name + ":ErrorLog"),
+			Log:     logger.NewResourceLogger(config.ModuleName + ":ErrorLog"),
 			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
 		}
 	}
@@ -82,7 +81,6 @@ func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfi
 		isTopicSpecificProducer = true
 	}
 	k := &Producer{
-		serviceName:             config.ServiceName,
 		log:                     logger,
 		config:                  *config,
 		Writer:                  writer,
@@ -95,7 +93,7 @@ func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfi
 		k.autoFlushCancel = cancel
 		k.wg.Add(1)
 		go k.autoFlush(autoFlushContext)
-		logger.Notice(ctx, config.Name+" is set to batch mode", nil)
+		logger.Notice(ctx, config.ModuleName+" is set to batch mode", nil)
 	}
 	return k, nil
 }
@@ -198,7 +196,7 @@ func (k *Producer) Close(ctx context.Context) error {
 }
 
 func (k *Producer) Name(ctx context.Context) string {
-	return k.config.Name
+	return k.config.ModuleName
 }
 
 func (k *Producer) Shutdown(ctx context.Context) error {

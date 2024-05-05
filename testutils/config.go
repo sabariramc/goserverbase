@@ -44,8 +44,7 @@ type TestConfig struct {
 func NewConfig() *TestConfig {
 	serviceName := utils.GetEnv("SERVICE_NAME", "go-base")
 	kafkaBaseConfig := kafka.KafkaCredConfig{Brokers: []string{utils.GetEnv("KAFKA_BROKER", "")},
-		ServiceName: serviceName,
-		SASLType:    utils.GetEnv("SASL_TYPE", "NONE"),
+		SASLType: utils.GetEnv("SASL_TYPE", "NONE"),
 	}
 	appConfig := &baseapp.ServerConfig{
 		ServiceName: serviceName,
@@ -66,7 +65,6 @@ func NewConfig() *TestConfig {
 		}
 	}
 	mongo := &mongo.Config{
-		ServiceName:      serviceName,
 		ConnectionString: utils.GetEnv("MONGO_URL", "mongodb://localhost:60001"),
 	}
 	return &TestConfig{

@@ -20,7 +20,6 @@ type Poller struct {
 	config           KafkaConsumerConfig
 	log              log.Log
 	topics           []string
-	serviceName      string
 	autoCommitCancel context.CancelFunc
 	wg               sync.WaitGroup
 }
@@ -33,7 +32,7 @@ func NewPoller(ctx context.Context, logger log.Log, config KafkaConsumerConfig, 
 		config.AutoCommitIntervalInMs = 1000
 	}
 	logger = logger.NewResourceLogger("KafkaConsumer")
-	defaultCorrelationParam := &log.CorrelationParam{CorrelationID: config.ServiceName + ":KafkaConsumer"}
+	defaultCorrelationParam := &log.CorrelationParam{CorrelationID: "KafkaConsumer"}
 	readerConfig := kafka.ReaderConfig{
 		Brokers:           config.Brokers,
 		GroupID:           config.GroupID,
@@ -62,11 +61,10 @@ func NewPoller(ctx context.Context, logger log.Log, config KafkaConsumerConfig, 
 	}
 	r := kafka.NewReader(readerConfig)
 	k := &Poller{
-		log:         logger.NewResourceLogger("KafkaConsumer"),
-		config:      config,
-		Reader:      api.NewReader(ctx, logger, r, config.MaxBuffer, tr),
-		topics:      topics,
-		serviceName: config.ServiceName,
+		log:    logger.NewResourceLogger("KafkaConsumer"),
+		config: config,
+		Reader: api.NewReader(ctx, logger, r, config.MaxBuffer, tr),
+		topics: topics,
 	}
 	if k.config.AutoCommit {
 		commitCtx, cancel := context.WithCancel(log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam))

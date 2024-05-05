@@ -180,7 +180,7 @@ func TestH2CClient(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			for j := 0; j < 100; j++ {
-				res, err := client.Post(ctx, "https://localhost:60007/service/v1/test/req", body, nil, map[string]string{"Content-Type": "application/json"})
+				res, err := client.Get(ctx, "https://localhost:60007/meta/health", body, nil, map[string]string{"Content-Type": "application/json"})
 				assert.NilError(t, err)
 				assert.Assert(t, res.StatusCode < 300)
 			}

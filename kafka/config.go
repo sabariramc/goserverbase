@@ -8,7 +8,6 @@ import (
 
 type KafkaCredConfig struct {
 	Brokers       []string
-	ServiceName   string
 	SASLType      string
 	SASLMechanism sasl.Mechanism
 	TLSConfig     *tls.Config
@@ -32,5 +31,5 @@ type KafkaProducerConfig struct {
 	Batch                  bool
 	Topic                  string
 	EnableLog              bool
-	Name                   string
+	ModuleName             string
 }

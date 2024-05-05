@@ -1,5 +1,5 @@
-export message="Bug fix"
-export version="v5.1.2"
+export message="Streamlined config: removed probagation of service"
+export version="v5.1.3"
 export branch="master"
 git add .
 git commit -m "$message"

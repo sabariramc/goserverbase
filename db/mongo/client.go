@@ -17,25 +17,22 @@ import (
 
 type Mongo struct {
 	*mongo.Client
-	log  log.Log
-	name string
+	log        log.Log
+	moduleName string
 }
 
 type Tracer interface {
 	MongoDB() *event.CommandMonitor
 }
 
-var ErrNoDocuments = mongo.ErrNoDocuments
-
-func NewWithAWSRoleAuth(ctx context.Context, logger log.Log, c Config, t Tracer, opts ...*options.ClientOptions) (*Mongo, error) {
+func NewWithAWSRoleAuth(ctx context.Context, serviceName string, logger log.Log, c Config, t Tracer, opts ...*options.ClientOptions) (*Mongo, error) {
 	opts = append(opts, options.Client().SetAuth(options.Credential{
 		AuthMechanism: "MONGODB-AWS",
 	}))
-	return New(ctx, logger, c, t, opts...)
+	return NewWithDefaultOptions(ctx, serviceName, logger, c, t, opts...)
 }
 
-func New(ctx context.Context, logger log.Log, c Config, t Tracer, opts ...*options.ClientOptions) (*Mongo, error) {
-	var err error
+func NewWithDefaultOptions(ctx context.Context, serviceName string, logger log.Log, c Config, t Tracer, opts ...*options.ClientOptions) (*Mongo, error) {
 	connectionOptions := options.Client()
 	connectionOptions.ApplyURI(c.ConnectionString)
 	connectionOptions.SetConnectTimeout(time.Minute)
@@ -43,7 +40,7 @@ func New(ctx context.Context, logger log.Log, c Config, t Tracer, opts ...*optio
 	connectionOptions.SetMaxPoolSize(10)
 	connectionOptions.SetMaxConnIdleTime(time.Minute * 5)
 	connectionOptions.SetCompressors([]string{"snappy", "zlib", "zstd"})
-	connectionOptions.SetAppName(c.ServiceName)
+	connectionOptions.SetAppName(serviceName)
 	connectionOptions.SetReadPreference(readpref.SecondaryPreferred())
 	connectionOptions.SetWriteConcern(writeconcern.W1())
 	if t != nil {
@@ -63,6 +60,18 @@ func New(ctx context.Context, logger log.Log, c Config, t Tracer, opts ...*optio
 		})
 	}
 	opts = utils.Prepend(opts, connectionOptions)
+	client, err := New(ctx, logger, opts...)
+	if err != nil {
+		return nil, err
+	}
+	if c.ModuleName != "" {
+		client.moduleName = c.ModuleName
+	}
+	return client, nil
+}
+
+func New(ctx context.Context, logger log.Log, opts ...*options.ClientOptions) (*Mongo, error) {
+	var err error
 	client, err := mongo.Connect(ctx, opts...)
 	if err != nil {
 		logger.Error(ctx, "error creating mongo connection", err)
@@ -76,10 +85,7 @@ func New(ctx context.Context, logger log.Log, c Config, t Tracer, opts ...*optio
 	if err != nil {
 		return nil, fmt.Errorf("mongo.New: %w", err)
 	}
-	if c.Name == "" {
-		c.Name = "MongoClient"
-	}
-	return &Mongo{Client: client, name: c.Name, log: logger.NewResourceLogger("MongoClient")}, nil
+	return &Mongo{Client: client, moduleName: "MongoClient", log: logger.NewResourceLogger("MongoClient")}, nil
 }
 
 func (m *Mongo) GetClient() *mongo.Client {
@@ -105,7 +111,10 @@ func (m *Mongo) Shutdown(ctx context.Context) error {
 }
 
 func (m *Mongo) Name(ctx context.Context) string {
-	return m.name
+	if m.moduleName == "" {
+		return "MongoClient"
+	}
+	return m.moduleName
 }
 
 func (m *Mongo) HealthCheck(ctx context.Context) error {
