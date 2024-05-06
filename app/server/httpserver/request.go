@@ -96,33 +96,6 @@ func (h *HTTPServer) GetRequestBody(r *http.Request) ([]byte, error) {
 	return blobBody, err
 }
 
-func (h *HTTPServer) GetCacheRequestBody(r *http.Request) ([]byte, error) {
-	if r.ContentLength <= 0 {
-		return nil, nil
-	}
-	ctx := r.Context()
-	ctxBody := ctx.Value(ContextKeyRequestBody)
-	if ctxBody != nil {
-		body, ok := ctxBody.(**[]byte)
-		if !ok {
-			return nil, fmt.Errorf("HttpServer.CacheRequestBody: invalid type for context body reference")
-		}
-		if body == nil {
-			return nil, fmt.Errorf("HttpServer.CacheRequestBody: context body ptr is null ptr")
-		}
-		if *body == nil {
-			data, err := h.CopyRequestBody(r)
-			if err != nil {
-				return nil, fmt.Errorf("HttpServer.CacheRequestBody: %w", err)
-			}
-			*body = &data
-			return data, nil
-		}
-		return **body, nil
-	}
-	return nil, fmt.Errorf("HttpServer.CacheRequestBody: context cache not initiated")
-}
-
 func (h *HTTPServer) LoadRequestJSONBody(r *http.Request, body any) error {
 	blobBody, err := h.GetRequestBody(r)
 	if err != nil {

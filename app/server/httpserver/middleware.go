@@ -47,18 +47,18 @@ func (h *HTTPServer) RequestTimerMiddleware() gin.HandlerFunc {
 func (h *HTTPServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		w, r := c.Writer, c.Request
-		logResWri := &loggingResponseWriter{
-			ResponseWriter: w,
-		}
-		var bodyBlob *[]byte
 		ctx := r.Context()
-		ctx = context.WithValue(ctx, ContextKeyRequestBody, &bodyBlob)
 		r = r.WithContext(ctx)
 		req := h.GetMaskedRequestMeta(r)
-		c.Writer = logResWri
 		c.Request = r
 		body, _ := h.CopyRequestBody(r)
-		bodyBlob = &body
+		logResWri := &loggingResponseWriter{
+			ResponseWriter: w,
+			ctx:            r.Context(),
+			log:            h.log,
+			reqBody:        &body,
+		}
+		c.Writer = logResWri
 		h.log.Info(ctx, "Request", req)
 		cs, spanOk := h.GetSpanFromContext(ctx)
 		defer func() {
@@ -67,14 +67,6 @@ func (h *HTTPServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 			}
 		}()
 		c.Next()
-		res := map[string]any{"statusCode": logResWri.status, "headers": logResWri.Header()}
-		if logResWri.status > 299 {
-			res["Body"] = logResWri.body
-			h.log.Error(ctx, "RequestBody", string(body))
-			h.log.Error(ctx, "Response", res)
-		} else {
-			h.log.Info(ctx, "Response", res)
-		}
 	}
 }
 

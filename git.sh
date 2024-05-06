@@ -1,5 +1,5 @@
 export message="Streamlined request handling: removed set error in context with write error response function"
-export version="v5.3.0"
+export version="v5.4.0"
 export branch="master"
 git add .
 git commit -m "$message"

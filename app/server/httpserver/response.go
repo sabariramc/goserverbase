@@ -8,11 +8,14 @@ import (
 	"runtime"
 
 	"github.com/gin-gonic/gin"
+	"github.com/sabariramc/goserverbase/v5/log"
 )
 
 type loggingResponseWriter struct {
-	status int
-	body   string
+	status  int
+	log     log.Log
+	reqBody *[]byte
+	ctx     context.Context
 	gin.ResponseWriter
 }
 
@@ -22,7 +25,18 @@ func (w *loggingResponseWriter) WriteHeader(code int) {
 }
 
 func (w *loggingResponseWriter) Write(body []byte) (int, error) {
-	w.body = string(body)
+	if w.status == 0 {
+		w.status = http.StatusOK
+	}
+	ctx := w.ctx
+	res := map[string]any{"statusCode": w.status, "headers": w.Header()}
+	if w.status <= 299 {
+		w.log.Info(ctx, "Response", res)
+	} else {
+		res["body"] = string(body)
+		w.log.Error(ctx, "Request Body", string(*w.reqBody))
+		w.log.Error(ctx, "Response", res)
+	}
 	return w.ResponseWriter.Write(body)
 }
 
