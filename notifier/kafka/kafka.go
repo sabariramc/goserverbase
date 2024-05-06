@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/v5/errors"
 	"github.com/sabariramc/goserverbase/v5/errors/message"
 	"github.com/sabariramc/goserverbase/v5/kafka"
 	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v5/notifier"
 )
 
 type ErrorNotifierKafka struct {
@@ -25,10 +25,10 @@ func New(ctx context.Context, log log.Log, serviceName string, topic string, pro
 }
 
 func (e *ErrorNotifierKafka) Send5XX(ctx context.Context, errorCode string, err error, stackTrace string, errorData interface{}) error {
-	return e.send(ctx, errorCode, err, stackTrace, errorData, errors.ErrorCode5XX)
+	return e.send(ctx, errorCode, err, stackTrace, errorData, notifier.NotificationCode5XX)
 }
 func (e *ErrorNotifierKafka) Send4XX(ctx context.Context, errorCode string, err error, stackTrace string, errorData interface{}) error {
-	return e.send(ctx, errorCode, err, stackTrace, errorData, errors.ErrorCode4XX)
+	return e.send(ctx, errorCode, err, stackTrace, errorData, notifier.NotificationCode4XX)
 }
 
 func (e *ErrorNotifierKafka) send(ctx context.Context, errorCode string, err error, stackTrace string, errorData interface{}, alertType string) error {

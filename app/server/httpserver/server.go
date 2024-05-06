@@ -7,9 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	baseapp "github.com/sabariramc/goserverbase/v5/app"
-	"github.com/sabariramc/goserverbase/v5/errors"
 	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
 	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v5/notifier"
 )
 
 type Tracer interface {
@@ -27,7 +27,7 @@ type HTTPServer struct {
 	connectionCount int64
 }
 
-func New(appConfig HTTPServerConfig, logger log.Log, tr Tracer, errorNotifier errors.ErrorNotifier) *HTTPServer {
+func New(appConfig HTTPServerConfig, logger log.Log, tr Tracer, errorNotifier notifier.Notifier) *HTTPServer {
 	b := baseapp.New(appConfig.ServerConfig, logger, errorNotifier)
 	h := &HTTPServer{
 		BaseApp: b,
@@ -61,4 +61,11 @@ func (h *HTTPServer) Shutdown(ctx context.Context) error {
 
 func (h *HTTPServer) GetPort() string {
 	return fmt.Sprintf("%v:%v", h.c.Host, h.c.Port)
+}
+
+func (h *HTTPServer) GetSpanFromContext(ctx context.Context) (span.Span, bool) {
+	if h.tracer != nil {
+		return h.tracer.GetSpanFromContext(ctx)
+	}
+	return nil, false
 }

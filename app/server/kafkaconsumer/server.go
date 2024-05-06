@@ -7,10 +7,10 @@ import (
 	"sync"
 
 	baseapp "github.com/sabariramc/goserverbase/v5/app"
-	"github.com/sabariramc/goserverbase/v5/errors"
 	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
 	"github.com/sabariramc/goserverbase/v5/kafka"
 	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v5/notifier"
 	ckafka "github.com/segmentio/kafka-go"
 )
 
@@ -33,7 +33,7 @@ type KafkaConsumerServer struct {
 	tracer                 Tracer
 }
 
-func New(appConfig KafkaConsumerServerConfig, logger log.Log, t Tracer, errorNotifier errors.ErrorNotifier) *KafkaConsumerServer {
+func New(appConfig KafkaConsumerServerConfig, logger log.Log, t Tracer, errorNotifier notifier.Notifier) *KafkaConsumerServer {
 	if appConfig.HealthCheckInSec <= 0 {
 		appConfig.HealthCheckInSec = 30
 	}

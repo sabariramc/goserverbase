@@ -1,7 +1,6 @@
 package httpserver
 
 import (
-	"context"
 	"fmt"
 	"strconv"
 	"time"
@@ -91,11 +90,4 @@ func (h *HTTPServer) PanicHandleMiddleware() gin.HandlerFunc {
 		}()
 		c.Next()
 	}
-}
-
-func (h *HTTPServer) GetSpanFromContext(ctx context.Context) (span.Span, bool) {
-	if h.tracer != nil {
-		return h.tracer.GetSpanFromContext(ctx)
-	}
-	return nil, false
 }

@@ -5,21 +5,21 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v5/errors"
 	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v5/notifier"
 )
 
 type BaseApp struct {
 	c             *ServerConfig
 	log           log.Log
-	notifier      errors.ErrorNotifier
+	notifier      notifier.Notifier
 	shutdownHooks []ShutdownHook
 	healthHooks   []HealthCheckHook
 	statusHooks   []StatusCheckHook
 	shutdownWg    sync.WaitGroup
 }
 
-func New(appConfig ServerConfig, logger log.Log, notifier errors.ErrorNotifier) *BaseApp {
+func New(appConfig ServerConfig, logger log.Log, notifier notifier.Notifier) *BaseApp {
 	b := &BaseApp{
 		c:             &appConfig,
 		notifier:      notifier,
@@ -41,14 +41,14 @@ func (b *BaseApp) GetLogger() log.Log {
 	return b.log
 }
 
-func (b *BaseApp) SetErrorNotifier(errorNotifier errors.ErrorNotifier) {
-	b.notifier = errorNotifier
+func (b *BaseApp) SetNotifier(notifier notifier.Notifier) {
+	b.notifier = notifier
 }
 
 func (b *BaseApp) WaitForCompleteShutDown() {
 	b.shutdownWg.Wait()
 }
 
-func (b *BaseApp) GetNotifier() errors.ErrorNotifier {
+func (b *BaseApp) GetNotifier() notifier.Notifier {
 	return b.notifier
 }
