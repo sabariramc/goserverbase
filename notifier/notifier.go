@@ -10,6 +10,6 @@ const (
 )
 
 type Notifier interface {
-	Send5XX(ctx context.Context, errorCode string, err error, stackTrace string, errorData interface{}) error
-	Send4XX(ctx context.Context, errorCode string, err error, stackTrace string, errorData interface{}) error
+	Notify5XX(ctx context.Context, errorCode string, err error, stackTrace string, errorData interface{}) error
+	Notify4XX(ctx context.Context, errorCode string, err error, stackTrace string, errorData interface{}) error
 }

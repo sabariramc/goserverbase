@@ -59,9 +59,9 @@ func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error
 	}
 	if notify && b.notifier != nil {
 		if statusCode >= 500 {
-			b.notifier.Send5XX(ctx, errorCode, err, stackTrace, errorData)
+			b.notifier.Notify5XX(ctx, errorCode, err, stackTrace, errorData)
 		} else {
-			b.notifier.Send4XX(ctx, errorCode, err, stackTrace, errorData)
+			b.notifier.Notify4XX(ctx, errorCode, err, stackTrace, errorData)
 		}
 	}
 	return statusCode, body

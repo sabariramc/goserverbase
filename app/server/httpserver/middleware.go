@@ -59,6 +59,7 @@ func (h *HTTPServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 		}
 		c.Writer = logResWri
 		h.log.Info(ctx, "Request", req)
+		h.log.Debug(ctx, "Request Body", func() string { return string(body) })
 		cs, spanOk := h.GetSpanFromContext(ctx)
 		defer func() {
 			if spanOk {
