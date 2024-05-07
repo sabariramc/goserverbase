@@ -76,7 +76,7 @@ func (s *server) Shutdown(ctx context.Context) error {
 }
 
 func NewServer(t instrumentation.Tracer) *server {
-	testutils.SetAWSSession(t)
+	testutils.SetAWSConfig(t)
 	ctx := GetCorrelationContext()
 	loc := utils.GetEnv("SCHEME_LOCATION", "./db/mongo/csfle/sample/piischeme.json")
 	file, err := os.Open(loc)
@@ -88,7 +88,7 @@ func NewServer(t instrumentation.Tracer) *server {
 		ServerTestLogger.Emergency(ctx, "error reading scheme file", err, nil)
 	}
 	scheme := string(schemeByte)
-	kmsArn := ServerTestConfig.AWS.KMS_ARN
+	kmsArn := ServerTestConfig.AWS.KMS
 	dbName, collName := "GOTEST", "PII"
 	kmsProvider, err := sample.GetKMSProvider(ctx, ServerTestLogger, kmsArn)
 	if err != nil {

@@ -60,7 +60,7 @@ func (s *server) Func1(ctx context.Context, event *kafka.Message) error {
 	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		s.sns.Publish(ctx, &ServerTestConfig.AWS.SNS_ARN, nil, msg, nil)
+		s.sns.Publish(ctx, &ServerTestConfig.AWS.SNS, nil, msg, nil)
 	}()
 	go func() {
 		defer wg.Done()
@@ -82,7 +82,7 @@ func (s *server) Name(ctx context.Context) string {
 }
 
 func NewServer(t instrumentation.Tracer) *server {
-	testutils.SetAWSSession(t)
+	testutils.SetAWSConfig(t)
 	ctx := GetCorrelationContext()
 	pr, err := kafka.NewProducer(ctx, ServerTestLogger, ServerTestConfig.KafkaProducer, t)
 	if err != nil {

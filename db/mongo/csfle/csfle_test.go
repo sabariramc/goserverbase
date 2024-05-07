@@ -24,7 +24,7 @@ func TestCollectionPII(t *testing.T) {
 	schemeByte, err := io.ReadAll(file)
 	assert.NilError(t, err)
 	scheme := string(schemeByte)
-	kmsArn := MongoTestConfig.AWS.KMS_ARN
+	kmsArn := MongoTestConfig.AWS.KMS
 	dbName, collName := "GOTEST", "PII"
 	kmsProvider, err := sample.GetKMSProvider(ctx, MongoTestLogger, kmsArn)
 	assert.NilError(t, err)

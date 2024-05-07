@@ -15,13 +15,13 @@ import (
 	"github.com/segmentio/kafka-go/sasl/plain"
 )
 
-type AWSConfig struct {
-	KMS_ARN      string
-	SNS_ARN      string
-	S3_BUCKET    string
-	SECRET_ARN   string
-	SQS_URL      string
-	FIFO_SQS_URL string
+type AWSResources struct {
+	KMS     string
+	SNS     string
+	S3      string
+	SECRET  string
+	SQS     string
+	FIFOSQS string
 }
 
 type TestConfig struct {
@@ -31,7 +31,7 @@ type TestConfig struct {
 	Kafka           *kafkaconsumer.KafkaConsumerServerConfig
 	Mongo           *mongo.Config
 	CSFLE           *csfle.Config
-	AWS             *AWSConfig
+	AWS             *AWSResources
 	KafkaConsumer   kafka.KafkaConsumerConfig
 	KafkaProducer   *kafka.KafkaProducerConfig
 	KafkaTestTopic  string
@@ -97,13 +97,13 @@ func NewConfig() *TestConfig {
 			CryptSharedLibPath: utils.GetEnv("CSFLE_CRYPT_SHARED_LIB_PATH", ""),
 			KeyVaultNamespace:  utils.GetEnv("CSFLE_KEY_VAULT_NAMESPACE", ""),
 		},
-		AWS: &AWSConfig{
-			KMS_ARN:      utils.GetEnv("KMS_ARN", ""),
-			SNS_ARN:      utils.GetEnv("SNS_ARN", ""),
-			S3_BUCKET:    utils.GetEnv("S3_BUCKET", ""),
-			SECRET_ARN:   utils.GetEnv("SECRET_ARN", ""),
-			SQS_URL:      utils.GetEnv("SQS_URL", ""),
-			FIFO_SQS_URL: utils.GetEnv("FIFO_SQS_URL", ""),
+		AWS: &AWSResources{
+			KMS:     utils.GetEnv("KMS_ARN", ""),
+			SNS:     utils.GetEnv("SNS_ARN", ""),
+			S3:      utils.GetEnv("S3_BUCKET", ""),
+			SECRET:  utils.GetEnv("SECRET_ARN", ""),
+			SQS:     utils.GetEnv("SQS_URL", ""),
+			FIFOSQS: utils.GetEnv("FIFO_SQS_URL", ""),
 		},
 		KafkaProducer: &kafka.KafkaProducerConfig{
 			KafkaCredConfig: &kafkaBaseConfig,

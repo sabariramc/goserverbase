@@ -16,7 +16,7 @@ func TestS3(t *testing.T) {
 		o.UsePathStyle = true
 	}), AWSTestLogger)
 	path := fmt.Sprintf("dev/goserverbasetest/plain/%v.pdf", uuid.NewString())
-	s3Bucket := AWSTestConfig.AWS.S3_BUCKET
+	s3Bucket := AWSTestConfig.AWS.S3
 	_, err := s3Client.PutFile(ctx, s3Bucket, path, "./testdata/sample.pdf")
 	assert.NilError(t, err)
 	err = s3Client.GetFile(ctx, s3Bucket, path, "./testdata/result/test.pdf")
@@ -30,12 +30,12 @@ func TestS3(t *testing.T) {
 
 func TestS3PII(t *testing.T) {
 	ctx := GetCorrelationContext()
-	keyArn := AWSTestConfig.AWS.KMS_ARN
+	keyArn := AWSTestConfig.AWS.KMS
 	s3Client := aws.NewS3CryptoClient(aws.NewS3Client(s3.NewFromConfig(*aws.GetDefaultAWSConfig(), func(o *s3.Options) {
 		o.UsePathStyle = true
 	}), AWSTestLogger), aws.GetDefaultKMSClient(AWSTestLogger, keyArn), AWSTestLogger)
 	path := fmt.Sprintf("dev/goserverbasetest/pii/%v.pdf", uuid.NewString())
-	s3Bucker := AWSTestConfig.AWS.S3_BUCKET
+	s3Bucker := AWSTestConfig.AWS.S3
 	err := s3Client.PutFile(ctx, s3Bucker, path, "./testdata/sample.pdf")
 	assert.NilError(t, err)
 	err = s3Client.GetFile(ctx, s3Bucker, path, "./testdata/result/testpii.pdf")

@@ -1,3 +1,4 @@
+// Package testutils has common utility for testing the components
 package testutils
 
 import (
@@ -8,13 +9,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	base "github.com/sabariramc/goserverbase/v5/aws"
-	"github.com/sabariramc/goserverbase/v5/instrumentation"
 	"github.com/sabariramc/goserverbase/v5/utils"
 
 	"github.com/joho/godotenv"
 )
 
-func SetAWSSession(tr instrumentation.Tracer) {
+// SetAWSConfig sets the global AWS config and enable support for using localstack as proxy AWS services
+func SetAWSConfig(tr base.Tracer) {
 	cnf, _ := config.LoadDefaultConfig(context.TODO())
 	if utils.GetEnv("AWS_PROVIDER", "") == "local" {
 		var err error
@@ -33,7 +34,7 @@ func LoadEnv(path string) {
 }
 
 func Initialize() {
-	SetAWSSession(nil)
+	SetAWSConfig(nil)
 }
 
 func GetLocalStackConfig() (aws.Config, error) {

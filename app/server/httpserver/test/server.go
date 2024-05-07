@@ -83,7 +83,7 @@ func (s *server) testAll(w http.ResponseWriter, r *http.Request) {
 	msg := utils.NewMessage("testFlight", "test")
 	msg.AddPayload("content", data)
 	wg := &sync.WaitGroup{}
-	s.run(wg, func() { s.sns.Publish(ctx, &ServerTestConfig.AWS.SNS_ARN, nil, msg, nil) })
+	s.run(wg, func() { s.sns.Publish(ctx, &ServerTestConfig.AWS.SNS, nil, msg, nil) })
 	s.run(wg, func() {
 		res := make(map[string]any)
 		s.httpClient.Post(ctx, ServerTestConfig.TestURL1+"/service/v1/echo/12/2", data, &res, nil)
@@ -151,7 +151,7 @@ func (s *server) printHttpVersion() gin.HandlerFunc {
 }
 
 func NewServer(t instrumentation.Tracer) *server {
-	testutils.SetAWSSession(t)
+	testutils.SetAWSConfig(t)
 	ctx := GetCorrelationContext()
 	pr, err := kafka.NewProducer(ctx, ServerTestLogger, ServerTestConfig.KafkaProducer, t)
 	if err != nil {

@@ -15,14 +15,14 @@ type CustomerIdentifier struct {
 }
 
 func (c *CustomerIdentifier) GetPayload() map[string]string {
-	encodedData, _ := utils.BodyJson.Marshal(c)
+	encodedData, _ := utils.BodyJSON.Marshal(c)
 	res := map[string]string{}
 	json.Unmarshal(encodedData, &res)
 	return res
 }
 
 func (c *CustomerIdentifier) GetHeader() map[string]string {
-	encodedData, _ := utils.HeaderJson.Marshal(c)
+	encodedData, _ := utils.HeaderJSON.Marshal(c)
 	res := map[string]string{}
 	json.Unmarshal(encodedData, &res)
 	return res
@@ -33,7 +33,7 @@ func (c *CustomerIdentifier) LoadFromHeader(header map[string]string) error {
 	if err != nil {
 		return fmt.Errorf("CustomerIdentifier.LoadFromHeader: error marshalling header: %w", err)
 	}
-	err = utils.HeaderJson.Unmarshal(data, c)
+	err = utils.HeaderJSON.Unmarshal(data, c)
 	if err != nil {
 		return fmt.Errorf("CustomerIdentifier.LoadFromHeader: error unmarshalling header: %w", err)
 	}

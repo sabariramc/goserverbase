@@ -1,3 +1,4 @@
+// Package kafka implements the Notifer interface with Kafka as the messaging system
 package kafka
 
 import (

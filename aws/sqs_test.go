@@ -35,7 +35,7 @@ func GetMessage() *utils.Message {
 }
 
 func TestSQSClient(t *testing.T) {
-	queueURL := AWSTestConfig.AWS.SQS_URL
+	queueURL := AWSTestConfig.AWS.SQS
 	ctx := GetCorrelationContext()
 	sqsClient := aws.GetDefaultSQSClient(AWSTestLogger, queueURL)
 	sqsClient.PurgeQueue(context.Background(), &sqs.PurgeQueueInput{
@@ -86,7 +86,7 @@ func TestSQSClient(t *testing.T) {
 }
 
 func TestSQSFIFOClient(t *testing.T) {
-	queueURL := AWSTestConfig.AWS.FIFO_SQS_URL
+	queueURL := AWSTestConfig.AWS.FIFOSQS
 	sqsClient := aws.GetDefaultSQSClient(AWSTestLogger, queueURL)
 	sqsClient.PurgeQueue(context.Background(), &sqs.PurgeQueueInput{
 		QueueUrl: &queueURL,

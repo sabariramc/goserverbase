@@ -9,7 +9,7 @@ import (
 
 func TestAWSKMS(t *testing.T) {
 	ctx := GetCorrelationContext()
-	kms := aws.GetDefaultKMSClient(AWSTestLogger, AWSTestConfig.AWS.KMS_ARN)
+	kms := aws.GetDefaultKMSClient(AWSTestLogger, AWSTestConfig.AWS.KMS)
 	text := "asfasdfsaf"
 	encryptedBlob, err := kms.Encrypt(ctx, []byte(text))
 	assert.NilError(t, err)

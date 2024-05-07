@@ -9,7 +9,7 @@ import (
 )
 
 func TestSNSClient(t *testing.T) {
-	arn := AWSTestConfig.AWS.SNS_ARN
+	arn := AWSTestConfig.AWS.SNS
 	ctx := GetCorrelationContext()
 	snsClient := aws.GetDefaultSNSClient(AWSTestLogger)
 	message := utils.NewMessage("event", "sns.test")

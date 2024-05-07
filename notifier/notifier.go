@@ -1,3 +1,4 @@
+// Package notifier defines interface for the system to send messages regarding various system events that the engineering team should be immediately aware off can be used in incident reporting
 package notifier
 
 import (

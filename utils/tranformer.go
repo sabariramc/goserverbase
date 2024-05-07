@@ -68,24 +68,24 @@ Example 1:
 
 Example 2:
 
-	    a := map[string]any{
-			"key1": "value1",
-			"key2": 10,
-			"key3": false,
-	        "key4":"fasf",
-		}
+	a := map[string]any{
+		"key1": "value1",
+		"key2": 10,
+		"key3": false,
+		"key4":"fasf",
+	}
 
-		type sample struct {
-			Key1 string
-			B    int  `json:"key2"`
-			C    bool `json:"key3"`
-		}
-		b := &sample{}
-		err := utils.StrictJSONTransformer(a, b)
-		if err != nil { //err is not nil
-	        fmt.Print(err) // Output: StrictJsonTransformer: error decoding content: utils_test.TestVal.ReadObject: found unknown field: newField, error found in #10 byte of ...|\"newField\":\"random v|..., bigger context ...|{\"decimalVal\":\"123.1232\",\"intVal\":10,\"newField\":\"random value\"}\n|...
-	        ...
-		}
+	type sample struct {
+		Key1 string
+		B    int  `json:"key2"`
+		C    bool `json:"key3"`
+	}
+	b := &sample{}
+	err := utils.StrictJSONTransformer(a, b)
+	if err != nil { //err is not nil
+		fmt.Print(err) // Output: StrictJsonTransformer: error decoding content: utils_test.TestVal.ReadObject: found unknown field: newField, error found in #10 byte of ...|\"newField\":\"random v|..., bigger context ...|{\"decimalVal\":\"123.1232\",\"intVal\":10,\"newField\":\"random value\"}\n|...
+		...
+	}
 */
 func StrictJSONTransformer(src interface{}, dest interface{}) error {
 	var buf bytes.Buffer
