@@ -25,18 +25,18 @@ func (h *HTTPServer) GetCorrelationParams(r *http.Request) *log.CorrelationParam
 	keyList := []string{"x-correlation-id", "x-scenario-id", "x-scenario-name", "x-session-id"}
 	headers := extractKeyValue(r, keyList)
 	cr := &log.CorrelationParam{}
-	cr.LoadFromHeader(headers)
+	cr.ExtractFromHeader(headers)
 	if cr.CorrelationID == "" {
 		return log.GetDefaultCorrelationParam(h.c.ServiceName)
 	}
 	return cr
 }
 
-func (h *HTTPServer) GetCustomerID(r *http.Request) *log.CustomerIdentifier {
+func (h *HTTPServer) GetCustomerID(r *http.Request) *log.UserIdentifier {
 	keyList := []string{"x-user-id", "x-user-client-id", "x-entity-id"}
 	headers := extractKeyValue(r, keyList)
-	id := &log.CustomerIdentifier{}
-	id.LoadFromHeader(headers)
+	id := &log.UserIdentifier{}
+	id.ExtractFromHeader(headers)
 	return id
 }
 

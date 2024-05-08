@@ -46,7 +46,7 @@ func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfi
 	defaultCorrelationParam := &log.CorrelationParam{CorrelationID: config.ModuleName}
 	kLog := &kafkaDeliveryReportLogger{
 		Log: logger.NewResourceLogger(config.ModuleName + ":DeliveryLog"),
-		ctx: log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
+		ctx: log.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam),
 	}
 	if config.Acknowledge == 0 {
 		logger.Warning(ctx, "Kafka replica acknowledgement is set to None", nil)
@@ -66,13 +66,13 @@ func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfi
 	if config.EnableLog {
 		p.Logger = &kafkaLogger{
 			Log:     logger.NewResourceLogger(config.ModuleName + ":InfoLog"),
-			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
+			ctx:     log.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam),
 			isError: false,
 		}
 		p.ErrorLogger = &kafkaLogger{
 			isError: true,
 			Log:     logger.NewResourceLogger(config.ModuleName + ":ErrorLog"),
-			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
+			ctx:     log.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam),
 		}
 	}
 	writer := api.NewWriter(ctx, p, config.BatchMaxBuffer, logger, tr)
@@ -89,7 +89,7 @@ func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfi
 		isBatch:                 config.Batch,
 	}
 	if config.Batch {
-		autoFlushContext, cancel := context.WithCancel(log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam))
+		autoFlushContext, cancel := context.WithCancel(log.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam))
 		k.autoFlushCancel = cancel
 		k.wg.Add(1)
 		go k.autoFlush(autoFlushContext)
@@ -127,7 +127,7 @@ func (k *Producer) ProduceToTopic(ctx context.Context, topic, key string, messag
 	if headers == nil {
 		headers = make(map[string]string, 0)
 	}
-	corr := log.GetCorrelationHeader(ctx)
+	corr := log.GetHeader(ctx)
 	messageHeader := make([]kafka.Header, 0)
 	for i, v := range corr {
 		headers[i] = v

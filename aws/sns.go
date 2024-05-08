@@ -57,7 +57,7 @@ func (s *SNS) GenerateAttribute(ctx context.Context, attribute map[string]any) m
 	if attribute == nil {
 		attribute = map[string]any{}
 	}
-	correlation := log.GetCorrelationParam(ctx)
+	correlation := log.ExtractCorrelationParam(ctx)
 	if correlation != nil {
 		headers := correlation.GetHeader()
 		for key, val := range headers {

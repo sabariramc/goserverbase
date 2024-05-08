@@ -2,6 +2,7 @@ package kafka_test
 
 import (
 	"context"
+	"runtime"
 	"testing"
 
 	pKafka "github.com/sabariramc/goserverbase/v5/kafka"
@@ -34,12 +35,17 @@ func TestKafkaNotifier(t *testing.T) {
 	notifier := kafka.New(context.TODO(), TestLogger, "Test", TestConfig.KafkaTestTopic, p)
 	ctx := GetCorrelationContext()
 	custID := "cust_test_id"
-	err := notifier.Notify4XX(log.GetContextWithCustomerID(ctx, &log.CustomerIdentifier{UserID: &custID}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
+	errorCode := "com.testing.error"
+	stackTraceBuff := []byte{}
+	runtime.Stack(stackTraceBuff, false)
+	stackTrace := string(stackTraceBuff)
+	errorData := map[string]any{"check": "Testing error"}
+	err := notifier.Notify4XX(log.GetContextWithUserIdentifier(ctx, &log.UserIdentifier{UserID: &custID}), errorCode, nil, stackTrace, errorData)
 	assert.NilError(t, err)
 	custID = "app_user_id"
-	err = notifier.Notify4XX(log.GetContextWithCustomerID(ctx, &log.CustomerIdentifier{AppUserID: &custID}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
+	err = notifier.Notify4XX(log.GetContextWithUserIdentifier(ctx, &log.UserIdentifier{AppUserID: &custID}), errorCode, nil, stackTrace, errorData)
 	assert.NilError(t, err)
 	custID = "entity_id"
-	err = notifier.Notify4XX(log.GetContextWithCustomerID(ctx, &log.CustomerIdentifier{EntityID: &custID}), "com.testing.error", nil, "testing", map[string]any{"check": "Testing error"})
+	err = notifier.Notify4XX(log.GetContextWithUserIdentifier(ctx, &log.UserIdentifier{EntityID: &custID}), errorCode, nil, stackTrace, errorData)
 	assert.NilError(t, err)
 }

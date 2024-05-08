@@ -27,7 +27,7 @@ func (c *ConsoleWriter) GetBufferSize() int {
 const TimeFormat = "2006-01-02T15:04:05.000Z07:00"
 
 func (c *ConsoleWriter) WriteMessage(ctx context.Context, l *log.LogMessage) error {
-	cr := log.GetCorrelationParam(ctx)
+	cr := log.ExtractCorrelationParam(ctx)
 	if l.File != "" {
 		fmt.Println(l.File)
 	}

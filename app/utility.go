@@ -7,9 +7,9 @@ import (
 )
 
 func (b *BaseApp) GetContextWithCorrelation(ctx context.Context, c *log.CorrelationParam) context.Context {
-	return log.GetContextWithCorrelation(ctx, c)
+	return log.GetContextWithCorrelationParam(ctx, c)
 }
 
-func (b *BaseApp) GetContextWithCustomerId(ctx context.Context, c *log.CustomerIdentifier) context.Context {
-	return log.GetContextWithCustomerID(ctx, c)
+func (b *BaseApp) GetContextWithCustomerId(ctx context.Context, c *log.UserIdentifier) context.Context {
+	return log.GetContextWithUserIdentifier(ctx, c)
 }

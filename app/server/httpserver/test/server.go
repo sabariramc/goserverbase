@@ -53,8 +53,8 @@ type server struct {
 
 func (s *server) echo(c *gin.Context) {
 	w, r := c.Writer, c.Request
-	id := log.GetCustomerIdentifier(r.Context())
-	corr := log.GetCorrelationParam(r.Context())
+	id := log.ExtractUserIdentifier(r.Context())
+	corr := log.ExtractCorrelationParam(r.Context())
 	s.log.Info(r.Context(), "identity", id)
 	s.log.Info(r.Context(), "correlation", corr)
 	data, _ := s.GetRequestBody(r)

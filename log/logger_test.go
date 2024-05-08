@@ -50,7 +50,7 @@ func NewLogWriter(ch chan []string) *LogWriter {
 }
 
 func (c *LogWriter) WriteMessage(ctx context.Context, l *log.LogMessage) error {
-	cr := log.GetCorrelationParam(ctx)
+	cr := log.ExtractCorrelationParam(ctx)
 	fmt.Printf("[%v] [%v] [%v] [%v] [%v] [%v] [%v] [%v]\n", l.Timestamp, l.LogLevelName, cr.CorrelationID, l.ServiceName, l.ModuleName, l.Message, logwriter.GetLogObjectType(l.LogObject), logwriter.ParseLogObject(l.LogObject, true))
 	c.i++
 	c.ch <- []string{logwriter.ParseLogObject(l.LogObject, false), c.valueList[c.i]}

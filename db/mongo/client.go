@@ -47,7 +47,7 @@ func NewWithDefaultOptions(ctx context.Context, serviceName string, logger log.L
 		connectionOptions.SetMonitor(t.MongoDB())
 	}
 	if c.EnableLog {
-		mongoLogger := &MongoLogger{log: logger.NewResourceLogger("MongoInternalLog"), ctx: log.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam("MongoInternal"))}
+		mongoLogger := &MongoLogger{log: logger.NewResourceLogger("MongoInternalLog"), ctx: log.GetContextWithCorrelationParam(context.Background(), log.GetDefaultCorrelationParam("MongoInternal"))}
 		connectionOptions.SetLoggerOptions(&options.LoggerOptions{
 			ComponentLevels: map[options.LogComponent]options.LogLevel{
 				options.LogComponentAll: options.LogLevelDebug,

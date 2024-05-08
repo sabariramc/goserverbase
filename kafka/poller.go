@@ -50,12 +50,12 @@ func NewPoller(ctx context.Context, logger log.Log, config KafkaConsumerConfig, 
 	if config.EnableLog {
 		readerConfig.Logger = &kafkaLogger{
 			Log:     logger.NewResourceLogger("KafkaConsumerInfoLog"),
-			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
+			ctx:     log.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam),
 			isError: false,
 		}
 		readerConfig.ErrorLogger = &kafkaLogger{
 			Log:     logger.NewResourceLogger("KafkaConsumerErrorLog"),
-			ctx:     log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam),
+			ctx:     log.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam),
 			isError: true,
 		}
 	}
@@ -67,7 +67,7 @@ func NewPoller(ctx context.Context, logger log.Log, config KafkaConsumerConfig, 
 		topics: topics,
 	}
 	if k.config.AutoCommit {
-		commitCtx, cancel := context.WithCancel(log.GetContextWithCorrelation(context.Background(), defaultCorrelationParam))
+		commitCtx, cancel := context.WithCancel(log.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam))
 		k.autoCommitCancel = cancel
 		k.wg.Add(1)
 		go k.autoCommit(commitCtx)

@@ -13,12 +13,12 @@ import (
 
 func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 	corr := &log.CorrelationParam{CorrelationID: fmt.Sprintf("%v:KafkaConsumerServer", k.c.ServiceName)}
-	ctx, k.shutdown = context.WithCancel(log.GetContextWithCorrelation(ctx, corr))
+	ctx, k.shutdown = context.WithCancel(log.GetContextWithCorrelationParam(ctx, corr))
 	defer k.WaitForCompleteShutDown()
 	k.shutdownWG.Add(1)
 	defer k.shutdownWG.Wait()
 	k.StartSignalMonitor(ctx)
-	pollCtx, cancelPoll := context.WithCancel(log.GetContextWithCorrelation(context.Background(), corr))
+	pollCtx, cancelPoll := context.WithCancel(log.GetContextWithCorrelationParam(context.Background(), corr))
 	k.shutdownPoll = cancelPoll
 	k.log.Notice(ctx, "Starting kafka consumer", nil)
 	defer func() {

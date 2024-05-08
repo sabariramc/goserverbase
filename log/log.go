@@ -1,3 +1,4 @@
+// Package log implements modules for logging
 package log
 
 import (
@@ -64,7 +65,8 @@ type LogMessage struct {
 	File        string
 }
 
-type Logger struct {
+// DefaultLog implementation of Log interface
+type DefaultLog struct {
 	logLevel    *LogLevel
 	lMux        LogMux
 	moduleName  string
@@ -73,18 +75,18 @@ type Logger struct {
 	audit       AuditLogWriter
 }
 
-func (l *Logger) NewResourceLogger(resourceName string) Log {
+func (l *DefaultLog) NewResourceLogger(resourceName string) Log {
 	newLog := *l
 	newLog.SetModuleName(resourceName)
 	return &newLog
 }
 
-func NewWithDefaultConfig(ctx context.Context, lc Config, moduleName string) *Logger {
+func NewWithDefaultConfig(ctx context.Context, lc Config, moduleName string) *DefaultLog {
 	return New(ctx, lc, moduleName, NewDefaultLogMux(), nil)
 }
 
-func New(ctx context.Context, lc Config, moduleName string, lMux LogMux, audit AuditLogWriter) *Logger {
-	l := &Logger{
+func New(ctx context.Context, lc Config, moduleName string, lMux LogMux, audit AuditLogWriter) *DefaultLog {
+	l := &DefaultLog{
 		logLevel:    logLevelMap[INFO],
 		lMux:        lMux,
 		moduleName:  moduleName,
@@ -104,50 +106,50 @@ func New(ctx context.Context, lc Config, moduleName string, lMux LogMux, audit A
 	return l
 }
 
-func (l *Logger) AddLogWriter(ctx context.Context, w LogWriter) {
+func (l *DefaultLog) AddLogWriter(ctx context.Context, w LogWriter) {
 	l.lMux.AddLogWriter(ctx, w)
 }
 
-func (l *Logger) GetLogLevel() LogLevel {
+func (l *DefaultLog) GetLogLevel() LogLevel {
 	return *l.logLevel
 }
 
-func (l *Logger) SetModuleName(moduleName string) {
+func (l *DefaultLog) SetModuleName(moduleName string) {
 	l.moduleName = moduleName
 }
 
-func (l *Logger) Audit(ctx context.Context, msg interface{}) error {
+func (l *DefaultLog) Audit(ctx context.Context, msg interface{}) error {
 	if l.audit == nil {
 		return nil
 	}
 	return l.audit.WriteMessage(ctx, msg)
 }
 
-func (l *Logger) Trace(ctx context.Context, message string, logObject ...interface{}) {
+func (l *DefaultLog) Trace(ctx context.Context, message string, logObject ...interface{}) {
 	l.print(ctx, logLevelMap[TRACE], message, logObject)
 }
 
-func (l *Logger) Debug(ctx context.Context, message string, logObject ...interface{}) {
+func (l *DefaultLog) Debug(ctx context.Context, message string, logObject ...interface{}) {
 	l.print(ctx, logLevelMap[DEBUG], message, logObject)
 }
 
-func (l *Logger) Info(ctx context.Context, message string, logObject ...interface{}) {
+func (l *DefaultLog) Info(ctx context.Context, message string, logObject ...interface{}) {
 	l.print(ctx, logLevelMap[INFO], message, logObject)
 }
 
-func (l *Logger) Notice(ctx context.Context, message string, logObject ...interface{}) {
+func (l *DefaultLog) Notice(ctx context.Context, message string, logObject ...interface{}) {
 	l.print(ctx, logLevelMap[NOTICE], message, logObject)
 }
 
-func (l *Logger) Warning(ctx context.Context, message string, logObject ...interface{}) {
+func (l *DefaultLog) Warning(ctx context.Context, message string, logObject ...interface{}) {
 	l.print(ctx, logLevelMap[WARNING], message, logObject)
 }
 
-func (l *Logger) Error(ctx context.Context, message string, logObject ...interface{}) {
+func (l *DefaultLog) Error(ctx context.Context, message string, logObject ...interface{}) {
 	l.print(ctx, logLevelMap[ERROR], message, logObject)
 }
 
-func (l *Logger) Emergency(ctx context.Context, message string, err error, logObject ...interface{}) {
+func (l *DefaultLog) Emergency(ctx context.Context, message string, err error, logObject ...interface{}) {
 	l.print(ctx, logLevelMap[EMERGENCY], message, logObject)
 	if err == nil {
 		err = fmt.Errorf("%v", message)
@@ -155,12 +157,12 @@ func (l *Logger) Emergency(ctx context.Context, message string, err error, logOb
 	panic(err)
 }
 
-func (l *Logger) Fatal(ctx context.Context, message string, exitCode int, logObject ...interface{}) {
+func (l *DefaultLog) Fatal(ctx context.Context, message string, exitCode int, logObject ...interface{}) {
 	l.print(ctx, logLevelMap[FATAL], message, logObject)
 	os.Exit(exitCode)
 }
 
-func (l *Logger) print(ctx context.Context, level *LogLevel, message string, logObject []interface{}) {
+func (l *DefaultLog) print(ctx context.Context, level *LogLevel, message string, logObject []interface{}) {
 	if level.Level > l.logLevel.Level {
 		return
 	}

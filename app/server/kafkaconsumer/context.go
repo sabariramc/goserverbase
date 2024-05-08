@@ -10,16 +10,16 @@ import (
 
 func (k *KafkaConsumerServer) GetCorrelationParams(headers map[string]string) *log.CorrelationParam {
 	cr := &log.CorrelationParam{}
-	cr.LoadFromHeader(headers)
+	cr.ExtractFromHeader(headers)
 	if cr.CorrelationID == "" {
 		return log.GetDefaultCorrelationParam(k.c.ServiceName)
 	}
 	return cr
 }
 
-func (k *KafkaConsumerServer) GetCustomerID(headers map[string]string) *log.CustomerIdentifier {
-	id := &log.CustomerIdentifier{}
-	id.LoadFromHeader(headers)
+func (k *KafkaConsumerServer) GetCustomerID(headers map[string]string) *log.UserIdentifier {
+	id := &log.UserIdentifier{}
+	id.ExtractFromHeader(headers)
 	return id
 }
 

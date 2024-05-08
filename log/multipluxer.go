@@ -12,9 +12,30 @@ type LogWriter interface {
 	WriteMessage(context.Context, *LogMessage) error
 }
 
+// LogMux interface abstracts how the logger interacts with the the log handlers
 type LogMux interface {
 	Print(context.Context, *LogMessage)
 	AddLogWriter(context.Context, LogWriter)
+}
+
+// DefaultLogMux is a implementation of LogMux and calls the associated log handlers sequentially over a for loop
+type DefaultLogMux struct {
+	writer []LogWriter
+}
+
+func NewDefaultLogMux(logWriterList ...LogWriter) *DefaultLogMux {
+	ls := &DefaultLogMux{writer: logWriterList}
+	return ls
+}
+
+func (ls *DefaultLogMux) Print(ctx context.Context, msg *LogMessage) {
+	for _, w := range ls.writer {
+		_ = w.WriteMessage(ctx, msg)
+	}
+}
+
+func (ls *DefaultLogMux) AddLogWriter(ctx context.Context, writer LogWriter) {
+	ls.writer = append(ls.writer, writer)
 }
 
 type MuxLogMessage struct {
@@ -56,23 +77,4 @@ func (ls *ChanneledLogMux) start() {
 			outChannel <- log
 		}
 	}
-}
-
-type DefaultLogMux struct {
-	writer []LogWriter
-}
-
-func NewDefaultLogMux(logWriterList ...LogWriter) *DefaultLogMux {
-	ls := &DefaultLogMux{writer: logWriterList}
-	return ls
-}
-
-func (ls *DefaultLogMux) Print(ctx context.Context, msg *LogMessage) {
-	for _, w := range ls.writer {
-		_ = w.WriteMessage(ctx, msg)
-	}
-}
-
-func (ls *DefaultLogMux) AddLogWriter(ctx context.Context, writer LogWriter) {
-	ls.writer = append(ls.writer, writer)
 }

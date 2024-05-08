@@ -9,7 +9,7 @@ import (
 )
 
 func DefaultLogMapper(ctx context.Context, msg *log.LogMessage) map[string]any {
-	cr := log.GetCorrelationParam(ctx)
+	cr := log.ExtractCorrelationParam(ctx)
 
 	return map[string]any{
 		"LogMessage":       msg,

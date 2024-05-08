@@ -2,6 +2,7 @@ package log
 
 import "context"
 
+// Log defines interface for logging used in the rest of the package
 type Log interface {
 	NewResourceLogger(resourceName string) Log
 	Audit(ctx context.Context, msg interface{}) error
