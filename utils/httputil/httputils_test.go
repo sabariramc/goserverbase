@@ -18,21 +18,24 @@ import (
 	"gotest.tools/assert"
 )
 
-var HttpUtilTestConfig *testutils.TestConfig
-var HttpUtilTestLogger log.Log
+var HTTPUtilTestConfig *testutils.TestConfig
+var HTTPUtilTestLogger log.Log
+
+const ContentTypeHeader = "Content-Type"
+const MIMEJSON = "application/json"
 
 func init() {
 	testutils.LoadEnv("../../.env")
 	testutils.Initialize()
 
-	HttpUtilTestConfig = testutils.NewConfig()
+	HTTPUtilTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter()
 	lMux := log.NewDefaultLogMux(consoleLogWriter)
-	HttpUtilTestLogger = log.New(context.TODO(), HttpUtilTestConfig.Logger, "AWSTest", lMux, nil)
+	HTTPUtilTestLogger = log.New(context.TODO(), HTTPUtilTestConfig.Logger, "AWSTest", lMux, nil)
 }
 
 func GetCorrelationContext() context.Context {
-	ctx := context.WithValue(context.Background(), log.ContextKeyCorrelation, log.GetDefaultCorrelationParam(HttpUtilTestConfig.App.ServiceName))
+	ctx := context.WithValue(context.Background(), log.ContextKeyCorrelation, log.GetDefaultCorrelationParam(HTTPUtilTestConfig.App.ServiceName))
 	return ctx
 }
 
@@ -41,7 +44,7 @@ const RetryURL = "http://localhost:64000/service/v1/echo/error/b"
 const ErrURL = "http://localhost:80/service/v1/echo/error/b"
 
 func TestHttpUtilGet(t *testing.T) {
-	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger, nil)
+	client := httputil.NewDefaultHTTPClient(HTTPUtilTestLogger, nil)
 	data := make(map[string]any)
 	res, err := client.Get(GetCorrelationContext(), URL, nil, &data, nil)
 	assert.NilError(t, err)
@@ -49,12 +52,12 @@ func TestHttpUtilGet(t *testing.T) {
 }
 
 func TestHttpUtilGetWithBody(t *testing.T) {
-	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger, nil)
+	client := httputil.NewDefaultHTTPClient(HTTPUtilTestLogger, nil)
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
 	}
-	res, err := client.Get(GetCorrelationContext(), URL, &body, &data, map[string]string{"Content-Type": "application/json"})
+	res, err := client.Get(GetCorrelationContext(), URL, &body, &data, map[string]string{ContentTypeHeader: MIMEJSON})
 	assert.NilError(t, err)
 	assert.Equal(t, res.StatusCode, 200)
 	assert.DeepEqual(t, body, data["body"])
@@ -62,12 +65,12 @@ func TestHttpUtilGetWithBody(t *testing.T) {
 }
 
 func TestHttpUtilUnwrapError(t *testing.T) {
-	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger, nil)
+	client := httputil.NewDefaultHTTPClient(HTTPUtilTestLogger, nil)
 	data := 0
 	body := map[string]string{
 		"tag": "Test",
 	}
-	_, err := client.Post(GetCorrelationContext(), URL, &body, &data, map[string]string{"Content-Type": "application/json"})
+	_, err := client.Post(GetCorrelationContext(), URL, &body, &data, map[string]string{ContentTypeHeader: MIMEJSON})
 	if errors.Is(err, httputil.ErrResponseUnmarshal) {
 		return
 	}
@@ -75,7 +78,7 @@ func TestHttpUtilUnwrapError(t *testing.T) {
 }
 
 func TestHttpUtilPost(t *testing.T) {
-	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger, nil)
+	client := httputil.NewDefaultHTTPClient(HTTPUtilTestLogger, nil)
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -88,7 +91,7 @@ func TestHttpUtilPost(t *testing.T) {
 }
 
 func TestHttpUtilPatch(t *testing.T) {
-	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger, nil)
+	client := httputil.NewDefaultHTTPClient(HTTPUtilTestLogger, nil)
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -101,7 +104,7 @@ func TestHttpUtilPatch(t *testing.T) {
 }
 
 func TestHttpUtilPut(t *testing.T) {
-	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger, nil)
+	client := httputil.NewDefaultHTTPClient(HTTPUtilTestLogger, nil)
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -114,7 +117,7 @@ func TestHttpUtilPut(t *testing.T) {
 }
 
 func TestHttpUtilDelete(t *testing.T) {
-	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger, nil)
+	client := httputil.NewDefaultHTTPClient(HTTPUtilTestLogger, nil)
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -127,7 +130,7 @@ func TestHttpUtilDelete(t *testing.T) {
 }
 
 func TestHttpUtilRetry(t *testing.T) {
-	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger, nil)
+	client := httputil.NewDefaultHTTPClient(HTTPUtilTestLogger, nil)
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -137,7 +140,7 @@ func TestHttpUtilRetry(t *testing.T) {
 }
 
 func TestHttpUtilRetryError(t *testing.T) {
-	client := httputil.NewDefaultHTTPClient(HttpUtilTestLogger, nil)
+	client := httputil.NewDefaultHTTPClient(HTTPUtilTestLogger, nil)
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -151,7 +154,7 @@ func TestHttpUtilRetryError(t *testing.T) {
 func TestConnectionReuse(t *testing.T) {
 	ht := http.DefaultTransport.(*http.Transport).Clone()
 	ht.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	client := httputil.New(HttpUtilTestLogger, nil, &http.Client{Transport: ht}, 4, time.Second*1, time.Second*5)
+	client := httputil.New(HTTPUtilTestLogger, nil, &http.Client{Transport: ht}, 4, time.Second*1, time.Second*5)
 	var wg sync.WaitGroup
 	body, _ := json.Marshal(map[string]string{"fasdfsda": "fasdfas", "fasdfas": "fasdfas"})
 	for i := 0; i < 10; i++ {
@@ -161,7 +164,7 @@ func TestConnectionReuse(t *testing.T) {
 			ctx := GetCorrelationContext()
 			for i := 0; i < 100; i++ {
 				res, _ := client.Post(ctx, "https://localhost:60006/service/v1/test/all", bytes.NewBuffer(body), nil, map[string]string{
-					"Content-Type": "application/json",
+					ContentTypeHeader: MIMEJSON,
 				})
 				assert.Assert(t, res.ProtoAtLeast(2, 0))
 			}
@@ -171,7 +174,7 @@ func TestConnectionReuse(t *testing.T) {
 }
 
 func TestH2CClient(t *testing.T) {
-	client := httputil.NewH2CClient(HttpUtilTestLogger, nil, 4, time.Second, 4*time.Second)
+	client := httputil.NewH2CClient(HTTPUtilTestLogger, nil, 4, time.Second, 4*time.Second)
 	var wg sync.WaitGroup
 	ctx := GetCorrelationContext()
 	body, _ := json.Marshal(map[string]any{"sabariram": 10})
@@ -180,7 +183,7 @@ func TestH2CClient(t *testing.T) {
 		go func() {
 			defer wg.Done()
 			for j := 0; j < 100; j++ {
-				res, err := client.Get(ctx, "https://localhost:60007/meta/health", body, nil, map[string]string{"Content-Type": "application/json"})
+				res, err := client.Get(ctx, "https://localhost:60007/meta/health", body, nil, map[string]string{ContentTypeHeader: MIMEJSON})
 				assert.NilError(t, err)
 				assert.Assert(t, res.StatusCode < 300)
 			}

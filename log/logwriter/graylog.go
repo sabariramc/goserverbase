@@ -34,35 +34,35 @@ type GraylogConfig struct {
 	LongMessageLimit  uint
 }
 
-// GraylogWriter represents an established graylog connection
-type GraylogWriter struct {
+// GraylogLogWriter write logs to Graylog server
+type GraylogLogWriter struct {
 	writer   gelf.Writer
 	errorLog log.LogWriter
 	c        GraylogConfig
 }
 
-func NewGraylogTCP(errorLog log.LogWriter, c GraylogConfig) (*GraylogWriter, error) {
+func NewGraylogTCP(errorLog log.LogWriter, c GraylogConfig) (*GraylogLogWriter, error) {
 	gelfWriter, err := gelf.NewTCPWriter(fmt.Sprintf("%s:%d", c.Address, c.Port))
 	if err != nil {
 		return nil, err
 	}
 
-	return &GraylogWriter{writer: gelfWriter, errorLog: errorLog, c: c}, nil
+	return &GraylogLogWriter{writer: gelfWriter, errorLog: errorLog, c: c}, nil
 }
 
-func NewGraylogUDP(errorLog log.LogWriter, c GraylogConfig) (*GraylogWriter, error) {
+func NewGraylogUDP(errorLog log.LogWriter, c GraylogConfig) (*GraylogLogWriter, error) {
 	gelfWriter, err := gelf.NewUDPWriter(fmt.Sprintf("%s:%d", c.Address, c.Port))
 	if err != nil {
 		return nil, err
 	}
-	return &GraylogWriter{writer: gelfWriter, errorLog: errorLog, c: c}, nil
+	return &GraylogLogWriter{writer: gelfWriter, errorLog: errorLog, c: c}, nil
 }
 
-func (g *GraylogWriter) GetBufferSize() int {
+func (g *GraylogLogWriter) GetBufferSize() int {
 	return -1
 }
 
-func (g *GraylogWriter) Start(logChannel chan log.MuxLogMessage) {
+func (g *GraylogLogWriter) Start(logChannel chan log.MuxLogMessage) {
 	for mxMsg := range logChannel {
 		_ = g.WriteMessage(mxMsg.Ctx, &mxMsg.LogMessage)
 	}
@@ -75,7 +75,7 @@ func truncate(s *string, l uint) string {
 	return (*s)[:l]
 }
 
-func (g *GraylogWriter) WriteMessage(ctx context.Context, msg *log.LogMessage) (err error) {
+func (g *GraylogLogWriter) WriteMessage(ctx context.Context, msg *log.LogMessage) (err error) {
 	cr := log.ExtractCorrelationParam(ctx)
 	errorMessage := log.LogMessage{
 		LogLevel:  log.GetLogLevelMap(log.ERROR),

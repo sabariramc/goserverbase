@@ -9,30 +9,31 @@ import (
 	"github.com/sabariramc/goserverbase/v5/log"
 )
 
-type SyslogWriter struct {
+// SyslogLogWriter writes log to syslog
+type SyslogLogWriter struct {
 	logger *stlLog.Logger
 }
 
-func NewSyslogWriterWriter(ctx context.Context, syslogTag, prefix string) *SyslogWriter {
+func NewSyslogWriterWriter(ctx context.Context, syslogTag, prefix string) *SyslogLogWriter {
 	logWriter, err := syslog.New(syslog.LOG_SYSLOG, syslogTag)
 	if err != nil {
 		panic(fmt.Errorf("NewSyslogWriterWriter: unable to set log file: %w", err))
 	}
-	syslog := &SyslogWriter{logger: stlLog.New(logWriter, prefix, stlLog.LstdFlags)}
+	syslog := &SyslogLogWriter{logger: stlLog.New(logWriter, prefix, stlLog.LstdFlags)}
 	return syslog
 }
 
-func (s *SyslogWriter) GetBufferSize() int {
+func (s *SyslogLogWriter) GetBufferSize() int {
 	return 1
 }
 
-func (c *SyslogWriter) Start(logChannel chan log.MuxLogMessage) {
+func (c *SyslogLogWriter) Start(logChannel chan log.MuxLogMessage) {
 	for log := range logChannel {
 		_ = c.WriteMessage(log.Ctx, &log.LogMessage)
 	}
 }
 
-func (c *SyslogWriter) WriteMessage(ctx context.Context, l *log.LogMessage) error {
+func (c *SyslogLogWriter) WriteMessage(ctx context.Context, l *log.LogMessage) error {
 	cr := log.ExtractCorrelationParam(ctx)
 	c.logger.Printf("[%v] [%v] [%v] [%v] [%v] [%v] [%v]\n", l.Timestamp, l.LogLevelName, cr.CorrelationID, l.ServiceName, l.Message, GetLogObjectType(l.LogObject), l.LogObject)
 	return nil

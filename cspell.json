@@ -5,35 +5,44 @@
     "language": "en",
     // words - list of words to be always considered correct
     "words": [
-        "sabariramc",
         "baseapp",
-        "goserverbase",
-        "csfle",
-        "testutils",
-        "gotest",
-        "godotenv",
-        "joho",
-        "sabariram",
-        "SASL",
-        "shopspring",
-        "confluentinc",
-        "logwriter",
         "bson",
         "bsoncodec",
-        "varchar",
         "bsonrw",
+        "CiphertextBlob",
+        "confluentinc",
+        "csfle",
+        "gelf",
+        "godotenv",
+        "goserverbase",
+        "gotest",
+        "httprouter",
+        "joho",
+        "julienschmidt",
+        "logwriter",
         "mongocryptd",
         "pidfilepath",
         "PKCS7",
-        "httprouter",
-        "julienschmidt",
-        "vasile",
-        "CiphertextBlob"
+        "retryablehttp",
+        "sabariram",
+        "sabariramc",
+        "SASL",
+        "shopspring",
+        "testutils",
+        "varchar",
+        "vasile"
     ],
     // flagWords - list of words to be always considered incorrect
     // This is useful for offensive words and common spelling errors.
     // For example "hte" should be "the"
-    "ignorePaths":["docker-compose.yml", "go.mod", "go.sum", "cspell.json","baseapp/samples/**", "**_test.go"],
+    "ignorePaths": [
+        "docker-compose.yml",
+        "go.mod",
+        "go.sum",
+        "cspell.json",
+        "baseapp/samples/**",
+        "**_test.go"
+    ],
     "flagWords": [
         "hte"
     ]

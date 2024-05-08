@@ -19,25 +19,27 @@ func DefaultLogMapper(ctx context.Context, msg *log.LogMessage) map[string]any {
 		"Message":          msg.Message,
 		"LogObject":        ParseLogObject(msg.LogObject, false),
 		"FilePtr":          msg.File,
+		"Timestamp":        msg.Timestamp,
 	}
 }
 
 type LogMapper func(context.Context, *log.LogMessage) map[string]any
 
-type JSONLConsoleWriter struct {
+// JSONLLogWriter writes log to console in JSONL format
+type JSONLLogWriter struct {
 	logMapper LogMapper
 }
 
-func NewJSONLConsoleWriter(mapper LogMapper) *JSONLConsoleWriter {
+func NewJSONLConsoleWriter(mapper LogMapper) *JSONLLogWriter {
 	if mapper == nil {
 		mapper = DefaultLogMapper
 	}
-	return &JSONLConsoleWriter{
+	return &JSONLLogWriter{
 		logMapper: mapper,
 	}
 }
 
-func (c *JSONLConsoleWriter) WriteMessage(ctx context.Context, l *log.LogMessage) error {
+func (c *JSONLLogWriter) WriteMessage(ctx context.Context, l *log.LogMessage) error {
 	msg := c.logMapper(ctx, l)
 	blob, _ := json.Marshal(msg)
 	fmt.Println(string(blob))
