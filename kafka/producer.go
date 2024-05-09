@@ -12,7 +12,7 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
-// Producer is a high level object that extends Writer with auto flush and implements Shutdown hook
+// Producer is a high level api that extends Writer with time and count based auto flush and implements Shutdown hook
 type Producer struct {
 	*Writer
 	config                  KafkaProducerConfig

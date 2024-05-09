@@ -14,6 +14,7 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
+// Poller is a high level api that extends Reader with time and count based auto commit and implements Shutdown hook
 type Poller struct {
 	*Reader
 	config           KafkaConsumerConfig
@@ -74,6 +75,7 @@ func NewPoller(ctx context.Context, logger log.Log, config KafkaConsumerConfig, 
 	return k, nil
 }
 
+// Poll fetches message from broker and passe it the channel in the argument, this function is meant to be run as a goroutine
 func (k *Poller) Poll(ctx context.Context, ch chan<- *kafka.Message) error {
 	var pollErr, commitErr error
 	defer close(ch)
@@ -144,6 +146,7 @@ func (k *Poller) commit(ctx context.Context) error {
 	return nil
 }
 
+// autoCommit handles time based background commit to broker incase of auto commit poller
 func (k *Poller) autoCommit(ctx context.Context) {
 	timeout, _ := context.WithTimeout(context.Background(), time.Duration(k.config.AutoCommitIntervalInMs*uint64(time.Millisecond)))
 	defer k.wg.Done()
@@ -152,13 +155,13 @@ func (k *Poller) autoCommit(ctx context.Context) {
 	for {
 		select {
 		case <-timeout.Done():
-			err := k.Commit(ctx)
+			err := k.commit(ctx)
 			if err != nil {
-				k.log.Emergency(ctx, "Error while writing kafka message", fmt.Errorf("Consumer.autoCommit: %w", err), nil)
+				k.log.Emergency(ctx, "Error while writing kafka message", fmt.Errorf("Consumer.autoCommit: %w", err))
 			}
 			timeout, _ = context.WithTimeout(context.Background(), time.Duration(k.config.AutoCommitIntervalInMs*uint64(time.Millisecond)))
 		case <-ctx.Done():
-			err := k.Commit(nCtx)
+			err := k.commit(nCtx)
 			if err != nil {
 				k.log.Error(nCtx, "error in auto commit", err)
 			}
