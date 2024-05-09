@@ -9,14 +9,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v5/kafka/api"
 	"github.com/sabariramc/goserverbase/v5/log"
 	"github.com/sabariramc/goserverbase/v5/utils"
 	"github.com/segmentio/kafka-go"
 )
 
 type Poller struct {
-	*api.Reader
+	*Reader
 	config           KafkaConsumerConfig
 	log              log.Log
 	topics           []string
@@ -24,7 +23,7 @@ type Poller struct {
 	wg               sync.WaitGroup
 }
 
-func NewPoller(ctx context.Context, logger log.Log, config KafkaConsumerConfig, tr api.ConsumerTracer, topics ...string) (*Poller, error) {
+func NewPoller(ctx context.Context, logger log.Log, config KafkaConsumerConfig, tr ConsumerTracer, topics ...string) (*Poller, error) {
 	if config.MaxBuffer <= 0 {
 		config.MaxBuffer = 100
 	}
@@ -63,7 +62,7 @@ func NewPoller(ctx context.Context, logger log.Log, config KafkaConsumerConfig, 
 	k := &Poller{
 		log:    logger.NewResourceLogger("KafkaConsumer"),
 		config: config,
-		Reader: api.NewReader(ctx, logger, r, config.MaxBuffer, tr),
+		Reader: NewReader(ctx, logger, r, config.MaxBuffer, tr),
 		topics: topics,
 	}
 	if k.config.AutoCommit {
@@ -121,7 +120,7 @@ outer:
 func (k *Poller) storeMessage(ctx context.Context, msg *kafka.Message) error {
 	if k.config.AutoCommit {
 		err := k.StoreMessage(ctx, msg)
-		if err == api.ErrReaderBufferFull {
+		if err == ErrReaderBufferFull {
 			err = k.Commit(ctx)
 			if err != nil {
 				return err

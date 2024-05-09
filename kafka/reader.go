@@ -1,4 +1,4 @@
-package api
+package kafka
 
 import (
 	"context"
@@ -14,6 +14,7 @@ type ConsumerTracer interface {
 	span.SpanOp
 }
 
+// Reader extends kafka.Reader(github.com/segmentio/kafka-go) with batch commit, tracing and StatusCheck hook
 type Reader struct {
 	*kafka.Reader
 	log              log.Log
@@ -77,4 +78,8 @@ func (k *Reader) Close(ctx context.Context) error {
 		return fmt.Errorf("kafka.Reader.Close: error in closing reader: %w", err)
 	}
 	return nil
+}
+
+func (k *Reader) StatusCheck(ctx context.Context) (any, error) {
+	return k.Stats(), nil
 }

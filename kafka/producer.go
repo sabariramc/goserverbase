@@ -7,14 +7,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v5/kafka/api"
 	"github.com/sabariramc/goserverbase/v5/log"
 	"github.com/sabariramc/goserverbase/v5/utils"
 	"github.com/segmentio/kafka-go"
 )
 
+// Producer is a high level object that extends Writer with auto flush and implements Shutdown hook
 type Producer struct {
-	*api.Writer
+	*Writer
 	config                  KafkaProducerConfig
 	log                     log.Log
 	topic                   string
@@ -24,7 +24,7 @@ type Producer struct {
 	isBatch                 bool
 }
 
-func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfig, tr api.ProduceTracer) (*Producer, error) {
+func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfig, tr ProduceTracer) (*Producer, error) {
 	if config.Batch && config.Async {
 		return nil, fmt.Errorf("NewProducer: `Batch` and `Async` are mutually exclusive")
 	}
@@ -75,7 +75,7 @@ func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfi
 			ctx:     log.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam),
 		}
 	}
-	writer := api.NewWriter(ctx, p, config.BatchMaxBuffer, logger, tr)
+	writer := NewWriter(ctx, p, config.BatchMaxBuffer, logger, tr)
 	isTopicSpecificProducer := false
 	if config.Topic != "" {
 		isTopicSpecificProducer = true
@@ -98,6 +98,7 @@ func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfi
 	return k, nil
 }
 
+// ProduceMessage writes message(utils.Message) to the topic with given key and headers, append correlation and user identity header
 func (k *Producer) ProduceMessage(ctx context.Context, key string, message *utils.Message, headers map[string]string) (err error) {
 	blob, err := json.Marshal(message)
 	if err != nil {
@@ -105,9 +106,10 @@ func (k *Producer) ProduceMessage(ctx context.Context, key string, message *util
 		k.log.Error(ctx, "Message", message)
 		return fmt.Errorf("Producer.ProduceMessage: error marshalling message: %w", err)
 	}
-	return k.ProduceToTopic(ctx, k.topic, key, blob, headers)
+	return k.Produce(ctx, k.topic, key, blob, headers)
 }
 
+// ProduceMessageWithTopic writes message(utils.Message) to a topic with given key and headers, append correlation and user identity header
 func (k *Producer) ProduceMessageWithTopic(ctx context.Context, topic, key string, message *utils.Message, headers map[string]string) (err error) {
 	blob, err := json.Marshal(message)
 	if err != nil {
@@ -115,13 +117,14 @@ func (k *Producer) ProduceMessageWithTopic(ctx context.Context, topic, key strin
 		k.log.Error(ctx, "Message", message)
 		return fmt.Errorf("Producer.ProduceMessageWithTopic: error marshalling message: %w", err)
 	}
-	return k.ProduceToTopic(ctx, topic, key, blob, headers)
+	return k.Produce(ctx, topic, key, blob, headers)
 }
 
-func (k *Producer) ProduceToTopic(ctx context.Context, topic, key string, message []byte, headers map[string]string) (err error) {
+// Produce writes message to a topic with given key and headers, append correlation and user identity header
+func (k *Producer) Produce(ctx context.Context, topic, key string, message []byte, headers map[string]string) (err error) {
 	if k.isTopicSpecificProducer && topic != k.topic {
-		err := fmt.Errorf("Producer.ProduceToTopic: topic is set for producer use `Produce` method")
-		k.log.Error(ctx, "topic is set for producer use `Produce` method", err)
+		err := fmt.Errorf("Producer.Produce: topic is set for producer use `Producer.ProduceMessage` method")
+		k.log.Error(ctx, "topic is set for producer use `Producer.ProduceMessage` method", err)
 		return err
 	}
 	if headers == nil {
@@ -149,7 +152,7 @@ func (k *Producer) ProduceToTopic(ctx context.Context, topic, key string, messag
 		msg.Topic = topic
 	}
 	err = k.Send(ctx, msg)
-	if err == api.ErrWriterBufferFull {
+	if err == ErrWriterBufferFull {
 		err = k.Flush(ctx)
 		if err != nil {
 			return err
@@ -159,6 +162,7 @@ func (k *Producer) ProduceToTopic(ctx context.Context, topic, key string, messag
 	return nil
 }
 
+// autoFlush handles time based background write to broker incase of batch producer
 func (k *Producer) autoFlush(ctx context.Context) {
 	defer k.wg.Done()
 	nCtx := context.WithoutCancel(ctx)
@@ -201,8 +205,4 @@ func (k *Producer) Name(ctx context.Context) string {
 
 func (k *Producer) Shutdown(ctx context.Context) error {
 	return k.Close(ctx)
-}
-
-func (k *Producer) HealthCheck(ctx context.Context) error {
-	return nil
 }

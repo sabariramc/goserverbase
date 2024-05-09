@@ -27,14 +27,14 @@ func (s *SyslogLogWriter) GetBufferSize() int {
 	return 1
 }
 
-func (c *SyslogLogWriter) Start(logChannel chan log.MuxLogMessage) {
+func (s *SyslogLogWriter) Start(logChannel chan log.MuxLogMessage) {
 	for log := range logChannel {
-		_ = c.WriteMessage(log.Ctx, &log.LogMessage)
+		_ = s.WriteMessage(log.Ctx, &log.LogMessage)
 	}
 }
 
-func (c *SyslogLogWriter) WriteMessage(ctx context.Context, l *log.LogMessage) error {
+func (s *SyslogLogWriter) WriteMessage(ctx context.Context, l *log.LogMessage) error {
 	cr := log.ExtractCorrelationParam(ctx)
-	c.logger.Printf("[%v] [%v] [%v] [%v] [%v] [%v] [%v]\n", l.Timestamp, l.LogLevelName, cr.CorrelationID, l.ServiceName, l.Message, GetLogObjectType(l.LogObject), l.LogObject)
+	s.logger.Printf("[%v] [%v] [%v] [%v] [%v] [%v] [%v]\n", l.Timestamp, l.LogLevelName, cr.CorrelationID, l.ServiceName, l.Message, GetLogObjectType(l.LogObject), l.LogObject)
 	return nil
 }

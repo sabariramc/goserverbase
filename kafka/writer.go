@@ -1,4 +1,5 @@
-package api
+// Package kafka wraps github.com/segmentio/kafka-go api and adds additional functionalities eg. tracing
+package kafka
 
 import (
 	"context"
@@ -15,20 +16,26 @@ type ProduceTracer interface {
 	span.SpanOp
 }
 
+// Writer extends kafka.Writer(github.com/segmentio/kafka-go) with batch write, tracing and StatusCheck hook
 type Writer struct {
 	*kafka.Writer
+	//messageList - storage for batch messages
 	messageList []kafka.Message
 	produceLock sync.Mutex
-	bufferLen   int
-	log         log.Log
-	msgCh       chan kafka.Message
-	wg          sync.WaitGroup
-	idx         int
-	tr          ProduceTracer
+	//bufferLen - max size of the batch
+	bufferLen int
+	log       log.Log
+	msgCh     chan kafka.Message
+	wg        sync.WaitGroup
+	idx       int
+	tr        ProduceTracer
 }
 
 var ErrWriterBufferFull = fmt.Errorf("Reader.Send: Buffer full")
 
+/*
+NewWriter creates a new Writer
+*/
 func NewWriter(ctx context.Context, w *kafka.Writer, bufferLen int, log log.Log, tr ProduceTracer) *Writer {
 	if w.Async {
 		log.Notice(ctx, "Kafka writer is set to async mode", nil)
@@ -43,6 +50,7 @@ func NewWriter(ctx context.Context, w *kafka.Writer, bufferLen int, log log.Log,
 	}
 }
 
+// Send writes the message broker in async mode / batch mode
 func (w *Writer) Send(ctx context.Context, msg *kafka.Message) error {
 	if w.tr != nil {
 		var crSpan span.Span
@@ -66,6 +74,7 @@ func (w *Writer) Send(ctx context.Context, msg *kafka.Message) error {
 	return nil
 }
 
+// Flush writes the message batch to the broker
 func (w *Writer) Flush(ctx context.Context) error {
 	w.produceLock.Lock()
 	defer w.produceLock.Unlock()
@@ -98,4 +107,8 @@ func (w *Writer) Close(ctx context.Context) error {
 		return fmt.Errorf("kafka.Writer.Close: error in closing writer: %w", err)
 	}
 	return nil
+}
+
+func (w *Writer) StatusCheck(ctx context.Context) (any, error) {
+	return w.Stats(), nil
 }
