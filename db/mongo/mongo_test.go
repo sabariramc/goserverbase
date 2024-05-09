@@ -13,7 +13,7 @@ import (
 
 type TestVal struct {
 	mongo.BaseMongoModel `bson:",inline"`
-	TestId               string          `bson:"testId"`
+	TestID               string          `bson:"testId"`
 	IntVal               int64           `bson:"intVal"`
 	DecimalVal           decimal.Decimal `bson:"decimalVal"`
 	StrVal               string          `bson:"strVal"`
@@ -26,7 +26,7 @@ func GetSampleData() *TestVal {
 	val1, _ := decimal.NewFromString("123.1232")
 	val2, _ := decimal.NewFromString("123.1232")
 	data := &TestVal{}
-	data.TestId = utils.GenerateID(10, "test_")
+	data.TestID = utils.GenerateID(10, "test_")
 	data.SetCreateParam("Random value")
 	data.StrVal = "value1"
 	data.IntVal = 123
@@ -67,7 +67,7 @@ func TestMongoCollection(t *testing.T) {
 	coll := client.Database("GOTEST").Collection("Plain")
 	input := GetSampleData()
 	coll.InsertOne(ctx, input)
-	cur := coll.FindOne(ctx, map[string]string{"testId": input.TestId})
+	cur := coll.FindOne(ctx, map[string]string{"testId": input.TestID})
 	res := &TestVal{}
 	err = cur.Decode(res)
 	assert.NilError(t, err)
@@ -76,7 +76,7 @@ func TestMongoCollection(t *testing.T) {
 	res.BaseMongoDocument = nil
 	assert.DeepEqual(t, res, input)
 	coll.UpdateByID(ctx, res.ID, map[string]map[string]interface{}{"$set": {"strVal": "val2"}})
-	cur = coll.FindOne(ctx, map[string]string{"testId": input.TestId})
+	cur = coll.FindOne(ctx, map[string]string{"testId": input.TestID})
 	res = &TestVal{}
 	err = cur.Decode(res)
 	assert.NilError(t, err)

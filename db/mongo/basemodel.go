@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// BaseMongoDocument defines a simple base struct for mongo document
 type BaseMongoDocument struct {
 	CreatedAt *time.Time `json:"createdAt,omitempty" bson:"createdAt,omitempty"`
 	UpdatedAt *time.Time `json:"updatedAt,omitempty" bson:"updatedAt,omitempty"`
@@ -27,6 +28,7 @@ func (b *BaseMongoDocument) SetUpdateParam(actionBy string) {
 	b.UpdatedBy = &actionBy
 }
 
+// BaseMongoModel extends BaseMongoDocument with the bson objectId
 type BaseMongoModel struct {
 	ID                 *primitive.ObjectID `json:"-" bson:"_id,omitempty"`
 	*BaseMongoDocument `bson:",inline"`

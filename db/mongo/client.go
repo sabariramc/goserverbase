@@ -1,3 +1,4 @@
+// Package mongo extends the functionality of go.mongodb.org/mongo-driver/mongo with tracing, logging and implements Shutdown and HealthCheck hooks
 package mongo
 
 import (
@@ -15,6 +16,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 )
 
+// Mongo extends mongo.Client with default options setting and logging. Enable mongo internal log with a flag
 type Mongo struct {
 	*mongo.Client
 	log        log.Log
@@ -23,13 +25,6 @@ type Mongo struct {
 
 type Tracer interface {
 	MongoDB() *event.CommandMonitor
-}
-
-func NewWithAWSRoleAuth(ctx context.Context, serviceName string, logger log.Log, c Config, t Tracer, opts ...*options.ClientOptions) (*Mongo, error) {
-	opts = append(opts, options.Client().SetAuth(options.Credential{
-		AuthMechanism: "MONGODB-AWS",
-	}))
-	return NewWithDefaultOptions(ctx, serviceName, logger, c, t, opts...)
 }
 
 func NewWithDefaultOptions(ctx context.Context, serviceName string, logger log.Log, c Config, t Tracer, opts ...*options.ClientOptions) (*Mongo, error) {

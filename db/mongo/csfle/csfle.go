@@ -1,3 +1,4 @@
+// Package csfle implements a boilerplate code for the creation of a CSFLE mongoDB client
 package csfle
 
 import (
