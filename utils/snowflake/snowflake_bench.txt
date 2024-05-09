@@ -1,0 +1,25 @@
+goos: linux
+goarch: amd64
+pkg: github.com/sabariramc/goserverbase/v5/utils/snowflake
+cpu: 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz
+BenchmarkSnowflake/goroutines-8-8         	 2311456	       453.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSnowflake/goroutines-408-8       	 2385620	       512.7 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSnowflake/goroutines-808-8       	 2387419	       500.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSnowflake/goroutines-1208-8      	 2443531	       516.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSnowflake/goroutines-1608-8      	 2426834	       536.1 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSnowflake/goroutines-2008-8      	 2322592	       531.2 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSnowflake/goroutines-2408-8      	 2441066	       507.3 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSnowflake/goroutines-2808-8      	 2478417	       518.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSnowflake/goroutines-3208-8      	 2437497	       509.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSnowflake/goroutines-3608-8      	 2538768	       511.3 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSnowflake/goroutines-4008-8      	 2524021	       501.0 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSnowflake/goroutines-4408-8      	 2528781	       538.6 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSnowflake/goroutines-4808-8      	 2603144	       573.5 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSnowflake/goroutines-5208-8      	 2594269	       510.3 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSnowflake/goroutines-5608-8      	 2596576	       509.9 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSnowflake/goroutines-6008-8      	 2664158	       509.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSnowflake/goroutines-6408-8      	 2608719	       557.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSnowflake/goroutines-6808-8      	 2530183	       497.8 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSnowflake/goroutines-7208-8      	 2678696	       528.4 ns/op	       0 B/op	       0 allocs/op
+BenchmarkSnowflake/goroutines-7608-8      	 2714437	       504.7 ns/op	       0 B/op	       0 allocs/op
+PASS
