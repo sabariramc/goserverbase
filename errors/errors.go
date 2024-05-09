@@ -1,3 +1,4 @@
+// Package errors implements custom errors with additional attributes
 package errors
 
 import (
@@ -10,8 +11,9 @@ type CustomError struct {
 	ErrorMessage     string      `json:"errorMessage"`
 	ErrorDescription interface{} `json:"errorDescription"`
 	ErrorCode        string      `json:"errorCode"`
-	Notify           bool        `json:"-"`
-	OriginalError    string      `json:"error"`
+	//Notify works in conjunction with notifer.Notifier
+	Notify        bool   `json:"-"`
+	OriginalError string `json:"error"`
 }
 
 func (e *CustomError) Error() string {
