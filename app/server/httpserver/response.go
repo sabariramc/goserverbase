@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"runtime"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sabariramc/goserverbase/v5/log"
@@ -68,13 +67,7 @@ func (h *HTTPServer) WriteResponse(ctx context.Context, w http.ResponseWriter, c
 	h.WriteResponseWithStatusCode(ctx, w, http.StatusOK, contentType, responseBody)
 }
 
-func (h *HTTPServer) WriteErrorResponse(ctx context.Context, w http.ResponseWriter, err error, includeStackTrace bool) {
-	stackTrace := ""
-	if includeStackTrace {
-		stack := []byte{}
-		runtime.Stack(stack, false)
-		stackTrace = string(stack)
-	}
+func (h *HTTPServer) WriteErrorResponse(ctx context.Context, w http.ResponseWriter, err error, stackTrace string) {
 	statusCode, body := h.ProcessError(ctx, stackTrace, err)
 	span, spanOk := h.GetSpanFromContext(ctx)
 	if spanOk {

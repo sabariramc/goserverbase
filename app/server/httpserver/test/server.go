@@ -76,7 +76,7 @@ func (s *server) testAll(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]any)
 	err := s.LoadRequestJSONBody(r, &data)
 	if err != nil {
-		s.WriteErrorResponse(ctx, w, errors.NewHTTPClientError(400, "invalidJsonBody", "error marshalling json body", nil, nil, err), false)
+		s.WriteErrorResponse(ctx, w, errors.NewHTTPClientError(400, "invalidJsonBody", "error marshalling json body", nil, nil, err), "")
 		return
 	}
 	s.coll.InsertOne(ctx, data)
@@ -117,7 +117,7 @@ func (s *server) testKafka(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]any)
 	err := s.LoadRequestJSONBody(r, &data)
 	if err != nil {
-		s.WriteErrorResponse(ctx, w, errors.NewHTTPClientError(400, "invalidJsonBody", "error marshalling json body", nil, nil, err), false)
+		s.WriteErrorResponse(ctx, w, errors.NewHTTPClientError(400, "invalidJsonBody", "error marshalling json body", nil, nil, err), "")
 		return
 	}
 	msg := utils.NewMessage("testFlight", "test")
@@ -127,7 +127,7 @@ func (s *server) testKafka(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) internalServerError(w http.ResponseWriter, r *http.Request) {
-	s.WriteErrorResponse(r.Context(), w, errors.NewCustomError("hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, true, nil), false)
+	s.WriteErrorResponse(r.Context(), w, errors.NewCustomError("hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, true, nil), "")
 }
 
 func (s *server) panicUsingLog(w http.ResponseWriter, r *http.Request) {
@@ -139,7 +139,7 @@ func (s *server) panic(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) unauthorizedAccess(w http.ResponseWriter, r *http.Request) {
-	s.WriteErrorResponse(r.Context(), w, errors.NewHTTPClientError(403, "hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, nil), false)
+	s.WriteErrorResponse(r.Context(), w, errors.NewHTTPClientError(403, "hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, nil), "")
 }
 
 func (s *server) printHttpVersion() gin.HandlerFunc {
