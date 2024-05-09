@@ -9,7 +9,7 @@ import (
 	ddtrace "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 
-// A MessageCarrier injects and extracts traces from a sarama.ProducerMessage.
+// MessageCarrier implements datadog carrier interface for kafka.Message(github.com/segmentio/kafka-go)
 type MessageCarrier struct {
 	msg *kafka.Message
 }
@@ -45,7 +45,7 @@ func (c MessageCarrier) Set(key, val string) {
 	})
 }
 
-// NewMessageCarrier creates a new MessageCarrier.
+// NewKafkaCarrier creates a new MessageCarrier.
 func NewKafkaCarrier(msg *kafka.Message) MessageCarrier {
 	return MessageCarrier{msg}
 }

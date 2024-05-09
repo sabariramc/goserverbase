@@ -1,3 +1,4 @@
+// Package ddtrace is the implementation of instrumentation.Tracer for datadog
 package ddtrace
 
 import (

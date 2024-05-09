@@ -1,3 +1,4 @@
+// Package otel is the implementation of instrumentation.Tracer for opentelemetry
 package otel
 
 import (
@@ -27,9 +28,9 @@ type tracer struct {
 	version string
 }
 
-func (tm *tracerManager) Tracer(name string, opts ...trace.TracerOption) trace.Tracer {
-	tr := tm.TracerProvider.Tracer(name, opts...)
-	return &tracer{Tracer: tr, env: tm.env, version: tm.version}
+func (t *tracerManager) Tracer(name string, opts ...trace.TracerOption) trace.Tracer {
+	tr := t.TracerProvider.Tracer(name, opts...)
+	return &tracer{Tracer: tr, env: t.env, version: t.version}
 }
 
 func (t *tracer) Start(ctx context.Context, spanName string, opts ...trace.SpanStartOption) (context.Context, trace.Span) {

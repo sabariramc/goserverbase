@@ -1,3 +1,4 @@
+// Package span define the interface for the tracing span for the rest of the package
 package span
 
 import "context"

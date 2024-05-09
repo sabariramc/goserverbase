@@ -11,15 +11,14 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// HeaderCarrier adapts kafka.Message to satisfy the TextMapCarrier interface.
-
-type KafkaCarrier struct {
+// MessageCarrier implements otel TextMapCarrier interface for kafka.Message(github.com/segmentio/kafka-go)
+type MessageCarrier struct {
 	*cKafka.Message
 	header map[string]string
 }
 
-func NewKafkaCarrier(msg *kafka.Message) *KafkaCarrier {
-	cr := &KafkaCarrier{
+func NewMessageCarrier(msg *kafka.Message) *MessageCarrier {
+	cr := &MessageCarrier{
 		Message: &cKafka.Message{
 			Message: msg,
 		},
@@ -29,7 +28,7 @@ func NewKafkaCarrier(msg *kafka.Message) *KafkaCarrier {
 }
 
 // Get returns the value associated with the passed key.
-func (kc *KafkaCarrier) Get(key string) string {
+func (kc *MessageCarrier) Get(key string) string {
 	val, ok := kc.header[key]
 	if !ok {
 		return ""
@@ -38,7 +37,7 @@ func (kc *KafkaCarrier) Get(key string) string {
 }
 
 // Set stores the key-value pair.
-func (kc *KafkaCarrier) Set(key string, value string) {
+func (kc *MessageCarrier) Set(key string, value string) {
 	kc.Message.Headers = append(kc.Message.Headers, kafka.Header{
 		Key:   key,
 		Value: []byte(value),
@@ -46,7 +45,7 @@ func (kc *KafkaCarrier) Set(key string, value string) {
 }
 
 // Keys lists the keys stored in this carrier.
-func (kc *KafkaCarrier) Keys() []string {
+func (kc *MessageCarrier) Keys() []string {
 	keys := make([]string, 0, len(kc.header))
 	for k := range kc.header {
 		keys = append(keys, k)
@@ -55,11 +54,11 @@ func (kc *KafkaCarrier) Keys() []string {
 }
 
 func (t *tracerManager) KafkaInject(ctx context.Context, msg *kafka.Message) {
-	otel.GetTextMapPropagator().Inject(ctx, NewKafkaCarrier(msg))
+	otel.GetTextMapPropagator().Inject(ctx, NewMessageCarrier(msg))
 }
 
 func (t *tracerManager) StartKafkaSpanFromMessage(ctx context.Context, msg *kafka.Message) (context.Context, span.Span) {
-	msgCtx := otel.GetTextMapPropagator().Extract(ctx, NewKafkaCarrier(msg))
+	msgCtx := otel.GetTextMapPropagator().Extract(ctx, NewMessageCarrier(msg))
 	tr := otel.Tracer("")
 	opts := []trace.SpanStartOption{
 		trace.WithSpanKind(trace.SpanKindConsumer),

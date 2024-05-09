@@ -1,4 +1,4 @@
-// Package instrumentation define the interface for the tracing requirement of the package
+// Package instrumentation define the interface for the tracing requirement for the rest of the package
 package instrumentation
 
 import (
