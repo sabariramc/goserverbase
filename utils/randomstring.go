@@ -84,29 +84,48 @@ func GetLetterPool(c LetterPollConfig) string {
 	return res
 }
 
-// GenerateRandomString generates a random string of n characters, the generated string will of form ^[A-Za-z0-9]{n}$ by default, letter pool is customizable using options
-func GenerateRandomString(n int, options ...LetterPoolConfig) string {
+// RandomStringGenerator generates a random string of n characters, the generated string will of form ^[A-Za-z0-9]{n}$ by default, charset is customizable using options
+type RandomStringGenerator struct {
+	letterPool string
+	src        *rand.Rand
+	lock       sync.Mutex
+}
+
+func NewRandomNumberGenerator(options ...LetterPoolConfig) *RandomStringGenerator {
 	config := GetLetterPoolConfig(options...)
-	b := make([]byte, n)
-	letterBytes := GetLetterPool(config)
-	if len(letterBytes) == 0 {
+	letterPool := GetLetterPool(config)
+	return &RandomStringGenerator{
+		letterPool: letterPool,
+		src:        rand.New(rand.NewSource(time.Now().UnixNano())),
+	}
+}
+
+func (r *RandomStringGenerator) String(n int) string {
+	if len(r.letterPool) == 0 {
 		return ""
 	}
-	mu.Lock()
-	defer mu.Unlock()
+	b := make([]byte, n)
+	r.lock.Lock()
+	defer r.lock.Unlock()
 	// A src.Int63() generates 63 random biGenerts, enough for letterIdxMax characters!
-	for i, cache, remain := n-1, src.Int63(), letterIdxMax; i >= 0; {
+	for i, cache, remain := n-1, r.src.Int63(), letterIdxMax; i >= 0; {
 		if remain == 0 {
-			cache, remain = src.Int63(), letterIdxMax
+			cache, remain = r.src.Int63(), letterIdxMax
 		}
-		if idx := int(cache & letterIdxMask); idx < len(letterBytes) {
-			b[i] = letterBytes[idx]
+		if idx := int(cache & letterIdxMask); idx < len(r.letterPool) {
+			b[i] = r.letterPool[idx]
 			i--
 		}
 		cache >>= letterIdxBits
 		remain--
 	}
 	return string(b)
+}
+
+var defaultRandomNumberGenerator = NewRandomNumberGenerator()
+
+func GenerateRandomString(n int) string {
+	return defaultRandomNumberGenerator.String(n)
 }
 
 /*

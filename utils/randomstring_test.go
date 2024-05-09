@@ -1,6 +1,7 @@
 package utils_test
 
 import (
+	"fmt"
 	"sync"
 	"testing"
 
@@ -43,12 +44,25 @@ func TestRandomStringGenerator(t *testing.T) {
 	assert.Equal(t, duplicateCount, 0)
 }
 
-var benchmarkRes string
-
 func BenchmarkRandomStringGenerator(b *testing.B) {
-	var r string
+	var v int64
 	for i := 0; i < b.N; i++ {
-		r = utils.GenerateID(20, "sch_")
+		utils.GenerateID(20, "sch_")
+		v++
 	}
-	benchmarkRes = r
+}
+
+func BenchmarkRandomStringGeneratorParallel(b *testing.B) {
+	var v int64
+	for i := start; i < end; i += step {
+		b.Run(fmt.Sprintf("goroutines-%d", i*goprocs), func(b *testing.B) {
+			b.SetParallelism(i)
+			b.RunParallel(func(pb *testing.PB) {
+				for pb.Next() {
+					utils.GenerateID(20, "sch_")
+					v += 1
+				}
+			})
+		})
+	}
 }

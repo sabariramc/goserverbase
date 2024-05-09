@@ -28,7 +28,7 @@ type CheckRetry func(ctx context.Context, resp *http.Response, err error) (bool,
 type Backoff func(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration
 
 /*
-HTTPClient wraps http.Client with following addons
+HTTPClient extends http.Client with following
  1. Default exponential backoff and retry mechanism
  2. Request body can be any object
  3. Optionally decode success response to the passed object

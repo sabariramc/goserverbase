@@ -16,9 +16,9 @@ func TestGetHash(t *testing.T) {
 }
 
 const (
-	start = 300 // actual = start  * goprocs
+	start = 1   // actual = start  * goprocs
 	end   = 600 // actual = end    * goprocs
-	step  = 10
+	step  = 50
 )
 
 var goprocs = runtime.GOMAXPROCS(0) // 8

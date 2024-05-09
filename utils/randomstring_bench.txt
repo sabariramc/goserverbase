@@ -1,0 +1,17 @@
+goos: linux
+goarch: amd64
+pkg: github.com/sabariramc/goserverbase/v5/utils
+cpu: 11th Gen Intel(R) Core(TM) i7-1165G7 @ 2.80GHz
+BenchmarkRandomStringGeneratorParallel/goroutines-8-8         	 4731927	       263.5 ns/op	      88 B/op	       5 allocs/op
+BenchmarkRandomStringGeneratorParallel/goroutines-408-8       	 3165520	       383.0 ns/op	      88 B/op	       5 allocs/op
+BenchmarkRandomStringGeneratorParallel/goroutines-808-8       	 3002740	       400.7 ns/op	      88 B/op	       5 allocs/op
+BenchmarkRandomStringGeneratorParallel/goroutines-1208-8      	 2881902	       411.0 ns/op	      88 B/op	       5 allocs/op
+BenchmarkRandomStringGeneratorParallel/goroutines-1608-8      	 2901892	       415.8 ns/op	      88 B/op	       5 allocs/op
+BenchmarkRandomStringGeneratorParallel/goroutines-2008-8      	 2840902	       425.1 ns/op	      88 B/op	       5 allocs/op
+BenchmarkRandomStringGeneratorParallel/goroutines-2408-8      	 2921258	       428.6 ns/op	      88 B/op	       5 allocs/op
+BenchmarkRandomStringGeneratorParallel/goroutines-2808-8      	 2300730	       624.1 ns/op	      88 B/op	       5 allocs/op
+BenchmarkRandomStringGeneratorParallel/goroutines-3208-8      	 2028978	       613.4 ns/op	      88 B/op	       5 allocs/op
+BenchmarkRandomStringGeneratorParallel/goroutines-3608-8      	 1905507	       625.9 ns/op	      88 B/op	       5 allocs/op
+BenchmarkRandomStringGeneratorParallel/goroutines-4008-8      	 2078586	       617.3 ns/op	      88 B/op	       5 allocs/op
+BenchmarkRandomStringGeneratorParallel/goroutines-4408-8      	 1925317	       595.1 ns/op	      88 B/op	       5 allocs/op
+PASS
