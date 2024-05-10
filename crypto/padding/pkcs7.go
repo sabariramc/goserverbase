@@ -1,3 +1,4 @@
+// Package padding implements a PKCS7 padding
 package padding
 
 import "bytes"

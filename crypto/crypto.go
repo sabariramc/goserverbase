@@ -1,3 +1,4 @@
+// Package crypto defines common interface for Cipher and Padding
 package crypto
 
 import "context"

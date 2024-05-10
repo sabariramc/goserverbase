@@ -1,3 +1,4 @@
+// Package aes wraps crypto/aes package cipher to be compatible with Cipher interface defined under Crypto package
 package aes
 
 import (
