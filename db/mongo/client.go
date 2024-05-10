@@ -77,9 +77,6 @@ func New(ctx context.Context, logger log.Log, opts ...*options.ClientOptions) (*
 		logger.Error(ctx, "error pinging mongo server", err)
 		return nil, fmt.Errorf("mongo.New: error pinging mongo server: %w", err)
 	}
-	if err != nil {
-		return nil, fmt.Errorf("mongo.New: %w", err)
-	}
 	return &Mongo{Client: client, moduleName: "MongoClient", log: logger.NewResourceLogger("MongoClient")}, nil
 }
 

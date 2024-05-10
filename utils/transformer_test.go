@@ -47,7 +47,7 @@ func TestLeniantJSONTransform(t *testing.T) {
 		C    bool `json:"key3"`
 	}
 	b := &sample{}
-	err := utils.LenientJSONTransformer(a, b)
+	err := utils.JSONTransformer(a, b)
 	assert.NilError(t, err)
 	assert.Equal(t, b.Key1, "value1")
 	assert.Equal(t, b.B, 10)

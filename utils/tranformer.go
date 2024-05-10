@@ -9,7 +9,7 @@ import (
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
-// LenientJSONTransformer copies fields from src(map/ struct object) to dest struct object
+// JSONTransformer copies fields from src(map/ struct object) to dest struct object
 /*
 Example:
 	a := map[string]any{
@@ -25,20 +25,20 @@ Example:
 		C    bool `json:"key3"`
 	}
 	b := &sample{}
-	err := utils.LenientJSONTransformer(a, b)
+	err := utils.JSONTransformer(a, b)
 	if err != nil {
 		assert.NilError(t, err)
 	}
 	fmt.Printf("%+v", b) // Output: &{Key1:value1 B:10 C:false}
 */
-func LenientJSONTransformer(src interface{}, dest interface{}) error {
+func JSONTransformer(src interface{}, dest interface{}) error {
 	blob, err := json.Marshal(src)
 	if err != nil {
-		return fmt.Errorf("LenientJsonTransformer: error encoding content: %w", err)
+		return fmt.Errorf("JSONTransformer: error encoding content: %w", err)
 	}
 	err = json.Unmarshal(blob, dest)
 	if err != nil {
-		return fmt.Errorf("LenientJsonTransformer: error decoding content: %w", err)
+		return fmt.Errorf("JSONTransformer: error decoding content: %w", err)
 	}
 	return nil
 }
@@ -91,13 +91,13 @@ func StrictJSONTransformer(src interface{}, dest interface{}) error {
 	var buf bytes.Buffer
 	err := json.NewEncoder(&buf).Encode(src)
 	if err != nil {
-		return fmt.Errorf("StrictJsonTransformer: error encoding source: %w", err)
+		return fmt.Errorf("StrictJSONTransformer: error encoding source: %w", err)
 	}
 	decoder := json.NewDecoder(&buf)
 	decoder.DisallowUnknownFields()
 	err = decoder.Decode(dest)
 	if err != nil {
-		return fmt.Errorf("StrictJsonTransformer: error decoding content: %w", err)
+		return fmt.Errorf("StrictJSONTransformer: error decoding content: %w", err)
 	}
 	return nil
 }
