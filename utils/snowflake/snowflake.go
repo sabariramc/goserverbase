@@ -11,6 +11,7 @@ type Snowflake struct {
 	machineID      int64
 	sequenceNumber int64
 	lock           sync.Mutex
+	ch             chan int64
 }
 
 const maxSequence int64 = 0xFFF
@@ -25,7 +26,7 @@ func New(machineID, sequenceNumber int64) (*Snowflake, error) {
 		sequenceNumber = 0
 	}
 	return &Snowflake{
-		machineID:      machineID,
+		machineID:      machineID << 12,
 		sequenceNumber: sequenceNumber,
 	}, nil
 }
@@ -48,6 +49,6 @@ func (s *Snowflake) ID() (int64, error) {
 	if ts > maxTimestamp {
 		return -1, fmt.Errorf("timestamp exceed max limit")
 	}
-	res := ts<<22 | s.machineID<<12 | sequenceNumber
+	res := ts<<22 | s.machineID | sequenceNumber
 	return res, nil
 }

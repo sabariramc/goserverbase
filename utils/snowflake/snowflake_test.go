@@ -22,6 +22,17 @@ func TestSnowflake(t *testing.T) {
 	}
 }
 
+func TestSnowflakeTimer(t *testing.T) {
+	s, err := snowflake.New(1, 0)
+	assert.NilError(t, err)
+	st := time.Now()
+	for i := 0; i < 10000; i++ {
+		_, err := s.ID()
+		assert.NilError(t, err)
+	}
+	assert.Assert(t, 6 >= time.Since(st).Milliseconds())
+}
+
 func TestSnowflakeDuplicacy(t *testing.T) {
 	s, err := snowflake.New(1, 0)
 	assert.NilError(t, err)
