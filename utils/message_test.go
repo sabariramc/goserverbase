@@ -33,33 +33,34 @@ func ExampleMessage() {
 	fmt.Println(string(blob))
 	//Output:
 	// {
-	//     "entity": "event",
-	//     "event": "aws.test",
-	//     "contains": [
-	//         "payment",
-	//         "bank",
-	//         "customer"
-	//     ],
-	//     "payload": {
-	//         "bank": {
-	//             "entity": {
-	//                 "id": "bank_fadsfas"
-	//             }
-	//         },
-	//         "customer": {
-	//             "entity": {
-	//                 "id": "cust_fasdfsa"
-	//             },
-	//             "state": {
-	//                 "fromState":"created",
-	//                 "toState":"updated"
-	//             }
-	//         },
-	//         "payment": {
-	//             "entity": {
-	//                 "amount": 123,
-	//                 "id": "pay_14341234"
-	//             }
-	//         }
+	// 	"entity": "event",
+	// 	"event": "aws.test",
+	// 	"contains": [
+	// 		"payment",
+	// 		"bank",
+	// 		"customer"
+	// 	],
+	// 	"payload": {
+	// 		"bank": {
+	// 			"entity": {
+	// 				"id": "bank_fadsfas"
+	// 			}
+	// 		},
+	// 		"customer": {
+	// 			"entity": {
+	// 				"id": "cust_fasdfsa"
+	// 			},
+	// 			"state": {
+	// 				"fromState": "created",
+	// 				"toState": "updated"
+	// 			}
+	// 		},
+	// 		"payment": {
+	// 			"entity": {
+	// 				"amount": 123,
+	// 				"id": "pay_14341234"
+	// 			}
+	// 		}
+	// 	}
 	// }
 }
