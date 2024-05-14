@@ -9,6 +9,7 @@ import (
 	"github.com/sabariramc/goserverbase/v5/errors"
 )
 
+// GetEnv looks for the key in env, if not found returns defaultVal
 func GetEnv(key string, defaultVal string) string {
 	if value, exists := os.LookupEnv(key); exists {
 		return value
@@ -24,6 +25,7 @@ func GetHostName() string {
 	return nodeName
 }
 
+// GetEnvInt looks for the key in env, calls [strconv.Atoi] with the value if no error returns the value else returns defaultVal
 func GetEnvInt(key string, defaultVal int) int {
 	if value, exists := os.LookupEnv(key); exists {
 		if iVal, err := strconv.Atoi(value); err == nil {
@@ -33,6 +35,7 @@ func GetEnvInt(key string, defaultVal int) int {
 	return defaultVal
 }
 
+// GetEnvBool looks for the key in env, if the value is "1" or "true" returns true else false if the value is not found returns defaultVal
 func GetEnvBool(key string, defaultVal bool) bool {
 	if value, exists := os.LookupEnv(key); exists {
 		if value == "1" || strings.ToLower(value) == "true" {
@@ -43,6 +46,7 @@ func GetEnvBool(key string, defaultVal bool) bool {
 	return defaultVal
 }
 
+// GetEnvAsSlice looks for the key in env, if found splits the value using the sep
 func GetEnvAsSlice(name string, defaultVal []string, sep string) []string {
 	valStr := GetEnv(name, "")
 
@@ -55,6 +59,7 @@ func GetEnvAsSlice(name string, defaultVal []string, sep string) []string {
 	return val
 }
 
+// GetEnvMust looks for the key in env, if not found raises panic
 func GetEnvMust(key string) string {
 	value := os.Getenv(key)
 	if value == "" {

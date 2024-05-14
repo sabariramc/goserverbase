@@ -2,12 +2,59 @@ package utils_test
 
 import (
 	"fmt"
+	"regexp"
 	"sync"
 	"testing"
 
 	"github.com/sabariramc/goserverbase/v5/utils"
 	"gotest.tools/assert"
 )
+
+func ExampleGenerateID() {
+	x := utils.GenerateID(20, "cust_")
+	fmt.Println(len(x))
+	match, _ := regexp.MatchString("^cust_[a-zA-Z0-9]{15}$", x)
+	fmt.Println(match)
+	//Output:
+	//20
+	//true
+}
+
+func ExampleRandomStringGenerator() {
+	gen := utils.NewRandomStringGenerator()
+	x := gen.Generate(10)
+	match, _ := regexp.MatchString("^[a-zA-Z0-9]{10}$", x)
+	fmt.Println(match)
+	//Output:
+	//true
+}
+
+func ExampleRandomStringGenerator_onlynumerals() {
+	gen := utils.NewRandomStringGenerator(utils.NoLowerCase(), utils.NoUpperCase())
+	x := gen.Generate(10)
+	match, _ := regexp.MatchString("^[0-9]{10}$", x)
+	fmt.Println(match)
+	//Output:
+	//true
+}
+
+func ExampleRandomStringGenerator_onlyuppercase() {
+	gen := utils.NewRandomStringGenerator(utils.NoLowerCase(), utils.NoInt())
+	x := gen.Generate(10)
+	match, _ := regexp.MatchString("^[A-Z]{10}$", x)
+	fmt.Println(match)
+	//Output:
+	//true
+}
+
+func ExampleRandomStringGenerator_onlylowercase() {
+	gen := utils.NewRandomStringGenerator(utils.NoUpperCase(), utils.NoInt())
+	x := gen.Generate(10)
+	match, _ := regexp.MatchString("^[a-z]{10}$", x)
+	fmt.Println(match)
+	//Output:
+	//true
+}
 
 func TestRandomStringGenerator(t *testing.T) {
 	totalN := 1000000

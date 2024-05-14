@@ -74,7 +74,7 @@ type RandomStringGenerator struct {
 	lock       sync.Mutex
 }
 
-func NewRandomNumberGenerator(options ...LetterPoolConfig) *RandomStringGenerator {
+func NewRandomStringGenerator(options ...LetterPoolConfig) *RandomStringGenerator {
 	config := GetLetterPoolConfig(options...)
 	letterPool := GetLetterPool(config)
 	return &RandomStringGenerator{
@@ -83,7 +83,7 @@ func NewRandomNumberGenerator(options ...LetterPoolConfig) *RandomStringGenerato
 	}
 }
 
-func (r *RandomStringGenerator) String(n int) string {
+func (r *RandomStringGenerator) Generate(n int) string {
 	if len(r.letterPool) == 0 {
 		return ""
 	}
@@ -105,19 +105,16 @@ func (r *RandomStringGenerator) String(n int) string {
 	return string(b)
 }
 
-var defaultRandomNumberGenerator = NewRandomNumberGenerator()
+var defaultRandomNumberGenerator = NewRandomStringGenerator()
 
+// GenerateRandomString uses default RandomNumberGenerator object to generate random string
 func GenerateRandomString(n int) string {
-	return defaultRandomNumberGenerator.String(n)
+	return defaultRandomNumberGenerator.Generate(n)
 }
 
 /*
 GenerateID generates a id with the prefix and totalLength
-
-x := GenerateID(20, "cust_")
-
 In the above example
-len(x) would be equal to 20, prefix "cust_" of length 5 and the remaining slots(15) will be filled by random characters regex: ^cust_[a-zA-Z0-9]{15}$
 */
 func GenerateID(totalLength int, prefix string) string {
 	n := totalLength - len(prefix)

@@ -1,6 +1,7 @@
 package utils_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -8,6 +9,71 @@ import (
 	"github.com/shopspring/decimal"
 	"gotest.tools/assert"
 )
+
+func ExampleJSONTransformer() {
+	a := map[string]any{
+		"key1": "value1",
+		"key2": 10,
+		"key3": false,
+		"key4": "abc",
+	}
+	type sample struct {
+		Key1 string
+		B    int  `json:"key2"`
+		C    bool `json:"key3"`
+	}
+	b := &sample{}
+	err := utils.JSONTransformer(a, b)
+	if err != nil {
+		//error processing
+	}
+	fmt.Printf("%+v", b)
+	// Output: &{Key1:value1 B:10 C:false}
+}
+
+func ExampleStrictJSONTransformer_success() {
+	a := map[string]any{
+		"key1": "value1",
+		"key2": 10,
+		"key3": false,
+	}
+
+	type sample struct {
+		Key1 string
+		B    int  `json:"key2"`
+		C    bool `json:"key3"`
+	}
+	b := &sample{}
+	err := utils.StrictJSONTransformer(a, b)
+	if err != nil {
+		//err is nil
+	}
+	fmt.Printf("%+v", b)
+	// Output: &{Key1:value1 B:10 C:false}
+}
+
+func ExampleStrictJSONTransformer_failure() {
+	a := map[string]any{
+		"key1": "value1",
+		"key2": 10,
+		"key3": false,
+		"key4": "fasf",
+	}
+
+	type sample struct {
+		Key1 string
+		B    int  `json:"key2"`
+		C    bool `json:"key3"`
+	}
+	b := &sample{}
+	err := utils.StrictJSONTransformer(a, b)
+	if err != nil {
+		fmt.Print(err)
+	}
+	// Output: StrictJSONTransformer: error decoding content: utils_test.sample.ReadObject: found unknown field: key4, error found in #10 byte of ...|lse,"key4":"fasf"}
+	//|..., bigger context ...|{"key1":"value1","key2":10,"key3":false,"key4":"fasf"}
+	//|...
+}
 
 type TestVal struct {
 	IntVal       int             `json:"intVal"`

@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"sync"
 	"testing"
@@ -42,6 +43,82 @@ func GetCorrelationContext() context.Context {
 const URL = "http://localhost:64000/service/v1/echo/a/b"
 const RetryURL = "http://localhost:64000/service/v1/echo/error/b"
 const ErrURL = "http://localhost:80/service/v1/echo/error/b"
+
+func ExampleHTTPClient() {
+	client := httputil.NewDefaultHTTPClient(HTTPUtilTestLogger, nil)
+	data := make(map[string]any)
+	res, err := client.Get(GetCorrelationContext(), URL, nil, &data, nil)
+	fmt.Println(err)
+	fmt.Println(res.StatusCode)
+	//Output:
+	//<nil>
+	//200
+}
+
+func ExampleHTTPClient_responsebody() {
+	client := httputil.NewDefaultHTTPClient(HTTPUtilTestLogger, nil)
+	response := map[string]any{} // object to decode response body
+	body := map[string]string{
+		"tag": "Test",
+	}
+	//URL is a echo  endpoint that returns the whole request as response body
+	res, err := client.Post(GetCorrelationContext(), URL, &body, &response, map[string]string{ContentTypeHeader: MIMEJSON})
+	fmt.Println(err)
+	fmt.Println(res.StatusCode)
+	fmt.Printf("%+v", response)
+	//Output:
+	//<nil>
+	//200
+	//map[body:map[tag:Test] headers:map[accept-encoding:gzip connection:close content-length:15 content-type:application/json host:backend user-agent:Go-http-client/1.1 x-correlation-id:go-test-service-50e6a92b-326f-4b4c-8c78-54d1c9eaf32a] method:POST pathParams:map[path_1:a path_2:b] url:http://backend/service/v1/echo/a/b]
+}
+
+func ExampleHTTPClient_errorresponsebody() {
+	client := httputil.NewDefaultHTTPClient(HTTPUtilTestLogger, nil)
+	response := 0
+	body := map[string]string{
+		"tag": "Test",
+	}
+	_, err := client.Post(GetCorrelationContext(), URL, &body, &response, map[string]string{ContentTypeHeader: MIMEJSON})
+	fmt.Println(errors.Is(err, httputil.ErrResponseUnmarshal))
+	//Output:
+	//true
+}
+
+func ExampleHTTPClient_retry() {
+	client := httputil.NewDefaultHTTPClient(HTTPUtilTestLogger, nil)
+	data := make(map[string]any)
+	body := map[string]any{
+		"tag": "Test",
+	}
+	//RetryURL is a  endpoint that returns the always returns 500
+	res, err := client.Call(GetCorrelationContext(), "POST", RetryURL, &body, &data, nil)
+	fmt.Println(err)
+	fmt.Println(res.StatusCode)
+	//Output:
+	//[2024-05-14T12:32:30.177+05:30] [NOTICE] [go-test-service-5ecf10e2-f837-4eaa-a5c5-103176b6753a] [go-test-service] [HttpClient] [request failed with status code 500 retry 1 of 4 in 1000ms] [string] [{"url": "http://backend/service/v1/echo/error/b", "headers": {"host": "backend", "connection": "close", "content-length": "15", "user-agent": "Go-http-client/1.1", "x-correlation-id": "go-test-service-5ecf10e2-f837-4eaa-a5c5-103176b6753a", "accept-encoding": "gzip"}, "method": "POST", "body": {"tag": "Test"}, "pathParams": {"path_1": "error", "path_2": "b"}}]
+	// [2024-05-14T12:32:31.282+05:30] [NOTICE] [go-test-service-5ecf10e2-f837-4eaa-a5c5-103176b6753a] [go-test-service] [HttpClient] [request failed with status code 500 retry 2 of 4 in 2000ms] [string] [{"url": "http://backend/service/v1/echo/error/b", "headers": {"host": "backend", "connection": "close", "content-length": "15", "user-agent": "Go-http-client/1.1", "x-correlation-id": "go-test-service-5ecf10e2-f837-4eaa-a5c5-103176b6753a", "accept-encoding": "gzip"}, "method": "POST", "body": {"tag": "Test"}, "pathParams": {"path_1": "error", "path_2": "b"}}]
+	// [2024-05-14T12:32:33.390+05:30] [NOTICE] [go-test-service-5ecf10e2-f837-4eaa-a5c5-103176b6753a] [go-test-service] [HttpClient] [request failed with status code 500 retry 3 of 4 in 4000ms] [string] [{"url": "http://backend/service/v1/echo/error/b", "headers": {"host": "backend", "connection": "close", "content-length": "15", "user-agent": "Go-http-client/1.1", "x-correlation-id": "go-test-service-5ecf10e2-f837-4eaa-a5c5-103176b6753a", "accept-encoding": "gzip"}, "method": "POST", "body": {"tag": "Test"}, "pathParams": {"path_1": "error", "path_2": "b"}}]
+	// [2024-05-14T12:32:37.525+05:30] [NOTICE] [go-test-service-5ecf10e2-f837-4eaa-a5c5-103176b6753a] [go-test-service] [HttpClient] [request failed with status code 500 retry 4 of 4 in 5000ms] [string] [{"url": "http://backend/service/v1/echo/error/b", "headers": {"host": "backend", "connection": "close", "content-length": "15", "user-agent": "Go-http-client/1.1", "x-correlation-id": "go-test-service-5ecf10e2-f837-4eaa-a5c5-103176b6753a", "accept-encoding": "gzip"}, "method": "POST", "body": {"tag": "Test"}, "pathParams": {"path_1": "error", "path_2": "b"}}]
+	// [2024-05-14T12:32:42.636+05:30] [ERROR] [go-test-service-5ecf10e2-f837-4eaa-a5c5-103176b6753a] [go-test-service] [HttpClient] [Response] [map[string]interface {}] [{
+	//     "headers": {
+	//         "Connection": [
+	//             "keep-alive"
+	//         ],
+	//         "Content-Length": [
+	//             "360"
+	//         ],
+	//         "Date": [
+	//             "Tue, 14 May 2024 07:02:42 GMT"
+	//         ],
+	//         "Server": [
+	//             "nginx/1.26.0"
+	//         ]
+	//     },
+	//     "statusCode": 500
+	// }]
+	// HttpClient.Call: non 2xx status
+	// 500
+}
 
 func TestHttpUtilGet(t *testing.T) {
 	client := httputil.NewDefaultHTTPClient(HTTPUtilTestLogger, nil)
