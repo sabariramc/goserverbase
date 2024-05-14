@@ -23,6 +23,7 @@ func newAsyncProducer(ctx context.Context) (*kafka.Producer, error) {
 	KafkaTestConfig.KafkaProducer.Topic = KafkaTestConfig.KafkaTestTopic
 	config := *KafkaTestConfig.KafkaProducer
 	config.Async = true
+	config.Batch = false
 	return kafka.NewProducer(ctx, KafkaTestLogger, &config, nil)
 }
 
@@ -30,10 +31,57 @@ func newPoller(ctx context.Context) (*kafka.Poller, error) {
 	return kafka.NewPoller(ctx, KafkaTestLogger, KafkaTestConfig.KafkaConsumer, nil, KafkaTestConfig.KafkaTestTopic)
 }
 
+func Example() {
+	ctx := GetCorrelationContext()
+	co, _ := kafka.NewPoller(ctx, KafkaTestLogger, KafkaTestConfig.KafkaConsumer, nil, KafkaTestConfig.KafkaTestTopic)
+	defer co.Close(ctx)
+	pr, _ := kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducer, nil)
+	defer pr.Close(ctx)
+	ch := make(chan *cKafka.Message, 100)
+	var wg sync.WaitGroup
+	totalCount := 100000
+	wg.Add(1)
+	uuidVal := "TestKafkaPoll" + uuid.NewString()
+	go func() {
+		defer wg.Done()
+		for i := 0; i < totalCount; i++ {
+			ctx := GetCorrelationContext()
+			pr.ProduceMessage(ctx, strconv.Itoa(i), &utils.Message{
+				Event: uuidVal,
+			}, nil)
+		}
+		pr.Flush(ctx)
+	}()
+	tCtx, cancel := context.WithTimeout(ctx, time.Second*45)
+	defer cancel()
+	st := time.Now()
+	go co.Poll(tCtx, ch)
+	count := 0
+	msgCount := 0
+	for i := range ch {
+		m, err := kafka.LoadMessage(i)
+		msgCount++
+		if m.Event == uuidVal {
+			count++
+		}
+		if totalCount == count {
+			cancel()
+		}
+		if err != nil {
+			KafkaTestLogger.Error(ctx, "parse error", err)
+		}
+		KafkaTestLogger.Info(ctx, "Kafka message", m)
+	}
+	KafkaTestLogger.Info(ctx, "Total matched", count)
+	KafkaTestLogger.Info(ctx, "Total received", msgCount)
+	wg.Wait()
+	KafkaTestLogger.Notice(ctx, "Time taken in ms", time.Now().Sub(st)/1000000)
+}
+
 func TestKafkaProducer(t *testing.T) {
 	ctx := GetCorrelationContext()
 	uuidVal := uuid.NewString()
-	totalNoOfMessage := 100000
+	totalNoOfMessage := 10
 	connFac := 10
 	var wg sync.WaitGroup
 	for i := 0; i < connFac; i++ {
