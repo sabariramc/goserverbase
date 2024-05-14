@@ -1,3 +1,4 @@
+// Package aws provides simplified interface for different AWS services
 package aws
 
 import (

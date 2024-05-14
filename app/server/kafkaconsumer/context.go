@@ -27,8 +27,8 @@ func (k *KafkaConsumerServer) GetMessageContext(msg *kafka.Message) context.Cont
 	msgCtx := context.Background()
 	corr := k.GetCorrelationParams(msg.GetHeaders())
 	identity := k.GetCustomerID(msg.GetHeaders())
-	msgCtx = k.GetContextWithCorrelation(msgCtx, k.GetCorrelationParams(msg.GetHeaders()))
-	msgCtx = k.GetContextWithCustomerId(msgCtx, identity)
+	msgCtx = log.GetContextWithCorrelationParam(msgCtx, k.GetCorrelationParams(msg.GetHeaders()))
+	msgCtx = log.GetContextWithUserIdentifier(msgCtx, identity)
 	if k.tracer != nil {
 		var span span.Span
 		msgCtx, span = k.tracer.StartKafkaSpanFromMessage(msgCtx, msg.Message)

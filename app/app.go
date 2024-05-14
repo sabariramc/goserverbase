@@ -1,3 +1,4 @@
+// Package baseapp implements lightweight abstract base framework for a microservice application
 package baseapp
 
 import (
@@ -25,7 +26,7 @@ func New(appConfig ServerConfig, logger log.Log, notifier notifier.Notifier) *Ba
 		notifier:      notifier,
 		shutdownHooks: make([]ShutdownHook, 0, 10),
 	}
-	ctx := b.GetContextWithCorrelation(context.Background(), log.GetDefaultCorrelationParam(appConfig.ServiceName))
+	ctx := log.GetContextWithCorrelationParam(context.Background(), log.GetDefaultCorrelationParam(appConfig.ServiceName))
 	b.log = logger.NewResourceLogger("BaseApp")
 	zone, _ := time.Now().Zone()
 	b.log.Notice(ctx, "Timezone", zone)

@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
+	"github.com/sabariramc/goserverbase/v5/log"
 )
 
 func (h *HTTPServer) SetContextMiddleware() gin.HandlerFunc {
@@ -14,8 +15,8 @@ func (h *HTTPServer) SetContextMiddleware() gin.HandlerFunc {
 		r := c.Request
 		corr := h.GetCorrelationParams(r)
 		identity := h.GetCustomerID(r)
-		ctx := h.GetContextWithCorrelation(r.Context(), corr)
-		ctx = h.GetContextWithCustomerId(ctx, identity)
+		ctx := log.GetContextWithCorrelationParam(r.Context(), corr)
+		ctx = log.GetContextWithUserIdentifier(ctx, identity)
 		c.Request = r.WithContext(ctx)
 		if h.tracer != nil {
 			span, ok := h.tracer.GetSpanFromContext(ctx)
