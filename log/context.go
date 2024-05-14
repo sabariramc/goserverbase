@@ -5,11 +5,11 @@ import (
 	"net/http"
 )
 
-type ContextKey struct{}
+type contextKey string
 
 var (
-	ContextKeyCorrelation        ContextKey = ContextKey{}
-	ContextKeyCustomerIdentifier ContextKey = ContextKey{}
+	ContextKeyCorrelation        contextKey = contextKey("ContextKeyCorrelation")
+	ContextKeyCustomerIdentifier contextKey = contextKey("ContextKeyCustomerIdentifier")
 )
 
 // GetContextWithCorrelationParam returns a context.Context with CorrelationParam
