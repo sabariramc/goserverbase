@@ -15,8 +15,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
-	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v6/instrumentation/span"
+	"github.com/sabariramc/goserverbase/v6/log"
 	"golang.org/x/net/http2"
 )
 

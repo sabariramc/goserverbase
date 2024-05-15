@@ -1,7 +1,7 @@
 package main
 
 import (
-	server "github.com/sabariramc/goserverbase/v5/db/mongo/csfle/test"
+	server "github.com/sabariramc/goserverbase/v6/db/mongo/csfle/test"
 )
 
 func main() {

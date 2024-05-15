@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/v5/log"
-	"github.com/sabariramc/goserverbase/v5/log/logwriter"
-	"github.com/sabariramc/goserverbase/v5/testutils"
+	"github.com/sabariramc/goserverbase/v6/log"
+	"github.com/sabariramc/goserverbase/v6/log/logwriter"
+	"github.com/sabariramc/goserverbase/v6/testutils"
 	"gopkg.in/Graylog2/go-gelf.v2/gelf"
 	"gotest.tools/assert"
 )

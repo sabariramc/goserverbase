@@ -2,7 +2,7 @@
 package ddtrace
 
 import (
-	"github.com/sabariramc/goserverbase/v5/instrumentation"
+	"github.com/sabariramc/goserverbase/v6/instrumentation"
 	ddtrace "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"
 )
 

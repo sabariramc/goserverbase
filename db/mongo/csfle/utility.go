@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/sabariramc/goserverbase/v5/db/mongo"
-	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v6/db/mongo"
+	"github.com/sabariramc/goserverbase/v6/log"
 )
 
 func SetEncryptionKey(ctx context.Context, logger log.Log, encryptionSchema *string, client *mongo.Mongo, keyVaultNamespace string, kmsProvider MasterKeyProvider) (map[string]interface{}, error) {

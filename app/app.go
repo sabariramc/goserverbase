@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v5/log"
-	"github.com/sabariramc/goserverbase/v5/notifier"
+	"github.com/sabariramc/goserverbase/v6/log"
+	"github.com/sabariramc/goserverbase/v6/notifier"
 )
 
 type BaseApp struct {

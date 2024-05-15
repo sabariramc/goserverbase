@@ -12,10 +12,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v5/log"
-	"github.com/sabariramc/goserverbase/v5/log/logwriter"
-	"github.com/sabariramc/goserverbase/v5/testutils"
-	"github.com/sabariramc/goserverbase/v5/utils/httputil"
+	"github.com/sabariramc/goserverbase/v6/log"
+	"github.com/sabariramc/goserverbase/v6/log/logwriter"
+	"github.com/sabariramc/goserverbase/v6/testutils"
+	"github.com/sabariramc/goserverbase/v6/utils/httputil"
 	"gotest.tools/assert"
 )
 

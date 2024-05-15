@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v6/log"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )

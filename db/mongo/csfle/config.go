@@ -1,6 +1,6 @@
 package csfle
 
-import "github.com/sabariramc/goserverbase/v5/db/mongo"
+import "github.com/sabariramc/goserverbase/v6/db/mongo"
 
 type Config struct {
 	*mongo.Config

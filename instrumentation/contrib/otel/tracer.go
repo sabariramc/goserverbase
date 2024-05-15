@@ -4,8 +4,8 @@ package otel
 import (
 	"context"
 
-	"github.com/sabariramc/goserverbase/v5/instrumentation"
-	"github.com/sabariramc/goserverbase/v5/utils"
+	"github.com/sabariramc/goserverbase/v6/instrumentation"
+	"github.com/sabariramc/goserverbase/v6/utils"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"

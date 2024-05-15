@@ -7,8 +7,8 @@ import (
 	"runtime/debug"
 	"testing"
 
-	"github.com/sabariramc/goserverbase/v5/errors/message"
-	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v6/errors/message"
+	"github.com/sabariramc/goserverbase/v6/log"
 )
 
 func TestMessage(t *testing.T) {
@@ -76,7 +76,7 @@ func Example() {
 	// 		"stackTrace": {
 	// 			"entity": {
 	// 				"error": "test",
-	// 				"stackTrace": "goroutine 1 [running]:\nruntime/debug.Stack()\n\t/usr/local/go/src/runtime/debug/stack.go:24 +0x5e\ngithub.com/sabariramc/goserverbase/v5/errors/message_test.Example()\n\t/<<filepath>>/goserverbase/errors/message/message_test.go:27 +0x15f\ntesting.runExample({{0x64d3df, 0x7}, 0x677028, {0x65c213, 0x4c5}, 0x0})\n\t/usr/local/go/src/testing/run_example.go:63 +0x2de\ntesting.runExamples(0x6b4fc0?, {0x827280, 0x1, 0x1?})\n\t/usr/local/go/src/testing/example.go:40 +0x126\ntesting.(*M).Run(0xc0001188c0)\n\t/usr/local/go/src/testing/testing.go:2029 +0x75d\nmain.main()\n\t_testmain.go:51 +0x16c\n"
+	// 				"stackTrace": "goroutine 1 [running]:\nruntime/debug.Stack()\n\t/usr/local/go/src/runtime/debug/stack.go:24 +0x5e\ngithub.com/sabariramc/goserverbase/v6/errors/message_test.Example()\n\t/<<filepath>>/goserverbase/errors/message/message_test.go:27 +0x15f\ntesting.runExample({{0x64d3df, 0x7}, 0x677028, {0x65c213, 0x4c5}, 0x0})\n\t/usr/local/go/src/testing/run_example.go:63 +0x2de\ntesting.runExamples(0x6b4fc0?, {0x827280, 0x1, 0x1?})\n\t/usr/local/go/src/testing/example.go:40 +0x126\ntesting.(*M).Run(0xc0001188c0)\n\t/usr/local/go/src/testing/testing.go:2029 +0x75d\nmain.main()\n\t_testmain.go:51 +0x16c\n"
 	// 			}
 	// 		},
 	// 		"timestamp": {

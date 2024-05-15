@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/v5/db/mongo"
-	"github.com/sabariramc/goserverbase/v5/db/mongo/csfle"
-	"github.com/sabariramc/goserverbase/v5/db/mongo/csfle/sample"
+	"github.com/sabariramc/goserverbase/v6/db/mongo"
+	"github.com/sabariramc/goserverbase/v6/db/mongo/csfle"
+	"github.com/sabariramc/goserverbase/v6/db/mongo/csfle/sample"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"gotest.tools/assert"
 )

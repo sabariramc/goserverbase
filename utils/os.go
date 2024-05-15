@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/sabariramc/goserverbase/v5/errors"
+	"github.com/sabariramc/goserverbase/v6/errors"
 )
 
 // GetEnv looks for the key in env, if not found returns defaultVal

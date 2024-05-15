@@ -5,9 +5,9 @@ import (
 	"os"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v5/aws"
-	"github.com/sabariramc/goserverbase/v5/db/mongo/csfle"
-	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v6/aws"
+	"github.com/sabariramc/goserverbase/v6/db/mongo/csfle"
+	"github.com/sabariramc/goserverbase/v6/log"
 )
 
 type Address struct {

@@ -3,15 +3,15 @@ package testutils
 import (
 	"crypto/tls"
 
-	baseapp "github.com/sabariramc/goserverbase/v5/app"
-	"github.com/sabariramc/goserverbase/v5/app/server/httpserver"
-	"github.com/sabariramc/goserverbase/v5/app/server/kafkaconsumer"
-	"github.com/sabariramc/goserverbase/v5/db/mongo"
-	"github.com/sabariramc/goserverbase/v5/db/mongo/csfle"
-	"github.com/sabariramc/goserverbase/v5/kafka"
-	"github.com/sabariramc/goserverbase/v5/log"
-	"github.com/sabariramc/goserverbase/v5/log/logwriter"
-	"github.com/sabariramc/goserverbase/v5/utils"
+	baseapp "github.com/sabariramc/goserverbase/v6/app"
+	"github.com/sabariramc/goserverbase/v6/app/server/httpserver"
+	"github.com/sabariramc/goserverbase/v6/app/server/kafkaconsumer"
+	"github.com/sabariramc/goserverbase/v6/db/mongo"
+	"github.com/sabariramc/goserverbase/v6/db/mongo/csfle"
+	"github.com/sabariramc/goserverbase/v6/kafka"
+	"github.com/sabariramc/goserverbase/v6/log"
+	"github.com/sabariramc/goserverbase/v6/log/logwriter"
+	"github.com/sabariramc/goserverbase/v6/utils"
 	"github.com/segmentio/kafka-go/sasl/plain"
 )
 

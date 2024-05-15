@@ -4,8 +4,8 @@ import (
 	"context"
 	"log"
 
-	server "github.com/sabariramc/goserverbase/v5/app/server/kafkaconsumer/test"
-	"github.com/sabariramc/goserverbase/v5/instrumentation/contrib/ddtrace"
+	server "github.com/sabariramc/goserverbase/v6/app/server/kafkaconsumer/test"
+	"github.com/sabariramc/goserverbase/v6/instrumentation/contrib/ddtrace"
 )
 
 func main() {

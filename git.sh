@@ -1,5 +1,5 @@
-export message="Refatored system notification package"
-export version="v5.10.0"
+export message="Rafactored package"
+export version="v6.0.0"
 export branch="master"
 git add .
 git commit -m $message"

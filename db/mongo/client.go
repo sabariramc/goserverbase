@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v5/log"
-	"github.com/sabariramc/goserverbase/v5/utils"
+	"github.com/sabariramc/goserverbase/v6/log"
+	"github.com/sabariramc/goserverbase/v6/utils"
 
 	"go.mongodb.org/mongo-driver/event"
 	"go.mongodb.org/mongo-driver/mongo"

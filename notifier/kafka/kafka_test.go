@@ -5,11 +5,11 @@ import (
 	"runtime"
 	"testing"
 
-	pKafka "github.com/sabariramc/goserverbase/v5/kafka"
-	"github.com/sabariramc/goserverbase/v5/log"
-	"github.com/sabariramc/goserverbase/v5/log/logwriter"
-	"github.com/sabariramc/goserverbase/v5/notifier/kafka"
-	"github.com/sabariramc/goserverbase/v5/testutils"
+	pKafka "github.com/sabariramc/goserverbase/v6/kafka"
+	"github.com/sabariramc/goserverbase/v6/log"
+	"github.com/sabariramc/goserverbase/v6/log/logwriter"
+	"github.com/sabariramc/goserverbase/v6/notifier/kafka"
+	"github.com/sabariramc/goserverbase/v6/testutils"
 	"gotest.tools/assert"
 )
 

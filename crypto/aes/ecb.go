@@ -10,9 +10,9 @@ import (
 	"encoding/base64"
 	"fmt"
 
-	"github.com/sabariramc/goserverbase/v5/crypto"
-	"github.com/sabariramc/goserverbase/v5/crypto/padding"
-	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v6/crypto"
+	"github.com/sabariramc/goserverbase/v6/crypto/padding"
+	"github.com/sabariramc/goserverbase/v6/log"
 )
 
 type ECB struct {

@@ -3,7 +3,7 @@ package aws_test
 import (
 	"testing"
 
-	"github.com/sabariramc/goserverbase/v5/aws"
+	"github.com/sabariramc/goserverbase/v6/aws"
 	"gotest.tools/assert"
 )
 

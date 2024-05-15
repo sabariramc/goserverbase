@@ -9,15 +9,15 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sabariramc/goserverbase/v5/app/server/httpserver"
-	"github.com/sabariramc/goserverbase/v5/db/mongo"
-	"github.com/sabariramc/goserverbase/v5/db/mongo/csfle"
-	"github.com/sabariramc/goserverbase/v5/db/mongo/csfle/sample"
-	"github.com/sabariramc/goserverbase/v5/instrumentation"
-	"github.com/sabariramc/goserverbase/v5/log"
-	"github.com/sabariramc/goserverbase/v5/log/logwriter"
-	"github.com/sabariramc/goserverbase/v5/testutils"
-	"github.com/sabariramc/goserverbase/v5/utils"
+	"github.com/sabariramc/goserverbase/v6/app/server/httpserver"
+	"github.com/sabariramc/goserverbase/v6/db/mongo"
+	"github.com/sabariramc/goserverbase/v6/db/mongo/csfle"
+	"github.com/sabariramc/goserverbase/v6/db/mongo/csfle/sample"
+	"github.com/sabariramc/goserverbase/v6/instrumentation"
+	"github.com/sabariramc/goserverbase/v6/log"
+	"github.com/sabariramc/goserverbase/v6/log/logwriter"
+	"github.com/sabariramc/goserverbase/v6/testutils"
+	"github.com/sabariramc/goserverbase/v6/utils"
 )
 
 var ServerTestConfig *testutils.TestConfig

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v6/log"
 )
 
 func DefaultLogMapper(ctx context.Context, msg *log.LogMessage) map[string]any {

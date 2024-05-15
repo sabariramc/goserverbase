@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/v5/utils"
+	"github.com/sabariramc/goserverbase/v6/utils"
 )
 
 // CorrelationParam defines context object for a correlation

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v6/log"
 
 	"gopkg.in/Graylog2/go-gelf.v2/gelf"
 )

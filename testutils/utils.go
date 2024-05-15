@@ -8,8 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
-	base "github.com/sabariramc/goserverbase/v5/aws"
-	"github.com/sabariramc/goserverbase/v5/utils"
+	base "github.com/sabariramc/goserverbase/v6/aws"
+	"github.com/sabariramc/goserverbase/v6/utils"
 
 	"github.com/joho/godotenv"
 )

@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/sabariramc/goserverbase/v5/utils"
+	"github.com/sabariramc/goserverbase/v6/utils"
 	"gotest.tools/assert"
 )
 

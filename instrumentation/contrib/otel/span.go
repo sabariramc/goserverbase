@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
+	"github.com/sabariramc/goserverbase/v6/instrumentation/span"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"

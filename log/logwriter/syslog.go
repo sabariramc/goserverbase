@@ -6,7 +6,7 @@ import (
 	stlLog "log"
 	"log/syslog"
 
-	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v6/log"
 )
 
 // SyslogLogWriter writes log to syslog

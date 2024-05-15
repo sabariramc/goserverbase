@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v5/db/mongo"
+	"github.com/sabariramc/goserverbase/v6/db/mongo"
 	"github.com/sabariramc/randomstring"
 	"github.com/sabariramc/snowflake"
 	"github.com/shopspring/decimal"

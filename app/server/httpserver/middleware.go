@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
-	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v6/instrumentation/span"
+	"github.com/sabariramc/goserverbase/v6/log"
 )
 
 func (h *HTTPServer) SetContextMiddleware() gin.HandlerFunc {

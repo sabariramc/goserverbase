@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v5/utils"
+	"github.com/sabariramc/goserverbase/v6/utils"
 	"github.com/shopspring/decimal"
 	"gotest.tools/assert"
 )

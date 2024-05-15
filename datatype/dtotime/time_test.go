@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v5/datatype/dtotime"
+	"github.com/sabariramc/goserverbase/v6/datatype/dtotime"
 	"gotest.tools/assert"
 )
 

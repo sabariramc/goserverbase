@@ -9,17 +9,17 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/v5/app/server/httpserver"
-	"github.com/sabariramc/goserverbase/v5/aws"
-	"github.com/sabariramc/goserverbase/v5/db/mongo"
-	"github.com/sabariramc/goserverbase/v5/errors"
-	"github.com/sabariramc/goserverbase/v5/instrumentation"
-	"github.com/sabariramc/goserverbase/v5/kafka"
-	"github.com/sabariramc/goserverbase/v5/log"
-	"github.com/sabariramc/goserverbase/v5/log/logwriter"
-	"github.com/sabariramc/goserverbase/v5/testutils"
-	"github.com/sabariramc/goserverbase/v5/utils"
-	"github.com/sabariramc/goserverbase/v5/utils/httputil"
+	"github.com/sabariramc/goserverbase/v6/app/server/httpserver"
+	"github.com/sabariramc/goserverbase/v6/aws"
+	"github.com/sabariramc/goserverbase/v6/db/mongo"
+	"github.com/sabariramc/goserverbase/v6/errors"
+	"github.com/sabariramc/goserverbase/v6/instrumentation"
+	"github.com/sabariramc/goserverbase/v6/kafka"
+	"github.com/sabariramc/goserverbase/v6/log"
+	"github.com/sabariramc/goserverbase/v6/log/logwriter"
+	"github.com/sabariramc/goserverbase/v6/testutils"
+	"github.com/sabariramc/goserverbase/v6/utils"
+	"github.com/sabariramc/goserverbase/v6/utils/httputil"
 )
 
 var ServerTestConfig *testutils.TestConfig

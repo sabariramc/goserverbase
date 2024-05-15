@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
-	"github.com/sabariramc/goserverbase/v5/kafka"
+	"github.com/sabariramc/goserverbase/v6/instrumentation/span"
+	"github.com/sabariramc/goserverbase/v6/kafka"
 	ckafka "github.com/segmentio/kafka-go"
 )
 

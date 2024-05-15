@@ -6,11 +6,11 @@ import (
 	"os"
 	"sync"
 
-	baseapp "github.com/sabariramc/goserverbase/v5/app"
-	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
-	"github.com/sabariramc/goserverbase/v5/kafka"
-	"github.com/sabariramc/goserverbase/v5/log"
-	"github.com/sabariramc/goserverbase/v5/notifier"
+	baseapp "github.com/sabariramc/goserverbase/v6/app"
+	"github.com/sabariramc/goserverbase/v6/instrumentation/span"
+	"github.com/sabariramc/goserverbase/v6/kafka"
+	"github.com/sabariramc/goserverbase/v6/log"
+	"github.com/sabariramc/goserverbase/v6/notifier"
 	ckafka "github.com/segmentio/kafka-go"
 )
 

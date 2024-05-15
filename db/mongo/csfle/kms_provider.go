@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	cuaws "github.com/sabariramc/goserverbase/v5/aws"
-	"github.com/sabariramc/goserverbase/v5/log"
+	cuaws "github.com/sabariramc/goserverbase/v6/aws"
+	"github.com/sabariramc/goserverbase/v6/log"
 )
 
 type MasterKeyProvider interface {

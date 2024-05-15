@@ -3,9 +3,9 @@ package csfle_test
 import (
 	"context"
 
-	"github.com/sabariramc/goserverbase/v5/log"
-	"github.com/sabariramc/goserverbase/v5/log/logwriter"
-	"github.com/sabariramc/goserverbase/v5/testutils"
+	"github.com/sabariramc/goserverbase/v6/log"
+	"github.com/sabariramc/goserverbase/v6/log/logwriter"
+	"github.com/sabariramc/goserverbase/v6/testutils"
 )
 
 var MongoTestConfig *testutils.TestConfig

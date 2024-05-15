@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	server "github.com/sabariramc/goserverbase/v5/db/mongo/csfle/test"
-	"github.com/sabariramc/goserverbase/v5/instrumentation/contrib/ddtrace"
+	server "github.com/sabariramc/goserverbase/v6/db/mongo/csfle/test"
+	"github.com/sabariramc/goserverbase/v6/instrumentation/contrib/ddtrace"
 )
 
 func main() {

@@ -3,8 +3,8 @@ package otel
 import (
 	"context"
 
-	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
-	cKafka "github.com/sabariramc/goserverbase/v5/kafka"
+	"github.com/sabariramc/goserverbase/v6/instrumentation/span"
+	cKafka "github.com/sabariramc/goserverbase/v6/kafka"
 	"github.com/segmentio/kafka-go"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"

@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"github.com/sabariramc/goserverbase/v5/errors"
+	"github.com/sabariramc/goserverbase/v6/errors"
 )
 
 func (b *BaseApp) PanicRecovery(ctx context.Context, rec any) (string, error) {

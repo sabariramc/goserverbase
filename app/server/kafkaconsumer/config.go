@@ -1,8 +1,8 @@
 package kafkaconsumer
 
 import (
-	baseapp "github.com/sabariramc/goserverbase/v5/app"
-	"github.com/sabariramc/goserverbase/v5/kafka"
+	baseapp "github.com/sabariramc/goserverbase/v6/app"
+	"github.com/sabariramc/goserverbase/v6/kafka"
 )
 
 type KafkaConsumerServerConfig struct {

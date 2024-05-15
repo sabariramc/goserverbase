@@ -14,8 +14,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/gabriel-vasile/mimetype"
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/v5/crypto/aes"
-	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v6/crypto/aes"
+	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/randomstring"
 )
 

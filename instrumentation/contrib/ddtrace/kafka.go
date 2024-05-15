@@ -3,7 +3,7 @@ package ddtrace
 import (
 	"context"
 
-	"github.com/sabariramc/goserverbase/v5/instrumentation/span"
+	"github.com/sabariramc/goserverbase/v6/instrumentation/span"
 	"github.com/segmentio/kafka-go"
 	"gopkg.in/DataDog/dd-trace-go.v1/ddtrace/ext"
 	ddtrace "gopkg.in/DataDog/dd-trace-go.v1/ddtrace/tracer"

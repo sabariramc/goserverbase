@@ -7,8 +7,8 @@ import (
 
 	e "errors"
 
-	"github.com/sabariramc/goserverbase/v5/kafka"
-	"github.com/sabariramc/goserverbase/v5/log"
+	"github.com/sabariramc/goserverbase/v6/kafka"
+	"github.com/sabariramc/goserverbase/v6/log"
 )
 
 func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
