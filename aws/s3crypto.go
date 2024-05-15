@@ -16,7 +16,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/sabariramc/goserverbase/v5/crypto/aes"
 	"github.com/sabariramc/goserverbase/v5/log"
-	"github.com/sabariramc/goserverbase/v5/utils"
+	"github.com/sabariramc/randomstring"
 )
 
 const (
@@ -26,6 +26,7 @@ const (
 	ConstEncryptionAlgorithm         = "AES-GCM-256"
 )
 
+// S3Crypto extends S3 with client side object encryption, all the objects that are created will be in encrypted format
 type S3Crypto struct {
 	_ struct{}
 	*S3
@@ -50,7 +51,7 @@ func NewS3CryptoClient(s3Client *S3, kms *KMS, logger log.Log) *S3Crypto {
 }
 
 func (s *S3Crypto) encrypt(ctx context.Context, body io.Reader) (io.Reader, map[string]string, error) {
-	key := utils.GenerateRandomString(32)
+	key := randomstring.Generate(32)
 	encryptedKey, err := s.kms.Encrypt(ctx, []byte(key))
 	if err != nil {
 		s.log.Error(ctx, "error encrypting content key", err)

@@ -6,7 +6,8 @@ import (
 	"time"
 
 	"github.com/sabariramc/goserverbase/v5/db/mongo"
-	"github.com/sabariramc/goserverbase/v5/utils"
+	"github.com/sabariramc/randomstring"
+	"github.com/sabariramc/snowflake"
 	"github.com/shopspring/decimal"
 	"gotest.tools/assert"
 )
@@ -26,8 +27,10 @@ func GetSampleData() *TestVal {
 	val1, _ := decimal.NewFromString("123.1232")
 	val2, _ := decimal.NewFromString("123.1232")
 	data := &TestVal{}
-	data.TestID = utils.GenerateID(10, "test_")
+	data.TestID = randomstring.GenerateWithPrefix(10, "test_")
 	data.SetCreateParam("Random value")
+	gen, _ := snowflake.New()
+	gen.GenerateID()
 	data.StrVal = "value1"
 	data.IntVal = 123
 	data.DecimalVal = val1.Add(val2)

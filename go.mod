@@ -1,8 +1,6 @@
 module github.com/sabariramc/goserverbase/v5
 
-go 1.22
-
-toolchain go1.22.0
+go 1.22.0
 
 require (
 	github.com/aws/aws-sdk-go-v2 v1.26.1
@@ -18,6 +16,8 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.5
 	github.com/joho/godotenv v1.5.1
 	github.com/json-iterator/go v1.1.12
+	github.com/sabariramc/randomstring v1.0.0
+	github.com/sabariramc/snowflake v1.0.0
 	github.com/segmentio/kafka-go v0.4.47
 	github.com/shopspring/decimal v1.4.0
 	github.com/swaggo/files v1.0.1
@@ -128,7 +128,6 @@ require (
 	go.uber.org/atomic v1.11.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect
 	golang.org/x/crypto v0.23.0 // indirect
-	golang.org/x/mod v0.17.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.20.0 // indirect
 	golang.org/x/text v0.15.0 // indirect

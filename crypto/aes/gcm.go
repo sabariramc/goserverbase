@@ -8,7 +8,7 @@ import (
 	"fmt"
 
 	"github.com/sabariramc/goserverbase/v5/log"
-	"github.com/sabariramc/goserverbase/v5/utils"
+	"github.com/sabariramc/randomstring"
 )
 
 type GCM struct {
@@ -36,7 +36,7 @@ func (a *GCM) Encrypt(ctx context.Context, plainBlob []byte) ([]byte, error) {
 		a.log.Error(ctx, "error creating gcm cipher", err)
 		return nil, fmt.Errorf("GCM.Encrypt: error creating gcm cipher: %w", err)
 	}
-	nonce := []byte(utils.GenerateRandomString(cipher.NonceSize()))
+	nonce := []byte(randomstring.Generate(cipher.NonceSize()))
 	cipherBlob := cipher.Seal(nil, nonce, plainBlob, nil)
 	return append(nonce, cipherBlob...), nil
 }
