@@ -1,4 +1,5 @@
-package log
+//
+package message
 
 type LogLevel struct {
 	Level        LogLevelCode
@@ -37,10 +38,18 @@ var logLevelInverseMap map[string]*LogLevel = func() map[string]*LogLevel {
 	return a
 }()
 
-func GetLogLevel(level string) LogLevel {
+func GetLogLevelWithName(level string) LogLevel {
 	logLevel, ok := logLevelInverseMap[level]
 	if !ok {
 		logLevel = logLevelInverseMap["ERROR"]
+	}
+	return *logLevel
+}
+
+func GetLogLevel(level LogLevelCode) LogLevel {
+	logLevel, ok := logLevelMap[LogLevelCode(level)]
+	if !ok {
+		logLevel = logLevelMap[ERROR]
 	}
 	return *logLevel
 }

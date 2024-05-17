@@ -7,6 +7,7 @@ import (
 	"log/syslog"
 
 	"github.com/sabariramc/goserverbase/v6/log"
+	"github.com/sabariramc/goserverbase/v6/log/message"
 )
 
 // SyslogLogWriter writes log to syslog
@@ -27,13 +28,13 @@ func (s *SyslogLogWriter) GetBufferSize() int {
 	return 1
 }
 
-func (s *SyslogLogWriter) Start(logChannel chan log.MuxLogMessage) {
+func (s *SyslogLogWriter) Start(logChannel chan message.MuxLogMessage) {
 	for log := range logChannel {
 		_ = s.WriteMessage(log.Ctx, &log.LogMessage)
 	}
 }
 
-func (s *SyslogLogWriter) WriteMessage(ctx context.Context, l *log.LogMessage) error {
+func (s *SyslogLogWriter) WriteMessage(ctx context.Context, l *message.LogMessage) error {
 	cr := log.ExtractCorrelationParam(ctx)
 	s.logger.Printf("[%v] [%v] [%v] [%v] [%v] [%v] [%v]\n", l.Timestamp, l.LogLevelName, cr.CorrelationID, l.ServiceName, l.Message, GetLogObjectType(l.LogObject), l.LogObject)
 	return nil

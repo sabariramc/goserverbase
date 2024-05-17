@@ -1,20 +1,24 @@
 package log
 
-import "context"
+import (
+	"context"
+
+	m "github.com/sabariramc/goserverbase/v6/log/message"
+)
 
 type ChanneledLogWriter interface {
-	Start(chan MuxLogMessage)
-	WriteMessage(context.Context, *LogMessage) error
+	Start(chan m.MuxLogMessage)
+	WriteMessage(context.Context, *m.LogMessage) error
 	GetBufferSize() int
 }
 
 type LogWriter interface {
-	WriteMessage(context.Context, *LogMessage) error
+	WriteMessage(context.Context, *m.LogMessage) error
 }
 
 // Mux interface abstracts how the logger interacts with the the log handlers
 type Mux interface {
-	Print(context.Context, *LogMessage)
+	Print(context.Context, *m.LogMessage)
 	AddLogWriter(context.Context, LogWriter)
 }
 
@@ -28,7 +32,7 @@ func NewDefaultLogMux(logWriterList ...LogWriter) *DefaultLogMux {
 	return ls
 }
 
-func (ls *DefaultLogMux) Print(ctx context.Context, msg *LogMessage) {
+func (ls *DefaultLogMux) Print(ctx context.Context, msg *m.LogMessage) {
 	for _, w := range ls.writer {
 		_ = w.WriteMessage(ctx, msg)
 	}
@@ -38,34 +42,29 @@ func (ls *DefaultLogMux) AddLogWriter(ctx context.Context, writer LogWriter) {
 	ls.writer = append(ls.writer, writer)
 }
 
-type MuxLogMessage struct {
-	Ctx        context.Context
-	LogMessage LogMessage
-}
-
 type ChanneledLogMux struct {
-	inChannel  chan MuxLogMessage
-	outChannel []chan MuxLogMessage
+	inChannel  chan m.MuxLogMessage
+	outChannel []chan m.MuxLogMessage
 }
 
 func NewChanneledLogMux(bufferSize uint8, logWriterList ...ChanneledLogWriter) *ChanneledLogMux {
-	outChannelList := make([]chan MuxLogMessage, len(logWriterList))
+	outChannelList := make([]chan m.MuxLogMessage, len(logWriterList))
 	for i, logWriter := range logWriterList {
 		lBufferSize := logWriter.GetBufferSize()
 		if lBufferSize < 1 {
 			lBufferSize = int(bufferSize)
 		}
-		outChannel := make(chan MuxLogMessage, lBufferSize)
+		outChannel := make(chan m.MuxLogMessage, lBufferSize)
 		outChannelList[i] = outChannel
 		go logWriter.Start(outChannel)
 	}
-	ls := &ChanneledLogMux{inChannel: make(chan MuxLogMessage, bufferSize), outChannel: outChannelList}
+	ls := &ChanneledLogMux{inChannel: make(chan m.MuxLogMessage, bufferSize), outChannel: outChannelList}
 	go ls.start()
 	return ls
 }
 
-func (ls *ChanneledLogMux) Print(ctx context.Context, msg *LogMessage) {
-	ls.inChannel <- MuxLogMessage{
+func (ls *ChanneledLogMux) Print(ctx context.Context, msg *m.LogMessage) {
+	ls.inChannel <- m.MuxLogMessage{
 		Ctx:        ctx,
 		LogMessage: *msg,
 	}

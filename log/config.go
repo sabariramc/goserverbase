@@ -1,11 +1,14 @@
 package log
 
-import "github.com/sabariramc/goserverbase/v6/utils"
+import (
+	"github.com/sabariramc/goserverbase/v6/log/message"
+	"github.com/sabariramc/goserverbase/v6/utils"
+)
 
 type Config struct {
 	ServiceName string
 	ModuleName  string
-	LogLevel    LogLevel
+	LogLevel    message.LogLevel
 	Mux         Mux
 	FileTrace   bool
 	Audit       AuditLogWriter
@@ -14,7 +17,7 @@ type Config struct {
 var defaultConfig = Config{
 	ServiceName: utils.GetEnv("SERVICE_NAME", "default"),
 	ModuleName:  "log",
-	LogLevel:    GetLogLevel(utils.GetEnv("LOG__LEVEL", "default")),
+	LogLevel:    message.GetLogLevelWithName(utils.GetEnv("LOG__LEVEL", "ERROR")),
 	FileTrace:   false,
 	Mux:         NewDefaultLogMux(),
 	Audit:       nil,
@@ -40,11 +43,7 @@ func WithModuleName(moduleName string) Option {
 // WithLogLevelName sets the log level name for Logger.
 func WithLogLevelName(logLevelName string) Option {
 	return func(c *Config) {
-		logLevel, ok := logLevelInverseMap[logLevelName]
-		if !ok {
-			logLevel = logLevelInverseMap["INFO"]
-		}
-		c.LogLevel = *logLevel
+		c.LogLevel = message.GetLogLevelWithName(logLevelName)
 	}
 }
 

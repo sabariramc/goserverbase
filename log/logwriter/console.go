@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/sabariramc/goserverbase/v6/log"
+	"github.com/sabariramc/goserverbase/v6/log/message"
 )
 
 // ConsoleLogWriter write logs to console
@@ -15,7 +16,7 @@ func NewConsoleWriter() *ConsoleLogWriter {
 	return &ConsoleLogWriter{}
 }
 
-func (c *ConsoleLogWriter) Start(logChannel chan log.MuxLogMessage) {
+func (c *ConsoleLogWriter) Start(logChannel chan message.MuxLogMessage) {
 	for log := range logChannel {
 		_ = c.WriteMessage(log.Ctx, &log.LogMessage)
 	}
@@ -25,7 +26,7 @@ func (c *ConsoleLogWriter) GetBufferSize() int {
 	return 1
 }
 
-func (c *ConsoleLogWriter) WriteMessage(ctx context.Context, l *log.LogMessage) error {
+func (c *ConsoleLogWriter) WriteMessage(ctx context.Context, l *message.LogMessage) error {
 	cr := log.ExtractCorrelationParam(ctx)
 	if l.File != "" {
 		fmt.Println(l.File)
