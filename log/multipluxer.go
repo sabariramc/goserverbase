@@ -12,8 +12,8 @@ type LogWriter interface {
 	WriteMessage(context.Context, *LogMessage) error
 }
 
-// LogMux interface abstracts how the logger interacts with the the log handlers
-type LogMux interface {
+// Mux interface abstracts how the logger interacts with the the log handlers
+type Mux interface {
 	Print(context.Context, *LogMessage)
 	AddLogWriter(context.Context, LogWriter)
 }

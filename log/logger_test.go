@@ -62,7 +62,7 @@ func TestLogWriter(t *testing.T) {
 	valueList := []any{0, 1.234, dec, true, "abcd", []any{"asdf", 10}, map[string]any{"a": "fadsf", "b": 10}, GetSampleData()}
 	ch := make(chan []string, len(valueList)+1)
 	lmux := log.NewDefaultLogMux(NewLogWriter(ch))
-	log := log.New(context.Background(), log.Config{LogLevelName: "DEBUG"}, "Test Logger", lmux, nil)
+	log := log.New(log.WithLogLevelName("DEBUG"), log.WithMux(lmux), log.WithServiceName("Test Logger"))
 	for _, v := range valueList {
 		log.Debug(context.Background(), "test", v)
 	}
@@ -79,15 +79,14 @@ type BenchLogWriter struct {
 	i *int
 }
 
-func (b *BenchLogWriter) WriteMessage(context.Context, *log.LogMessage) error {
-	*b.i = *b.i + 1
+func (b *BenchLogWriter) WriteMessage(ctx context.Context, msg *log.LogMessage) error {
 	return nil
 }
 
 func BenchmarkLogger(b *testing.B) {
 	k := 0
 	lmux := log.NewDefaultLogMux(&BenchLogWriter{i: &k})
-	log := log.New(context.Background(), log.Config{LogLevelName: "DEBUG"}, "Test Logger", lmux, nil)
+	log := log.New(log.WithLogLevelName("DEBUG"), log.WithMux(lmux), log.WithServiceName("Test Logger"))
 	ctx := context.Background()
 	for i := 1; i < 8; i += 2 {
 		b.Run(fmt.Sprintf("goroutines-%d", i*goprocs), func(b *testing.B) {
