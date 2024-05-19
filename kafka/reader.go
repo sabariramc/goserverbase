@@ -20,14 +20,14 @@ type Reader struct {
 	log              log.Log
 	commitLock       sync.Mutex
 	consumedMessages []kafka.Message
-	bufferSize       int
-	idx              int
+	bufferSize       uint
+	idx              uint
 	tr               ConsumerTracer
 }
 
 var ErrReaderBufferFull = fmt.Errorf("Reader.StoreMessage: Buffer full")
 
-func NewReader(ctx context.Context, log log.Log, r *kafka.Reader, bufferSize int, tr ConsumerTracer) *Reader {
+func NewReader(ctx context.Context, log log.Log, r *kafka.Reader, bufferSize uint, tr ConsumerTracer) *Reader {
 	return &Reader{
 		Reader:           r,
 		log:              log.NewResourceLogger("KafkaReader"),

@@ -10,6 +10,7 @@ import (
 	"github.com/sabariramc/goserverbase/v6/errors"
 )
 
+// PanicRecovery recovers from panics, logs the panic details, and returns the stack trace and error.
 func (b *BaseApp) PanicRecovery(ctx context.Context, rec any) (string, error) {
 	stackTrace := string(debug.Stack())
 	err, ok := rec.(error)
@@ -22,6 +23,7 @@ func (b *BaseApp) PanicRecovery(ctx context.Context, rec any) (string, error) {
 	return stackTrace, err
 }
 
+// ProcessError processes an error, logs it, and returns the HTTP status code and error response body.
 func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error) (int, []byte) {
 	var statusCode int
 	var body []byte

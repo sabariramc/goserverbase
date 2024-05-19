@@ -6,10 +6,12 @@ import (
 	"time"
 )
 
+// RegisterHealthCheckHook registers a health check hook to be executed during health check.
 func (b *BaseApp) RegisterHealthCheckHook(handler HealthCheckHook) {
 	b.healthHooks = append(b.healthHooks, handler)
 }
 
+// RunHealthCheck runs the registered health check hooks and returns an error if any health check fails.
 func (b *BaseApp) RunHealthCheck(ctx context.Context) error {
 	b.log.Debug(ctx, "Starting health check", nil)
 	n := len(b.healthHooks)
@@ -37,10 +39,12 @@ func (b *BaseApp) RunHealthCheck(ctx context.Context) error {
 	return nil
 }
 
+// RegisterStatusCheckHook registers a status check hook to be executed during status check.
 func (b *BaseApp) RegisterStatusCheckHook(handler StatusCheckHook) {
 	b.statusHooks = append(b.statusHooks, handler)
 }
 
+// RunStatusCheck runs the registered status check hooks and returns a map of their statuses.
 func (b *BaseApp) RunStatusCheck(ctx context.Context) map[string]any {
 	b.log.Debug(ctx, "Starting status check", nil)
 	n := len(b.statusHooks)

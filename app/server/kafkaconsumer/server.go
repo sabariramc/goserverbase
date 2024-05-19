@@ -1,3 +1,4 @@
+// Package kafkaconsumer extends the BaseApp with a kafka consumer server
 package kafkaconsumer
 
 import (
@@ -10,49 +11,66 @@ import (
 	"github.com/sabariramc/goserverbase/v6/instrumentation/span"
 	"github.com/sabariramc/goserverbase/v6/kafka"
 	"github.com/sabariramc/goserverbase/v6/log"
-	"github.com/sabariramc/goserverbase/v6/notifier"
 	ckafka "github.com/segmentio/kafka-go"
 )
 
+// KafkaEventProcessor defines the function signature for processing Kafka events handlers.
 type KafkaEventProcessor func(context.Context, *kafka.Message) error
 
+// Tracer defines the interface for tracing functionality.
 type Tracer interface {
 	StartKafkaSpanFromMessage(ctx context.Context, msg *ckafka.Message) (context.Context, span.Span)
 	span.SpanOp
 }
 
+// KafkaConsumerServer represents a Kafka consumer server.
+// Implements ShutdownHook, HealthCheckHook and StatusCheckHook
 type KafkaConsumerServer struct {
 	*baseapp.BaseApp
 	client                 *kafka.Poller
 	handler                map[string]KafkaEventProcessor
 	log                    log.Log
 	ch                     chan *ckafka.Message
-	c                      *KafkaConsumerServerConfig
+	c                      *Config
 	shutdown, shutdownPoll context.CancelFunc
 	requestWG, shutdownWG  sync.WaitGroup
 	tracer                 Tracer
 }
 
-func New(appConfig KafkaConsumerServerConfig, logger log.Log, t Tracer, errorNotifier notifier.Notifier) *KafkaConsumerServer {
-	if appConfig.HealthCheckInSec <= 0 {
-		appConfig.HealthCheckInSec = 30
+// New creates a new instance of KafkaConsumerServer.
+func New(option ...Options) *KafkaConsumerServer {
+	config := defaultConfig
+	for _, fn := range option {
+		fn(&config)
 	}
-	if appConfig.HealthFilePath == "" {
-		appConfig.HealthFilePath = "/tmp/healthCheck"
-	}
-	os.WriteFile(appConfig.HealthFilePath, []byte("Hello"), fs.ModeAppend)
-	b := baseapp.New(appConfig.ServerConfig, logger, errorNotifier)
+	os.WriteFile(config.healthFilePath, []byte("Hello"), fs.ModeAppend)
+	b := baseapp.New(config.ServerConfig, config.log, config.notifier)
 	h := &KafkaConsumerServer{
 		BaseApp: b,
-		log:     logger.NewResourceLogger("KafkaConsumerServer"),
-		c:       &appConfig,
+		log:     config.log.NewResourceLogger("KafkaConsumerServer"),
+		c:       &config,
 		handler: make(map[string]KafkaEventProcessor),
-		tracer:  t,
+		tracer:  config.t,
 	}
+	h.RegisterHealthCheckHook(h)
 	h.RegisterOnShutdownHook(h)
+	h.RegisterStatusCheckHook(h)
 	return h
 }
 
+// Name returns the name of the KafkaConsumerServer.
+// Implementation of the hook interface defined in the BaseApp
 func (k *KafkaConsumerServer) Name(ctx context.Context) string {
 	return "KafkaConsumerServer"
+}
+
+// Shutdown gracefully shuts down the Kafka consumer server.
+// Implementation for shutdown hook
+func (k *KafkaConsumerServer) Shutdown(ctx context.Context) error {
+	defer k.shutdownWG.Done()
+	k.shutdownPoll()
+	k.requestWG.Wait()
+	k.shutdown()
+	k.client.Close(ctx)
+	return nil
 }

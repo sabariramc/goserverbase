@@ -1,6 +1,7 @@
 package log
 
 import (
+	"github.com/sabariramc/goserverbase/v6/log/logwriter"
 	"github.com/sabariramc/goserverbase/v6/log/message"
 	"github.com/sabariramc/goserverbase/v6/utils"
 )
@@ -19,7 +20,7 @@ var defaultConfig = Config{
 	ModuleName:  "log",
 	LogLevel:    message.GetLogLevelWithName(utils.GetEnv("LOG__LEVEL", "ERROR")),
 	FileTrace:   false,
-	Mux:         NewDefaultLogMux(),
+	Mux:         NewDefaultLogMux(logwriter.NewConsoleWriter()),
 	Audit:       nil,
 }
 

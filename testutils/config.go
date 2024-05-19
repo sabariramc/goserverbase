@@ -28,7 +28,7 @@ type TestConfig struct {
 	Logger          log.Config
 	App             *baseapp.ServerConfig
 	HTTP            *httpserver.HTTPServerConfig
-	Kafka           *kafkaconsumer.KafkaConsumerServerConfig
+	Kafka           *kafkaconsumer.Config
 	Mongo           *mongo.Config
 	CSFLE           *csfle.Config
 	AWS             *AWSResources
@@ -52,7 +52,7 @@ func NewConfig() *TestConfig {
 	consumer := kafka.KafkaConsumerConfig{
 		KafkaCredConfig: &kafkaBaseConfig,
 		GroupID:         utils.GetEnvMust("KAFKA_CONSUMER_ID"),
-		MaxBuffer:       utils.GetEnvInt("KAFKA_CONSUMER_MAX_BUFFER", 1000),
+		MaxBuffer:       uint(utils.GetEnvInt("KAFKA_CONSUMER_MAX_BUFFER", 1000)),
 		AutoCommit:      true,
 	}
 	if kafkaBaseConfig.SASLType == "PLAIN" {
@@ -69,8 +69,8 @@ func NewConfig() *TestConfig {
 	}
 	return &TestConfig{
 		Logger: log.Config{
-			ServiceName:  serviceName,
-			LogLevelName: utils.GetEnv("LOG_LEVEL", "INFO"),
+			ServiceName: serviceName,
+			LogLevel:    utils.GetEnv("LOG_LEVEL", "INFO"),
 		},
 		App: appConfig,
 		HTTP: &httpserver.HTTPServerConfig{
@@ -87,7 +87,7 @@ func NewConfig() *TestConfig {
 				PrivateKeyPath: utils.GetEnv("HTTP2_PRIVATE_KEY", ""),
 			},
 		},
-		Kafka: &kafkaconsumer.KafkaConsumerServerConfig{
+		Kafka: &kafkaconsumer.Config{
 			ServerConfig:        *appConfig,
 			KafkaConsumerConfig: consumer,
 		},

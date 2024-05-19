@@ -38,7 +38,7 @@ func NewPoller(ctx context.Context, logger log.Log, config KafkaConsumerConfig, 
 		GroupID:           config.GroupID,
 		GroupTopics:       topics,
 		HeartbeatInterval: time.Second,
-		QueueCapacity:     config.MaxBuffer,
+		QueueCapacity:     int(config.MaxBuffer),
 		MaxBytes:          10e6, // 10MB,
 		Dialer: &kafka.Dialer{
 			Timeout:       10 * time.Second,

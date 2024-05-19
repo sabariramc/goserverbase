@@ -2,21 +2,26 @@ package baseapp
 
 import "context"
 
+// Name defines interface to retrieve module identity
+type Name interface {
+	Name(ctx context.Context) string
+}
+
 // ShutdownHook defines interface for a graceful shutdown of different resources used by the app
 type ShutdownHook interface {
-	Name(ctx context.Context) string
+	Name
 	Shutdown(ctx context.Context) error
 }
 
 // HealthCheckHook defines interface for health check of different resources used by the app
 type HealthCheckHook interface {
-	Name(ctx context.Context) string
+	Name
 	HealthCheck(ctx context.Context) error
 }
 
 // StatusCheckHook defines interface to get the current status of different resources used by the app
 type StatusCheckHook interface {
-	Name(ctx context.Context) string
+	Name
 	StatusCheck(ctx context.Context) (any, error)
 }
 

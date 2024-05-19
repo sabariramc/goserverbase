@@ -5,12 +5,13 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	cuCtx "github.com/sabariramc/goserverbase/v6/context"
 	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/log/logwriter"
 )
 
 func TestConsoleLogWriter(t *testing.T) {
-	ctx := log.GetContextWithCorrelationParam(context.Background(), &log.CorrelationParam{
+	ctx := cuCtx.GetContextWithCorrelationParam(context.Background(), &cuCtx.CorrelationParam{
 		CorrelationID: "test console log",
 	})
 	log := log.New()

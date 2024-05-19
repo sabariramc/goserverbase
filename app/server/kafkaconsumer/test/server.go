@@ -21,7 +21,7 @@ import (
 
 var ServerTestConfig *testutils.TestConfig
 var ServerTestLogger log.Log
-var ServerTestLMux log.LogMux
+var ServerTestLMux log.Mux
 
 func init() {
 	testutils.LoadEnv("../../../.env")
@@ -93,7 +93,7 @@ func NewServer(t instrumentation.Tracer) *server {
 		ServerTestLogger.Emergency(ctx, "error creating mongo connection", err, nil)
 	}
 	srv := &server{
-		KafkaConsumerServer: kafkaconsumer.New(*ServerTestConfig.Kafka, ServerTestLogger, t, nil),
+		KafkaConsumerServer: kafkaconsumer.New(kafkaconsumer.WithKafkaConsumerConfig(ServerTestConfig.Kafka.KafkaConsumerConfig), kafkaconsumer.WithLog(ServerTestLogger), kafkaconsumer.WithTracer(t), nil),
 		pr:                  pr,
 		sns:                 aws.GetDefaultSNSClient(ServerTestLogger),
 		httpClient:          httputil.NewDefaultHTTPClient(ServerTestLogger, t),

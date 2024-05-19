@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/sabariramc/goserverbase/v6/log"
+	cuCtx "github.com/sabariramc/goserverbase/v6/context"
 	"github.com/sabariramc/goserverbase/v6/log/message"
 )
 
-func DefaultLogMapper(ctx context.Context, msg *message.LogMessage) map[string]any {
-	cr := log.ExtractCorrelationParam(ctx)
+func DefaultLogMapper(ctx context.Context, msg *message.Log) map[string]any {
+	cr := cuCtx.ExtractCorrelationParam(ctx)
 
 	return map[string]any{
 		"LogMessage":       msg,
@@ -24,7 +24,7 @@ func DefaultLogMapper(ctx context.Context, msg *message.LogMessage) map[string]a
 	}
 }
 
-type LogMapper func(context.Context, *message.LogMessage) map[string]any
+type LogMapper func(context.Context, *message.Log) map[string]any
 
 // JSONLLogWriter writes log to console in JSONL format
 type JSONLLogWriter struct {
@@ -40,7 +40,7 @@ func NewJSONLConsoleWriter(mapper LogMapper) *JSONLLogWriter {
 	}
 }
 
-func (c *JSONLLogWriter) WriteMessage(ctx context.Context, l *message.LogMessage) error {
+func (c *JSONLLogWriter) WriteMessage(ctx context.Context, l *message.Log) error {
 	msg := c.logMapper(ctx, l)
 	blob, _ := json.Marshal(msg)
 	fmt.Println(string(blob))

@@ -16,8 +16,7 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.5
 	github.com/joho/godotenv v1.5.1
 	github.com/json-iterator/go v1.1.12
-	github.com/sabariramc/randomstring v1.0.0
-	github.com/sabariramc/snowflake v1.0.0
+	github.com/sabariramc/randomstring v1.0.1
 	github.com/segmentio/kafka-go v0.4.47
 	github.com/shopspring/decimal v1.4.0
 	github.com/swaggo/files v1.0.1
@@ -34,9 +33,9 @@ require (
 	go.opentelemetry.io/otel/sdk v1.26.0
 	go.opentelemetry.io/otel/sdk/metric v1.26.0
 	go.opentelemetry.io/otel/trace v1.26.0
+	go.uber.org/zap v1.27.0
 	golang.org/x/net v0.25.0
 	gopkg.in/DataDog/dd-trace-go.v1 v1.63.1
-	gopkg.in/Graylog2/go-gelf.v2 v2.0.0-20191017102106-1550ee647df0
 	gotest.tools v2.2.0+incompatible
 )
 
@@ -126,6 +125,7 @@ require (
 	go.opentelemetry.io/otel/metric v1.26.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.2.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
+	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect
 	golang.org/x/crypto v0.23.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect

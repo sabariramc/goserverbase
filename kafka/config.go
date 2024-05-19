@@ -17,7 +17,7 @@ type KafkaConsumerConfig struct {
 	*KafkaCredConfig
 	GroupID                string
 	AutoCommit             bool
-	MaxBuffer              int
+	MaxBuffer              uint
 	AutoCommitIntervalInMs uint64
 	EnableLog              bool
 }

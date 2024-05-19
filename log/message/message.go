@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type LogMessage struct {
+type Log struct {
 	LogLevel
 	Message     string
 	LogObject   []interface{}
@@ -15,7 +15,7 @@ type LogMessage struct {
 	File        string
 }
 
-type MuxLogMessage struct {
+type MuxLog struct {
 	Ctx context.Context
-	LogMessage
+	Log
 }

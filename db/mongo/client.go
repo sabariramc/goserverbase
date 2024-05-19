@@ -19,8 +19,8 @@ import (
 // Mongo extends mongo.Client with default options setting and logging. Enable mongo internal log with a flag
 type Mongo struct {
 	*mongo.Client
-	log        log.Log
-	moduleName string
+	log         log.Log
+	serviceName string
 }
 
 type Tracer interface {
@@ -59,9 +59,7 @@ func NewWithDefaultOptions(ctx context.Context, serviceName string, logger log.L
 	if err != nil {
 		return nil, err
 	}
-	if c.ModuleName != "" {
-		client.moduleName = c.ModuleName
-	}
+	client.serviceName = serviceName
 	return client, nil
 }
 
@@ -77,7 +75,7 @@ func New(ctx context.Context, logger log.Log, opts ...*options.ClientOptions) (*
 		logger.Error(ctx, "error pinging mongo server", err)
 		return nil, fmt.Errorf("mongo.New: error pinging mongo server: %w", err)
 	}
-	return &Mongo{Client: client, moduleName: "MongoClient", log: logger.NewResourceLogger("MongoClient")}, nil
+	return &Mongo{Client: client, serviceName: "MongoClient", log: logger.NewResourceLogger("MongoClient")}, nil
 }
 
 func (m *Mongo) GetClient() *mongo.Client {
@@ -103,10 +101,10 @@ func (m *Mongo) Shutdown(ctx context.Context) error {
 }
 
 func (m *Mongo) Name(ctx context.Context) string {
-	if m.moduleName == "" {
+	if m.serviceName == "" {
 		return "MongoClient"
 	}
-	return m.moduleName
+	return m.serviceName
 }
 
 func (m *Mongo) HealthCheck(ctx context.Context) error {

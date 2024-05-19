@@ -12,10 +12,10 @@ func ExampleCustomJSONTagHandler() {
 	var tag2Json = utils.NewCustomJSONTagHandler("tag2")
 
 	type CorrelationParam struct {
-		CorrelationID string  `tag1:"x-correlation-id" tag2:"correlationId"`
-		ScenarioID    *string `tag1:"x-scenario-id,omitempty" tag2:"scenarioId,omitempty"`
-		SessionID     *string `tag1:"x-session-id,omitempty" tag2:"sessionId,omitempty"`
-		ScenarioName  *string `tag1:"x-scenario-name,omitempty" tag2:"scenarioName,omitempty"`
+		CorrelationID string `tag1:"x-correlation-id" tag2:"correlationId"`
+		ScenarioID    string `tag1:"x-scenario-id,omitempty" tag2:"scenarioId,omitempty"`
+		SessionID     string `tag1:"x-session-id,omitempty" tag2:"sessionId,omitempty"`
+		ScenarioName  string `tag1:"x-scenario-name,omitempty" tag2:"scenarioName,omitempty"`
 	}
 
 	x := CorrelationParam{}

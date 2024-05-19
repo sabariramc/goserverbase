@@ -125,7 +125,7 @@ func (l *Logger) print(ctx context.Context, level m.LogLevelCode, message string
 	if level > l.logLevel.Level {
 		return
 	}
-	msg := &m.LogMessage{
+	msg := &m.Log{
 		LogLevel:    m.GetLogLevel(level),
 		Message:     message,
 		LogObject:   logObject,

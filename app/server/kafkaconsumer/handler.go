@@ -10,6 +10,7 @@ import (
 	ckafka "github.com/segmentio/kafka-go"
 )
 
+// AddHandler adds a handler for processing Kafka events for the specified topic.
 func (k *KafkaConsumerServer) AddHandler(ctx context.Context, topicName string, handler KafkaEventProcessor) {
 	if handler == nil {
 		k.log.Emergency(ctx, "missing handler for topic - "+topicName, nil, fmt.Errorf("KafkaConsumerServer.AddHandler: handler parameter cannot be nil"))
@@ -20,6 +21,7 @@ func (k *KafkaConsumerServer) AddHandler(ctx context.Context, topicName string, 
 	k.handler[topicName] = handler
 }
 
+// ProcessEvent processes a Kafka message using the specified handler.
 func (k *KafkaConsumerServer) ProcessEvent(ctx context.Context, msg *kafka.Message, handler KafkaEventProcessor) {
 	span, spanOk := k.GetSpanFromContext(ctx)
 	defer func() {
@@ -51,14 +53,17 @@ func (k *KafkaConsumerServer) ProcessEvent(ctx context.Context, msg *kafka.Messa
 	}
 }
 
+// Commit commits the current offset of the Kafka consumer.
 func (k *KafkaConsumerServer) Commit(ctx context.Context) error {
 	return k.client.Commit(ctx)
 }
 
+// StoreMessage stores the given Kafka message.
 func (k *KafkaConsumerServer) StoreMessage(ctx context.Context, msg *kafka.Message) error {
 	return k.client.StoreMessage(ctx, msg.Message)
 }
 
+// Subscribe subscribes to Kafka topics and starts consuming messages.
 func (k *KafkaConsumerServer) Subscribe(ctx context.Context) {
 	topicList := make([]string, 0, len(k.handler))
 	for h := range k.handler {
@@ -76,6 +81,7 @@ func (k *KafkaConsumerServer) Subscribe(ctx context.Context) {
 	k.client = client
 }
 
+// GetSpanFromContext retrieves the OpenTelemetry span from the given context.
 func (k *KafkaConsumerServer) GetSpanFromContext(ctx context.Context) (span.Span, bool) {
 	if k.tracer != nil {
 		return k.tracer.GetSpanFromContext(ctx)

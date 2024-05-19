@@ -10,6 +10,7 @@ import (
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
+// NotFound returns a handler function for responding with a 404 Not Found status.
 func NotFound() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add(HttpHeaderContentType, HttpContentTypeJSON)
@@ -21,6 +22,7 @@ func NotFound() http.HandlerFunc {
 	}
 }
 
+// MethodNotAllowed returns a handler function for responding with a 405 Method Not Allowed status.
 func MethodNotAllowed() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add(HttpHeaderContentType, HttpContentTypeJSON)
@@ -33,6 +35,7 @@ func MethodNotAllowed() http.HandlerFunc {
 	}
 }
 
+// SetupRouter configures routes and middleware for the HTTPServer.
 func (h *HTTPServer) SetupRouter(ctx context.Context) {
 	h.handler.NoRoute(gin.WrapF(NotFound()))
 	h.handler.NoMethod(gin.WrapF(MethodNotAllowed()))
@@ -46,6 +49,9 @@ func (h *HTTPServer) SetupRouter(ctx context.Context) {
 	h.handler.Use(h.SetContextMiddleware(), h.RequestTimerMiddleware(), h.LogRequestResponseMiddleware(), h.PanicHandleMiddleware())
 }
 
+// SetupDocumentation configures routes for serving OpenAPI documentation.
+// By default documentation is served in <<host>>/meta/docs/index.html
+// The local root folder for the documentation can be configured with config.SwaggerRootFolder, the root folder should contain swagger.yaml
 func (h *HTTPServer) SetupDocumentation(ctx context.Context) {
 	h.handler.GET("/meta/docs/*any", ginSwagger.WrapHandler(swaggerfiles.Handler,
 		ginSwagger.URL(h.c.DocHost+"/meta/static/swagger.yaml"),
@@ -55,6 +61,7 @@ func (h *HTTPServer) SetupDocumentation(ctx context.Context) {
 	h.handler.StaticFS("/meta/static", http.Dir(h.c.SwaggerRootFolder))
 }
 
+// AddMiddleware adds custom middleware to the HTTPServer.
 func (h *HTTPServer) AddMiddleware(middleware ...gin.HandlerFunc) {
 	h.handler.Use(middleware...)
 }

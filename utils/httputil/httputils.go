@@ -38,9 +38,9 @@ HTTPClient extends http.Client with following
 type HTTPClient struct {
 	*http.Client
 	log          log.Log
-	retryMax     int
-	retryWaitMin time.Duration
-	retryWaitMax time.Duration
+	retryMax     uint
+	minRetryWait time.Duration
+	maxRetryWait time.Duration
 	checkRetry   CheckRetry
 	backoff      Backoff
 	tr           Tracer
@@ -92,7 +92,7 @@ func NewH2CClient(log log.Log, tr Tracer, retryMax int, retryWaitMin, retryWaitM
 
 // New creates a new HTTPClient wrapper for passed *http.Client
 func New(log log.Log, tr Tracer, c *http.Client, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HTTPClient {
-	return &HTTPClient{Client: c, log: log.NewResourceLogger("HttpClient"), retryMax: retryMax, retryWaitMin: retryWaitMin, retryWaitMax: retryWaitMax, checkRetry: retryablehttp.DefaultRetryPolicy, backoff: retryablehttp.DefaultBackoff, tr: tr}
+	return &HTTPClient{Client: c, log: log.NewResourceLogger("HttpClient"), retryMax: retryMax, minRetryWait: retryWaitMin, maxRetryWait: retryWaitMax, checkRetry: retryablehttp.DefaultRetryPolicy, backoff: retryablehttp.DefaultBackoff, tr: tr}
 }
 
 func (h *HTTPClient) validateResponseBody(resBody interface{}) error {
@@ -272,7 +272,7 @@ func (h *HTTPClient) backOffAndRetry(i int, req *http.Request, resp *http.Respon
 	if remain <= 0 {
 		return false, respErr
 	}
-	wait := h.backoff(h.retryWaitMin, h.retryWaitMax, i, resp)
+	wait := h.backoff(h.minRetryWait, h.maxRetryWait, i, resp)
 	if resp != nil && resp.ContentLength > 0 {
 		defer resp.Body.Close()
 		resBlob, _ := io.ReadAll(resp.Body)

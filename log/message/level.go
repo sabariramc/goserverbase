@@ -1,4 +1,4 @@
-//
+// Package message implements log message and level
 package message
 
 type LogLevel struct {

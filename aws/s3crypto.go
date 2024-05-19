@@ -20,13 +20,14 @@ import (
 )
 
 const (
-	ConstMetadataKMSARN              = "x-kms-arn"
-	ConstMetadataEncryptionAlgorithm = "x-encryption-algorithm"
-	ConstMetadataContentKey          = "x-content-key"
-	ConstEncryptionAlgorithm         = "AES-GCM-256"
+	MetadataKMSARN              = "x-kms-arn"
+	MetadataEncryptionAlgorithm = "x-encryption-algorithm"
+	MetadataContentKey          = "x-content-key"
+	EncryptionAlgorithmAESGCM   = "AES-GCM-256"
 )
 
-// S3Crypto extends S3 with client side object encryption, all the objects that are created will be in encrypted format
+// S3Crypto extends S3 with client side object encryption, all the objects that are created will be encrypted.
+// The objects is encrypted with content key unique to that object and the content key is encrypted with master key and stored in the metadata of the object
 type S3Crypto struct {
 	_ struct{}
 	*S3
@@ -73,9 +74,9 @@ func (s *S3Crypto) encrypt(ctx context.Context, body io.Reader) (io.Reader, map[
 		return nil, nil, fmt.Errorf("S3Crypto.encrypt: error encrypting content: %w", err)
 	}
 	return bytes.NewReader(data), map[string]string{
-		ConstMetadataKMSARN:              *s.kms.keyArn,
-		ConstMetadataEncryptionAlgorithm: ConstEncryptionAlgorithm,
-		ConstMetadataContentKey:          hex.EncodeToString(encryptedKey),
+		MetadataKMSARN:              *s.kms.keyArn,
+		MetadataEncryptionAlgorithm: EncryptionAlgorithmAESGCM,
+		MetadataContentKey:          hex.EncodeToString(encryptedKey),
 	}, nil
 }
 
@@ -109,22 +110,22 @@ func (s *S3Crypto) PutFile(ctx context.Context, s3Bucket, s3Key, localFilPath st
 }
 
 func (s *S3Crypto) decrypt(ctx context.Context, res *s3.GetObjectOutput) ([]byte, error) {
-	for _, key := range []string{ConstMetadataKMSARN, ConstMetadataContentKey, ConstMetadataEncryptionAlgorithm} {
+	for _, key := range []string{MetadataKMSARN, MetadataContentKey, MetadataEncryptionAlgorithm} {
 		if _, ok := res.Metadata[key]; !ok {
 			s.log.Error(ctx, "missing metadata", key)
 			return nil, fmt.Errorf(fmt.Sprintf("S3Crypto.decrypt: missing metadata %s", key))
 		}
 	}
-	if res.Metadata[ConstMetadataEncryptionAlgorithm] != ConstEncryptionAlgorithm {
-		s.log.Error(ctx, "algorithm not supported", res.Metadata[ConstMetadataEncryptionAlgorithm])
-		return nil, fmt.Errorf("S3Crypto.decrypt: algorithm not supported: %s", res.Metadata[ConstMetadataEncryptionAlgorithm])
+	if res.Metadata[MetadataEncryptionAlgorithm] != EncryptionAlgorithmAESGCM {
+		s.log.Error(ctx, "algorithm not supported", res.Metadata[MetadataEncryptionAlgorithm])
+		return nil, fmt.Errorf("S3Crypto.decrypt: algorithm not supported: %s", res.Metadata[MetadataEncryptionAlgorithm])
 	}
-	encryptedKey, err := hex.DecodeString(res.Metadata[ConstMetadataContentKey])
+	encryptedKey, err := hex.DecodeString(res.Metadata[MetadataContentKey])
 	if err != nil {
 		s.log.Error(ctx, "error decoding content key", err)
 		return nil, fmt.Errorf("S3Crypto.decrypt: error decoding content key: %w", err)
 	}
-	decryptKMS := NewKMSClient(s.log, s.kms.Client, res.Metadata[ConstMetadataKMSARN])
+	decryptKMS := NewKMSClient(s.log, s.kms.Client, res.Metadata[MetadataKMSARN])
 	key, err := decryptKMS.Decrypt(ctx, encryptedKey)
 	if err != nil {
 		s.log.Error(ctx, "error decrypting content key", err)

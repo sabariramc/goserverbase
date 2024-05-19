@@ -24,7 +24,7 @@ import (
 
 var ServerTestConfig *testutils.TestConfig
 var ServerTestLogger log.Log
-var ServerTestLMux log.LogMux
+var ServerTestLMux log.Mux
 
 func init() {
 	fmt.Println(os.Getwd())

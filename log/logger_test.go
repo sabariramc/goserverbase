@@ -50,7 +50,7 @@ func NewLogWriter(ch chan []string) *LogWriter {
 	}
 }
 
-func (c *LogWriter) WriteMessage(ctx context.Context, l *message.LogMessage) error {
+func (c *LogWriter) WriteMessage(ctx context.Context, l *message.Log) error {
 	cr := log.ExtractCorrelationParam(ctx)
 	fmt.Printf("[%v] [%v] [%v] [%v] [%v] [%v] [%v] [%v]\n", l.Timestamp, l.LogLevelName, cr.CorrelationID, l.ServiceName, l.ModuleName, l.Message, logwriter.GetLogObjectType(l.LogObject), logwriter.ParseLogObject(l.LogObject, true))
 	c.i++
@@ -80,7 +80,7 @@ type BenchLogWriter struct {
 	i *int
 }
 
-func (b *BenchLogWriter) WriteMessage(ctx context.Context, msg *message.LogMessage) error {
+func (b *BenchLogWriter) WriteMessage(ctx context.Context, msg *message.Log) error {
 	return nil
 }
 
