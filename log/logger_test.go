@@ -10,6 +10,7 @@ import (
 	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/log/logwriter"
 	"github.com/sabariramc/goserverbase/v6/log/message"
+	"github.com/sabariramc/goserverbase/v6/trace"
 	"github.com/shopspring/decimal"
 	"gotest.tools/assert"
 )
@@ -50,8 +51,8 @@ func NewLogWriter(ch chan []string) *LogWriter {
 	}
 }
 
-func (c *LogWriter) WriteMessage(ctx context.Context, l *message.Log) error {
-	cr := log.ExtractCorrelationParam(ctx)
+func (c *LogWriter) WriteMessage(ctx context.Context, l *message.LogMessage) error {
+	cr := trace.ExtractCorrelationParam(ctx)
 	fmt.Printf("[%v] [%v] [%v] [%v] [%v] [%v] [%v] [%v]\n", l.Timestamp, l.LogLevelName, cr.CorrelationID, l.ServiceName, l.ModuleName, l.Message, logwriter.GetLogObjectType(l.LogObject), logwriter.ParseLogObject(l.LogObject, true))
 	c.i++
 	c.ch <- []string{logwriter.ParseLogObject(l.LogObject, false), c.valueList[c.i]}
@@ -80,7 +81,7 @@ type BenchLogWriter struct {
 	i *int
 }
 
-func (b *BenchLogWriter) WriteMessage(ctx context.Context, msg *message.Log) error {
+func (b *BenchLogWriter) WriteMessage(ctx context.Context, msg *message.LogMessage) error {
 	return nil
 }
 
