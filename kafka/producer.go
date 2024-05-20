@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/sabariramc/goserverbase/v6/log"
+	"github.com/sabariramc/goserverbase/v6/trace"
 	"github.com/sabariramc/goserverbase/v6/utils"
 	"github.com/segmentio/kafka-go"
 )
@@ -43,10 +44,10 @@ func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfi
 		config.ModuleName = "KafkaProducer"
 	}
 	logger = logger.NewResourceLogger(config.ModuleName)
-	defaultCorrelationParam := &log.CorrelationParam{CorrelationID: config.ModuleName}
+	defaultCorrelationParam := &trace.CorrelationParam{CorrelationID: config.ModuleName}
 	kLog := &kafkaDeliveryReportLogger{
 		Log: logger.NewResourceLogger(config.ModuleName + ":DeliveryLog"),
-		ctx: log.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam),
+		ctx: trace.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam),
 	}
 	if config.Acknowledge == 0 {
 		logger.Warning(ctx, "Kafka replica acknowledgement is set to None", nil)
@@ -66,13 +67,13 @@ func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfi
 	if config.EnableLog {
 		p.Logger = &kafkaLogger{
 			Log:     logger.NewResourceLogger(config.ModuleName + ":InfoLog"),
-			ctx:     log.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam),
+			ctx:     trace.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam),
 			isError: false,
 		}
 		p.ErrorLogger = &kafkaLogger{
 			isError: true,
 			Log:     logger.NewResourceLogger(config.ModuleName + ":ErrorLog"),
-			ctx:     log.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam),
+			ctx:     trace.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam),
 		}
 	}
 	writer := NewWriter(ctx, p, config.BatchMaxBuffer, logger, tr)
@@ -89,7 +90,7 @@ func NewProducer(ctx context.Context, logger log.Log, config *KafkaProducerConfi
 		isBatch:                 config.Batch,
 	}
 	if config.Batch {
-		autoFlushContext, cancel := context.WithCancel(log.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam))
+		autoFlushContext, cancel := context.WithCancel(trace.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam))
 		k.autoFlushCancel = cancel
 		k.wg.Add(1)
 		go k.autoFlush(autoFlushContext)
@@ -130,7 +131,7 @@ func (k *Producer) Produce(ctx context.Context, topic, key string, message []byt
 	if headers == nil {
 		headers = make(map[string]string, 0)
 	}
-	corr := log.GetHeader(ctx)
+	corr := trace.GetHeader(ctx)
 	messageHeader := make([]kafka.Header, 0)
 	for i, v := range corr {
 		headers[i] = v

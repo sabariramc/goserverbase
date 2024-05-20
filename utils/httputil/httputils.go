@@ -14,17 +14,22 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/hashicorp/go-retryablehttp"
 	"github.com/sabariramc/goserverbase/v6/instrumentation/span"
 	"github.com/sabariramc/goserverbase/v6/log"
+	"github.com/sabariramc/goserverbase/v6/trace"
 	"golang.org/x/net/http2"
 )
 
+// ErrResponseUnmarshal is an error returned when the response body cannot be unmarshalled.
 var ErrResponseUnmarshal = fmt.Errorf("error marshalling response body")
+
+// ErrResponseFromUpstream is an error returned when the upstream server returns a non-2xx status.
 var ErrResponseFromUpstream = fmt.Errorf("HttpClient.Call: non 2xx status")
 
+// CheckRetry defines a function type for determining if a request should be retried.
 type CheckRetry func(ctx context.Context, resp *http.Response, err error) (bool, error)
 
+// Backoff defines a function type for determining the backoff duration between retries.
 type Backoff func(min, max time.Duration, attemptNum int, resp *http.Response) time.Duration
 
 /*
@@ -46,34 +51,15 @@ type HTTPClient struct {
 	tr           Tracer
 }
 
+// Tracer defines an interface for custom tracing implementations.
 type Tracer interface {
 	HTTPWrapTransport(http.RoundTripper) http.RoundTripper
 	HTTPRequestTrace(context.Context) *httptrace.ClientTrace
 	span.SpanOp
 }
 
-// NewDefaultHTTPClient creates a new HTTPClient with default options
-func NewDefaultHTTPClient(log log.Log, t Tracer) *HTTPClient {
-	return NewHTTPClient(log, t, 4, time.Second*1, time.Second*5)
-}
-
-// NewHTTPClient creates a new HTTPClient
-func NewHTTPClient(log log.Log, tr Tracer, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HTTPClient {
-	var rt http.RoundTripper
-	t := http.DefaultTransport.(*http.Transport).Clone()
-	t.MaxIdleConns = 100
-	t.MaxConnsPerHost = 100
-	t.MaxIdleConnsPerHost = 100
-	rt = t
-	if tr != nil {
-		rt = tr.HTTPWrapTransport(t)
-	}
-	return New(log, tr, &http.Client{Transport: rt}, retryMax, retryWaitMin, retryWaitMax)
-}
-
-// NewH2CClient creates a new HTTPClient with configuration to support h2c servers
-func NewH2CClient(log log.Log, tr Tracer, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HTTPClient {
-	var rt http.RoundTripper
+// NewH2CClient creates a new HTTPClient configured to support HTTP/2 Cleartext (h2c) servers.
+func NewH2CClient(options ...Option) *HTTPClient {
 	t := &http2.Transport{
 		// So http2.Transport doesn't complain the URL scheme isn't 'https'
 		AllowHTTP: false,
@@ -83,18 +69,32 @@ func NewH2CClient(log log.Log, tr Tracer, retryMax int, retryWaitMin, retryWaitM
 			return net.Dial(network, addr)
 		},
 	}
-	rt = t
-	if tr != nil {
-		rt = tr.HTTPWrapTransport(t)
+	options = append(options, WithHTTPClient(&http.Client{Transport: t}))
+	return New(options...)
+}
+
+// New creates a new HTTPClient wrapper with the provided options.
+func New(options ...Option) *HTTPClient {
+	config := defaultConfig
+	for _, fn := range options {
+		fn(&config)
 	}
-	return New(log, tr, &http.Client{Transport: rt}, retryMax, retryWaitMin, retryWaitMax)
+	if config.tr != nil {
+		config.c.Transport = config.tr.HTTPWrapTransport(config.c.Transport)
+	}
+	return &HTTPClient{
+		Client:       config.c,
+		log:          config.log,
+		retryMax:     config.retryMax,
+		minRetryWait: config.minRetryWait,
+		maxRetryWait: config.maxRetryWait,
+		checkRetry:   config.checkRetry,
+		backoff:      config.backoff,
+		tr:           config.tr,
+	}
 }
 
-// New creates a new HTTPClient wrapper for passed *http.Client
-func New(log log.Log, tr Tracer, c *http.Client, retryMax int, retryWaitMin, retryWaitMax time.Duration) *HTTPClient {
-	return &HTTPClient{Client: c, log: log.NewResourceLogger("HttpClient"), retryMax: retryMax, minRetryWait: retryWaitMin, maxRetryWait: retryWaitMax, checkRetry: retryablehttp.DefaultRetryPolicy, backoff: retryablehttp.DefaultBackoff, tr: tr}
-}
-
+// validateResponseBody checks if the provided response body is a pointer and returns an error if not.
 func (h *HTTPClient) validateResponseBody(resBody interface{}) error {
 	if resBody != nil {
 		v := reflect.ValueOf(resBody)
@@ -105,7 +105,7 @@ func (h *HTTPClient) validateResponseBody(resBody interface{}) error {
 	return nil
 }
 
-// Encode marshals the passed object and creates the io.Reader object
+// Encode marshals the provided data into an io.Reader object for the request body.
 func (h *HTTPClient) Encode(ctx context.Context, data interface{}) (io.Reader, error) {
 	var body io.Reader
 	if data != nil {
@@ -130,7 +130,8 @@ func (h *HTTPClient) Encode(ctx context.Context, data interface{}) (io.Reader, e
 	return body, nil
 }
 
-// Decode un-marshals the passed bytes to an object and returns a copy in io.ReadCloser
+// Decode unmarshals the provided byte slice into the provided object and returns an io.ReadCloser
+// for the response body.
 func (h *HTTPClient) Decode(ctx context.Context, body []byte, data interface{}) (io.ReadCloser, error) {
 	if data != nil {
 		switch v := data.(type) {
@@ -151,32 +152,38 @@ func (h *HTTPClient) Decode(ctx context.Context, body []byte, data interface{}) 
 	return newBuff, nil
 }
 
-// Get HTTP GET method invocation
+// Get sends an HTTP GET request to the specified URL with the provided request and response bodies,
+// and headers, returning the HTTP response.
 func (h *HTTPClient) Get(ctx context.Context, url string, reqBody, resBody interface{}, headers map[string]string) (*http.Response, error) {
 	return h.Call(ctx, http.MethodGet, url, reqBody, resBody, headers)
 }
 
-// Post HTTP POST method invocation
+// Post sends an HTTP POST request to the specified URL with the provided request and response bodies,
+// and headers, returning the HTTP response.
 func (h *HTTPClient) Post(ctx context.Context, url string, reqBody, resBody interface{}, headers map[string]string) (*http.Response, error) {
 	return h.Call(ctx, http.MethodPost, url, reqBody, resBody, headers)
 }
 
-// Put HTTP PUT method invocation
+// Put sends an HTTP PUT request to the specified URL with the provided request and response bodies,
+// and headers, returning the HTTP response.
 func (h *HTTPClient) Put(ctx context.Context, url string, reqBody, resBody interface{}, headers map[string]string) (*http.Response, error) {
 	return h.Call(ctx, http.MethodPut, url, reqBody, resBody, headers)
 }
 
-// Patch HTTP PATCH method invocation
+// Patch sends an HTTP PATCH request to the specified URL with the provided request and response bodies,
+// and headers, returning the HTTP response.
 func (h *HTTPClient) Patch(ctx context.Context, url string, reqBody, resBody interface{}, headers map[string]string) (*http.Response, error) {
 	return h.Call(ctx, http.MethodPatch, url, reqBody, resBody, headers)
 }
 
-// Delete HTTP DELETE method invocation
+// Delete sends an HTTP DELETE request to the specified URL with the provided request and response bodies,
+// and headers, returning the HTTP response.
 func (h *HTTPClient) Delete(ctx context.Context, url string, reqBody, resBody interface{}, headers map[string]string) (*http.Response, error) {
 	return h.Call(ctx, http.MethodDelete, url, reqBody, resBody, headers)
 }
 
-// Call pre-processes the request and response
+// Call pre-processes the HTTP request and response, performing retries and backoff as needed.
+// It sends the request and decodes the response body if provided.
 func (h *HTTPClient) Call(ctx context.Context, method, url string, reqBody, resBody interface{}, headers map[string]string) (*http.Response, error) {
 	err := h.validateResponseBody(resBody)
 	if err != nil {
@@ -195,7 +202,7 @@ func (h *HTTPClient) Call(ctx context.Context, method, url string, reqBody, resB
 	if err != nil {
 		return nil, fmt.Errorf("HttpClient.Call: error creating request: %w", err)
 	}
-	log.SetCorrelationHeader(ctx, req)
+	trace.SetCorrelationHeader(ctx, req)
 	for key, val := range headers {
 		req.Header.Add(key, val)
 	}
@@ -225,7 +232,8 @@ func (h *HTTPClient) Call(ctx context.Context, method, url string, reqBody, resB
 	return r, err
 }
 
-// Do adds additional retry and backoff mechanism
+// Do sends an HTTP request and performs retries with exponential backoff as needed,
+// based on the retry and backoff configuration.
 func (h *HTTPClient) Do(req *http.Request) (*http.Response, error) {
 	/*this is a modified version of go-retryablehttp*/
 	var resp *http.Response
@@ -260,15 +268,16 @@ func (h *HTTPClient) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	return resp, err
-
 }
 
+// backOffAndRetry determines if the request should be retried and calculates the backoff duration.
+// It logs the retry attempt and waits for the backoff duration before retrying.
 func (h *HTTPClient) backOffAndRetry(i int, req *http.Request, resp *http.Response, doErr error) (bool, error) {
 	shouldRetry, respErr := h.checkRetry(req.Context(), resp, doErr)
 	if !shouldRetry || respErr != nil {
 		return shouldRetry, respErr
 	}
-	remain := h.retryMax - i
+	remain := h.retryMax - uint(i)
 	if remain <= 0 {
 		return false, respErr
 	}

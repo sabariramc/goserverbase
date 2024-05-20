@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/hashicorp/go-retryablehttp"
 	"github.com/sabariramc/goserverbase/v6/log"
 )
 
@@ -18,8 +19,22 @@ type config struct {
 	c            *http.Client
 }
 
-var defaultOption = config{
-    log: ,
+func newHTTP() *http.Client {
+	t := http.DefaultTransport.(*http.Transport).Clone()
+	t.MaxIdleConns = 100
+	t.MaxConnsPerHost = 100
+	t.MaxIdleConnsPerHost = 100
+	return &http.Client{Transport: t}
+}
+
+var defaultConfig = config{
+	log:          log.New().NewResourceLogger("HTTPClient"),
+	retryMax:     4,
+	minRetryWait: time.Millisecond * 10,
+	maxRetryWait: time.Second * 5,
+	checkRetry:   retryablehttp.DefaultRetryPolicy,
+	backoff:      retryablehttp.DefaultBackoff,
+	c:            newHTTP(),
 }
 
 // Option represents an option function for configuring the config struct.

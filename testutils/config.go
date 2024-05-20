@@ -10,7 +10,6 @@ import (
 	"github.com/sabariramc/goserverbase/v6/db/mongo/csfle"
 	"github.com/sabariramc/goserverbase/v6/kafka"
 	"github.com/sabariramc/goserverbase/v6/log"
-	"github.com/sabariramc/goserverbase/v6/log/logwriter"
 	"github.com/sabariramc/goserverbase/v6/utils"
 	"github.com/segmentio/kafka-go/sasl/plain"
 )
@@ -36,7 +35,6 @@ type TestConfig struct {
 	KafkaProducer   *kafka.KafkaProducerConfig
 	KafkaTestTopic  string
 	KafkaTestTopic2 string
-	Graylog         logwriter.GraylogConfig
 	TestURL1        string
 	TestURL2        string
 }
@@ -70,7 +68,6 @@ func NewConfig() *TestConfig {
 	return &TestConfig{
 		Logger: log.Config{
 			ServiceName: serviceName,
-			LogLevel:    utils.GetEnv("LOG_LEVEL", "INFO"),
 		},
 		App: appConfig,
 		HTTP: &httpserver.HTTPServerConfig{
@@ -114,11 +111,7 @@ func NewConfig() *TestConfig {
 		KafkaConsumer:   consumer,
 		KafkaTestTopic:  utils.GetEnvMust("KAFKA_TEST_TOPIC"),
 		KafkaTestTopic2: utils.GetEnvMust("KAFKA_TEST_TOPIC_2"),
-		Graylog: logwriter.GraylogConfig{
-			Address: utils.GetEnv("GRAYLOG_URL", ""),
-			Port:    utils.GetEnvInt("GRAYLOG_PORT", 12001),
-		},
-		TestURL1: utils.GetEnv("TEST_URL_1", ""),
-		TestURL2: utils.GetEnv("TEST_URL_2", ""),
+		TestURL1:        utils.GetEnv("TEST_URL_1", ""),
+		TestURL2:        utils.GetEnv("TEST_URL_2", ""),
 	}
 }

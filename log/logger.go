@@ -40,10 +40,6 @@ func New(options ...Option) *Logger {
 	for _, fn := range options {
 		fn(&config)
 	}
-	return NewWithConfig(context.Background(), config)
-}
-
-func NewWithConfig(ctx context.Context, config Config) *Logger {
 	l := &Logger{
 		logLevel:    config.LogLevel,
 		mux:         config.Mux,
@@ -53,7 +49,7 @@ func NewWithConfig(ctx context.Context, config Config) *Logger {
 		audit:       config.Audit,
 	}
 	if config.LogLevel.Level == m.TRACE {
-		l.Notice(ctx, "log level is set as TRACE", nil)
+		l.Notice(context.Background(), "log level is set as TRACE", nil)
 	}
 	return l
 }
