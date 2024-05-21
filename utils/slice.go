@@ -1,8 +1,9 @@
 package utils
 
-/*
-Prepend add a element[T] to the beginning of a list[T] it appends
-*/
+// Prepend adds an element to the beginning of a slice.
+//
+// This function takes a slice of any type and an element of the same type,
+// and returns a new slice with the element prepended.
 func Prepend[T any](a []T, b T) []T {
 	var c T
 	a = append(a, c)

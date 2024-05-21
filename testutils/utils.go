@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	base "github.com/sabariramc/goserverbase/v6/aws"
 	"github.com/sabariramc/goserverbase/v6/utils"
+	"github.com/sabariramc/snowflake"
 
 	"github.com/joho/godotenv"
 )
@@ -24,6 +25,8 @@ func SetAWSConfig(tr base.Tracer) {
 			log.Fatal(err)
 		}
 	}
+	s, _ := snowflake.New()
+	s.GenerateID()
 	base.SetDefaultAWSConfig(cnf, tr)
 }
 

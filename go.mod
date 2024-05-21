@@ -16,7 +16,8 @@ require (
 	github.com/hashicorp/go-retryablehttp v0.7.5
 	github.com/joho/godotenv v1.5.1
 	github.com/json-iterator/go v1.1.12
-	github.com/sabariramc/randomstring v1.0.1
+	github.com/sabariramc/randomstring v1.1.1
+	github.com/sabariramc/snowflake v1.1.1
 	github.com/segmentio/kafka-go v0.4.47
 	github.com/shopspring/decimal v1.4.0
 	github.com/swaggo/files v1.0.1

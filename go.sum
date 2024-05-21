@@ -222,8 +222,10 @@ github.com/richardartoul/molecule v1.0.1-0.20221107223329-32cfee06a052 h1:Qp27Id
 github.com/richardartoul/molecule v1.0.1-0.20221107223329-32cfee06a052/go.mod h1:uvX/8buq8uVeiZiFht+0lqSLBHF+uGV8BrTv8W/SIwk=
 github.com/rogpeppe/go-internal v1.11.0 h1:cWPaGQEPrBb5/AsnsZesgZZ9yb1OQ+GOISoDNXVBh4M=
 github.com/rogpeppe/go-internal v1.11.0/go.mod h1:ddIwULY96R17DhadqLgMfk9H9tvdUzkipdSkR5nkCZA=
-github.com/sabariramc/randomstring v1.0.1 h1:+hlS3cfWiQdsNQ+cyWGoeQA0rKtWMrsIAwXP00BkvuA=
-github.com/sabariramc/randomstring v1.0.1/go.mod h1:+uoGipJ4djp4ks0BoAMNx4W7LbAXO2UrI8Oc0ndpW7k=
+github.com/sabariramc/randomstring v1.1.1 h1:tS5YzlFdGEg0959XytnIwQ0SSyxQENdL2ot5FE0khKE=
+github.com/sabariramc/randomstring v1.1.1/go.mod h1:+uoGipJ4djp4ks0BoAMNx4W7LbAXO2UrI8Oc0ndpW7k=
+github.com/sabariramc/snowflake v1.1.1 h1:o9cZuARaOzqOfhyqTMyfBjPj8Zm4CjV0WPyk/KHa198=
+github.com/sabariramc/snowflake v1.1.1/go.mod h1:IGGxEyxehsu7uzl5zqznHowDtcY5/fJKd2uODmZgkPE=
 github.com/secure-systems-lab/go-securesystemslib v0.8.0 h1:mr5An6X45Kb2nddcFlbmfHkLguCE9laoZCUzEEpIZXA=
 github.com/secure-systems-lab/go-securesystemslib v0.8.0/go.mod h1:UH2VZVuJfCYR8WgMlCU1uFsOUU+KeyrTWcSS73NBOzU=
 github.com/segmentio/kafka-go v0.4.47 h1:IqziR4pA3vrZq7YdRxaT3w1/5fvIH5qpCwstUanQQB0=
