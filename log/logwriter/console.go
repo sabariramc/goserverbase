@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/sabariramc/goserverbase/v6/log/message"
-	"github.com/sabariramc/goserverbase/v6/trace"
+	"github.com/sabariramc/goserverbase/v6/correlation"
 )
 
 // ConsoleLogWriter write logs to console
@@ -27,7 +27,7 @@ func (c *ConsoleLogWriter) GetBufferSize() int {
 }
 
 func (c *ConsoleLogWriter) WriteMessage(ctx context.Context, l *message.LogMessage) error {
-	cr := trace.ExtractCorrelationParam(ctx)
+	cr := correlation.ExtractCorrelationParam(ctx)
 	if l.File != "" {
 		fmt.Println(l.File)
 	}

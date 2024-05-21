@@ -3,25 +3,25 @@ package kafkaconsumer
 import (
 	"context"
 
+	"github.com/sabariramc/goserverbase/v6/correlation"
 	"github.com/sabariramc/goserverbase/v6/instrumentation/span"
 	"github.com/sabariramc/goserverbase/v6/kafka"
-	"github.com/sabariramc/goserverbase/v6/log"
 )
 
 // GetCorrelationParams extracts correlation parameters from the given headers and returns a CorrelationParam instance.
-func (k *KafkaConsumerServer) GetCorrelationParams(headers map[string]string) *log.CorrelationParam {
-	cr := &log.CorrelationParam{}
-	cr.ExtractFromHeader(headers)
+func (k *KafkaConsumerServer) GetCorrelationParams(headers map[string]string) *correlation.CorrelationParam {
+	cr := &correlation.CorrelationParam{}
+	cr.LoadFromHeader(headers)
 	if cr.CorrelationID == "" {
-		return log.GetDefaultCorrelationParam(k.c.ServiceName)
+		return correlation.GetDefaultCorrelationParam(k.c.ServiceName)
 	}
 	return cr
 }
 
 // GetUserIdentifier extracts user identifier from the given headers and returns a UserIdentifier instance.
-func (k *KafkaConsumerServer) GetUserIdentifier(headers map[string]string) *log.UserIdentifier {
-	id := &log.UserIdentifier{}
-	id.ExtractFromHeader(headers)
+func (k *KafkaConsumerServer) GetUserIdentifier(headers map[string]string) *correlation.UserIdentifier {
+	id := &correlation.UserIdentifier{}
+	id.LoadFromHeader(headers)
 	return id
 }
 
@@ -31,8 +31,8 @@ func (k *KafkaConsumerServer) GetMessageContext(msg *kafka.Message) context.Cont
 	msgCtx := context.Background()
 	corr := k.GetCorrelationParams(msg.GetHeaders())
 	identity := k.GetUserIdentifier(msg.GetHeaders())
-	msgCtx = log.GetContextWithCorrelationParam(msgCtx, k.GetCorrelationParams(msg.GetHeaders()))
-	msgCtx = log.GetContextWithUserIdentifier(msgCtx, identity)
+	msgCtx = correlation.GetContextWithCorrelationParam(msgCtx, k.GetCorrelationParams(msg.GetHeaders()))
+	msgCtx = correlation.GetContextWithUserIdentifier(msgCtx, identity)
 	if k.tracer != nil {
 		var span span.Span
 		msgCtx, span = k.tracer.StartKafkaSpanFromMessage(msgCtx, msg.Message)

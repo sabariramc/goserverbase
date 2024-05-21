@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/sabariramc/goserverbase/v6/log"
+	"github.com/sabariramc/goserverbase/v6/correlation"
 	"github.com/sabariramc/goserverbase/v6/utils"
 )
 
@@ -142,7 +143,7 @@ func (s *SQS) GenerateAttribute(ctx context.Context, attribute map[string]any) m
 	if attribute == nil {
 		attribute = map[string]any{}
 	}
-	correlation := log.ExtractCorrelationParam(ctx)
+	correlation := correlation.ExtractCorrelationParam(ctx)
 	if correlation != nil {
 		headers := correlation.GetHeader()
 		for key, val := range headers {

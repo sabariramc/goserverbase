@@ -5,7 +5,7 @@ import (
 
 	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/testutils"
-	"github.com/sabariramc/goserverbase/v6/trace"
+	"github.com/sabariramc/goserverbase/v6/correlation"
 )
 
 var TestConfig *testutils.TestConfig
@@ -19,6 +19,6 @@ func init() {
 }
 
 func GetCorrelationContext() context.Context {
-	ctx := context.WithValue(context.Background(), trace.ContextKeyCorrelation, trace.GetDefaultCorrelationParam(TestConfig.App.ServiceName))
+	ctx := context.WithValue(context.Background(), correlation.ContextKeyCorrelation, correlation.GetDefaultCorrelationParam(TestConfig.App.ServiceName))
 	return ctx
 }

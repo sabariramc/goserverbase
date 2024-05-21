@@ -8,6 +8,7 @@ import (
 
 	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/notifier"
+	"github.com/sabariramc/goserverbase/v6/correlation"
 )
 
 // BaseApp represents a basic application structure with configuration, logging, status check, health check and  shutdown functionality.
@@ -28,7 +29,7 @@ func New(appConfig ServerConfig, logger log.Log, notifier notifier.Notifier) *Ba
 		notifier:      notifier,
 		shutdownHooks: make([]ShutdownHook, 0, 10),
 	}
-	ctx := log.GetContextWithCorrelationParam(context.Background(), log.GetDefaultCorrelationParam(appConfig.ServiceName))
+	ctx := correlation.GetContextWithCorrelationParam(context.Background(), correlation.GetDefaultCorrelationParam(appConfig.ServiceName))
 	b.log = logger.NewResourceLogger("BaseApp")
 	zone, _ := time.Now().Zone()
 	b.log.Notice(ctx, "Timezone", zone)

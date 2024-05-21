@@ -7,7 +7,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/sabariramc/goserverbase/v6/log"
+	"github.com/sabariramc/goserverbase/v6/correlation"
 )
 
 func extractKeyValue(r *http.Request, keyList []string) map[string]string {
@@ -21,22 +21,22 @@ func extractKeyValue(r *http.Request, keyList []string) map[string]string {
 	return res
 }
 
-func (h *HTTPServer) GetCorrelationParams(r *http.Request) *log.CorrelationParam {
+func (h *HTTPServer) GetCorrelationParams(r *http.Request) *correlation.CorrelationParam {
 	keyList := []string{"x-correlation-id", "x-scenario-id", "x-scenario-name", "x-session-id"}
 	headers := extractKeyValue(r, keyList)
-	cr := &log.CorrelationParam{}
-	cr.ExtractFromHeader(headers)
+	cr := &correlation.CorrelationParam{}
+	cr.LoadFromHeader(headers)
 	if cr.CorrelationID == "" {
-		return log.GetDefaultCorrelationParam(h.c.ServiceName)
+		return correlation.GetDefaultCorrelationParam(h.c.ServiceName)
 	}
 	return cr
 }
 
-func (h *HTTPServer) GetCustomerID(r *http.Request) *log.UserIdentifier {
+func (h *HTTPServer) GetCustomerID(r *http.Request) *correlation.UserIdentifier {
 	keyList := []string{"x-user-id", "x-user-client-id", "x-entity-id"}
 	headers := extractKeyValue(r, keyList)
-	id := &log.UserIdentifier{}
-	id.ExtractFromHeader(headers)
+	id := &correlation.UserIdentifier{}
+	id.LoadFromHeader(headers)
 	return id
 }
 

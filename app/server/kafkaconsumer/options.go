@@ -1,8 +1,6 @@
 package kafkaconsumer
 
 import (
-	"context"
-
 	baseapp "github.com/sabariramc/goserverbase/v6/app"
 	"github.com/sabariramc/goserverbase/v6/kafka"
 	"github.com/sabariramc/goserverbase/v6/log"
@@ -15,10 +13,7 @@ var defaultConfig = Config{
 	ServerConfig: baseapp.ServerConfig{
 		ServiceName: "KafkaConsumer",
 	},
-	log: log.NewWithDefaultConfig(context.TODO(), log.Config{
-		ServiceName: "KafkaConsumer",
-		LogLevel:    "ERROR",
-	}, "KafkaConsumer"),
+	log: log.New(log.WithModuleName("KafkaConsumer")),
 	KafkaConsumerConfig: kafka.KafkaConsumerConfig{
 		KafkaCredConfig: &kafka.KafkaCredConfig{
 			Brokers:  []string{"0.0.0.0:9092"},

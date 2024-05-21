@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/sabariramc/goserverbase/v6/log"
-	"github.com/sabariramc/goserverbase/v6/trace"
+	"github.com/sabariramc/goserverbase/v6/correlation"
 	"github.com/sabariramc/goserverbase/v6/utils"
 
 	"go.mongodb.org/mongo-driver/event"
@@ -43,7 +43,7 @@ func NewWithDefaultOptions(ctx context.Context, serviceName string, logger log.L
 		connectionOptions.SetMonitor(t.MongoDB())
 	}
 	if c.EnableLog {
-		mongoLogger := &MongoLogger{log: logger.NewResourceLogger("MongoInternalLog"), ctx: trace.GetContextWithCorrelationParam(context.Background(), trace.GetDefaultCorrelationParam("MongoInternal"))}
+		mongoLogger := &MongoLogger{log: logger.NewResourceLogger("MongoInternalLog"), ctx: correlation.GetContextWithCorrelationParam(context.Background(), correlation.GetDefaultCorrelationParam("MongoInternal"))}
 		connectionOptions.SetLoggerOptions(&options.LoggerOptions{
 			ComponentLevels: map[options.LogComponent]options.LogLevel{
 				options.LogComponentAll: options.LogLevelDebug,

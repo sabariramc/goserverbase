@@ -8,26 +8,26 @@ import (
 	"testing"
 
 	"github.com/sabariramc/goserverbase/v6/errors/message"
-	"github.com/sabariramc/goserverbase/v6/trace"
+	"github.com/sabariramc/goserverbase/v6/correlation"
 )
 
 func TestMessage(t *testing.T) {
-	ctx := trace.GetContextWithCorrelationParam(context.Background(), &trace.CorrelationParam{
+	ctx := correlation.GetContextWithCorrelationParam(context.Background(), &correlation.CorrelationParam{
 		CorrelationID: "xyz",
 	})
 	custID := "cust_test_id"
-	ctx = trace.GetContextWithUserIdentifier(ctx, &trace.UserIdentifier{UserID: &custID})
+	ctx = correlation.GetContextWithUserIdentifier(ctx, &correlation.UserIdentifier{UserID: &custID})
 	msg := message.CreateErrorMessage(ctx, "test_service", "com.test.message", fmt.Errorf("test"), string(debug.Stack()), map[string]string{"test": "test"}, "5XX")
 	blob, _ := json.MarshalIndent(msg, "", "    ")
 	fmt.Println(string(blob))
 }
 
 func Example() {
-	ctx := trace.GetContextWithCorrelationParam(context.Background(), &trace.CorrelationParam{
+	ctx := correlation.GetContextWithCorrelationParam(context.Background(), &correlation.CorrelationParam{
 		CorrelationID: "xyz",
 	})
 	custID := "cust_test_id"
-	ctx = trace.GetContextWithUserIdentifier(ctx, &trace.UserIdentifier{UserID: &custID})
+	ctx = correlation.GetContextWithUserIdentifier(ctx, &correlation.UserIdentifier{UserID: &custID})
 	msg := message.CreateErrorMessage(ctx, "test_service", "com.test.message", fmt.Errorf("test"), string(debug.Stack()), map[string]string{"test": "test"}, "5XX")
 	blob, _ := json.MarshalIndent(msg, "", "    ")
 	fmt.Println(string(blob))

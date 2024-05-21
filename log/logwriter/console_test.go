@@ -7,11 +7,11 @@ import (
 	"github.com/google/uuid"
 	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/log/logwriter"
-	"github.com/sabariramc/goserverbase/v6/trace"
+	"github.com/sabariramc/goserverbase/v6/correlation"
 )
 
 func TestConsoleLogWriter(t *testing.T) {
-	ctx := trace.GetContextWithCorrelationParam(context.Background(), &trace.CorrelationParam{
+	ctx := correlation.GetContextWithCorrelationParam(context.Background(), &correlation.CorrelationParam{
 		CorrelationID: "test console log",
 	})
 	log := log.New()

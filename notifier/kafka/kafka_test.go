@@ -9,7 +9,7 @@ import (
 	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/notifier/kafka"
 	"github.com/sabariramc/goserverbase/v6/testutils"
-	"github.com/sabariramc/goserverbase/v6/trace"
+	"github.com/sabariramc/goserverbase/v6/correlation"
 	"gotest.tools/assert"
 )
 
@@ -24,7 +24,7 @@ func init() {
 }
 
 func GetCorrelationContext() context.Context {
-	ctx := context.WithValue(context.Background(), trace.ContextKeyCorrelation, trace.GetDefaultCorrelationParam(TestConfig.App.ServiceName))
+	ctx := context.WithValue(context.Background(), correlation.ContextKeyCorrelation, correlation.GetDefaultCorrelationParam(TestConfig.App.ServiceName))
 	return ctx
 }
 
@@ -38,12 +38,12 @@ func TestKafkaNotifier(t *testing.T) {
 	runtime.Stack(stackTraceBuff, false)
 	stackTrace := string(stackTraceBuff)
 	errorData := map[string]any{"check": "Testing error"}
-	err := notifier.Notify4XX(trace.GetContextWithUserIdentifier(ctx, &trace.UserIdentifier{UserID: &custID}), errorCode, nil, stackTrace, errorData)
+	err := notifier.Notify4XX(correlation.GetContextWithUserIdentifier(ctx, &correlation.UserIdentifier{UserID: &custID}), errorCode, nil, stackTrace, errorData)
 	assert.NilError(t, err)
 	custID = "app_user_id"
-	err = notifier.Notify4XX(trace.GetContextWithUserIdentifier(ctx, &trace.UserIdentifier{AppUserID: &custID}), errorCode, nil, stackTrace, errorData)
+	err = notifier.Notify4XX(correlation.GetContextWithUserIdentifier(ctx, &correlation.UserIdentifier{AppUserID: &custID}), errorCode, nil, stackTrace, errorData)
 	assert.NilError(t, err)
 	custID = "entity_id"
-	err = notifier.Notify4XX(trace.GetContextWithUserIdentifier(ctx, &trace.UserIdentifier{EntityID: &custID}), errorCode, nil, stackTrace, errorData)
+	err = notifier.Notify4XX(correlation.GetContextWithUserIdentifier(ctx, &correlation.UserIdentifier{EntityID: &custID}), errorCode, nil, stackTrace, errorData)
 	assert.NilError(t, err)
 }

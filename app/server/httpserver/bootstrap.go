@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/sabariramc/goserverbase/v6/log"
+	"github.com/sabariramc/goserverbase/v6/correlation"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 )
@@ -16,8 +16,8 @@ func (h *HTTPServer) BootstrapServer(ctx context.Context, handler http.Handler) 
 }
 
 func (h *HTTPServer) StartServer() {
-	corr := &log.CorrelationParam{CorrelationID: fmt.Sprintf("%v-HTTP-SERVER", h.c.ServiceName)}
-	ctx := log.GetContextWithCorrelationParam(context.TODO(), corr)
+	corr := &correlation.CorrelationParam{CorrelationID: fmt.Sprintf("%v-HTTP-SERVER", h.c.ServiceName)}
+	ctx := correlation.GetContextWithCorrelationParam(context.TODO(), corr)
 	h.log.Notice(ctx, fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
 	err := h.BootstrapServer(ctx, h)
 	if err != nil {
@@ -31,8 +31,8 @@ func (h *HTTPServer) StartServer() {
 }
 
 func (h *HTTPServer) StartTLSServer() {
-	corr := &log.CorrelationParam{CorrelationID: fmt.Sprintf("%v-HTTP2-SERVER", h.c.ServiceName)}
-	ctx := log.GetContextWithCorrelationParam(context.TODO(), corr)
+	corr := &correlation.CorrelationParam{CorrelationID: fmt.Sprintf("%v-HTTP2-SERVER", h.c.ServiceName)}
+	ctx := correlation.GetContextWithCorrelationParam(context.TODO(), corr)
 	h.log.Notice(ctx, fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
 	err := h.BootstrapServer(ctx, h)
 	if err != nil {
@@ -46,8 +46,8 @@ func (h *HTTPServer) StartTLSServer() {
 }
 
 func (h *HTTPServer) StartH2CServer() {
-	corr := &log.CorrelationParam{CorrelationID: fmt.Sprintf("%v-HTTP2-SERVER", h.c.ServiceName)}
-	ctx := log.GetContextWithCorrelationParam(context.TODO(), corr)
+	corr := &correlation.CorrelationParam{CorrelationID: fmt.Sprintf("%v-HTTP2-SERVER", h.c.ServiceName)}
+	ctx := correlation.GetContextWithCorrelationParam(context.TODO(), corr)
 	h.log.Notice(ctx, fmt.Sprintf("Server starting at %v", h.GetPort()), nil)
 	h2s := &http2.Server{}
 	err := h.BootstrapServer(ctx, h2c.NewHandler(h, h2s))

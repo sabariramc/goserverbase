@@ -11,6 +11,7 @@ import (
 	"github.com/sabariramc/goserverbase/v6/instrumentation/span"
 	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/notifier"
+	"github.com/sabariramc/goserverbase/v6/correlation"
 )
 
 // Tracer defines the interface for tracing functionality.
@@ -41,7 +42,7 @@ func New(appConfig HTTPServerConfig, logger log.Log, tr Tracer, errorNotifier no
 		c:       &appConfig,
 		tracer:  tr,
 	}
-	ctx := log.GetContextWithCorrelationParam(context.Background(), log.GetDefaultCorrelationParam(appConfig.ServiceName))
+	ctx := correlation.GetContextWithCorrelationParam(context.Background(), correlation.GetDefaultCorrelationParam(appConfig.ServiceName))
 	h.SetupRouter(ctx)
 	h.RegisterOnShutdownHook(h)
 	h.RegisterStatusCheckHook(h)

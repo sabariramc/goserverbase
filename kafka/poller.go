@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/sabariramc/goserverbase/v6/log"
-	"github.com/sabariramc/goserverbase/v6/trace"
+	"github.com/sabariramc/goserverbase/v6/correlation"
 	"github.com/sabariramc/goserverbase/v6/utils"
 	"github.com/segmentio/kafka-go"
 )
@@ -33,7 +33,7 @@ func NewPoller(ctx context.Context, logger log.Log, config KafkaConsumerConfig, 
 		config.AutoCommitIntervalInMs = 1000
 	}
 	logger = logger.NewResourceLogger("KafkaConsumer")
-	defaultCorrelationParam := &trace.CorrelationParam{CorrelationID: "KafkaConsumer"}
+	defaultCorrelationParam := &correlation.CorrelationParam{CorrelationID: "KafkaConsumer"}
 	readerConfig := kafka.ReaderConfig{
 		Brokers:           config.Brokers,
 		GroupID:           config.GroupID,
@@ -51,12 +51,12 @@ func NewPoller(ctx context.Context, logger log.Log, config KafkaConsumerConfig, 
 	if config.EnableLog {
 		readerConfig.Logger = &kafkaLogger{
 			Log:     logger.NewResourceLogger("KafkaConsumerInfoLog"),
-			ctx:     trace.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam),
+			ctx:     correlation.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam),
 			isError: false,
 		}
 		readerConfig.ErrorLogger = &kafkaLogger{
 			Log:     logger.NewResourceLogger("KafkaConsumerErrorLog"),
-			ctx:     trace.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam),
+			ctx:     correlation.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam),
 			isError: true,
 		}
 	}
@@ -68,7 +68,7 @@ func NewPoller(ctx context.Context, logger log.Log, config KafkaConsumerConfig, 
 		topics: topics,
 	}
 	if k.config.AutoCommit {
-		commitCtx, cancel := context.WithCancel(trace.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam))
+		commitCtx, cancel := context.WithCancel(correlation.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam))
 		k.autoCommitCancel = cancel
 		k.wg.Add(1)
 		go k.autoCommit(commitCtx)

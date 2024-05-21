@@ -2,31 +2,24 @@ package aws_test
 
 import (
 	"context"
-	"os"
 
 	"github.com/sabariramc/goserverbase/v6/log"
-	"github.com/sabariramc/goserverbase/v6/log/logwriter"
 	"github.com/sabariramc/goserverbase/v6/testutils"
+	"github.com/sabariramc/goserverbase/v6/correlation"
 )
 
 var AWSTestConfig *testutils.TestConfig
 var AWSTestLogger log.Log
 
+const ServiceName = "AWSTest"
+
 func init() {
-	testutils.LoadEnv("../.env")
-	testutils.Initialize()
-	os.RemoveAll("./testdata/result")
-	err := os.Mkdir("./testdata/result", 0755)
-	if err != nil {
-		panic(err)
-	}
+	testutils.LoadEnv("../../../.env")
 	AWSTestConfig = testutils.NewConfig()
-	consoleLogWriter := logwriter.NewConsoleWriter()
-	lMux := log.NewDefaultLogMux(consoleLogWriter)
-	AWSTestLogger = log.New(context.TODO(), AWSTestConfig.Logger, "AWSTest", lMux, nil)
+	AWSTestLogger = log.New(log.WithServiceName(ServiceName))
 }
 
 func GetCorrelationContext() context.Context {
-	ctx := context.WithValue(context.Background(), log.ContextKeyCorrelation, log.GetDefaultCorrelationParam(AWSTestConfig.App.ServiceName))
+	ctx := context.WithValue(context.Background(), correlation.ContextKeyCorrelation, correlation.GetDefaultCorrelationParam(ServiceName))
 	return ctx
 }

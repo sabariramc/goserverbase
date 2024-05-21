@@ -13,8 +13,8 @@ import (
 	"github.com/sabariramc/goserverbase/v6/instrumentation"
 	"github.com/sabariramc/goserverbase/v6/kafka"
 	"github.com/sabariramc/goserverbase/v6/log"
-	"github.com/sabariramc/goserverbase/v6/log/logwriter"
 	"github.com/sabariramc/goserverbase/v6/testutils"
+	"github.com/sabariramc/goserverbase/v6/correlation"
 	"github.com/sabariramc/goserverbase/v6/utils"
 	"github.com/sabariramc/goserverbase/v6/utils/httputil"
 )
@@ -23,17 +23,17 @@ var ServerTestConfig *testutils.TestConfig
 var ServerTestLogger log.Log
 var ServerTestLMux log.Mux
 
+const ServiceName = "BaseTest"
+
 func init() {
 	testutils.LoadEnv("../../../.env")
 
 	ServerTestConfig = testutils.NewConfig()
-	consoleLogWriter := logwriter.NewConsoleWriter()
-	ServerTestLMux = log.NewDefaultLogMux(consoleLogWriter)
-	ServerTestLogger = log.New(context.TODO(), ServerTestConfig.Logger, "BaseTest", ServerTestLMux, nil)
+	ServerTestLogger = log.New(log.WithServiceName(ServiceName))
 }
 
 func GetCorrelationContext() context.Context {
-	ctx := context.WithValue(context.Background(), log.ContextKeyCorrelation, log.GetDefaultCorrelationParam(ServerTestConfig.App.ServiceName))
+	ctx := context.WithValue(context.Background(), correlation.ContextKeyCorrelation, correlation.GetDefaultCorrelationParam(ServiceName))
 	return ctx
 }
 
@@ -96,7 +96,7 @@ func NewServer(t instrumentation.Tracer) *server {
 		KafkaConsumerServer: kafkaconsumer.New(kafkaconsumer.WithKafkaConsumerConfig(ServerTestConfig.Kafka.KafkaConsumerConfig), kafkaconsumer.WithLog(ServerTestLogger), kafkaconsumer.WithTracer(t), nil),
 		pr:                  pr,
 		sns:                 aws.GetDefaultSNSClient(ServerTestLogger),
-		httpClient:          httputil.NewDefaultHTTPClient(ServerTestLogger, t),
+		httpClient:          httputil.New(httputil.WithTracer(t)),
 		conn:                conn,
 		coll:                conn.Database("GOBaseTest").Collection("TestColl"),
 	}

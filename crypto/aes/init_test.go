@@ -4,25 +4,24 @@ import (
 	"context"
 
 	"github.com/sabariramc/goserverbase/v6/log"
-	"github.com/sabariramc/goserverbase/v6/log/logwriter"
 	"github.com/sabariramc/goserverbase/v6/testutils"
+	"github.com/sabariramc/goserverbase/v6/correlation"
 )
 
 var ServerTestConfig *testutils.TestConfig
 var ServerTestLogger log.Log
 var ServerTestLMux log.Mux
 
+const ServiceName = "CryptoTest"
+
 func init() {
 	testutils.LoadEnv("../../.env")
 	testutils.Initialize()
 	ServerTestConfig = testutils.NewConfig()
-	consoleLogWriter := logwriter.NewConsoleWriter()
-	lmux := log.NewDefaultLogMux(consoleLogWriter)
-	ServerTestLogger = log.New(context.TODO(), ServerTestConfig.Logger, "CRYPTOTEST", lmux, nil)
-	ServerTestLMux = lmux
+	ServerTestLogger = log.New(log.WithServiceName(ServiceName))
 }
 
 func GetCorrelationContext() context.Context {
-	ctx := context.WithValue(context.Background(), log.ContextKeyCorrelation, log.GetDefaultCorrelationParam(ServerTestConfig.App.ServiceName))
+	ctx := context.WithValue(context.Background(), correlation.ContextKeyCorrelation, correlation.GetDefaultCorrelationParam(ServiceName))
 	return ctx
 }

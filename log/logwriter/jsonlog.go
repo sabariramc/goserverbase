@@ -5,12 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/sabariramc/goserverbase/v6/trace"
+	"github.com/sabariramc/goserverbase/v6/correlation"
 	"github.com/sabariramc/goserverbase/v6/log/message"
 )
 
 func DefaultLogMapper(ctx context.Context, msg *message.LogMessage) map[string]any {
-	cr := trace.ExtractCorrelationParam(ctx)
+	cr := correlation.ExtractCorrelationParam(ctx)
 
 	return map[string]any{
 		"LogMessage":       msg,

@@ -16,7 +16,7 @@ import (
 
 	"github.com/sabariramc/goserverbase/v6/instrumentation/span"
 	"github.com/sabariramc/goserverbase/v6/log"
-	"github.com/sabariramc/goserverbase/v6/trace"
+	"github.com/sabariramc/goserverbase/v6/correlation"
 	"golang.org/x/net/http2"
 )
 
@@ -202,7 +202,7 @@ func (h *HTTPClient) Call(ctx context.Context, method, url string, reqBody, resB
 	if err != nil {
 		return nil, fmt.Errorf("HttpClient.Call: error creating request: %w", err)
 	}
-	trace.SetCorrelationHeader(ctx, req)
+	correlation.SetCorrelationHeader(ctx, req)
 	for key, val := range headers {
 		req.Header.Add(key, val)
 	}

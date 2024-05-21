@@ -7,7 +7,7 @@ import (
 	"log/syslog"
 
 	"github.com/sabariramc/goserverbase/v6/log/message"
-	"github.com/sabariramc/goserverbase/v6/trace"
+	"github.com/sabariramc/goserverbase/v6/correlation"
 )
 
 // SyslogLogWriter writes log to syslog
@@ -35,7 +35,7 @@ func (s *SyslogLogWriter) Start(logChannel chan message.MuxLogMessage) {
 }
 
 func (s *SyslogLogWriter) WriteMessage(ctx context.Context, l *message.LogMessage) error {
-	cr := trace.ExtractCorrelationParam(ctx)
+	cr := correlation.ExtractCorrelationParam(ctx)
 	s.logger.Printf("[%v] [%v] [%v] [%v] [%v] [%v] [%v]\n", l.Timestamp, l.LogLevelName, cr.CorrelationID, l.ServiceName, l.Message, GetLogObjectType(l.LogObject), l.LogObject)
 	return nil
 }

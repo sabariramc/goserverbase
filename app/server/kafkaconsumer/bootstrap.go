@@ -8,18 +8,18 @@ import (
 	e "errors"
 
 	"github.com/sabariramc/goserverbase/v6/kafka"
-	"github.com/sabariramc/goserverbase/v6/log"
+	"github.com/sabariramc/goserverbase/v6/correlation"
 )
 
 // StartConsumer starts the Kafka consumer server. And starts background process for message poll, signal monitoring and set up cleanup steps when the server shutdowns
 func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
-	corr := &log.CorrelationParam{CorrelationID: fmt.Sprintf("%v:KafkaConsumerServer", k.c.ServiceName)}
-	ctx, k.shutdown = context.WithCancel(log.GetContextWithCorrelationParam(ctx, corr))
+	corr := &correlation.CorrelationParam{CorrelationID: fmt.Sprintf("%v:KafkaConsumerServer", k.c.ServiceName)}
+	ctx, k.shutdown = context.WithCancel(correlation.GetContextWithCorrelationParam(ctx, corr))
 	defer k.WaitForCompleteShutDown()
 	k.shutdownWG.Add(1)
 	defer k.shutdownWG.Wait()
 	k.StartSignalMonitor(ctx)
-	pollCtx, cancelPoll := context.WithCancel(log.GetContextWithCorrelationParam(context.Background(), corr))
+	pollCtx, cancelPoll := context.WithCancel(correlation.GetContextWithCorrelationParam(context.Background(), corr))
 	k.shutdownPoll = cancelPoll
 	k.log.Notice(ctx, "Starting kafka consumer", nil)
 	defer func() {

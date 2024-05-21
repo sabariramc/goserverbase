@@ -1,4 +1,4 @@
-package trace
+package correlation
 
 import (
 	"encoding/json"
@@ -32,8 +32,8 @@ func (c *CorrelationParam) GetHeader() map[string]string {
 	return res
 }
 
-// ExtractFromHeader extracts CorrelationParam from map[string]string with header struct tag
-func (c *CorrelationParam) ExtractFromHeader(header map[string]string) error {
+// LoadFromHeader extracts CorrelationParam from map[string]string with header struct tag
+func (c *CorrelationParam) LoadFromHeader(header map[string]string) error {
 	data, err := json.Marshal(header)
 	if err != nil {
 		return fmt.Errorf("CorrelationParam.LoadFromHeader: error marshalling header: %w", err)

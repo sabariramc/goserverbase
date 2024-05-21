@@ -18,6 +18,7 @@ import (
 	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/log/logwriter"
 	"github.com/sabariramc/goserverbase/v6/testutils"
+	"github.com/sabariramc/goserverbase/v6/correlation"
 	"github.com/sabariramc/goserverbase/v6/utils"
 	"github.com/sabariramc/goserverbase/v6/utils/httputil"
 )
@@ -26,17 +27,19 @@ var ServerTestConfig *testutils.TestConfig
 var ServerTestLogger log.Log
 var ServerTestLMux log.Mux
 
+const ServiceName = "BaseTest"
+
 func init() {
 	fmt.Println(os.Getwd())
 	testutils.LoadEnv("../../../.env")
 	ServerTestConfig = testutils.NewConfig()
 	consoleLogWriter := logwriter.NewConsoleWriter()
 	ServerTestLMux = log.NewDefaultLogMux(consoleLogWriter)
-	ServerTestLogger = log.New(context.TODO(), ServerTestConfig.Logger, "BaseTest", ServerTestLMux, nil)
+	ServerTestLogger = log.New(log.WithServiceName(ServiceName))
 }
 
 func GetCorrelationContext() context.Context {
-	ctx := context.WithValue(context.Background(), log.ContextKeyCorrelation, log.GetDefaultCorrelationParam(ServerTestConfig.App.ServiceName))
+	ctx := context.WithValue(context.Background(), correlation.ContextKeyCorrelation, correlation.GetDefaultCorrelationParam(ServiceName))
 	return ctx
 }
 
@@ -53,8 +56,8 @@ type server struct {
 
 func (s *server) echo(c *gin.Context) {
 	w, r := c.Writer, c.Request
-	id := log.ExtractUserIdentifier(r.Context())
-	corr := log.ExtractCorrelationParam(r.Context())
+	id := correlation.ExtractUserIdentifier(r.Context())
+	corr := correlation.ExtractCorrelationParam(r.Context())
 	s.log.Info(r.Context(), "identity", id)
 	s.log.Info(r.Context(), "correlation", corr)
 	data, _ := s.GetRequestBody(r)
@@ -165,7 +168,7 @@ func NewServer(t instrumentation.Tracer) *server {
 		HTTPServer: httpserver.New(*ServerTestConfig.HTTP, ServerTestLogger, t, nil), log: ServerTestLogger,
 		pr:         pr,
 		sns:        aws.GetDefaultSNSClient(ServerTestLogger),
-		httpClient: httputil.NewDefaultHTTPClient(ServerTestLogger, t),
+		httpClient: httputil.New(httputil.WithTracer(t)),
 		conn:       conn,
 		coll:       conn.Database("GOBaseTest").Collection("TestColl"),
 		c:          ServerTestConfig,
