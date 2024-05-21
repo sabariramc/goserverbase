@@ -14,9 +14,9 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/sabariramc/goserverbase/v6/correlation"
 	"github.com/sabariramc/goserverbase/v6/instrumentation/span"
 	"github.com/sabariramc/goserverbase/v6/log"
-	"github.com/sabariramc/goserverbase/v6/correlation"
 	"golang.org/x/net/http2"
 )
 
@@ -75,22 +75,22 @@ func NewH2CClient(options ...Option) *HTTPClient {
 
 // New creates a new HTTPClient wrapper with the provided options.
 func New(options ...Option) *HTTPClient {
-	config := defaultConfig
+	config := getDefaultConfig()
 	for _, fn := range options {
 		fn(&config)
 	}
-	if config.tr != nil {
-		config.c.Transport = config.tr.HTTPWrapTransport(config.c.Transport)
+	if config.Tracer != nil {
+		config.Client.Transport = config.Tracer.HTTPWrapTransport(config.Client.Transport)
 	}
 	return &HTTPClient{
-		Client:       config.c,
-		log:          config.log,
-		retryMax:     config.retryMax,
-		minRetryWait: config.minRetryWait,
-		maxRetryWait: config.maxRetryWait,
-		checkRetry:   config.checkRetry,
-		backoff:      config.backoff,
-		tr:           config.tr,
+		Client:       config.Client,
+		log:          config.Log,
+		retryMax:     config.RetryMax,
+		minRetryWait: config.MinRetryWait,
+		maxRetryWait: config.MaxRetryWait,
+		checkRetry:   config.CheckRetry,
+		backoff:      config.Backoff,
+		tr:           config.Tracer,
 	}
 }
 

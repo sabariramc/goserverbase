@@ -27,7 +27,7 @@ func (h *HTTPServer) GetCorrelationParams(r *http.Request) *correlation.Correlat
 	cr := &correlation.CorrelationParam{}
 	cr.LoadFromHeader(headers)
 	if cr.CorrelationID == "" {
-		return correlation.GetDefaultCorrelationParam(h.c.ServiceName)
+		return correlation.NewCorrelationParam(h.c.ServiceName)
 	}
 	return cr
 }

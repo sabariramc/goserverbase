@@ -5,11 +5,11 @@ import (
 	"runtime"
 	"testing"
 
+	"github.com/sabariramc/goserverbase/v6/correlation"
 	pKafka "github.com/sabariramc/goserverbase/v6/kafka"
 	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/notifier/kafka"
 	"github.com/sabariramc/goserverbase/v6/testutils"
-	"github.com/sabariramc/goserverbase/v6/correlation"
 	"gotest.tools/assert"
 )
 
@@ -24,7 +24,7 @@ func init() {
 }
 
 func GetCorrelationContext() context.Context {
-	ctx := context.WithValue(context.Background(), correlation.ContextKeyCorrelation, correlation.GetDefaultCorrelationParam(TestConfig.App.ServiceName))
+	ctx := context.WithValue(context.Background(), correlation.ContextKeyCorrelation, correlation.NewCorrelationParam(TestConfig.App.ServiceName))
 	return ctx
 }
 

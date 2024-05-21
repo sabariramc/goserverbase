@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/sabariramc/goserverbase/v6/app/server/httpserver"
 	"github.com/sabariramc/goserverbase/v6/aws"
+	"github.com/sabariramc/goserverbase/v6/correlation"
 	"github.com/sabariramc/goserverbase/v6/db/mongo"
 	"github.com/sabariramc/goserverbase/v6/errors"
 	"github.com/sabariramc/goserverbase/v6/instrumentation"
@@ -18,7 +19,6 @@ import (
 	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/log/logwriter"
 	"github.com/sabariramc/goserverbase/v6/testutils"
-	"github.com/sabariramc/goserverbase/v6/correlation"
 	"github.com/sabariramc/goserverbase/v6/utils"
 	"github.com/sabariramc/goserverbase/v6/utils/httputil"
 )
@@ -39,7 +39,7 @@ func init() {
 }
 
 func GetCorrelationContext() context.Context {
-	ctx := context.WithValue(context.Background(), correlation.ContextKeyCorrelation, correlation.GetDefaultCorrelationParam(ServiceName))
+	ctx := context.WithValue(context.Background(), correlation.ContextKeyCorrelation, correlation.NewCorrelationParam(ServiceName))
 	return ctx
 }
 

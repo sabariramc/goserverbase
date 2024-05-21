@@ -45,7 +45,7 @@ func (c *CorrelationParam) LoadFromHeader(header map[string]string) error {
 	return nil
 }
 
-func GetDefaultCorrelationParam(serviceName string) *CorrelationParam {
+func NewCorrelationParam(serviceName string) *CorrelationParam {
 	return &CorrelationParam{
 		CorrelationID: fmt.Sprintf("%v-%v", serviceName, uuid.New().String()),
 	}

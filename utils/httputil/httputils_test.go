@@ -11,9 +11,9 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/sabariramc/goserverbase/v6/correlation"
 	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/testutils"
-	"github.com/sabariramc/goserverbase/v6/correlation"
 	"github.com/sabariramc/goserverbase/v6/utils/httputil"
 	"gotest.tools/assert"
 )
@@ -31,7 +31,7 @@ func init() {
 }
 
 func GetCorrelationContext() context.Context {
-	ctx := context.WithValue(context.Background(), correlation.ContextKeyCorrelation, correlation.GetDefaultCorrelationParam(ServiceName))
+	ctx := context.WithValue(context.Background(), correlation.ContextKeyCorrelation, correlation.NewCorrelationParam(ServiceName))
 	return ctx
 }
 
@@ -57,14 +57,17 @@ func ExampleHTTPClient_responsebody() {
 		"tag": "Test",
 	}
 	//URL is a echo  endpoint that returns the whole request as response body
-	res, err := client.Post(GetCorrelationContext(), URL, &body, &response, map[string]string{ContentTypeHeader: MIMEJSON})
+	ctx := context.WithValue(context.Background(), correlation.ContextKeyCorrelation, &correlation.CorrelationParam{
+		CorrelationID: ServiceName,
+	})
+	res, err := client.Post(ctx, URL, &body, &response, map[string]string{ContentTypeHeader: MIMEJSON})
 	fmt.Println(err)
 	fmt.Println(res.StatusCode)
 	fmt.Printf("%+v", response)
 	//Output:
 	//<nil>
 	//200
-	//map[body:map[tag:Test] headers:map[accept-encoding:gzip connection:close content-length:15 content-type:application/json host:backend user-agent:Go-http-client/1.1 x-correlation-id:go-test-service-50e6a92b-326f-4b4c-8c78-54d1c9eaf32a] method:POST pathParams:map[path_1:a path_2:b] url:http://backend/service/v1/echo/a/b]
+	//map[body:map[tag:Test] headers:map[accept-encoding:gzip connection:close content-length:15 content-type:application/json host:backend user-agent:Go-http-client/1.1 x-correlation-id:HTTPClientTest] method:POST pathParams:map[path_1:a path_2:b] url:http://backend/service/v1/echo/a/b]
 }
 
 func ExampleHTTPClient_errorresponsebody() {
@@ -85,25 +88,37 @@ func ExampleHTTPClient_retry() {
 	body := map[string]any{
 		"tag": "Test",
 	}
+	ctx := context.WithValue(context.Background(), correlation.ContextKeyCorrelation, &correlation.CorrelationParam{
+		CorrelationID: ServiceName,
+	})
 	//RetryURL is a  endpoint that returns the always returns 500
-	res, err := client.Call(GetCorrelationContext(), "POST", RetryURL, &body, &data, nil)
+	res, err := client.Call(ctx, "POST", RetryURL, &body, &data, nil)
 	fmt.Println(err)
 	fmt.Println(res.StatusCode)
 	//Output:
-	//[2024-05-14T12:32:30.177+05:30] [NOTICE] [go-test-service-5ecf10e2-f837-4eaa-a5c5-103176b6753a] [go-test-service] [HttpClient] [request failed with status code 500 retry 1 of 4 in 1000ms] [string] [{"url": "http://backend/service/v1/echo/error/b", "headers": {"host": "backend", "connection": "close", "content-length": "15", "user-agent": "Go-http-client/1.1", "x-correlation-id": "go-test-service-5ecf10e2-f837-4eaa-a5c5-103176b6753a", "accept-encoding": "gzip"}, "method": "POST", "body": {"tag": "Test"}, "pathParams": {"path_1": "error", "path_2": "b"}}]
-	// [2024-05-14T12:32:31.282+05:30] [NOTICE] [go-test-service-5ecf10e2-f837-4eaa-a5c5-103176b6753a] [go-test-service] [HttpClient] [request failed with status code 500 retry 2 of 4 in 2000ms] [string] [{"url": "http://backend/service/v1/echo/error/b", "headers": {"host": "backend", "connection": "close", "content-length": "15", "user-agent": "Go-http-client/1.1", "x-correlation-id": "go-test-service-5ecf10e2-f837-4eaa-a5c5-103176b6753a", "accept-encoding": "gzip"}, "method": "POST", "body": {"tag": "Test"}, "pathParams": {"path_1": "error", "path_2": "b"}}]
-	// [2024-05-14T12:32:33.390+05:30] [NOTICE] [go-test-service-5ecf10e2-f837-4eaa-a5c5-103176b6753a] [go-test-service] [HttpClient] [request failed with status code 500 retry 3 of 4 in 4000ms] [string] [{"url": "http://backend/service/v1/echo/error/b", "headers": {"host": "backend", "connection": "close", "content-length": "15", "user-agent": "Go-http-client/1.1", "x-correlation-id": "go-test-service-5ecf10e2-f837-4eaa-a5c5-103176b6753a", "accept-encoding": "gzip"}, "method": "POST", "body": {"tag": "Test"}, "pathParams": {"path_1": "error", "path_2": "b"}}]
-	// [2024-05-14T12:32:37.525+05:30] [NOTICE] [go-test-service-5ecf10e2-f837-4eaa-a5c5-103176b6753a] [go-test-service] [HttpClient] [request failed with status code 500 retry 4 of 4 in 5000ms] [string] [{"url": "http://backend/service/v1/echo/error/b", "headers": {"host": "backend", "connection": "close", "content-length": "15", "user-agent": "Go-http-client/1.1", "x-correlation-id": "go-test-service-5ecf10e2-f837-4eaa-a5c5-103176b6753a", "accept-encoding": "gzip"}, "method": "POST", "body": {"tag": "Test"}, "pathParams": {"path_1": "error", "path_2": "b"}}]
-	// [2024-05-14T12:32:42.636+05:30] [ERROR] [go-test-service-5ecf10e2-f837-4eaa-a5c5-103176b6753a] [go-test-service] [HttpClient] [Response] [map[string]interface {}] [{
+	//[2024-05-21T14:33:04.793+05:30] [INFO] [HTTPClientTest] [default] [log] [Request] [map[string]interface {}] [{
+	//     "headers": {
+	//         "X-Correlation-Id": [
+	//             "HTTPClientTest"
+	//         ]
+	//     },
+	//     "method": "POST",
+	//     "url": "http://localhost:64000/service/v1/echo/error/b"
+	// }]
+	// [2024-05-21T14:33:04.801+05:30] [NOTICE] [HTTPClientTest] [default] [log] [request failed with status code 500 retry 1 of 4 in 10ms] [string] [{"url": "http://backend/service/v1/echo/error/b", "headers": {"host": "backend", "connection": "close", "content-length": "15", "user-agent": "Go-http-client/1.1", "x-correlation-id": "HTTPClientTest", "accept-encoding": "gzip"}, "method": "POST", "body": {"tag": "Test"}, "pathParams": {"path_1": "error", "path_2": "b"}}]
+	// [2024-05-21T14:33:04.829+05:30] [NOTICE] [HTTPClientTest] [default] [log] [request failed with status code 500 retry 2 of 4 in 20ms] [string] [{"url": "http://backend/service/v1/echo/error/b", "headers": {"host": "backend", "connection": "close", "content-length": "15", "user-agent": "Go-http-client/1.1", "x-correlation-id": "HTTPClientTest", "accept-encoding": "gzip"}, "method": "POST", "body": {"tag": "Test"}, "pathParams": {"path_1": "error", "path_2": "b"}}]
+	// [2024-05-21T14:33:04.868+05:30] [NOTICE] [HTTPClientTest] [default] [log] [request failed with status code 500 retry 3 of 4 in 40ms] [string] [{"url": "http://backend/service/v1/echo/error/b", "headers": {"host": "backend", "connection": "close", "content-length": "15", "user-agent": "Go-http-client/1.1", "x-correlation-id": "HTTPClientTest", "accept-encoding": "gzip"}, "method": "POST", "body": {"tag": "Test"}, "pathParams": {"path_1": "error", "path_2": "b"}}]
+	// [2024-05-21T14:33:04.930+05:30] [NOTICE] [HTTPClientTest] [default] [log] [request failed with status code 500 retry 4 of 4 in 80ms] [string] [{"url": "http://backend/service/v1/echo/error/b", "headers": {"host": "backend", "connection": "close", "content-length": "15", "user-agent": "Go-http-client/1.1", "x-correlation-id": "HTTPClientTest", "accept-encoding": "gzip"}, "method": "POST", "body": {"tag": "Test"}, "pathParams": {"path_1": "error", "path_2": "b"}}]
+	// [2024-05-21T14:33:05.031+05:30] [ERROR] [HTTPClientTest] [default] [log] [Response] [map[string]interface {}] [{
 	//     "headers": {
 	//         "Connection": [
 	//             "keep-alive"
 	//         ],
 	//         "Content-Length": [
-	//             "360"
+	//             "322"
 	//         ],
 	//         "Date": [
-	//             "Tue, 14 May 2024 07:02:42 GMT"
+	//             "Tue, 21 May 2024 09:03:05 GMT"
 	//         ],
 	//         "Server": [
 	//             "nginx/1.26.0"

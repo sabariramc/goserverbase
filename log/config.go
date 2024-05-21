@@ -15,13 +15,15 @@ type Config struct {
 	Audit       AuditLogWriter
 }
 
-var defaultConfig = Config{
-	ServiceName: utils.GetEnv("SERVICE_NAME", "default"),
-	ModuleName:  "log",
-	LogLevel:    message.GetLogLevelWithName(utils.GetEnv("LOG__LEVEL", "ERROR")),
-	FileTrace:   false,
-	Mux:         NewDefaultLogMux(logwriter.NewConsoleWriter()),
-	Audit:       nil,
+func getDefaultConfig() Config {
+	return Config{
+		ServiceName: utils.GetEnv("SERVICE_NAME", "default"),
+		ModuleName:  "log",
+		LogLevel:    message.GetLogLevelWithName(utils.GetEnv("LOG__LEVEL", "ERROR")),
+		FileTrace:   false,
+		Mux:         NewDefaultLogMux(logwriter.NewConsoleWriter()),
+		Audit:       nil,
+	}
 }
 
 // Option represents an option function for configuring the Logger struct.

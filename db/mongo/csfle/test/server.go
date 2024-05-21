@@ -10,13 +10,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sabariramc/goserverbase/v6/app/server/httpserver"
+	"github.com/sabariramc/goserverbase/v6/correlation"
 	"github.com/sabariramc/goserverbase/v6/db/mongo"
 	"github.com/sabariramc/goserverbase/v6/db/mongo/csfle"
 	"github.com/sabariramc/goserverbase/v6/db/mongo/csfle/sample"
 	"github.com/sabariramc/goserverbase/v6/instrumentation"
 	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/testutils"
-	"github.com/sabariramc/goserverbase/v6/correlation"
 	"github.com/sabariramc/goserverbase/v6/utils"
 )
 
@@ -34,7 +34,7 @@ func init() {
 }
 
 func GetCorrelationContext() context.Context {
-	ctx := context.WithValue(context.Background(), correlation.ContextKeyCorrelation, correlation.GetDefaultCorrelationParam(ServiceName))
+	ctx := context.WithValue(context.Background(), correlation.ContextKeyCorrelation, correlation.NewCorrelationParam(ServiceName))
 	return ctx
 }
 

@@ -8,15 +8,15 @@ import (
 	"github.com/sabariramc/goserverbase/v6/log"
 )
 
-type config struct {
-	log          log.Log
-	retryMax     uint
-	minRetryWait time.Duration
-	maxRetryWait time.Duration
-	checkRetry   CheckRetry
-	backoff      Backoff
-	tr           Tracer
-	c            *http.Client
+type Config struct {
+	Log          log.Log
+	RetryMax     uint
+	MinRetryWait time.Duration
+	MaxRetryWait time.Duration
+	CheckRetry   CheckRetry
+	Backoff      Backoff
+	Tracer       Tracer
+	Client       *http.Client
 }
 
 func newHTTP() *http.Client {
@@ -27,71 +27,73 @@ func newHTTP() *http.Client {
 	return &http.Client{Transport: t}
 }
 
-var defaultConfig = config{
-	log:          log.New().NewResourceLogger("HTTPClient"),
-	retryMax:     4,
-	minRetryWait: time.Millisecond * 10,
-	maxRetryWait: time.Second * 5,
-	checkRetry:   retryablehttp.DefaultRetryPolicy,
-	backoff:      retryablehttp.DefaultBackoff,
-	c:            newHTTP(),
+func getDefaultConfig() Config {
+	return Config{
+		Log:          log.New().NewResourceLogger("HTTPClient"),
+		RetryMax:     4,
+		MinRetryWait: time.Millisecond * 10,
+		MaxRetryWait: time.Second * 5,
+		CheckRetry:   retryablehttp.DefaultRetryPolicy,
+		Backoff:      retryablehttp.DefaultBackoff,
+		Client:       newHTTP(),
+	}
 }
 
 // Option represents an option function for configuring the config struct.
-type Option func(*config)
+type Option func(*Config)
 
 // WithLog sets the log instance for the config.
 func WithLog(log log.Log) Option {
-	return func(c *config) {
-		c.log = log
+	return func(c *Config) {
+		c.Log = log
 	}
 }
 
 // WithRetryMax sets the maximum number of retries for the config.
 func WithRetryMax(retryMax uint) Option {
-	return func(c *config) {
-		c.retryMax = retryMax
+	return func(c *Config) {
+		c.RetryMax = retryMax
 	}
 }
 
 // WithMinRetryWait sets the minimum retry wait duration for the config.
 func WithMinRetryWait(minRetryWait time.Duration) Option {
-	return func(c *config) {
-		c.minRetryWait = minRetryWait
+	return func(c *Config) {
+		c.MinRetryWait = minRetryWait
 	}
 }
 
 // WithMaxRetryWait sets the maximum retry wait duration for the config.
 func WithMaxRetryWait(maxRetryWait time.Duration) Option {
-	return func(c *config) {
-		c.maxRetryWait = maxRetryWait
+	return func(c *Config) {
+		c.MaxRetryWait = maxRetryWait
 	}
 }
 
 // WithCheckRetry sets the check retry function for the config.
 func WithCheckRetry(checkRetry CheckRetry) Option {
-	return func(c *config) {
-		c.checkRetry = checkRetry
+	return func(c *Config) {
+		c.CheckRetry = checkRetry
 	}
 }
 
 // WithBackoff sets the backoff strategy for the config.
 func WithBackoff(backoff Backoff) Option {
-	return func(c *config) {
-		c.backoff = backoff
+	return func(c *Config) {
+		c.Backoff = backoff
 	}
 }
 
 // WithTracer sets the tracer instance for the config.
 func WithTracer(tr Tracer) Option {
-	return func(c *config) {
-		c.tr = tr
+	return func(c *Config) {
+		c.Tracer = tr
 	}
 }
 
 // WithHTTPClient sets the HTTP client for the config.
 func WithHTTPClient(client *http.Client) Option {
-	return func(c *config) {
-		c.c = client
+	return func(c *Config) {
+		c.Client = client
 	}
 }
