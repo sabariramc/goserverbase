@@ -9,10 +9,11 @@ import (
 	"github.com/sabariramc/goserverbase/v6/log/message"
 )
 
-func DefaultLogMapper(ctx context.Context, msg *message.LogMessage) map[string]any {
+// DefaultLogMapper is the default log mapper function.
+func DefaultLogMapper(ctx context.Context, msg *message.LogMessage) map[string]interface{} {
 	cr := correlation.ExtractCorrelationParam(ctx)
 
-	return map[string]any{
+	return map[string]interface{}{
 		"LogMessage":       msg,
 		"CorrelationParam": cr,
 		"CorrelationID":    cr.CorrelationID,
@@ -24,13 +25,15 @@ func DefaultLogMapper(ctx context.Context, msg *message.LogMessage) map[string]a
 	}
 }
 
-type LogMapper func(context.Context, *message.LogMessage) map[string]any
+// LogMapper defines the function signature for log mapping.
+type LogMapper func(context.Context, *message.LogMessage) map[string]interface{}
 
-// JSONLLogWriter writes log to console in JSONL format
+// JSONLLogWriter writes logs to console in JSONL format.
 type JSONLLogWriter struct {
 	logMapper LogMapper
 }
 
+// NewJSONLConsoleWriter creates a new JSONLLogWriter instance.
 func NewJSONLConsoleWriter(mapper LogMapper) *JSONLLogWriter {
 	if mapper == nil {
 		mapper = DefaultLogMapper
@@ -40,6 +43,7 @@ func NewJSONLConsoleWriter(mapper LogMapper) *JSONLLogWriter {
 	}
 }
 
+// WriteMessage writes a log message in JSONL format.
 func (c *JSONLLogWriter) WriteMessage(ctx context.Context, l *message.LogMessage) error {
 	msg := c.logMapper(ctx, l)
 	blob, _ := json.Marshal(msg)

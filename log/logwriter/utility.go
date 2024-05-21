@@ -11,7 +11,7 @@ const timeFormat = "2006-01-02T15:04:05.000Z07:00"
 
 const ParseErrorMsg = "******************ERROR DURING MARSHAL OF FULL MESSAGE*******************"
 
-// ParseObject encodes the value of fullMessage into string
+// ParseObject encodes the value of fullMessage into a string.
 func ParseObject(fullMessage any, indent bool) string {
 	if fullMessage == nil {
 		return ""
@@ -43,7 +43,7 @@ func ParseObject(fullMessage any, indent bool) string {
 	return msg
 }
 
-// ParseLogObject encodes the value of logObj into string
+// ParseLogObject encodes the value of logObj into a string.
 func ParseLogObject(logObj []any, indent bool) string {
 	if len(logObj) == 1 {
 		return ParseObject(logObj[0], indent)
@@ -55,7 +55,7 @@ func ParseLogObject(logObj []any, indent bool) string {
 	return ParseObject(msg, indent)
 }
 
-// GetLogObjectType returns the TypeOf objects in logObj as  a string delimited by comma(,)
+// GetLogObjectType returns the TypeOf objects in logObj as a string delimited by commas.
 func GetLogObjectType(logObj []any) string {
 	if len(logObj) == 1 {
 		return GetObjectType(logObj[0])
@@ -67,7 +67,7 @@ func GetLogObjectType(logObj []any) string {
 	return ParseObject(msg, false)
 }
 
-// GetObjectType returns the TypeOf objects in obj
+// GetObjectType returns the TypeOf the object as a string.
 func GetObjectType(obj any) string {
 	msgType := "nil"
 	if obj != nil {

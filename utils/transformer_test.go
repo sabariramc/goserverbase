@@ -97,7 +97,8 @@ func TestJsonDecoding(t *testing.T) {
 	assert.DeepEqual(t, val, toData.DecimalVal)
 	data["newField"] = "random value"
 	err = utils.StrictJSONTransformer(data, toData)
-	assert.Error(t, err, "StrictJsonTransformer: error decoding content: utils_test.TestVal.ReadObject: found unknown field: newField, error found in #10 byte of ...|\"newField\":\"random v|..., bigger context ...|{\"decimalVal\":\"123.1232\",\"intVal\":10,\"newField\":\"random value\"}\n|...")
+	assert.Error(t, err, `StrictJsonTransformer: error decoding content: utils_test.TestVal.ReadObject: found unknown field: newField, error found in #10 byte of ...|"newField":"random v|..., bigger context ...|{"decimalVal":"123.1232","intVal":10,"newField":"random value"}
+	|...`)
 }
 
 func TestLeniantJSONTransform(t *testing.T) {
