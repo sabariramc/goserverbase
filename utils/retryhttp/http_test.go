@@ -1,4 +1,4 @@
-package httputil_test
+package retryhttp_test
 
 import (
 	"bytes"
@@ -14,7 +14,7 @@ import (
 	"github.com/sabariramc/goserverbase/v6/correlation"
 	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/testutils"
-	"github.com/sabariramc/goserverbase/v6/utils/httputil"
+	"github.com/sabariramc/goserverbase/v6/utils/retryhttp"
 	"gotest.tools/assert"
 )
 
@@ -40,7 +40,7 @@ const RetryURL = "http://localhost:64000/service/v1/echo/error/b"
 const ErrURL = "http://localhost:80/service/v1/echo/error/b"
 
 func ExampleHTTPClient() {
-	client := httputil.New(httputil.WithLog(HTTPUtilTestLogger))
+	client := retryhttp.New(retryhttp.WithLog(HTTPUtilTestLogger))
 	data := make(map[string]any)
 	res, err := client.Get(GetCorrelationContext(), URL, nil, &data, nil)
 	fmt.Println(err)
@@ -51,7 +51,7 @@ func ExampleHTTPClient() {
 }
 
 func ExampleHTTPClient_responsebody() {
-	client := httputil.New(httputil.WithLog(HTTPUtilTestLogger))
+	client := retryhttp.New(retryhttp.WithLog(HTTPUtilTestLogger))
 	response := map[string]any{} // object to decode response body
 	body := map[string]string{
 		"tag": "Test",
@@ -71,19 +71,19 @@ func ExampleHTTPClient_responsebody() {
 }
 
 func ExampleHTTPClient_errorresponsebody() {
-	client := httputil.New(httputil.WithLog(HTTPUtilTestLogger))
+	client := retryhttp.New(retryhttp.WithLog(HTTPUtilTestLogger))
 	response := 0
 	body := map[string]string{
 		"tag": "Test",
 	}
 	_, err := client.Post(GetCorrelationContext(), URL, &body, &response, map[string]string{ContentTypeHeader: MIMEJSON})
-	fmt.Println(errors.Is(err, httputil.ErrResponseUnmarshal))
+	fmt.Println(errors.Is(err, retryhttp.ErrResponseUnmarshal))
 	//Output:
 	//true
 }
 
 func ExampleHTTPClient_retry() {
-	client := httputil.New(httputil.WithLog(HTTPUtilTestLogger))
+	client := retryhttp.New(retryhttp.WithLog(HTTPUtilTestLogger))
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -131,7 +131,7 @@ func ExampleHTTPClient_retry() {
 }
 
 func TestHttpUtilGet(t *testing.T) {
-	client := httputil.New(httputil.WithLog(HTTPUtilTestLogger))
+	client := retryhttp.New(retryhttp.WithLog(HTTPUtilTestLogger))
 	data := make(map[string]any)
 	res, err := client.Get(GetCorrelationContext(), URL, nil, &data, nil)
 	assert.NilError(t, err)
@@ -139,7 +139,7 @@ func TestHttpUtilGet(t *testing.T) {
 }
 
 func TestHttpUtilGetWithBody(t *testing.T) {
-	client := httputil.New(httputil.WithLog(HTTPUtilTestLogger))
+	client := retryhttp.New(retryhttp.WithLog(HTTPUtilTestLogger))
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -152,20 +152,20 @@ func TestHttpUtilGetWithBody(t *testing.T) {
 }
 
 func TestHttpUtilUnwrapError(t *testing.T) {
-	client := httputil.New(httputil.WithLog(HTTPUtilTestLogger))
+	client := retryhttp.New(retryhttp.WithLog(HTTPUtilTestLogger))
 	data := 0
 	body := map[string]string{
 		"tag": "Test",
 	}
 	_, err := client.Post(GetCorrelationContext(), URL, &body, &data, map[string]string{ContentTypeHeader: MIMEJSON})
-	if errors.Is(err, httputil.ErrResponseUnmarshal) {
+	if errors.Is(err, retryhttp.ErrResponseUnmarshal) {
 		return
 	}
 	t.Fail()
 }
 
 func TestHttpUtilPost(t *testing.T) {
-	client := httputil.New(httputil.WithLog(HTTPUtilTestLogger))
+	client := retryhttp.New(retryhttp.WithLog(HTTPUtilTestLogger))
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -178,7 +178,7 @@ func TestHttpUtilPost(t *testing.T) {
 }
 
 func TestHttpUtilPatch(t *testing.T) {
-	client := httputil.New(httputil.WithLog(HTTPUtilTestLogger))
+	client := retryhttp.New(retryhttp.WithLog(HTTPUtilTestLogger))
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -191,7 +191,7 @@ func TestHttpUtilPatch(t *testing.T) {
 }
 
 func TestHttpUtilPut(t *testing.T) {
-	client := httputil.New(httputil.WithLog(HTTPUtilTestLogger))
+	client := retryhttp.New(retryhttp.WithLog(HTTPUtilTestLogger))
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -204,7 +204,7 @@ func TestHttpUtilPut(t *testing.T) {
 }
 
 func TestHttpUtilDelete(t *testing.T) {
-	client := httputil.New(httputil.WithLog(HTTPUtilTestLogger))
+	client := retryhttp.New(retryhttp.WithLog(HTTPUtilTestLogger))
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -217,7 +217,7 @@ func TestHttpUtilDelete(t *testing.T) {
 }
 
 func TestHttpUtilRetry(t *testing.T) {
-	client := httputil.New(httputil.WithLog(HTTPUtilTestLogger))
+	client := retryhttp.New(retryhttp.WithLog(HTTPUtilTestLogger))
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -227,7 +227,7 @@ func TestHttpUtilRetry(t *testing.T) {
 }
 
 func TestHttpUtilRetryError(t *testing.T) {
-	client := httputil.New(httputil.WithLog(HTTPUtilTestLogger))
+	client := retryhttp.New(retryhttp.WithLog(HTTPUtilTestLogger))
 	data := make(map[string]any)
 	body := map[string]any{
 		"tag": "Test",
@@ -241,7 +241,7 @@ func TestHttpUtilRetryError(t *testing.T) {
 func TestConnectionReuse(t *testing.T) {
 	ht := http.DefaultTransport.(*http.Transport).Clone()
 	ht.TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
-	client := httputil.New(httputil.WithLog(HTTPUtilTestLogger), httputil.WithHTTPClient(&http.Client{Transport: ht}))
+	client := retryhttp.New(retryhttp.WithLog(HTTPUtilTestLogger), retryhttp.WithHTTPClient(&http.Client{Transport: ht}))
 	var wg sync.WaitGroup
 	body, _ := json.Marshal(map[string]string{"fasdfsda": "fasdfas", "fasdfas": "fasdfas"})
 	for i := 0; i < 10; i++ {
@@ -261,7 +261,7 @@ func TestConnectionReuse(t *testing.T) {
 }
 
 func TestH2CClient(t *testing.T) {
-	client := httputil.NewH2CClient(httputil.WithLog(HTTPUtilTestLogger))
+	client := retryhttp.NewH2CClient(retryhttp.WithLog(HTTPUtilTestLogger))
 	var wg sync.WaitGroup
 	ctx := GetCorrelationContext()
 	body, _ := json.Marshal(map[string]any{"sabariram": 10})

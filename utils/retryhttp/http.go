@@ -1,5 +1,5 @@
 // Package httputil implements utility for httpClient with request retry and optional tracing
-package httputil
+package retryhttp
 
 import (
 	"bytes"

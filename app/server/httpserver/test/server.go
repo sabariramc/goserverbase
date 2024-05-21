@@ -20,7 +20,7 @@ import (
 	"github.com/sabariramc/goserverbase/v6/log/logwriter"
 	"github.com/sabariramc/goserverbase/v6/testutils"
 	"github.com/sabariramc/goserverbase/v6/utils"
-	"github.com/sabariramc/goserverbase/v6/utils/httputil"
+	"github.com/sabariramc/goserverbase/v6/utils/retryhttp"
 )
 
 var ServerTestConfig *testutils.TestConfig
@@ -50,7 +50,7 @@ type server struct {
 	conn       *mongo.Mongo
 	coll       *mongo.Collection
 	sns        *aws.SNS
-	httpClient *httputil.HTTPClient
+	httpClient *retryhttp.HTTPClient
 	c          *testutils.TestConfig
 }
 
@@ -168,7 +168,7 @@ func NewServer(t instrumentation.Tracer) *server {
 		HTTPServer: httpserver.New(*ServerTestConfig.HTTP, ServerTestLogger, t, nil), log: ServerTestLogger,
 		pr:         pr,
 		sns:        aws.GetDefaultSNSClient(ServerTestLogger),
-		httpClient: httputil.New(httputil.WithTracer(t)),
+		httpClient: retryhttp.New(retryhttp.WithTracer(t)),
 		conn:       conn,
 		coll:       conn.Database("GOBaseTest").Collection("TestColl"),
 		c:          ServerTestConfig,

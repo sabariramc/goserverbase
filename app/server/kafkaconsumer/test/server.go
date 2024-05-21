@@ -16,7 +16,7 @@ import (
 	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/testutils"
 	"github.com/sabariramc/goserverbase/v6/utils"
-	"github.com/sabariramc/goserverbase/v6/utils/httputil"
+	"github.com/sabariramc/goserverbase/v6/utils/retryhttp"
 )
 
 var ServerTestConfig *testutils.TestConfig
@@ -44,7 +44,7 @@ type server struct {
 	conn       *mongo.Mongo
 	coll       *mongo.Collection
 	sns        *aws.SNS
-	httpClient *httputil.HTTPClient
+	httpClient *retryhttp.HTTPClient
 }
 
 func (s *server) Func1(ctx context.Context, event *kafka.Message) error {
@@ -96,7 +96,7 @@ func NewServer(t instrumentation.Tracer) *server {
 		KafkaConsumerServer: kafkaconsumer.New(kafkaconsumer.WithKafkaConsumerConfig(ServerTestConfig.Kafka.KafkaConsumerConfig), kafkaconsumer.WithLog(ServerTestLogger), kafkaconsumer.WithTracer(t), nil),
 		pr:                  pr,
 		sns:                 aws.GetDefaultSNSClient(ServerTestLogger),
-		httpClient:          httputil.New(httputil.WithTracer(t)),
+		httpClient:          retryhttp.New(retryhttp.WithTracer(t)),
 		conn:                conn,
 		coll:                conn.Database("GOBaseTest").Collection("TestColl"),
 	}
