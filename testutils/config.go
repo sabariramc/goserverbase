@@ -32,7 +32,7 @@ type TestConfig struct {
 	CSFLE           *csfle.Config
 	AWS             *AWSResources
 	KafkaConsumer   kafka.KafkaConsumerConfig
-	KafkaProducer   *kafka.KafkaProducerConfig
+	KafkaProducer   *kafka.ProducerConfig
 	KafkaTestTopic  string
 	KafkaTestTopic2 string
 	TestURL1        string
@@ -102,10 +102,10 @@ func NewConfig() *TestConfig {
 			SQS:     utils.GetEnv("SQS_URL", ""),
 			FIFOSQS: utils.GetEnv("FIFO_SQS_URL", ""),
 		},
-		KafkaProducer: &kafka.KafkaProducerConfig{
+		KafkaProducer: &kafka.ProducerConfig{
 			KafkaCredConfig: &kafkaBaseConfig,
-			Acknowledge:     -1,
-			BatchMaxBuffer:  utils.GetEnvInt("KAFKA_PRODUCER_MAX_BUFFER", 1000),
+			RequiredAcks:    -1,
+			MaxBuffer:       utils.GetEnvInt("KAFKA_PRODUCER_MAX_BUFFER", 1000),
 			Async:           true,
 		},
 		KafkaConsumer:   consumer,

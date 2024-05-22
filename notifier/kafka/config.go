@@ -14,8 +14,8 @@ type Config struct {
 	Producer    *kafka.Producer
 }
 
-// getDefaultConfig returns the default configuration for the Notifier.
-func getDefaultConfig() Config {
+// GetDefaultConfig returns the default configuration for the Notifier.
+func GetDefaultConfig() Config {
 	return Config{
 		ServiceName: utils.GetEnv(envvariables.ServiceName, "default"),
 		Log:         log.New().NewResourceLogger("Notifier"),

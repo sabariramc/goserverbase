@@ -23,7 +23,7 @@ type NotifierKafka struct {
 
 // New creates a new instance of NotifierKafka.
 func New(options ...Option) *NotifierKafka {
-	config := getDefaultConfig()
+	config := GetDefaultConfig()
 	for _, fn := range options {
 		fn(&config)
 	}
