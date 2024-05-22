@@ -40,7 +40,6 @@ type ProducerConfig struct {
 	Async             bool          // Flag to indicate if the producer should work asynchronously.
 	Batch             bool          // Flag to indicate if messages should be batched.
 	Topic             string        // Kafka topic to produce messages to.
-	EnableLog         bool          // Flag to enable logging.
 	ModuleName        string        // Name of the module for logging.
 	Log               log.Log       // Logger instance.
 	Trace             ProduceTracer // Tracer for producing messages.
@@ -74,7 +73,6 @@ func GetDefaultProducerConfig() *ProducerConfig {
 		AutoFlushInterval: uint64(utils.GetEnvInt(envvariables.KafkaProducerAutoFlushInterval, 1000)),
 		Async:             utils.GetEnvBool(envvariables.KafkaProducerAsync, true),
 		Batch:             utils.GetEnvBool(envvariables.KafkaProducerBatch, false),
-		EnableLog:         utils.GetEnvBool(envvariables.KafkaProducerLog, false),
 		Log:               log.New(log.WithModuleName(ModuleProducer)),
 		ModuleName:        ModuleProducer,
 	}
@@ -133,13 +131,6 @@ func WithTopic(topic string) ProducerOption {
 	}
 }
 
-// WithEnableLog sets the enable log flag in the ProducerConfig.
-func WithEnableLog(enable bool) ProducerOption {
-	return func(c *ProducerConfig) {
-		c.EnableLog = enable
-	}
-}
-
 // WithModuleName sets the module name in the ProducerConfig.
 func WithModuleName(name string) ProducerOption {
 	return func(c *ProducerConfig) {
@@ -161,8 +152,8 @@ func WithTrace(tracer ProduceTracer) ProducerOption {
 	}
 }
 
-// WithTrace sets the produce tracer in the ProducerConfig.
-func WitWriter(writer *kafka.Writer) ProducerOption {
+// WithWriter sets the [kafka.Writer] in the ProducerConfig.
+func WithWriter(writer *kafka.Writer) ProducerOption {
 	return func(c *ProducerConfig) {
 		c.Writer = writer
 	}

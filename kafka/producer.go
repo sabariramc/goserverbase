@@ -27,6 +27,32 @@ type Producer struct {
 }
 
 // NewProducer creates a new Producer instance with the provided configuration options.
+/*
+If writer is not set in [ProducerConfig] then creates a new [kafka.Writer] with the options passed to the function, and adds addition params
+
+		kafka.Writer{
+			Addr:     kafka.TCP(config.Brokers...),
+			Topic:    config.Topic,
+			Balancer: &kafka.Hash{},
+			Transport: &kafka.Transport{
+				SASL: config.SASLMechanism,
+				TLS:  config.TLSConfig,
+			},
+			Completion:   kLog.DeliveryReport,
+			RequiredAcks: kafka.RequiredAcks(config.RequiredAcks),
+			Async:        config.Async,
+			Logger: &kafkaLogger{
+				Log:     logger.NewResourceLogger(config.ModuleName + ":InfoLog"),
+				ctx:     ctx,
+				isError: false,
+			},
+			ErrorLogger: &kafkaLogger{
+				isError: true,
+				Log:     logger.NewResourceLogger(config.ModuleName + ":ErrorLog"),
+				ctx:     ctx,
+			},
+		}
+*/
 func NewProducer(options ...ProducerOption) (*Producer, error) {
 	config := GetDefaultProducerConfig()
 	for _, fu := range options {
@@ -57,18 +83,16 @@ func NewProducer(options ...ProducerOption) (*Producer, error) {
 			Completion:   kLog.DeliveryReport,
 			RequiredAcks: kafka.RequiredAcks(config.RequiredAcks),
 			Async:        config.Async,
-		}
-	}
-	if config.EnableLog {
-		config.Writer.Logger = &kafkaLogger{
-			Log:     logger.NewResourceLogger(config.ModuleName + ":InfoLog"),
-			ctx:     ctx,
-			isError: false,
-		}
-		config.Writer.ErrorLogger = &kafkaLogger{
-			isError: true,
-			Log:     logger.NewResourceLogger(config.ModuleName + ":ErrorLog"),
-			ctx:     ctx,
+			Logger: &kafkaLogger{
+				Log:     logger.NewResourceLogger(config.ModuleName + ":InfoLog"),
+				ctx:     ctx,
+				isError: false,
+			},
+			ErrorLogger: &kafkaLogger{
+				isError: true,
+				Log:     logger.NewResourceLogger(config.ModuleName + ":ErrorLog"),
+				ctx:     ctx,
+			},
 		}
 	}
 	writer := NewWriter(ctx, config.Writer, config.MaxBuffer, logger, config.Trace)

@@ -14,5 +14,4 @@ const (
 	KafkaProducerAutoFlushInterval = "KAFKA__PRODUCER__AUTO_FLUSH_INTERVAL"
 	KafkaProducerAsync             = "KAFKA__PRODUCER__ASYNC"
 	KafkaProducerBatch             = "KAFKA__PRODUCER__BATCH"
-	KafkaProducerLog               = "KAFKA__PRODUCER__LOG"
 )

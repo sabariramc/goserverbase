@@ -14,19 +14,6 @@ import (
 	"gotest.tools/assert"
 )
 
-func newProducer(ctx context.Context) (*kafka.Producer, error) {
-	KafkaTestConfig.KafkaProducer.Topic = KafkaTestConfig.KafkaTestTopic
-	return kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducer, nil)
-}
-
-func newAsyncProducer(ctx context.Context) (*kafka.Producer, error) {
-	KafkaTestConfig.KafkaProducer.Topic = KafkaTestConfig.KafkaTestTopic
-	config := *KafkaTestConfig.KafkaProducer
-	config.Async = true
-	config.Batch = false
-	return kafka.NewProducer(ctx, KafkaTestLogger, &config, nil)
-}
-
 func newPoller(ctx context.Context) (*kafka.Poller, error) {
 	return kafka.NewPoller(ctx, KafkaTestLogger, KafkaTestConfig.KafkaConsumer, nil, KafkaTestConfig.KafkaTestTopic)
 }
@@ -35,7 +22,7 @@ func Example() {
 	ctx := GetCorrelationContext()
 	co, _ := kafka.NewPoller(ctx, KafkaTestLogger, KafkaTestConfig.KafkaConsumer, nil, KafkaTestConfig.KafkaTestTopic)
 	defer co.Close(ctx)
-	pr, _ := kafka.NewProducer(ctx, KafkaTestLogger, KafkaTestConfig.KafkaProducer, nil)
+	pr, _ := kafka.NewProducer()
 	defer pr.Close(ctx)
 	ch := make(chan *cKafka.Message, 100)
 	var wg sync.WaitGroup
@@ -88,7 +75,7 @@ func TestKafkaProducer(t *testing.T) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			pr, err := newAsyncProducer(ctx)
+			pr, err := kafka.NewProducer(kafka.WithAsync(true))
 			assert.NilError(t, err)
 			defer pr.Close(ctx)
 			for i := 0; i < totalNoOfMessage/connFac; i++ {
