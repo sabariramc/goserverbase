@@ -8,6 +8,19 @@ import (
 )
 
 // Config represents the configuration options for the logger.
+/*
+	Environment Variables
+	- SERVICE_NAME: Sets [ServiceName]
+	- LOG__LEVEL: Sets [LogLevel], following are the valid options
+		- TRACE
+		- DEBUG
+		- INFO
+		- NOTICE
+		- WARNING
+		- ERROR
+		- CRITICAL
+		- EMERGENCY
+*/
 type Config struct {
 	ServiceName string           // ServiceName represents the name of the service.
 	ModuleName  string           // ModuleName represents the name of the module.

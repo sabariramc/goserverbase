@@ -8,7 +8,7 @@ const (
 	NotifierTopic = "NOTIFIER__TOPIC"
 
 	KafkaBroker                    = "KAFAK__BROKER"
-	KafkaSALSMechanism             = "KAFAK__SASL_MECHANISM"
+	KafkaSALSType                  = "KAFAK__SASL__TYPE"
 	KafkaProducerAcknowledge       = "KAFKA__PRODUCER__ACKNOWLEDGE"
 	KafkaProducerMaxBuffer         = "KAFKA__PRODUCER__MAX_BUFFER"
 	KafkaProducerAutoFlushInterval = "KAFKA__PRODUCER__AUTO_FLUSH_INTERVAL"

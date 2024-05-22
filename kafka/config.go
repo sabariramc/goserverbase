@@ -16,6 +16,11 @@ const (
 )
 
 // KafkaCredConfig holds the configuration for Kafka credentials and connection details.
+/*
+	Environment Variables
+	- KAFAK__BROKER: Sets [Brokers]
+	- KAFAK__SASL__TYPE: Sets [SASLType]
+*/
 type KafkaCredConfig struct {
 	Brokers       []string       // List of Kafka broker addresses.
 	SASLType      string         // SASL authentication type.
@@ -27,11 +32,19 @@ type KafkaCredConfig struct {
 func GetDefaultKafkaCredConfig() *KafkaCredConfig {
 	return &KafkaCredConfig{
 		Brokers:  utils.GetEnvAsSlice(envvariables.KafkaBroker, []string{"0.0.0.0:9092"}, ","),
-		SASLType: utils.GetEnv(envvariables.KafkaSALSMechanism, "NONE"),
+		SASLType: utils.GetEnv(envvariables.KafkaSALSType, "NONE"),
 	}
 }
 
 // ProducerConfig holds the configuration for a Kafka producer.
+/*
+	Environment Variables
+	- KAFKA__PRODUCER__ACKNOWLEDGE: Sets [RequiredAcks]
+	- KAFKA__PRODUCER__MAX_BUFFER: Sets [MaxBuffer]
+	- KAFKA__PRODUCER__AUTO_FLUSH_INTERVAL: Sets [AutoFlushInterval]
+	- KAFKA__PRODUCER__ASYNC: Sets [Async]
+	- KAFKA__PRODUCER__BATCH: Sets [Batch]
+*/
 type ProducerConfig struct {
 	*KafkaCredConfig                // Embeds KafkaCredConfig for credential and connection details.
 	RequiredAcks      int           // Number of acknowledgments required from Kafka.
@@ -96,8 +109,8 @@ func WithAcknowledge(ack int) ProducerOption {
 	}
 }
 
-// WithBatchMaxBuffer sets the batch max buffer value in the ProducerConfig.
-func WithBatchMaxBuffer(buffer int) ProducerOption {
+// WithMaxBuffer sets the batch max buffer value in the ProducerConfig.
+func WithMaxBuffer(buffer int) ProducerOption {
 	return func(c *ProducerConfig) {
 		c.MaxBuffer = buffer
 	}

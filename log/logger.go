@@ -12,20 +12,7 @@ import (
 )
 
 // Logger represents the implementation of the log interface.
-/*
-	Environment Variables
-	- SERVICE_NAME: Service name for log messages printed, any string is accepted
-	- LOG__LEVEL: Log level for the messages, only following values are accepted
-			- TRACE
-			- DEBUG
-			- INFO
-			- NOTICE
-			- WARNING
-			- ERROR
-			- CRITICAL
-			- EMERGENCY
-	Can be overridden by [Config] / [Option]
-*/
+
 type Logger struct {
 	logLevel    m.LogLevel     // logLevel represents the log level.
 	mux         Mux            // mux represents the multiplexer for handling log messages.
