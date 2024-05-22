@@ -37,7 +37,7 @@ type Logger struct {
 
 // New creates a new Logger instance with the specified options.
 func New(options ...Option) *Logger {
-	config := getDefaultConfig()
+	config := GetDefaultConfig()
 	for _, fn := range options {
 		fn(&config)
 	}

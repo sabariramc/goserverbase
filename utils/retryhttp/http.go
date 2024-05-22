@@ -75,7 +75,7 @@ func NewH2CClient(options ...Option) *HTTPClient {
 
 // New creates a new HTTPClient wrapper with the provided options.
 func New(options ...Option) *HTTPClient {
-	config := getDefaultConfig()
+	config := GetDefaultConfig()
 	for _, fn := range options {
 		fn(&config)
 	}

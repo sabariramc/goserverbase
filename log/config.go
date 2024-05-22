@@ -17,8 +17,8 @@ type Config struct {
 	Audit       AuditLogWriter   // Audit represents the audit log writer.
 }
 
-// getDefaultConfig returns the default configuration for the logger.
-func getDefaultConfig() Config {
+// GetDefaultConfig returns the default configuration for the logger.
+func GetDefaultConfig() Config {
 	return Config{
 		ServiceName: utils.GetEnv(envvariables.ServiceName, "default"),
 		ModuleName:  "log",

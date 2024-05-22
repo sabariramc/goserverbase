@@ -21,8 +21,8 @@ type Config struct {
 	Client       *http.Client  // Client is the underlying HTTP client used to make requests.
 }
 
-// newHTTPClient creates and configures a new HTTP client with custom transport settings.
-func newHTTPClient() *http.Client {
+// NewHTTPClient creates and configures a new HTTP client with custom transport settings.
+func NewHTTPClient() *http.Client {
 	t := http.DefaultTransport.(*http.Transport).Clone()
 	t.MaxIdleConns = 100        // MaxIdleConns sets the maximum number of idle connections across all hosts.
 	t.MaxConnsPerHost = 100     // MaxConnsPerHost sets the maximum number of connections per host.
@@ -30,8 +30,8 @@ func newHTTPClient() *http.Client {
 	return &http.Client{Transport: t}
 }
 
-// getDefaultConfig returns a Config instance with default settings for the HTTP client.
-func getDefaultConfig() Config {
+// GetDefaultConfig returns a Config instance with default settings for the HTTP client.
+func GetDefaultConfig() Config {
 	return Config{
 		Log:          log.New().NewResourceLogger("HTTPClient"), // Creates a new logger instance for the HTTP client.
 		RetryMax:     4,                                         // Sets the maximum number of retry attempts to 4.
@@ -39,7 +39,7 @@ func getDefaultConfig() Config {
 		MaxRetryWait: time.Second * 5,                           // Sets the maximum retry wait duration to 5 seconds.
 		CheckRetry:   retryablehttp.DefaultRetryPolicy,          // Uses the default retry policy.
 		Backoff:      retryablehttp.DefaultBackoff,              // Uses the default backoff strategy.
-		Client:       newHTTPClient(),                           // Uses a custom HTTP client with specific transport settings.
+		Client:       NewHTTPClient(),                           // Uses a custom HTTP client with specific transport settings.
 	}
 }
 
