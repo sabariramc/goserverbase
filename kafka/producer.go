@@ -175,13 +175,13 @@ func (k *Producer) Produce(ctx context.Context, topic, key string, message []byt
 	if !k.isTopicSpecific {
 		msg.Topic = topic
 	}
-	err = k.Send(ctx, msg)
+	err = k.WriteMessage(ctx, msg)
 	if err == ErrWriterBufferFull {
 		err = k.Flush(ctx)
 		if err != nil {
 			return err
 		}
-		return k.Send(ctx, msg)
+		return k.WriteMessage(ctx, msg)
 	}
 	return nil
 }

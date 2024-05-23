@@ -48,8 +48,8 @@ func NewWriter(ctx context.Context, w *kafka.Writer, bufferLen int, log log.Log,
 	}
 }
 
-// Send writes the message to the broker in async mode or batch mode.
-func (w *Writer) Send(ctx context.Context, msg *kafka.Message) error {
+// WriteMessage writes the message to the broker in async mode or batch mode.
+func (w *Writer) WriteMessage(ctx context.Context, msg *kafka.Message) error {
 	if w.tr != nil {
 		var crSpan span.Span
 		ctx, crSpan = w.tr.NewSpanFromContext(ctx, "kafka.produce", span.SpanKindProducer, msg.Topic)
