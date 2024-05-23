@@ -16,8 +16,7 @@ var defaultConfig = Config{
 	log: log.New(log.WithModuleName("KafkaConsumer")),
 	ConsumerConfig: kafka.ConsumerConfig{
 		CredConfig: &kafka.CredConfig{
-			Brokers:  []string{"0.0.0.0:9092"},
-			SASLType: "NONE",
+			Brokers: []string{"0.0.0.0:9092"},
 		},
 		GroupID:            "cg-kafka-base",
 		AutoCommit:         true,
