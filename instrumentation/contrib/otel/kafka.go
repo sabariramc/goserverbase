@@ -11,12 +11,13 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
-// MessageCarrier implements otel TextMapCarrier interface for kafka.Message(github.com/segmentio/kafka-go)
+// MessageCarrier implements the otel TextMapCarrier interface for [kafka.Message].
 type MessageCarrier struct {
 	*cKafka.Message
 	header map[string]string
 }
 
+// NewMessageCarrier creates a new MessageCarrier from the given [kafka.Message].
 func NewMessageCarrier(msg *kafka.Message) *MessageCarrier {
 	cr := &MessageCarrier{
 		Message: &cKafka.Message{
@@ -53,10 +54,13 @@ func (kc *MessageCarrier) Keys() []string {
 	return keys
 }
 
+// KafkaInject injects tracing information from the context into the Kafka message.
 func (t *tracerManager) KafkaInject(ctx context.Context, msg *kafka.Message) {
 	otel.GetTextMapPropagator().Inject(ctx, NewMessageCarrier(msg))
 }
 
+// StartKafkaSpanFromMessage extracts tracing information from the Kafka message and starts a new consumer span.
+// It returns the new context with the span and the created span.
 func (t *tracerManager) StartKafkaSpanFromMessage(ctx context.Context, msg *kafka.Message) (context.Context, span.Span) {
 	msgCtx := otel.GetTextMapPropagator().Extract(ctx, NewMessageCarrier(msg))
 	tr := otel.Tracer("")

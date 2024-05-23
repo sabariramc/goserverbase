@@ -9,6 +9,8 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
+// HTTPWrapTransport wraps the given [http.RoundTripper] with OpenTelemetry instrumentation.
+// This allows tracing HTTP requests and responses.
 func (t *tracerManager) HTTPWrapTransport(rt http.RoundTripper) http.RoundTripper {
 	return otelhttp.NewTransport(
 		rt,
@@ -18,6 +20,8 @@ func (t *tracerManager) HTTPWrapTransport(rt http.RoundTripper) http.RoundTrippe
 	)
 }
 
+// HTTPRequestTrace creates a new [httptrace.ClientTrace] for tracing HTTP requests using OpenTelemetry.
+// This can be used to trace the lifecycle of an HTTP request.
 func (t *tracerManager) HTTPRequestTrace(ctx context.Context) *httptrace.ClientTrace {
 	return otelhttptrace.NewClientTrace(ctx)
 }

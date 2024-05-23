@@ -11,6 +11,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 )
 
+// spanKindMap maps custom span kinds to OpenTelemetry span kinds.
 var spanKindMap = map[string]trace.SpanKind{
 	span.SpanKindClient:   trace.SpanKindClient,
 	span.SpanKindConsumer: trace.SpanKindConsumer,
@@ -19,6 +20,8 @@ var spanKindMap = map[string]trace.SpanKind{
 	span.SpanKindServer:   trace.SpanKindServer,
 }
 
+// NewSpanFromContext creates a new span from the provided context, operation name, kind, and resource name.
+// It returns a new context with the span and the created span.
 func (t *tracerManager) NewSpanFromContext(ctx context.Context, operationName string, kind string, resourceName string) (context.Context, span.Span) {
 	spanKind, ok := spanKindMap[kind]
 	if !ok {
@@ -36,19 +39,24 @@ func (t *tracerManager) NewSpanFromContext(ctx context.Context, operationName st
 	return ctx, &otelSpan{Span: sp}
 }
 
+// GetSpanFromContext retrieves the span from the provided context.
+// It returns the span and a boolean indicating if the span is recording.
 func (t *tracerManager) GetSpanFromContext(ctx context.Context) (span.Span, bool) {
 	sp := trace.SpanFromContext(ctx)
 	return &otelSpan{Span: sp}, sp.IsRecording()
 }
 
+// otelSpan wraps an OpenTelemetry span to implement the span.Span interface.
 type otelSpan struct {
 	trace.Span
 }
 
+// Finish ends the span.
 func (s *otelSpan) Finish() {
 	s.End()
 }
 
+// SetAttribute sets an attribute on the span with the given key and value.
 func (s *otelSpan) SetAttribute(key string, value any) {
 	var at attribute.KeyValue
 	switch v := value.(type) {
@@ -80,15 +88,16 @@ func (s *otelSpan) SetAttribute(key string, value any) {
 	s.SetAttributes(at)
 }
 
+// SetError records an error on the span with the optional stack trace.
 func (s *otelSpan) SetError(err error, stackTrace string) {
 	opts := []trace.EventOption{}
 	if stackTrace == "" {
 		opts = append(opts, trace.WithStackTrace(true))
 	}
 	s.Span.RecordError(err, opts...)
-
 }
 
+// SetStatus sets the status of the span based on the provided status code and description.
 func (s *otelSpan) SetStatus(statusCode int, description string) {
 	if statusCode <= 299 {
 		s.Span.SetStatus(codes.Ok, description)

@@ -62,7 +62,7 @@ func Example() {
 	KafkaTestLogger.Notice(ctx, "Time taken in ms", time.Now().Sub(st)/1000000)
 }
 
-func Example_ConfluentKafka() {
+func Example_confluentKafka() {
 	ctx := GetCorrelationContext()
 	cred := kafka.GetDefaultCredConfig()
 	cred.TLSConfig = &tls.Config{ //For Confluent kafka
