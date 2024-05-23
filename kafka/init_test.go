@@ -11,14 +11,15 @@ import (
 var KafkaTestConfig *testutils.TestConfig
 var KafkaTestLogger log.Log
 
+const ServiceName = "KafkaTest"
+
 func init() {
 	testutils.LoadEnv("../.env")
-	testutils.Initialize()
 	KafkaTestConfig = testutils.NewConfig()
-	KafkaTestLogger = log.New(log.WithServiceName("KafkaTest"))
+	KafkaTestLogger = log.New(log.WithServiceName(ServiceName))
 }
 
 func GetCorrelationContext() context.Context {
-	ctx := context.WithValue(context.Background(), correlation.ContextKeyCorrelation, correlation.NewCorrelationParam(KafkaTestConfig.App.ServiceName))
+	ctx := context.WithValue(context.Background(), correlation.ContextKeyCorrelation, correlation.NewCorrelationParam(ServiceName))
 	return ctx
 }

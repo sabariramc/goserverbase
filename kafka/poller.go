@@ -9,6 +9,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/sabariramc/goserverbase/v6/correlation"
 	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/utils"
@@ -17,6 +18,35 @@ import (
 
 // Poller is a high-level API that extends Reader with time and count-based auto commit
 // and implements a shutdown hook.
+/*
+If Reader is not set in [ConsumerConfig] then creates a new [kafka.Reader] with the options passed to the function, and adds addition params
+
+		readerConfig := kafka.ReaderConfig{
+			Brokers:           config.Brokers,
+			GroupID:           config.GroupID,
+			GroupTopics:       config.Topics,
+			HeartbeatInterval: time.Second,
+			QueueCapacity:     int(config.MaxBuffer),
+			MaxBytes:          10e6, // 10MB,
+			Dialer: &kafka.Dialer{
+				Timeout:       10 * time.Second,
+				DualStack:     true,
+				SASLMechanism: config.SASLMechanism,
+				TLS:           config.TLSConfig,
+			},
+			Logger: &kafkaLogger{
+				Log:     logger.NewResourceLogger(config.ModuleName + ":InfoLog"),
+				ctx:     ctx,
+				isError: false,
+			},
+			ErrorLogger: &kafkaLogger{
+				Log:     logger.NewResourceLogger(config.ModuleName + ":ErrorLog"),
+				ctx:     ctx,
+				isError: true,
+			},
+		}
+		config.Reader = kafka.NewReader(readerConfig)
+*/
 type Poller struct {
 	*Reader
 	config           *ConsumerConfig
@@ -48,6 +78,7 @@ func NewPoller(options ...ConsumerOption) (*Poller, error) {
 				DualStack:     true,
 				SASLMechanism: config.SASLMechanism,
 				TLS:           config.TLSConfig,
+				ClientID:      fmt.Sprintf("%v-%v", config.ServiceName, uuid.NewString()),
 			},
 			Logger: &kafkaLogger{
 				Log:     logger.NewResourceLogger(config.ModuleName + ":InfoLog"),

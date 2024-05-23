@@ -2,6 +2,7 @@ package kafka_test
 
 import (
 	"context"
+	"crypto/tls"
 	"strconv"
 	"sync"
 	"testing"
@@ -61,17 +62,29 @@ func Example() {
 	KafkaTestLogger.Notice(ctx, "Time taken in ms", time.Now().Sub(st)/1000000)
 }
 
+func Example_ConfluentKafka() {
+	ctx := GetCorrelationContext()
+	cred := kafka.GetDefaultCredConfig()
+	cred.TLSConfig = &tls.Config{ //For Confluent kafka
+		MinVersion: tls.VersionTLS12,
+	}
+	co, _ := kafka.NewPoller(kafka.WithConsumerCredConfig(cred))
+	defer co.Close(ctx)
+	pr, _ := kafka.NewProducer(kafka.WithProducerCredConfig(cred))
+	defer pr.Close(ctx)
+}
+
 func TestKafkaProducer(t *testing.T) {
 	ctx := GetCorrelationContext()
 	uuidVal := uuid.NewString()
-	totalNoOfMessage := 10
+	totalNoOfMessage := 100000
 	connFac := 10
 	var wg sync.WaitGroup
 	for i := 0; i < connFac; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			pr, err := kafka.NewProducer(kafka.WithAsync(true))
+			pr, err := kafka.NewProducer(kafka.WithTopic(KafkaTestConfig.KafkaTestTopic))
 			assert.NilError(t, err)
 			defer pr.Close(ctx)
 			for i := 0; i < totalNoOfMessage/connFac; i++ {
@@ -90,9 +103,7 @@ func TestKafkaProducer(t *testing.T) {
 
 func TestKafkaPoller(t *testing.T) {
 	ctx := GetCorrelationContext()
-	config := KafkaTestConfig.KafkaConsumer
-	config.AutoCommit = false
-	co, err := kafka.NewPoller()
+	co, err := kafka.NewPoller(kafka.WithAutoCommit(false), kafka.WithTopics([]string{KafkaTestConfig.KafkaTestTopic}))
 	assert.NilError(t, err)
 	defer co.Close(ctx)
 	ch := make(chan *cKafka.Message, 100)
@@ -122,6 +133,7 @@ func TestKafkaPoller(t *testing.T) {
 	}
 	cancel()
 	co.Commit(ctx)
+	assert.Equal(t, i, maxCount)
 	KafkaTestLogger.Notice(ctx, "Time taken in ms", time.Now().Sub(st)/1000000)
 }
 
@@ -171,10 +183,10 @@ func testKafkaPoll(ctx context.Context, t *testing.T, co *kafka.Poller, pr *kafk
 
 func TestKafkaPoll(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := kafka.NewPoller()
+	co, err := kafka.NewPoller(kafka.WithTopics([]string{KafkaTestConfig.KafkaTestTopic}), kafka.WithConsumerBuffer(1000))
 	assert.NilError(t, err)
 	defer co.Close(ctx)
-	pr, err := kafka.NewProducer(kafka.WithBatch(true), kafka.WithAsync(false), kafka.WithProducerBuffer(100))
+	pr, err := kafka.NewProducer(kafka.WithBatch(true), kafka.WithAsync(false), kafka.WithProducerBuffer(1000), kafka.WithTopic(KafkaTestConfig.KafkaTestTopic))
 	assert.NilError(t, err)
 	defer pr.Close(ctx)
 	testKafkaPoll(ctx, t, co, pr, 100000)
@@ -182,10 +194,10 @@ func TestKafkaPoll(t *testing.T) {
 
 func TestKafkaPollAsyncWriter(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := kafka.NewPoller()
+	co, err := kafka.NewPoller(kafka.WithTopics([]string{KafkaTestConfig.KafkaTestTopic}), kafka.WithConsumerBuffer(1000))
 	assert.NilError(t, err)
 	defer co.Close(ctx)
-	pr, err := kafka.NewProducer()
+	pr, err := kafka.NewProducer(kafka.WithTopic(KafkaTestConfig.KafkaTestTopic))
 	assert.NilError(t, err)
 	defer pr.Close(ctx)
 	testKafkaPoll(ctx, t, co, pr, 100000)
@@ -193,10 +205,10 @@ func TestKafkaPollAsyncWriter(t *testing.T) {
 
 func TestKafkaPollWithDelay(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := kafka.NewPoller()
+	co, err := kafka.NewPoller(kafka.WithTopics([]string{KafkaTestConfig.KafkaTestTopic}), kafka.WithConsumerBuffer(1000))
 	assert.NilError(t, err)
 	defer co.Close(ctx)
-	pr, err := kafka.NewProducer()
+	pr, err := kafka.NewProducer(kafka.WithTopic(KafkaTestConfig.KafkaTestTopic))
 	assert.NilError(t, err)
 	defer pr.Close(ctx)
 	ch := make(chan *cKafka.Message, 100)

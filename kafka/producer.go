@@ -28,7 +28,7 @@ type Producer struct {
 
 // NewProducer creates a new Producer instance with the provided configuration options.
 /*
-If writer is not set in [ProducerConfig] then creates a new [kafka.Writer] with the options passed to the function, and adds addition params
+If Writer is not set in [ProducerConfig] then creates a new [kafka.Writer] with the options passed to the function, and adds addition params
 
 		kafka.Writer{
 			Addr:     kafka.TCP(config.Brokers...),
