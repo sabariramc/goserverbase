@@ -136,8 +136,8 @@ func WithBatch(batch bool) ProducerOption {
 	}
 }
 
-// WithTopic sets the topic for kafka producer.
-func WithTopic(topic string) ProducerOption {
+// WithProducerTopic sets the topic for kafka producer.
+func WithProducerTopic(topic string) ProducerOption {
 	return func(c *ProducerConfig) {
 		c.Topic = topic
 	}
@@ -282,8 +282,8 @@ func WithReader(reader *kafka.Reader) ConsumerOption {
 	}
 }
 
-// WithTopics sets the topics for the Kafka consumer.
-func WithTopics(topics []string) ConsumerOption {
+// WithConsumerTopic sets the topics for the Kafka consumer.
+func WithConsumerTopic(topics []string) ConsumerOption {
 	return func(config *ConsumerConfig) {
 		config.Topics = topics
 	}

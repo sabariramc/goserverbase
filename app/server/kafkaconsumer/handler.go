@@ -71,7 +71,7 @@ func (k *KafkaConsumerServer) Subscribe(ctx context.Context) {
 	}
 	ch := make(chan *ckafka.Message)
 	k.ch = ch
-	client, err := kafka.NewPoller(kafka.WithConsumerTracer(k.tracer), kafka.WithTopics(topicList))
+	client, err := kafka.NewPoller(kafka.WithConsumerTracer(k.tracer), kafka.WithConsumerTopic(topicList))
 	if err != nil {
 		k.log.Emergency(ctx, "Error occurred during client creation", fmt.Errorf("KafkaConsumerServer.Subscribe: error creating kafka consumer: %w", err), map[string]any{
 			"topicList": topicList,
