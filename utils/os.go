@@ -73,7 +73,7 @@ func GetEnvAsSlice(name string, defaultVal []string, sep string) []string {
 func GetEnvMust(key string) string {
 	value := os.Getenv(key)
 	if value == "" {
-		panic(errors.NewCustomError("MANDATORY_KEY_MISSING", fmt.Sprintf("mandatory environment variable is not set: %v", key), nil, nil, true, nil))
+		panic(&errors.CustomError{ErrorCode: "MANDATORY_KEY_MISSING", ErrorMessage: fmt.Sprintf("mandatory environment variable is not set: %v", key), Notify: true})
 	}
 	return value
 }

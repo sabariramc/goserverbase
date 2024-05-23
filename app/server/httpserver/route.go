@@ -15,9 +15,9 @@ func NotFound() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add(HttpHeaderContentType, HttpContentTypeJSON)
 		w.WriteHeader(http.StatusNotFound)
-		body, _ := errors.NewHTTPClientError(http.StatusNotFound, "URL_NOT_FOUND", "Invalid path", nil, map[string]string{
+		body, _ := errors.HTTPError{StatusCode: http.StatusNotFound, CustomError: &errors.CustomError{ErrorCode: "URL_NOT_FOUND", ErrorMessage: "Invalid path", ErrorDescription: map[string]string{
 			"path": r.URL.Path,
-		}, nil).GetErrorResponse()
+		}}}.GetErrorResponse()
 		w.Write(body)
 	}
 }
@@ -27,10 +27,10 @@ func MethodNotAllowed() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add(HttpHeaderContentType, HttpContentTypeJSON)
 		w.WriteHeader(http.StatusMethodNotAllowed)
-		body, _ := errors.NewHTTPClientError(http.StatusMethodNotAllowed, "METHOD_NOT_ALLOWED", "Invalid method", nil, map[string]string{
+		body, _ := errors.HTTPError{StatusCode: http.StatusMethodNotAllowed, CustomError: &errors.CustomError{ErrorCode: "METHOD_NOT_ALLOWED", ErrorMessage: "Invalid method", ErrorDescription: map[string]string{
 			"path":   r.URL.Path,
 			"method": r.Method,
-		}, nil).GetErrorResponse()
+		}}}.GetErrorResponse()
 		w.Write(body)
 	}
 }

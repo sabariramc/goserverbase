@@ -74,7 +74,7 @@ func (s *server) Func1(ctx context.Context, event *kafka.Message) error {
 }
 
 func (s *server) Func2(ctx context.Context, msg *kafka.Message) error {
-	return errors.NewCustomError("hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, true, nil)
+	return &errors.CustomError{ErrorCode: "hello.new.custom.error", ErrorMessage: "display this", ErrorData: map[string]any{"one": "two"}, Notify: true}
 }
 
 func (s *server) Name(ctx context.Context) string {

@@ -1,4 +1,3 @@
-// Package message abstracts the creation of error message in the format of utils.Message
 package message
 
 import (
@@ -9,7 +8,7 @@ import (
 	"github.com/sabariramc/goserverbase/v6/utils"
 )
 
-/*CreateErrorMessage creates utils.Message with the provided attributes*/
+// CreateErrorMessage creates a utils.Message with the provided attributes.
 func CreateErrorMessage(ctx context.Context, serviceName, errorCode string, err error, stackTrace string, errorData interface{}, alertType string) *utils.Message {
 	msg := utils.NewMessage("error", errorCode)
 	msg.AddPayload("category", utils.Payload{"entity": map[string]string{"category": alertType}})

@@ -1,21 +1,19 @@
-// Package errors implements custom errors with additional attributes
 package errors
 
 import (
 	"encoding/json"
-	"net/http"
 )
 
+// CustomError represents a custom error with additional attributes.
 type CustomError struct {
-	ErrorData        interface{} `json:"errorData"`
-	ErrorMessage     string      `json:"errorMessage"`
-	ErrorDescription interface{} `json:"errorDescription"`
 	ErrorCode        string      `json:"errorCode"`
-	//Notify works in conjunction with notifer.Notifier
-	Notify        bool   `json:"-"`
-	OriginalError string `json:"error"`
+	ErrorMessage     string      `json:"errorMessage"`
+	ErrorData        interface{} `json:"errorData"`
+	ErrorDescription interface{} `json:"errorDescription"`
+	Notify           bool        `json:"-"`
 }
 
+// Error returns the JSON representation of the custom error.
 func (e *CustomError) Error() string {
 	blob, err := json.MarshalIndent(e, "", "    ")
 	if err != nil {
@@ -26,10 +24,11 @@ func (e *CustomError) Error() string {
 	return string(blob)
 }
 
+// GetErrorResponse returns the JSON representation of the error response.
 func (e *CustomError) GetErrorResponse() ([]byte, error) {
-	data := map[string]any{
-		"errorMessage":     e.ErrorMessage,
+	data := map[string]interface{}{
 		"errorCode":        e.ErrorCode,
+		"errorMessage":     e.ErrorMessage,
 		"errorDescription": e.ErrorDescription,
 	}
 	blob, err := json.Marshal(data)
@@ -40,31 +39,8 @@ func (e *CustomError) GetErrorResponse() ([]byte, error) {
 	return blob, err
 }
 
-func NewCustomError(errorCode, errorMessage string, errorData interface{}, errorDescription interface{}, notify bool, err error) *CustomError {
-	var errStr string
-	if err != nil {
-		errStr = err.Error()
-	}
-	return &CustomError{ErrorCode: errorCode, ErrorMessage: errorMessage, ErrorData: errorData, Notify: notify, ErrorDescription: errorDescription, OriginalError: errStr}
-}
-
+// HTTPError represents an HTTP error with a custom error.
 type HTTPError struct {
-	CustomError
-	StatusCode int `json:"statusCode"`
-}
-
-func NewHTTPError(statusCode int, errorCode, errorMessage string, errorData interface{}, errorDescription interface{}, notify bool, err error) *HTTPError {
-	if errorCode == "" {
-		errorCode = http.StatusText(statusCode)
-	}
-	custErr := NewCustomError(errorCode, errorMessage, errorData, errorDescription, notify, err)
-	return &HTTPError{CustomError: *custErr, StatusCode: statusCode}
-}
-
-func NewHTTPClientError(statusCode int, errorCode, errorMessage string, errorData interface{}, errorDescription interface{}, err error) *HTTPError {
-	return NewHTTPError(statusCode, errorCode, errorMessage, errorData, errorDescription, false, err)
-}
-
-func NewHTTPServerError(statusCode int, errorCode, errorMessage string, errorData interface{}, errorDescription interface{}, err error) *HTTPError {
-	return NewHTTPError(statusCode, errorCode, errorMessage, errorData, errorDescription, true, err)
+	*CustomError `json:",inline"`
+	StatusCode   int `json:"statusCode"`
 }

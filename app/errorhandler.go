@@ -48,7 +48,7 @@ func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error
 		errorCode = customError.ErrorCode
 	} else {
 		statusCode = http.StatusInternalServerError
-		customError = errors.NewCustomError("com.base.internalServerError", "Unknown error", nil, map[string]string{"error": "Internal error occurred, if persist contact technical team"}, true, err)
+		customError = &errors.CustomError{ErrorCode: "com.base.internalServerError", ErrorMessage: "Unknown error", ErrorDescription: map[string]string{"error": "Internal error occurred, if persist contact technical team"}, Notify: true}
 		body, parseErr = customError.GetErrorResponse()
 		err = customError
 	}

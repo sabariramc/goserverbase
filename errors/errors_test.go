@@ -8,10 +8,21 @@ import (
 	"github.com/sabariramc/goserverbase/v6/errors"
 )
 
+func Example() {
+	err := &errors.CustomError{"com.sabariram.test.error", "test error message", "test error data", "test error description", false}
+	fmt.Println(err)
+	//Output:
+	//{
+	//     "errorCode": "com.sabariram.test.error",
+	//     "errorMessage": "test error message",
+	//     "errorData": "test error data",
+	//     "errorDescription": "test error description"
+	// }
+}
+
 func TestCustomeErrorPrint(t *testing.T) {
 	ctx := GetCorrelationContext()
-	err := fmt.Errorf("test error")
-	err = errors.NewCustomError("com.sabariram.test.error", "test error message", "test error data", "test error description", false, err)
+	err := &errors.CustomError{"com.sabariram.test.error", "test error message", "test error data", "test error description", false}
 	TestLogger.Error(ctx, "error", err)
 }
 
@@ -28,7 +39,7 @@ var benchmarkRes string
 func BenchmarkCustomError(b *testing.B) {
 	var str string
 	err := fmt.Errorf("test error")
-	err = errors.NewCustomError("com.sabariram.test.error", "test error message", "test error data", "test error description", false, err)
+	err = &errors.CustomError{"com.sabariram.test.error", "test error message", "test error data", "test error description", false}
 	for i := start; i < end; i += step {
 		b.Run(fmt.Sprintf("goroutines-%d", i*goprocs), func(b *testing.B) {
 			b.SetParallelism(i)

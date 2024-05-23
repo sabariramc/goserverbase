@@ -79,7 +79,7 @@ func (s *server) testAll(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]any)
 	err := s.LoadRequestJSONBody(r, &data)
 	if err != nil {
-		s.WriteErrorResponse(ctx, w, errors.NewHTTPClientError(400, "invalidJsonBody", "error marshalling json body", nil, nil, err), "")
+		s.WriteErrorResponse(ctx, w, errors.HTTPError{StatusCode: 400, CustomError: &errors.CustomError{ErrorCode: "invalidJsonBody", ErrorMessage: "error marshalling json body"}}, "")
 		return
 	}
 	s.coll.InsertOne(ctx, data)
@@ -120,7 +120,7 @@ func (s *server) testKafka(w http.ResponseWriter, r *http.Request) {
 	data := make(map[string]any)
 	err := s.LoadRequestJSONBody(r, &data)
 	if err != nil {
-		s.WriteErrorResponse(ctx, w, errors.NewHTTPClientError(400, "invalidJsonBody", "error marshalling json body", nil, nil, err), "")
+		s.WriteErrorResponse(ctx, w, &errors.HTTPError{StatusCode: 400, CustomError: &errors.CustomError{ErrorCode: "invalidJsonBody", ErrorMessage: "error marshalling json body"}}, "")
 		return
 	}
 	msg := utils.NewMessage("testFlight", "test")
@@ -130,11 +130,12 @@ func (s *server) testKafka(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) internalServerError(w http.ResponseWriter, r *http.Request) {
-	s.WriteErrorResponse(r.Context(), w, errors.NewCustomError("hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, true, nil), "")
+	s.WriteErrorResponse(r.Context(), w, &errors.CustomError{ErrorCode: "hello.new.custom.error", ErrorMessage: "display this", ErrorData: map[string]any{"one": "two"}, Notify: true}, "")
+
 }
 
 func (s *server) panicUsingLog(w http.ResponseWriter, r *http.Request) {
-	s.log.Emergency(r.Context(), "random panic at Func4", errors.NewHTTPClientError(503, "hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, nil))
+	s.log.Emergency(r.Context(), "random panic at Func4", errors.HTTPError{StatusCode: 503, CustomError: &errors.CustomError{ErrorCode: "hello.new.custom.error", ErrorMessage: "display this", ErrorData: map[string]any{"one": "two"}}})
 }
 
 func (s *server) panic(w http.ResponseWriter, r *http.Request) {
@@ -142,7 +143,7 @@ func (s *server) panic(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) unauthorizedAccess(w http.ResponseWriter, r *http.Request) {
-	s.WriteErrorResponse(r.Context(), w, errors.NewHTTPClientError(403, "hello.new.custom.error", "display this", map[string]any{"one": "two"}, nil, nil), "")
+	s.WriteErrorResponse(r.Context(), w, errors.HTTPError{StatusCode: 403, CustomError: &errors.CustomError{ErrorCode: "hello.new.custom.error", ErrorMessage: "display this", ErrorData: map[string]any{"one": "two"}}}, "")
 }
 
 func (s *server) printHttpVersion() gin.HandlerFunc {
