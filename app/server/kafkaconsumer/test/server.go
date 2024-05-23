@@ -84,7 +84,7 @@ func (s *server) Name(ctx context.Context) string {
 func NewServer(t instrumentation.Tracer) *server {
 	testutils.SetAWSConfig(t)
 	ctx := GetCorrelationContext()
-	pr, err := kafka.NewProducer(ctx, ServerTestLogger, ServerTestConfig.KafkaProducer, t)
+	pr, err := kafka.NewProducer(kafka.WithProducerTracer(t))
 	if err != nil {
 		ServerTestLogger.Emergency(ctx, "error creating producer2", err, nil)
 	}
@@ -93,7 +93,7 @@ func NewServer(t instrumentation.Tracer) *server {
 		ServerTestLogger.Emergency(ctx, "error creating mongo connection", err, nil)
 	}
 	srv := &server{
-		KafkaConsumerServer: kafkaconsumer.New(kafkaconsumer.WithKafkaConsumerConfig(ServerTestConfig.Kafka.KafkaConsumerConfig), kafkaconsumer.WithLog(ServerTestLogger), kafkaconsumer.WithTracer(t), nil),
+		KafkaConsumerServer: kafkaconsumer.New(kafkaconsumer.WithKafkaConsumerConfig(ServerTestConfig.Kafka.ConsumerConfig), kafkaconsumer.WithLog(ServerTestLogger), kafkaconsumer.WithTracer(t), nil),
 		pr:                  pr,
 		sns:                 aws.GetDefaultSNSClient(ServerTestLogger),
 		httpClient:          retryhttp.New(retryhttp.WithTracer(t)),

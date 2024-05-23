@@ -13,24 +13,25 @@ import (
 
 const (
 	ModuleProducer = "KafkaProducer"
+	ModuleConsumer = "KafkaConsumer"
 )
 
-// KafkaCredConfig holds the configuration for Kafka credentials and connection details.
+// CredConfig holds the configuration for Kafka credentials and connection details.
 /*
 	Environment Variables
 	- KAFAK__BROKER: Sets [Brokers]
 	- KAFAK__SASL__TYPE: Sets [SASLType]
 */
-type KafkaCredConfig struct {
+type CredConfig struct {
 	Brokers       []string       // List of Kafka broker addresses.
 	SASLType      string         // SASL authentication type.
 	SASLMechanism sasl.Mechanism // SASL mechanism for authentication.
 	TLSConfig     *tls.Config    // TLS configuration for secure connections.
 }
 
-// GetDefaultKafkaCredConfig returns a default KafkaCredConfig with values from environment variables or default values.
-func GetDefaultKafkaCredConfig() *KafkaCredConfig {
-	return &KafkaCredConfig{
+// GetDefaultCredConfig returns a default CredConfig with values from environment variables or default values.
+func GetDefaultCredConfig() *CredConfig {
+	return &CredConfig{
 		Brokers:  utils.GetEnvAsSlice(envvariables.KafkaBroker, []string{"0.0.0.0:9092"}, ","),
 		SASLType: utils.GetEnv(envvariables.KafkaSALSType, "NONE"),
 	}
@@ -46,7 +47,7 @@ func GetDefaultKafkaCredConfig() *KafkaCredConfig {
 	- KAFKA__PRODUCER__BATCH: Sets [Batch]
 */
 type ProducerConfig struct {
-	*KafkaCredConfig                // Embeds KafkaCredConfig for credential and connection details.
+	*CredConfig                     // Embeds CredConfig for credential and connection details.
 	RequiredAcks      int           // Number of acknowledgments required from Kafka.
 	MaxBuffer         int           // Maximum buffer size for the producer.
 	AutoFlushInterval uint64        // Interval in milliseconds to auto flush messages.
@@ -80,7 +81,7 @@ func ValidateProducerConfig(config *ProducerConfig) error {
 // GetDefaultProducerConfig creates a new ProducerConfig with the provided options applied.
 func GetDefaultProducerConfig() *ProducerConfig {
 	config := &ProducerConfig{
-		KafkaCredConfig:   GetDefaultKafkaCredConfig(),
+		CredConfig:        GetDefaultCredConfig(),
 		RequiredAcks:      utils.GetEnvInt(envvariables.KafkaProducerAcknowledge, 1),
 		MaxBuffer:         utils.GetEnvInt(envvariables.KafkaProducerMaxBuffer, 0),
 		AutoFlushInterval: uint64(utils.GetEnvInt(envvariables.KafkaProducerAutoFlushInterval, 1000)),
@@ -92,91 +93,196 @@ func GetDefaultProducerConfig() *ProducerConfig {
 	return config
 }
 
-// ProducerOption defines a function signature for applying options to ProducerConfig.
+// ProducerOption defines a function signature for applying options for kafka proucer.
 type ProducerOption func(*ProducerConfig)
 
-// WithKafkaCredConfig sets the Kafka credentials config in the ProducerConfig.
-func WithKafkaCredConfig(credConfig *KafkaCredConfig) ProducerOption {
+// WithProducerCredConfig sets the Kafka credentials config for kafka proucer.
+func WithProducerCredConfig(credConfig *CredConfig) ProducerOption {
 	return func(c *ProducerConfig) {
-		c.KafkaCredConfig = credConfig
+		c.CredConfig = credConfig
 	}
 }
 
-// WithAcknowledge sets the acknowledge value in the ProducerConfig.
+// WithAcknowledge sets the acknowledge value for kafka proucer.
 func WithAcknowledge(ack int) ProducerOption {
 	return func(c *ProducerConfig) {
 		c.RequiredAcks = ack
 	}
 }
 
-// WithMaxBuffer sets the batch max buffer value in the ProducerConfig.
-func WithMaxBuffer(buffer int) ProducerOption {
+// WithProducerBuffer sets the batch max buffer value for kafka proucer.
+func WithProducerBuffer(buffer int) ProducerOption {
 	return func(c *ProducerConfig) {
 		c.MaxBuffer = buffer
 	}
 }
 
-// WithAutoFlushInterval sets the auto flush interval in milliseconds in the ProducerConfig.
+// WithAutoFlushInterval sets the auto flush interval in milliseconds for kafka proucer.
 func WithAutoFlushInterval(interval uint64) ProducerOption {
 	return func(c *ProducerConfig) {
 		c.AutoFlushInterval = interval
 	}
 }
 
-// WithAsync sets the async flag in the ProducerConfig.
+// WithAsync sets the async flag for kafka proucer.
 func WithAsync(async bool) ProducerOption {
 	return func(c *ProducerConfig) {
 		c.Async = async
 	}
 }
 
-// WithBatch sets the batch flag in the ProducerConfig.
+// WithBatch sets the batch flag for kafka proucer.
 func WithBatch(batch bool) ProducerOption {
 	return func(c *ProducerConfig) {
 		c.Batch = batch
 	}
 }
 
-// WithTopic sets the topic in the ProducerConfig.
+// WithTopic sets the topic for kafka proucer.
 func WithTopic(topic string) ProducerOption {
 	return func(c *ProducerConfig) {
 		c.Topic = topic
 	}
 }
 
-// WithModuleName sets the module name in the ProducerConfig.
-func WithModuleName(name string) ProducerOption {
+// WithProducerModuleName sets the module name for kafka proucer.
+func WithProducerModuleName(name string) ProducerOption {
 	return func(c *ProducerConfig) {
 		c.ModuleName = name
 	}
 }
 
-// WithLogger sets the logger in the ProducerConfig.
-func WithLogger(logger log.Log) ProducerOption {
+// WithPoducerLogger sets the logger for kafka proucer.
+func WithPoducerLogger(logger log.Log) ProducerOption {
 	return func(c *ProducerConfig) {
 		c.Log = logger
 	}
 }
 
-// WithTrace sets the produce tracer in the ProducerConfig.
-func WithTrace(tracer ProduceTracer) ProducerOption {
+// WithProducerTracer sets the tracer for kafka proucer.
+func WithProducerTracer(tracer ProduceTracer) ProducerOption {
 	return func(c *ProducerConfig) {
 		c.Trace = tracer
 	}
 }
 
-// WithWriter sets the [kafka.Writer] in the ProducerConfig.
+// WithWriter sets the [kafka.Writer] for kafka proucer.
 func WithWriter(writer *kafka.Writer) ProducerOption {
 	return func(c *ProducerConfig) {
 		c.Writer = writer
 	}
 }
 
-type KafkaConsumerConfig struct {
-	*KafkaCredConfig
-	GroupID                string
-	AutoCommit             bool
-	MaxBuffer              uint
-	AutoCommitIntervalInMs uint64
-	EnableLog              bool
+// ConsumerConfig represents the configuration for a Kafka consumer.
+type ConsumerConfig struct {
+	*CredConfig                       // Embeds CredConfig for credential and connection details.
+	GroupID            string         // Consumer group id
+	AutoCommit         bool           // Flag to enable auto commit for consumed messages
+	MaxBuffer          uint           // Count of message for batch commit
+	AutoCommitInterval uint64         // Interval in milliseconds to auto commit messages.
+	Log                log.Log        // Logger instance
+	Trace              ConsumerTracer // Tracer for consuming messages
+	Reader             *kafka.Reader  // Reader for consuming messages
+	Topics             []string       // Topics to consume
+	ModuleName         string         // Name of the module for logging.
+}
+
+func ValidateConsumerConfig(config *ConsumerConfig) error {
+	if config.MaxBuffer <= 0 {
+		config.MaxBuffer = 100
+	}
+	if config.AutoCommitInterval <= 0 {
+		config.AutoCommitInterval = 1000
+	}
+	return nil
+}
+
+// GetDefaultConsumerConfig creates a new ConsumerConfig with the provided options.
+func GetDefaultConsumerConfig() *ConsumerConfig {
+	// Default configuration
+	config := &ConsumerConfig{
+		CredConfig:         GetDefaultCredConfig(),
+		GroupID:            utils.GetEnv(envvariables.KafkaConsumerGroupID, ""),
+		AutoCommit:         utils.GetEnvBool(envvariables.KafkaConsumerAutoCommit, true),
+		MaxBuffer:          uint(utils.GetEnvInt(envvariables.KafkaConsumerMaxBuffer, 100)),
+		AutoCommitInterval: uint64(utils.GetEnvInt(envvariables.KafkaConsumerAutoCommitInterval, 1000)),
+		Log:                log.New(log.WithModuleName(ModuleConsumer)),
+		Topics:             utils.GetEnvAsSlice(envvariables.KafkaConsumerTopics, []string{}, ","),
+		ModuleName:         ModuleProducer,
+	}
+
+	return config
+}
+
+// ConsumerOption defines a function type that modifies the ConsumerConfig.
+type ConsumerOption func(*ConsumerConfig)
+
+// WithCredConfig sets the Kafka credentials configuration.
+func WithCredConfig(creds *CredConfig) ConsumerOption {
+	return func(config *ConsumerConfig) {
+		config.CredConfig = creds
+	}
+}
+
+// WithGroupID sets the group ID for the Kafka consumer.
+func WithGroupID(groupID string) ConsumerOption {
+	return func(config *ConsumerConfig) {
+		config.GroupID = groupID
+	}
+}
+
+// WithAutoCommit sets the auto-commit option for the Kafka consumer.
+func WithAutoCommit(autoCommit bool) ConsumerOption {
+	return func(config *ConsumerConfig) {
+		config.AutoCommit = autoCommit
+	}
+}
+
+// WithConsumerBuffer sets the maximum buffer size for the Kafka consumer.
+func WithConsumerBuffer(maxBuffer uint) ConsumerOption {
+	return func(config *ConsumerConfig) {
+		config.MaxBuffer = maxBuffer
+	}
+}
+
+// WithAutoCommitInterval sets the auto-commit interval for the Kafka consumer.
+func WithAutoCommitInterval(intervalInMs uint64) ConsumerOption {
+	return func(config *ConsumerConfig) {
+		config.AutoCommitInterval = intervalInMs
+	}
+}
+
+// WithConsumerLogger sets the logger for the Kafka consumer.
+func WithConsumerLogger(logger log.Log) ConsumerOption {
+	return func(config *ConsumerConfig) {
+		config.Log = logger
+	}
+}
+
+// WithConsumerTracer sets the tracer for the Kafka consumer.
+func WithConsumerTracer(tracer ConsumerTracer) ConsumerOption {
+	return func(config *ConsumerConfig) {
+		config.Trace = tracer
+	}
+}
+
+// WithReader sets the Kafka reader for the consumer.
+func WithReader(reader *kafka.Reader) ConsumerOption {
+	return func(config *ConsumerConfig) {
+		config.Reader = reader
+	}
+}
+
+// WithTopics sets the topics for the Kafka consumer.
+func WithTopics(topics []string) ConsumerOption {
+	return func(config *ConsumerConfig) {
+		config.Topics = topics
+	}
+}
+
+// WithConsumerModuleName sets the module name for kafka proucer.
+func WithConsumerModuleName(name string) ConsumerOption {
+	return func(c *ConsumerConfig) {
+		c.ModuleName = name
+	}
 }

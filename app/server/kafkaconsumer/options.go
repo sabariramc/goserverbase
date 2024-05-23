@@ -14,16 +14,15 @@ var defaultConfig = Config{
 		ServiceName: "KafkaConsumer",
 	},
 	log: log.New(log.WithModuleName("KafkaConsumer")),
-	KafkaConsumerConfig: kafka.KafkaConsumerConfig{
-		KafkaCredConfig: &kafka.KafkaCredConfig{
+	ConsumerConfig: kafka.ConsumerConfig{
+		CredConfig: &kafka.CredConfig{
 			Brokers:  []string{"0.0.0.0:9092"},
 			SASLType: "NONE",
 		},
-		GroupID:                "cg-kafka-base",
-		AutoCommit:             true,
-		MaxBuffer:              100,
-		AutoCommitIntervalInMs: 1000,
-		EnableLog:              false,
+		GroupID:            "cg-kafka-base",
+		AutoCommit:         true,
+		MaxBuffer:          100,
+		AutoCommitInterval: 1000,
 	},
 }
 
@@ -52,9 +51,9 @@ func WithServerConfig(config baseapp.ServerConfig) Options {
 }
 
 // WithKafkaConsumerConfig sets the Kafka consumer configuration for KafkaConsumerServer.
-func WithKafkaConsumerConfig(config kafka.KafkaConsumerConfig) Options {
+func WithKafkaConsumerConfig(config kafka.ConsumerConfig) Options {
 	return func(c *Config) {
-		c.KafkaConsumerConfig = config
+		c.ConsumerConfig = config
 	}
 }
 

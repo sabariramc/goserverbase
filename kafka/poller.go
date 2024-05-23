@@ -9,66 +9,67 @@ import (
 	"sync"
 	"time"
 
-	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/correlation"
+	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/utils"
 	"github.com/segmentio/kafka-go"
 )
 
-// Poller is a high level api that extends Reader with time and count based auto commit and implements Shutdown hook
+// Poller is a high-level API that extends Reader with time and count-based auto commit
+// and implements a shutdown hook.
 type Poller struct {
 	*Reader
-	config           KafkaConsumerConfig
+	config           *ConsumerConfig
 	log              log.Log
 	topics           []string
 	autoCommitCancel context.CancelFunc
 	wg               sync.WaitGroup
 }
 
-func NewPoller(ctx context.Context, logger log.Log, config KafkaConsumerConfig, tr ConsumerTracer, topics ...string) (*Poller, error) {
-	if config.MaxBuffer <= 0 {
-		config.MaxBuffer = 100
+// NewPoller creates a new Poller with the provided consumer options.
+func NewPoller(options ...ConsumerOption) (*Poller, error) {
+	config := GetDefaultConsumerConfig()
+	// Apply options
+	for _, opt := range options {
+		opt(config)
 	}
-	if config.AutoCommitIntervalInMs <= 0 {
-		config.AutoCommitIntervalInMs = 1000
-	}
-	logger = logger.NewResourceLogger("KafkaConsumer")
-	defaultCorrelationParam := &correlation.CorrelationParam{CorrelationID: "KafkaConsumer"}
-	readerConfig := kafka.ReaderConfig{
-		Brokers:           config.Brokers,
-		GroupID:           config.GroupID,
-		GroupTopics:       topics,
-		HeartbeatInterval: time.Second,
-		QueueCapacity:     int(config.MaxBuffer),
-		MaxBytes:          10e6, // 10MB,
-		Dialer: &kafka.Dialer{
-			Timeout:       10 * time.Second,
-			DualStack:     true,
-			SASLMechanism: config.SASLMechanism,
-			TLS:           config.TLSConfig,
-		},
-	}
-	if config.EnableLog {
-		readerConfig.Logger = &kafkaLogger{
-			Log:     logger.NewResourceLogger("KafkaConsumerInfoLog"),
-			ctx:     correlation.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam),
-			isError: false,
+	logger := config.Log
+	ctx := correlation.GetContextWithCorrelationParam(context.Background(), &correlation.CorrelationParam{CorrelationID: config.ModuleName})
+	if config.Reader == nil {
+		readerConfig := kafka.ReaderConfig{
+			Brokers:           config.Brokers,
+			GroupID:           config.GroupID,
+			GroupTopics:       config.Topics,
+			HeartbeatInterval: time.Second,
+			QueueCapacity:     int(config.MaxBuffer),
+			MaxBytes:          10e6, // 10MB,
+			Dialer: &kafka.Dialer{
+				Timeout:       10 * time.Second,
+				DualStack:     true,
+				SASLMechanism: config.SASLMechanism,
+				TLS:           config.TLSConfig,
+			},
+			Logger: &kafkaLogger{
+				Log:     logger.NewResourceLogger(config.ModuleName + ":InfoLog"),
+				ctx:     ctx,
+				isError: false,
+			},
+			ErrorLogger: &kafkaLogger{
+				Log:     logger.NewResourceLogger(config.ModuleName + ":ErrorLog"),
+				ctx:     ctx,
+				isError: true,
+			},
 		}
-		readerConfig.ErrorLogger = &kafkaLogger{
-			Log:     logger.NewResourceLogger("KafkaConsumerErrorLog"),
-			ctx:     correlation.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam),
-			isError: true,
-		}
+		config.Reader = kafka.NewReader(readerConfig)
 	}
-	r := kafka.NewReader(readerConfig)
 	k := &Poller{
-		log:    logger.NewResourceLogger("KafkaConsumer"),
+		log:    config.Log,
 		config: config,
-		Reader: NewReader(ctx, logger, r, config.MaxBuffer, tr),
-		topics: topics,
+		Reader: NewReader(ctx, logger, config.Reader, config.MaxBuffer, config.Trace),
+		topics: config.Topics,
 	}
 	if k.config.AutoCommit {
-		commitCtx, cancel := context.WithCancel(correlation.GetContextWithCorrelationParam(context.Background(), defaultCorrelationParam))
+		commitCtx, cancel := context.WithCancel(ctx)
 		k.autoCommitCancel = cancel
 		k.wg.Add(1)
 		go k.autoCommit(commitCtx)
@@ -76,7 +77,8 @@ func NewPoller(ctx context.Context, logger log.Log, config KafkaConsumerConfig, 
 	return k, nil
 }
 
-// Poll fetches message from broker and passe it the channel in the argument, this function is meant to be run as a goroutine
+// Poll fetches messages from the broker and passes them to the provided channel.
+// This function is meant to be run as a goroutine.
 func (k *Poller) Poll(ctx context.Context, ch chan<- *kafka.Message) error {
 	var pollErr, commitErr error
 	defer close(ch)
@@ -120,6 +122,7 @@ outer:
 	return pollErr
 }
 
+// storeMessage stores the given message and commits if necessary.
 func (k *Poller) storeMessage(ctx context.Context, msg *kafka.Message) error {
 	if k.config.AutoCommit {
 		err := k.StoreMessage(ctx, msg)
@@ -140,6 +143,7 @@ func (k *Poller) storeMessage(ctx context.Context, msg *kafka.Message) error {
 	return nil
 }
 
+// commit commits the current state if auto-commit is enabled.
 func (k *Poller) commit(ctx context.Context) error {
 	if k.config.AutoCommit {
 		return k.Commit(ctx)
@@ -147,9 +151,9 @@ func (k *Poller) commit(ctx context.Context) error {
 	return nil
 }
 
-// autoCommit handles time based background commit to broker incase of auto commit poller
+// autoCommit handles time-based background commit to broker in case of auto commit poller.
 func (k *Poller) autoCommit(ctx context.Context) {
-	timeout, _ := context.WithTimeout(context.Background(), time.Duration(k.config.AutoCommitIntervalInMs*uint64(time.Millisecond)))
+	timeout, _ := context.WithTimeout(context.Background(), time.Duration(k.config.AutoCommitInterval*uint64(time.Millisecond)))
 	defer k.wg.Done()
 	defer k.log.Warning(ctx, "auto commit stopped", nil)
 	nCtx := context.WithoutCancel(ctx)
@@ -160,7 +164,7 @@ func (k *Poller) autoCommit(ctx context.Context) {
 			if err != nil {
 				k.log.Emergency(ctx, "Error while writing kafka message", fmt.Errorf("Consumer.autoCommit: %w", err))
 			}
-			timeout, _ = context.WithTimeout(context.Background(), time.Duration(k.config.AutoCommitIntervalInMs*uint64(time.Millisecond)))
+			timeout, _ = context.WithTimeout(context.Background(), time.Duration(k.config.AutoCommitInterval*uint64(time.Millisecond)))
 		case <-ctx.Done():
 			err := k.commit(nCtx)
 			if err != nil {
@@ -171,6 +175,7 @@ func (k *Poller) autoCommit(ctx context.Context) {
 	}
 }
 
+// Close closes the Poller and waits for any ongoing operations to complete.
 func (k *Poller) Close(ctx context.Context) error {
 	k.log.Notice(ctx, "Consumer closer initiated for topic", k.topics)
 	if k.config.AutoCommit {
@@ -186,6 +191,7 @@ func (k *Poller) Close(ctx context.Context) error {
 	return nil
 }
 
+// LoadMessage loads a message from the given Kafka message.
 func LoadMessage(src *kafka.Message) (*utils.Message, error) {
 	msg := &utils.Message{}
 	r := bytes.NewReader(src.Value)

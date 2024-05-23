@@ -9,7 +9,7 @@ import (
 
 type Config struct {
 	baseapp.ServerConfig
-	kafka.KafkaConsumerConfig
+	kafka.ConsumerConfig
 	healthCheckInSec uint
 	healthFilePath   string
 	log              log.Log

@@ -9,6 +9,7 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
+// kafkaLogger is a custom logger for Kafka operations.
 type kafkaLogger struct {
 	log.Log
 	ctx     context.Context
@@ -17,6 +18,7 @@ type kafkaLogger struct {
 
 var debugLogPrefix = []string{"no messages received from kafka within the allocated time for partition", "writing %d messages to"}
 
+// Printf logs a formatted message. Depending on the severity, it either logs an error or a debug/notice message.
 func (k *kafkaLogger) Printf(shortMessage string, logMessage ...interface{}) {
 	message := fmt.Sprintf(shortMessage, logMessage...)
 	if k.isError {
@@ -32,11 +34,13 @@ func (k *kafkaLogger) Printf(shortMessage string, logMessage ...interface{}) {
 	}
 }
 
+// kafkaDeliveryReportLogger is a custom logger for Kafka delivery reports.
 type kafkaDeliveryReportLogger struct {
 	log.Log
 	ctx context.Context
 }
 
+// DeliveryReport logs the delivery report of Kafka messages. If there's an error, it logs the error and the affected messages.
 func (k *kafkaDeliveryReportLogger) DeliveryReport(messages []kafka.Message, err error) {
 	if err != nil {
 		k.Error(k.ctx, "Error Writing to topic", err)

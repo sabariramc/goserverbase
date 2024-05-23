@@ -55,8 +55,9 @@ If writer is not set in [ProducerConfig] then creates a new [kafka.Writer] with 
 */
 func NewProducer(options ...ProducerOption) (*Producer, error) {
 	config := GetDefaultProducerConfig()
-	for _, fu := range options {
-		fu(config)
+	// Apply options
+	for _, opt := range options {
+		opt(config)
 	}
 	err := ValidateProducerConfig(config)
 	if err != nil {

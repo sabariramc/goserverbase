@@ -31,7 +31,7 @@ type TestConfig struct {
 	Mongo           *mongo.Config
 	CSFLE           *csfle.Config
 	AWS             *AWSResources
-	KafkaConsumer   kafka.KafkaConsumerConfig
+	KafkaConsumer   kafka.ConsumerConfig
 	KafkaProducer   *kafka.ProducerConfig
 	KafkaTestTopic  string
 	KafkaTestTopic2 string
@@ -41,17 +41,17 @@ type TestConfig struct {
 
 func NewConfig() *TestConfig {
 	serviceName := utils.GetEnv("SERVICE_NAME", "go-base")
-	kafkaBaseConfig := kafka.KafkaCredConfig{Brokers: []string{utils.GetEnv("KAFKA_BROKER", "")},
+	kafkaBaseConfig := kafka.CredConfig{Brokers: []string{utils.GetEnv("KAFKA_BROKER", "")},
 		SASLType: utils.GetEnv("SASL_TYPE", "NONE"),
 	}
 	appConfig := &baseapp.ServerConfig{
 		ServiceName: serviceName,
 	}
-	consumer := kafka.KafkaConsumerConfig{
-		KafkaCredConfig: &kafkaBaseConfig,
-		GroupID:         utils.GetEnvMust("KAFKA_CONSUMER_ID"),
-		MaxBuffer:       uint(utils.GetEnvInt("KAFKA_CONSUMER_MAX_BUFFER", 1000)),
-		AutoCommit:      true,
+	consumer := kafka.ConsumerConfig{
+		CredConfig: &kafkaBaseConfig,
+		GroupID:    utils.GetEnvMust("KAFKA_CONSUMER_ID"),
+		MaxBuffer:  uint(utils.GetEnvInt("KAFKA_CONSUMER_MAX_BUFFER", 1000)),
+		AutoCommit: true,
 	}
 	if kafkaBaseConfig.SASLType == "PLAIN" {
 		kafkaBaseConfig.SASLMechanism = &plain.Mechanism{
@@ -85,8 +85,8 @@ func NewConfig() *TestConfig {
 			},
 		},
 		Kafka: &kafkaconsumer.Config{
-			ServerConfig:        *appConfig,
-			KafkaConsumerConfig: consumer,
+			ServerConfig:   *appConfig,
+			ConsumerConfig: consumer,
 		},
 		Mongo: mongo,
 		CSFLE: &csfle.Config{
@@ -103,10 +103,10 @@ func NewConfig() *TestConfig {
 			FIFOSQS: utils.GetEnv("FIFO_SQS_URL", ""),
 		},
 		KafkaProducer: &kafka.ProducerConfig{
-			KafkaCredConfig: &kafkaBaseConfig,
-			RequiredAcks:    -1,
-			MaxBuffer:       utils.GetEnvInt("KAFKA_PRODUCER_MAX_BUFFER", 1000),
-			Async:           true,
+			CredConfig:   &kafkaBaseConfig,
+			RequiredAcks: -1,
+			MaxBuffer:    utils.GetEnvInt("KAFKA_PRODUCER_MAX_BUFFER", 1000),
+			Async:        true,
 		},
 		KafkaConsumer:   consumer,
 		KafkaTestTopic:  utils.GetEnvMust("KAFKA_TEST_TOPIC"),

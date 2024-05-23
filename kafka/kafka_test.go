@@ -14,13 +14,9 @@ import (
 	"gotest.tools/assert"
 )
 
-func newPoller(ctx context.Context) (*kafka.Poller, error) {
-	return kafka.NewPoller(ctx, KafkaTestLogger, KafkaTestConfig.KafkaConsumer, nil, KafkaTestConfig.KafkaTestTopic)
-}
-
 func Example() {
 	ctx := GetCorrelationContext()
-	co, _ := kafka.NewPoller(ctx, KafkaTestLogger, KafkaTestConfig.KafkaConsumer, nil, KafkaTestConfig.KafkaTestTopic)
+	co, _ := kafka.NewPoller()
 	defer co.Close(ctx)
 	pr, _ := kafka.NewProducer()
 	defer pr.Close(ctx)
@@ -96,7 +92,7 @@ func TestKafkaPoller(t *testing.T) {
 	ctx := GetCorrelationContext()
 	config := KafkaTestConfig.KafkaConsumer
 	config.AutoCommit = false
-	co, err := kafka.NewPoller(ctx, KafkaTestLogger, config, nil, KafkaTestConfig.KafkaTestTopic, KafkaTestConfig.KafkaTestTopic2)
+	co, err := kafka.NewPoller()
 	assert.NilError(t, err)
 	defer co.Close(ctx)
 	ch := make(chan *cKafka.Message, 100)
@@ -175,10 +171,10 @@ func testKafkaPoll(ctx context.Context, t *testing.T, co *kafka.Poller, pr *kafk
 
 func TestKafkaPoll(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := newPoller(ctx)
+	co, err := kafka.NewPoller()
 	assert.NilError(t, err)
 	defer co.Close(ctx)
-	pr, err := kafka.NewProducer(kafka.WithBatch(true), kafka.WithAsync(false), kafka.WithMaxBuffer(100))
+	pr, err := kafka.NewProducer(kafka.WithBatch(true), kafka.WithAsync(false), kafka.WithProducerBuffer(100))
 	assert.NilError(t, err)
 	defer pr.Close(ctx)
 	testKafkaPoll(ctx, t, co, pr, 100000)
@@ -186,7 +182,7 @@ func TestKafkaPoll(t *testing.T) {
 
 func TestKafkaPollAsyncWriter(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := newPoller(ctx)
+	co, err := kafka.NewPoller()
 	assert.NilError(t, err)
 	defer co.Close(ctx)
 	pr, err := kafka.NewProducer()
@@ -197,7 +193,7 @@ func TestKafkaPollAsyncWriter(t *testing.T) {
 
 func TestKafkaPollWithDelay(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := newPoller(ctx)
+	co, err := kafka.NewPoller()
 	assert.NilError(t, err)
 	defer co.Close(ctx)
 	pr, err := kafka.NewProducer()

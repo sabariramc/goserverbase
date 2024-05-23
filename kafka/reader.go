@@ -10,11 +10,12 @@ import (
 	"github.com/segmentio/kafka-go"
 )
 
+// ConsumerTracer defines an interface for tracing consumer operations.
 type ConsumerTracer interface {
 	span.SpanOp
 }
 
-// Reader extends kafka.Reader(github.com/segmentio/kafka-go) with batch commit, tracing and StatusCheck hook
+// Reader extends kafka.Reader with batch commit, tracing, and a StatusCheck hook.
 type Reader struct {
 	*kafka.Reader
 	log              log.Log
@@ -25,8 +26,10 @@ type Reader struct {
 	tr               ConsumerTracer
 }
 
+// ErrReaderBufferFull is returned when the buffer is full and a message cannot be stored.
 var ErrReaderBufferFull = fmt.Errorf("Reader.StoreMessage: Buffer full")
 
+// NewReader creates a new Reader with the provided context, logger, Kafka reader, buffer size, and tracer.
 func NewReader(ctx context.Context, log log.Log, r *kafka.Reader, bufferSize uint, tr ConsumerTracer) *Reader {
 	return &Reader{
 		Reader:           r,
@@ -38,6 +41,7 @@ func NewReader(ctx context.Context, log log.Log, r *kafka.Reader, bufferSize uin
 	}
 }
 
+// Commit commits the messages stored in the buffer.
 func (k *Reader) Commit(ctx context.Context) error {
 	k.commitLock.Lock()
 	defer k.commitLock.Unlock()
@@ -60,6 +64,7 @@ func (k *Reader) Commit(ctx context.Context) error {
 	return nil
 }
 
+// StoreMessage stores a message in the buffer. Returns an error if the buffer is full.
 func (k *Reader) StoreMessage(ctx context.Context, msg *kafka.Message) error {
 	if k.idx >= k.bufferSize {
 		return ErrReaderBufferFull
@@ -71,6 +76,7 @@ func (k *Reader) StoreMessage(ctx context.Context, msg *kafka.Message) error {
 	return nil
 }
 
+// Close closes the Kafka reader.
 func (k *Reader) Close(ctx context.Context) error {
 	err := k.Reader.Close()
 	if err != nil {
@@ -80,6 +86,7 @@ func (k *Reader) Close(ctx context.Context) error {
 	return nil
 }
 
+// StatusCheck returns the current stats of the Kafka reader.
 func (k *Reader) StatusCheck(ctx context.Context) (any, error) {
 	return k.Stats(), nil
 }
