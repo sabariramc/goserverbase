@@ -12,19 +12,19 @@ var (
 	ContextKeyCustomerIdentifier contextKey = contextKey("ContextKeyCustomerIdentifier")
 )
 
-// GetContextWithCorrelationParam returns a context.Context with CorrelationParam
+// GetContextWithCorrelationParam returns a context.Context with the provided CorrelationParam.
 func GetContextWithCorrelationParam(ctx context.Context, c *CorrelationParam) context.Context {
 	ctx = context.WithValue(ctx, ContextKeyCorrelation, c)
 	return ctx
 }
 
-// GetContextWithUserIdentifier returns a context.Context with UserIdentifier
+// GetContextWithUserIdentifier returns a context.Context with the provided UserIdentifier.
 func GetContextWithUserIdentifier(ctx context.Context, c *UserIdentifier) context.Context {
 	ctx = context.WithValue(ctx, ContextKeyCustomerIdentifier, c)
 	return ctx
 }
 
-// ExtractUserIdentifier returns UserIdentifier from within context.Context
+// ExtractUserIdentifier retrieves the UserIdentifier stored within the context.Context.
 func ExtractUserIdentifier(ctx context.Context) *UserIdentifier {
 	iVal := ctx.Value(ContextKeyCustomerIdentifier)
 	if iVal == nil {
@@ -37,7 +37,7 @@ func ExtractUserIdentifier(ctx context.Context) *UserIdentifier {
 	return val
 }
 
-// ExtractCorrelationParam returns CorrelationParam from within context.Context
+// ExtractCorrelationParam retrieves the CorrelationParam stored within the context.Context.
 func ExtractCorrelationParam(ctx context.Context) *CorrelationParam {
 	iVal := ctx.Value(ContextKeyCorrelation)
 	if iVal == nil {
@@ -50,7 +50,8 @@ func ExtractCorrelationParam(ctx context.Context) *CorrelationParam {
 	return val
 }
 
-// SetCorrelationHeader adds CorrelationParam and UserIdentifier available in the context.Context in http.Request.Header marshalled with header struct tag
+// SetCorrelationHeader adds the CorrelationParam and UserIdentifier from the context.Context into the http.Request Header.
+// These values are marshalled with the header struct tag.
 func SetCorrelationHeader(ctx context.Context, req *http.Request) {
 	headers := GetHeader(ctx)
 	for i, v := range headers {
@@ -58,7 +59,7 @@ func SetCorrelationHeader(ctx context.Context, req *http.Request) {
 	}
 }
 
-// GetHeader returns CorrelationParam and UserIdentifier available in the context.Context marshalled with header struct tag
+// GetHeader retrieves the CorrelationParam and UserIdentifier from the context.Context and marshals them with header struct tags.
 func GetHeader(ctx context.Context) map[string]string {
 	headers := make(map[string]string, 10)
 	corr := ExtractCorrelationParam(ctx).GetHeader()

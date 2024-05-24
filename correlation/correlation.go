@@ -1,3 +1,4 @@
+// Package correlation enhances the context of requests with correlation and user identity.
 package correlation
 
 import (
@@ -8,7 +9,7 @@ import (
 	"github.com/sabariramc/goserverbase/v6/utils"
 )
 
-// CorrelationParam defines context object for a correlation
+// CorrelationParam defines a context object for correlation.
 type CorrelationParam struct {
 	CorrelationID string  `header:"x-correlation-id" body:"correlationId"`
 	ScenarioID    *string `header:"x-scenario-id,omitempty" body:"scenarioId,omitempty"`
@@ -16,7 +17,7 @@ type CorrelationParam struct {
 	ScenarioName  *string `header:"x-scenario-name,omitempty" body:"scenarioName,omitempty"`
 }
 
-// GetPayload encodes CorrelationParam into map[string]string with body struct tag
+// GetPayload encodes CorrelationParam into a map[string]string with body struct tags.
 func (c *CorrelationParam) GetPayload() map[string]string {
 	encodedData, _ := utils.BodyJSON.Marshal(c)
 	res := map[string]string{}
@@ -24,7 +25,7 @@ func (c *CorrelationParam) GetPayload() map[string]string {
 	return res
 }
 
-// GetHeader encodes CorrelationParam into map[string]string with header struct tag
+// GetHeader encodes CorrelationParam into a map[string]string with header struct tags.
 func (c *CorrelationParam) GetHeader() map[string]string {
 	encodedData, _ := utils.HeaderJSON.Marshal(c)
 	res := map[string]string{}
@@ -32,7 +33,7 @@ func (c *CorrelationParam) GetHeader() map[string]string {
 	return res
 }
 
-// LoadFromHeader extracts CorrelationParam from map[string]string with header struct tag
+// LoadFromHeader extracts CorrelationParam from a map[string]string with header struct tags.
 func (c *CorrelationParam) LoadFromHeader(header map[string]string) error {
 	data, err := json.Marshal(header)
 	if err != nil {
@@ -45,6 +46,7 @@ func (c *CorrelationParam) LoadFromHeader(header map[string]string) error {
 	return nil
 }
 
+// NewCorrelationParam creates a new CorrelationParam with a given service name.
 func NewCorrelationParam(serviceName string) *CorrelationParam {
 	return &CorrelationParam{
 		CorrelationID: fmt.Sprintf("%v-%v", serviceName, uuid.New().String()),
