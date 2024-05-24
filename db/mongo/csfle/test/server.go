@@ -47,7 +47,7 @@ type server struct {
 }
 
 type body struct {
-	UUID string `json:"UUID`
+	UUID string `json:"UUID"`
 }
 
 func (s *server) Post(w http.ResponseWriter, r *http.Request) {
