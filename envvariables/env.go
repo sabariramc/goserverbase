@@ -18,4 +18,6 @@ const (
 	KafkaConsumerAutoCommit         = "KAFKA__CONSUMER__AUTO_COMMIT"
 	KafkaConsumerMaxBuffer          = "KAFKA__CONSUMER__MAX_BUFFER"
 	KafkaConsumerAutoCommitInterval = "KAFKA__CONSUMER__AUTO_COMMIT_INTERVAL"
+
+	MongoConnectionString = "MONGO__CONNECTION_STRING"
 )

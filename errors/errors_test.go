@@ -1,7 +1,9 @@
 package errors_test
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"runtime"
 	"testing"
 
@@ -9,14 +11,24 @@ import (
 )
 
 func Example() {
-	err := &errors.CustomError{"com.sabariram.test.error", "test error message", "test error data", "test error description", false}
+	err := &errors.CustomError{"goserverbase.test.error", "test error message", "test error data", "test error description", false}
 	fmt.Println(err)
+	herr := errors.HTTPError{StatusCode: http.StatusConflict, CustomError: err}
+	data, _ := json.MarshalIndent(herr, "", "    ")
+	fmt.Println(string(data))
 	//Output:
 	//{
-	//     "errorCode": "com.sabariram.test.error",
+	//     "errorCode": "goserverbase.test.error",
 	//     "errorMessage": "test error message",
 	//     "errorData": "test error data",
 	//     "errorDescription": "test error description"
+	// }
+	//{
+	//     "errorCode": "goserverbase.test.error",
+	//     "errorMessage": "test error message",
+	//     "errorData": "test error data",
+	//     "errorDescription": "test error description",
+	//     "statusCode": 409
 	// }
 }
 

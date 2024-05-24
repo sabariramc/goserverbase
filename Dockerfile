@@ -25,7 +25,7 @@ WORKDIR /service
 FROM builder AS httpbuilder
 WORKDIR /myapp/app/server/httpserver/test/http
 RUN go build -tags musl -o /app -ldflags '-linkmode external -w -extldflags "-static"'
-    
+
 FROM builder AS h2cbuilder
 WORKDIR /myapp/app/server/httpserver/test/h2c
 RUN go build -tags musl -o /app -ldflags '-linkmode external -w -extldflags "-static"'
@@ -70,31 +70,14 @@ ENTRYPOINT ["/service/app"]
 
 
 
-FROM golang:1.21-bullseye AS bullseyebuilder
-RUN apt-get update && apt-get install tzdata
-WORKDIR /myapp
+FROM builder AS csflebuilder
 COPY ./pkg/mongo/debian/bullseye ./pkg
-COPY ./app ./app
-COPY ./aws ./aws
-COPY ./crypto ./crypto
-COPY ./db ./db
-COPY ./errors ./errors
-COPY ./kafka ./kafka
-COPY ./log ./log
-COPY ./utils ./utils
-COPY ./testutils ./testutils
-COPY ./go.mod ./go.mod
-COPY ./instrumentation ./instrumentation
-RUN apt-get install ./pkg/libmongocrypt-dev_1.8.4-0_amd64.deb ./pkg/libmongocrypt0_1.8.4-0_amd64.deb
-RUN go mod tidy
-
 
 FROM debian:bullseye-slim AS csflerunner
 RUN apt-get install tzdata
 WORKDIR /service
 COPY ./pkg/mongo/debian/bullseye ./pkg
 COPY ./db/mongo/csfle/sample/piischeme.json ./piischeme.json
-RUN apt-get install /service/pkg/libmongocrypt-dev_1.8.4-0_amd64.deb /service/pkg/libmongocrypt0_1.8.4-0_amd64.deb
 ENV CSFLE_CRYPT_SHARED_LIB_PATH=/service/pkg/mongo_crypt_shared_v1-7.0.5/lib/mongo_crypt_v1.so
 ENV SCHEME_LOCATION=/service/piischeme.json
 

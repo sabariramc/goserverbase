@@ -1,11 +1,9 @@
 package csfle
 
-import "github.com/sabariramc/goserverbase/v6/db/mongo"
-
+// Config holds the configuration settings for Client-Side Field Level Encryption (CSFLE).
 type Config struct {
-	*mongo.Config
-	CryptSharedLibPath string
-	KeyVaultNamespace  string
-	SchemaMap          map[string]interface{}
-	KMSCredentials     map[string]map[string]interface{}
+	CryptSharedLibPath string                            // Path to the shared library for encryption.
+	KeyVaultNamespace  string                            // Namespace for the key vault in MongoDB.
+	SchemaMap          map[string]interface{}            // Schema map for defining encryption rules.
+	KMSCredentials     map[string]map[string]interface{} // Credentials for Key Management Services (KMS).
 }

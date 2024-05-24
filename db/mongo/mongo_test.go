@@ -38,7 +38,7 @@ func GetSampleData() *TestVal {
 
 func BenchmarkMongoCollectionInsertOne(b *testing.B) {
 	ctx := GetCorrelationContext()
-	client, err := mongo.NewWithDefaultOptions(ctx, MongoTestConfig.App.ServiceName, MongoTestLogger, *MongoTestConfig.Mongo, nil)
+	client, err := mongo.NewWithDefaultOptions(MongoTestLogger, nil)
 	assert.NilError(b, err)
 	coll := client.Database("GOTEST").Collection("Plain")
 	data := GetSampleData()
@@ -52,7 +52,7 @@ func BenchmarkMongoCollectionInsertOne(b *testing.B) {
 
 func TestMongoCollectionInsertOne(t *testing.T) {
 	ctx := GetCorrelationContext()
-	client, err := mongo.NewWithDefaultOptions(ctx, MongoTestConfig.App.ServiceName, MongoTestLogger, *MongoTestConfig.Mongo, nil)
+	client, err := mongo.NewWithDefaultOptions(MongoTestLogger, nil)
 	assert.NilError(t, err)
 	coll := client.Database("GOTEST").Collection("Plain")
 	data := GetSampleData()
@@ -62,12 +62,14 @@ func TestMongoCollectionInsertOne(t *testing.T) {
 
 func TestMongoCollection(t *testing.T) {
 	ctx := GetCorrelationContext()
-	client, err := mongo.NewWithDefaultOptions(ctx, MongoTestConfig.App.ServiceName, MongoTestLogger, *MongoTestConfig.Mongo, nil)
+	client, err := mongo.NewWithDefaultOptions(MongoTestLogger, nil)
 	assert.NilError(t, err)
 	coll := client.Database("GOTEST").Collection("Plain")
 	input := GetSampleData()
-	coll.InsertOne(ctx, input)
+	_, err = coll.InsertOne(ctx, input)
+	assert.NilError(t, err)
 	cur := coll.FindOne(ctx, map[string]string{"testId": input.TestID})
+	assert.NilError(t, cur.Err())
 	res := &TestVal{}
 	err = cur.Decode(res)
 	assert.NilError(t, err)
@@ -89,7 +91,7 @@ func TestMongoCollection(t *testing.T) {
 
 func TestMongoCollectionFindOne(t *testing.T) {
 	ctx := GetCorrelationContext()
-	client, err := mongo.NewWithDefaultOptions(ctx, MongoTestConfig.App.ServiceName, MongoTestLogger, *MongoTestConfig.Mongo, nil)
+	client, err := mongo.NewWithDefaultOptions(MongoTestLogger, nil)
 	assert.NilError(t, err)
 	coll := client.Database("GOTEST").Collection("Plain")
 	cur := coll.FindOne(ctx, map[string]string{"strVal": "value1"})

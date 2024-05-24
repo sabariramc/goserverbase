@@ -95,7 +95,7 @@ func NewServer(t instrumentation.Tracer) *server {
 		ServerTestLogger.Emergency(ctx, "error creating kms", err, nil)
 	}
 	config := ServerTestConfig.CSFLE
-	client, err := mongo.NewWithDefaultOptions(ctx, ServerTestConfig.App.ServiceName, ServerTestLogger, *ServerTestConfig.Mongo, t)
+	client, err := mongo.NewWithDefaultOptions(ServerTestLogger, t)
 	if err != nil {
 		ServerTestLogger.Emergency(ctx, "error creating mongo client", err, nil)
 	}
@@ -105,7 +105,7 @@ func NewServer(t instrumentation.Tracer) *server {
 	}
 	config.KMSCredentials = kmsProvider.Credentials()
 	config.SchemaMap = dbScheme
-	conn, err := csfle.New(ctx, ServerTestConfig.App.ServiceName, ServerTestLogger, *ServerTestConfig.CSFLE, t)
+	conn, err := csfle.New(ServerTestLogger, t, *ServerTestConfig.CSFLE)
 	if err != nil {
 		ServerTestLogger.Emergency(ctx, "error creating mongo connection", err, nil)
 	}

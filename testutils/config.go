@@ -4,9 +4,7 @@ import (
 	baseapp "github.com/sabariramc/goserverbase/v6/app"
 	"github.com/sabariramc/goserverbase/v6/app/server/httpserver"
 	"github.com/sabariramc/goserverbase/v6/app/server/kafkaconsumer"
-	"github.com/sabariramc/goserverbase/v6/db/mongo"
 	"github.com/sabariramc/goserverbase/v6/db/mongo/csfle"
-	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/utils"
 )
 
@@ -20,11 +18,9 @@ type AWSResources struct {
 }
 
 type TestConfig struct {
-	Logger          log.Config
 	App             *baseapp.ServerConfig
 	HTTP            *httpserver.HTTPServerConfig
 	Kafka           *kafkaconsumer.Config
-	Mongo           *mongo.Config
 	CSFLE           *csfle.Config
 	AWS             *AWSResources
 	KafkaTestTopic  string
@@ -38,14 +34,7 @@ func NewConfig() *TestConfig {
 	appConfig := &baseapp.ServerConfig{
 		ServiceName: serviceName,
 	}
-
-	mongo := &mongo.Config{
-		ConnectionString: utils.GetEnv("MONGO_URL", "mongodb://localhost:60001"),
-	}
 	return &TestConfig{
-		Logger: log.Config{
-			ServiceName: serviceName,
-		},
 		App: appConfig,
 		HTTP: &httpserver.HTTPServerConfig{
 			ServerConfig: *appConfig,
@@ -64,9 +53,7 @@ func NewConfig() *TestConfig {
 		Kafka: &kafkaconsumer.Config{
 			ServerConfig: *appConfig,
 		},
-		Mongo: mongo,
 		CSFLE: &csfle.Config{
-			Config:             mongo,
 			CryptSharedLibPath: utils.GetEnv("CSFLE_CRYPT_SHARED_LIB_PATH", ""),
 			KeyVaultNamespace:  utils.GetEnv("CSFLE_KEY_VAULT_NAMESPACE", ""),
 		},

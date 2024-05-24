@@ -161,7 +161,7 @@ func NewServer(t instrumentation.Tracer) *server {
 	if err != nil {
 		ServerTestLogger.Emergency(ctx, "error creating producer1", err, nil)
 	}
-	conn, err := mongo.NewWithDefaultOptions(ctx, "", ServerTestLogger, *ServerTestConfig.Mongo, t)
+	conn, err := mongo.NewWithDefaultOptions(ServerTestLogger, t)
 	if err != nil {
 		ServerTestLogger.Emergency(ctx, "error creating mongo connection", err, nil)
 	}

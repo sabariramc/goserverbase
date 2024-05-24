@@ -9,17 +9,15 @@ import (
 	"github.com/sabariramc/goserverbase/v6/log"
 )
 
-func SetEncryptionKey(ctx context.Context, logger log.Log, encryptionSchema *string, client *mongo.Mongo, keyVaultNamespace string, kmsProvider MasterKeyProvider) (map[string]interface{}, error) {
-	schema := make(map[string]interface{})
-	err := json.Unmarshal([]byte(*encryptionSchema), &schema)
+// SetEncryptionKey updates the given encryption schema with data keys for each field
+// that requires encryption. It retrieves or generates the necessary keys and replaces
+// the `keyAltName` fields in the schema with `keyId` fields containing the corresponding key IDs.
+func SetEncryptionKey(ctx context.Context, logger log.Log, encryptionSchema *string, client *mongo.Mongo, keyVaultNamespace string, kmsProvider MasterKeyProvider) (schema map[string]interface{}, err error) {
+	schema = make(map[string]interface{})
+	err = json.Unmarshal([]byte(*encryptionSchema), &schema)
 	if err != nil {
 		return nil, fmt.Errorf("csfle.SetEncryptionKey: error unmarshalling schema: %w", err)
 	}
-
-	if err != nil {
-		return nil, err
-	}
-
 	for coll, iConfig := range schema {
 		collConfig, ok := iConfig.(map[string]any)
 		if !ok {
