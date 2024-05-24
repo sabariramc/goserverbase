@@ -1,6 +1,4 @@
-/*
-Package aes is a wrapped for AES/ECB/PKCS5PADDING
-*/
+// Package aes provides encryption and decryption functionalities using the AES algorithm.
 package aes
 
 import (
@@ -15,6 +13,7 @@ import (
 	"github.com/sabariramc/goserverbase/v6/log"
 )
 
+// ECB represents the Electronic Codebook (ECB) mode of AES encryption.
 type ECB struct {
 	b         cipher.Block
 	key       []byte
@@ -23,6 +22,7 @@ type ECB struct {
 	log       log.Log
 }
 
+// NewECBPKC5 creates a new ECB instance with PKCS7 padding.
 func NewECBPKC5(ctx context.Context, key []byte, log log.Log) (*ECB, error) {
 	cipher, err := NewECB(ctx, key, log, padding.NewPKCS7(len(key)))
 	if err != nil {
@@ -32,6 +32,7 @@ func NewECBPKC5(ctx context.Context, key []byte, log log.Log) (*ECB, error) {
 	return cipher, nil
 }
 
+// NewECB creates a new ECB instance with custom padding.
 func NewECB(ctx context.Context, key []byte, log log.Log, padder crypto.Padder) (*ECB, error) {
 	cipher, err := aes.NewCipher(key)
 	if err != nil {
@@ -47,6 +48,7 @@ func NewECB(ctx context.Context, key []byte, log log.Log, padder crypto.Padder) 
 	}, nil
 }
 
+// Encrypt encrypts the given data using ECB mode and returns the encrypted data.
 func (a *ECB) Encrypt(ctx context.Context, data []byte) ([]byte, error) {
 	data = a.padder.Pad(data)
 	encrypted := make([]byte, len(data))
@@ -57,16 +59,18 @@ func (a *ECB) Encrypt(ctx context.Context, data []byte) ([]byte, error) {
 	return encrypted, nil
 }
 
+// EncryptString encrypts the given plaintext string using ECB mode and returns the encrypted string.
 func (a *ECB) EncryptString(ctx context.Context, plainText string) (string, error) {
 	blobRes, err := a.Encrypt(ctx, []byte(plainText))
 	if err != nil {
 		a.log.Error(ctx, "error encryption content", err)
-		return "", fmt.Errorf("ECB.EncryptString: error encryption content: %w", err)
+		return "", fmt.Errorf("EncryptString: error encryption content: %w", err)
 	}
 	res := base64.StdEncoding.EncodeToString(blobRes)
 	return res, nil
 }
 
+// Decrypt decrypts the given data using ECB mode and returns the decrypted data.
 func (a *ECB) Decrypt(ctx context.Context, data []byte) ([]byte, error) {
 	decrypted := make([]byte, len(data))
 	size := a.blockSize

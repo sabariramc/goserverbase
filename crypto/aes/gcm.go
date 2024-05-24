@@ -1,3 +1,4 @@
+// Package aes provides encryption and decryption functionalities using the AES algorithm.
 package aes
 
 import (
@@ -11,11 +12,13 @@ import (
 	"github.com/sabariramc/randomstring"
 )
 
+// GCM represents the Galois/Counter Mode (GCM) of AES encryption.
 type GCM struct {
 	key []byte
 	log log.Log
 }
 
+// NewGCM creates a new GCM instance with the given key.
 func NewGCM(ctx context.Context, log log.Log, key string) (*GCM, error) {
 	keyByte, err := getKeyBytes(key)
 	if err != nil {
@@ -25,6 +28,7 @@ func NewGCM(ctx context.Context, log log.Log, key string) (*GCM, error) {
 	return &GCM{key: keyByte, log: log.NewResourceLogger("GCM")}, nil
 }
 
+// Encrypt encrypts the given data using GCM mode and returns the encrypted data.
 func (a *GCM) Encrypt(ctx context.Context, plainBlob []byte) ([]byte, error) {
 	block, err := aes.NewCipher(a.key)
 	if err != nil {
@@ -41,6 +45,7 @@ func (a *GCM) Encrypt(ctx context.Context, plainBlob []byte) ([]byte, error) {
 	return append(nonce, cipherBlob...), nil
 }
 
+// EncryptString encrypts the given plaintext string using GCM mode and returns the encrypted string.
 func (a *GCM) EncryptString(ctx context.Context, plainText string) (string, error) {
 	blobRes, err := a.Encrypt(ctx, []byte(plainText))
 	if err != nil {
@@ -51,6 +56,7 @@ func (a *GCM) EncryptString(ctx context.Context, plainText string) (string, erro
 	return res, nil
 }
 
+// Decrypt decrypts the given data using GCM mode and returns the decrypted data.
 func (a *GCM) Decrypt(ctx context.Context, encryptedData []byte) (plainData []byte, err error) {
 	block, err := aes.NewCipher(a.key)
 	if err != nil {
@@ -72,6 +78,7 @@ func (a *GCM) Decrypt(ctx context.Context, encryptedData []byte) (plainData []by
 	return plainData, nil
 }
 
+// DecryptString decrypts the given base64-encoded encrypted text using GCM mode and returns the decrypted string.
 func (a *GCM) DecryptString(ctx context.Context, encryptedText string) (string, error) {
 	decoded, err := base64.StdEncoding.DecodeString(encryptedText)
 	if err != nil {
