@@ -1,28 +1,6 @@
 /*
-Package dtotime defines custom wrapper for time.Time object with different formats for API request and response
-DO NOT USE IT FOR DB MODEL
-NOT COMPATIBLE WITH utils.JSONTransformer
-
-Example1:
-
-	type TestData struct {
-		Dob       dtotime.Date     `json:"dob"`
-		CreatedAt dtotime.DateTime `json:"createdAt"`
-	}
-
-	type DBData struct {
-		ID        int64     `json:"id" bson:"id"`
-		Dob       time.Time `json:"dob" bson:"dob"`
-		CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
-	}
-
-	input := `{"dob":"2014-06-12","createdAt":"2006-03-04T15:04:05.112+05:30"}`
-	dataT1 := &TestData{}
-	json.Unmarshal([]byte(input), data)
-
-	dataT2 := DBData{}
-	utils.JSONTransformer(data, &insertData)
-	fmt.Println(dataT2) //{0 0001-01-01 00:00:00 +0000 UTC 0001-01-01 00:00:00 +0000 UTC} since the dto overrides MarshalJSON function the format is not compatible with time.UnmarshalJSON
+Package dtotime defines custom wrappers for the time.Time object with different formats for API request and response.
+These wrappers are not compatible with utils.JSONTransformer.
 */
 package dtotime
 
@@ -30,31 +8,34 @@ import (
 	"time"
 )
 
-// Date wraps time.Time with the JSON format and encodes and decodes in the "2006-01-02" format
+// Date wraps time.Time and provides JSON marshaling and unmarshaling in the "2006-01-02" format.
 type Date struct {
 	time.Time
 }
 
+// UnmarshalJSON parses the JSON-encoded data and stores the result in the Date.
 func (t *Date) UnmarshalJSON(b []byte) (err error) {
 	date, err := time.Parse(`"2006-01-02"`, string(b))
-	date = time.Date(date.Year(), date.Month(), date.Day(), date.Hour(), date.Minute(), date.Second(), date.Nanosecond(), time.Now().Location())
 	if err != nil {
 		return err
 	}
+	date = time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.Now().Location())
 	t.Time = date
 	return
 }
 
+// MarshalJSON returns the JSON encoding of the Date.
 func (t Date) MarshalJSON() ([]byte, error) {
 	val := t.Time.Format(`"2006-01-02"`)
 	return []byte(val), nil
 }
 
-// DateTimeShort wraps time.Time with the JSON format and encodes and decodes in the "2006-01-02T15:04:05Z07:00" format
+// DateTimeShort wraps time.Time and provides JSON marshaling and unmarshaling in the "2006-01-02T15:04:05Z07:00" format.
 type DateTimeShort struct {
 	time.Time
 }
 
+// UnmarshalJSON parses the JSON-encoded data and stores the result in the DateTimeShort.
 func (t *DateTimeShort) UnmarshalJSON(b []byte) (err error) {
 	date, err := time.Parse(`"2006-01-02T15:04:05Z07:00"`, string(b))
 	if err != nil {
@@ -64,16 +45,18 @@ func (t *DateTimeShort) UnmarshalJSON(b []byte) (err error) {
 	return
 }
 
+// MarshalJSON returns the JSON encoding of the DateTimeShort.
 func (t DateTimeShort) MarshalJSON() ([]byte, error) {
 	val := t.Time.Format(`"2006-01-02T15:04:05Z07:00"`)
 	return []byte(val), nil
 }
 
-// DateTime wraps time.Time with the JSON format and encodes and decodes in the "2006-01-02T15:04:05.000Z07:00" format
+// DateTime wraps time.Time and provides JSON marshaling and unmarshaling in the "2006-01-02T15:04:05.000Z07:00" format.
 type DateTime struct {
 	time.Time
 }
 
+// UnmarshalJSON parses the JSON-encoded data and stores the result in the DateTime.
 func (t *DateTime) UnmarshalJSON(b []byte) (err error) {
 	date, err := time.Parse(`"2006-01-02T15:04:05.000Z07:00"`, string(b))
 	if err != nil {
@@ -83,6 +66,7 @@ func (t *DateTime) UnmarshalJSON(b []byte) (err error) {
 	return
 }
 
+// MarshalJSON returns the JSON encoding of the DateTime.
 func (t DateTime) MarshalJSON() ([]byte, error) {
 	val := t.Time.Format(`"2006-01-02T15:04:05.000Z07:00"`)
 	return []byte(val), nil

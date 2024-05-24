@@ -2,10 +2,12 @@ package dtotime_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
 	"github.com/sabariramc/goserverbase/v6/datatype/dtotime"
+	"github.com/sabariramc/goserverbase/v6/utils"
 	"gotest.tools/assert"
 )
 
@@ -18,6 +20,30 @@ type DBData struct {
 	ID        int64     `json:"id" bson:"id"`
 	Dob       time.Time `json:"dob" bson:"dob"`
 	CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
+}
+
+func Example() {
+	type TestData struct {
+		Dob       dtotime.Date     `json:"dob"`
+		CreatedAt dtotime.DateTime `json:"createdAt"`
+	}
+
+	type DBData struct {
+		ID        int64     `json:"id" bson:"id"`
+		Dob       time.Time `json:"dob" bson:"dob"`
+		CreatedAt time.Time `json:"createdAt" bson:"createdAt"`
+	}
+
+	input := `{"dob":"2014-06-12","createdAt":"2006-03-04T15:04:05.112+05:30"}`
+	dataT1 := &TestData{}
+	json.Unmarshal([]byte(input), dataT1)
+	fmt.Println(dataT1)
+	dataT2 := DBData{}
+	utils.JSONTransformer(dataT1, &dataT2)
+	fmt.Println(dataT2)
+	//Output:
+	//&{2014-06-12 00:00:00 +0530 IST 2006-03-04 15:04:05.112 +0530 IST}
+	//{0 0001-01-01 00:00:00 +0000 UTC 0001-01-01 00:00:00 +0000 UTC}
 }
 
 func TestDate(t *testing.T) {
