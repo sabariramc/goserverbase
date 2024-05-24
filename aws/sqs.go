@@ -9,11 +9,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
-	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/correlation"
+	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/utils"
 )
 
+// SQS provides methods to interact with AWS Simple Queue Service (SQS).
 type SQS struct {
 	_ struct{}
 	*sqs.Client
@@ -21,10 +22,16 @@ type SQS struct {
 	queueURL *string
 }
 
+// defaultSQSClient is the default AWS SQS client.
 var defaultSQSClient *sqs.Client
-var ErrTooManyMessageToDelete = fmt.Errorf("too many message in receiptHandlerMap(should be less that 10)")
+
+// ErrTooManyMessageToDelete is an error indicating too many messages to delete.
+var ErrTooManyMessageToDelete = fmt.Errorf("too many messages in receiptHandlerMap (should be less than 10)")
+
+// DefaultMaxMessages is the default maximum number of messages.
 var DefaultMaxMessages int64 = 10
 
+// GetDefaultSQSClient returns the default SQS client using the provided logger and queue URL.
 func GetDefaultSQSClient(logger log.Log, queueURL string) *SQS {
 	if defaultSQSClient == nil {
 		defaultSQSClient = NewSQSClientWithConfig(*defaultAWSConfig)
@@ -32,22 +39,27 @@ func GetDefaultSQSClient(logger log.Log, queueURL string) *SQS {
 	return NewSQSClient(logger, defaultSQSClient, queueURL)
 }
 
+// NewSQSClientWithConfig creates a new SQS client with the provided AWS configuration.
 func NewSQSClientWithConfig(awsConfig aws.Config) *sqs.Client {
 	client := sqs.NewFromConfig(awsConfig)
 	return client
 }
 
+// NewSQSClient creates a new SQS instance with the provided logger, SQS client, and queue URL.
 func NewSQSClient(logger log.Log, client *sqs.Client, queueURL string) *SQS {
 	return &SQS{Client: client, queueURL: &queueURL, log: logger}
 }
 
+// IsFIFO checks if the SQS queue is FIFO.
 func (s *SQS) IsFIFO() bool {
 	return strings.HasSuffix(*s.queueURL, ".fifo")
 }
 
+// GetQueueURL returns the URL of the queue with the given name.
 func GetQueueURL(ctx context.Context, logger log.Log, queueName string, sqsClient *sqs.Client) (*string, error) {
 	req := &sqs.GetQueueUrlInput{
-		QueueName: &queueName}
+		QueueName: &queueName,
+	}
 	res, err := sqsClient.GetQueueUrl(ctx, req)
 	if err != nil {
 		logger.Error(ctx, "Error creating queue URL", err)
@@ -56,7 +68,8 @@ func GetQueueURL(ctx context.Context, logger log.Log, queueName string, sqsClien
 	return res.QueueUrl, nil
 }
 
-func (s *SQS) SendMessage(ctx context.Context, message *utils.Message, attribute map[string]any, delayInSeconds int32) (*sqs.SendMessageOutput, error) {
+// SendMessage sends a message to the SQS queue with optional attributes and delay.
+func (s *SQS) SendMessage(ctx context.Context, message *utils.Message, attribute map[string]interface{}, delayInSeconds int32) (*sqs.SendMessageOutput, error) {
 	body, err := marshal(message)
 	if err != nil {
 		return nil, fmt.Errorf("SQS.SendMessage: %w", err)
@@ -76,7 +89,8 @@ func (s *SQS) SendMessage(ctx context.Context, message *utils.Message, attribute
 	return res, nil
 }
 
-func (s *SQS) SendMessageFIFO(ctx context.Context, message *utils.Message, attribute map[string]any, delayInSeconds int32, messageDeduplicationID, messageGroupID *string) (*sqs.SendMessageOutput, error) {
+// SendMessageFIFO sends a message to the FIFO SQS queue with optional attributes, delay, and deduplication/group ID.
+func (s *SQS) SendMessageFIFO(ctx context.Context, message *utils.Message, attribute map[string]interface{}, delayInSeconds int32, messageDeduplicationID, messageGroupID *string) (*sqs.SendMessageOutput, error) {
 	body, err := marshal(message)
 	if err != nil {
 		return nil, fmt.Errorf("SQS.SendMessage: %w", err)
@@ -98,14 +112,16 @@ func (s *SQS) SendMessageFIFO(ctx context.Context, message *utils.Message, attri
 	return res, nil
 }
 
+// BatchQueueMessage represents a message to be sent in a batch to SQS.
 type BatchQueueMessage struct {
 	ID                     *string
 	Message                *utils.Message
-	Attribute              map[string]any
+	Attribute              map[string]interface{}
 	MessageDeduplicationID *string
 	MessageGroupID         *string
 }
 
+// SendMessageBatch sends multiple messages in a batch to the SQS queue.
 func (s *SQS) SendMessageBatch(ctx context.Context, messageList []*BatchQueueMessage, delayInSeconds int32) (*sqs.SendMessageBatchOutput, error) {
 	isFifo := s.IsFIFO()
 	messageReq := make([]types.SendMessageBatchRequestEntry, len(messageList))
@@ -139,9 +155,10 @@ func (s *SQS) SendMessageBatch(ctx context.Context, messageList []*BatchQueueMes
 	return res, nil
 }
 
-func (s *SQS) GenerateAttribute(ctx context.Context, attribute map[string]any) map[string]types.MessageAttributeValue {
+// GenerateAttribute generates message attributes from the given attribute map.
+func (s *SQS) GenerateAttribute(ctx context.Context, attribute map[string]interface{}) map[string]types.MessageAttributeValue {
 	if attribute == nil {
-		attribute = map[string]any{}
+		attribute = map[string]interface{}{}
 	}
 	correlation := correlation.ExtractCorrelationParam(ctx)
 	if correlation != nil {
@@ -173,6 +190,7 @@ func (s *SQS) GenerateAttribute(ctx context.Context, attribute map[string]any) m
 	return messageAttributes
 }
 
+// ReceiveMessage receives messages from the SQS queue.
 func (s *SQS) ReceiveMessage(ctx context.Context, timeoutInSeconds int32, maxNumberOfMessages int32, waitTimeInSeconds int32) (*sqs.ReceiveMessageOutput, error) {
 	req := &sqs.ReceiveMessageInput{
 		AttributeNames: []types.QueueAttributeName{
@@ -194,6 +212,7 @@ func (s *SQS) ReceiveMessage(ctx context.Context, timeoutInSeconds int32, maxNum
 	return msgResult, nil
 }
 
+// DeleteMessage deletes a message from the SQS queue.
 func (s *SQS) DeleteMessage(ctx context.Context, receiptHandler *string) (*sqs.DeleteMessageOutput, error) {
 	req := &sqs.DeleteMessageInput{
 		QueueUrl:      s.queueURL,
@@ -207,6 +226,7 @@ func (s *SQS) DeleteMessage(ctx context.Context, receiptHandler *string) (*sqs.D
 	return res, nil
 }
 
+// DeleteMessageBatch deletes multiple messages from the SQS queue.
 func (s *SQS) DeleteMessageBatch(ctx context.Context, receiptHandlerMap map[string]*string) (*sqs.DeleteMessageBatchOutput, error) {
 	if len(receiptHandlerMap) > 10 {
 		return nil, fmt.Errorf("SQS.DeleteMessage: %w", ErrTooManyMessageToDelete)
@@ -233,6 +253,7 @@ func (s *SQS) DeleteMessageBatch(ctx context.Context, receiptHandlerMap map[stri
 	return res, nil
 }
 
+// marshal converts the provided interface value to JSON string.
 func marshal(val interface{}) (*string, error) {
 	blob, err := json.Marshal(val)
 	if err != nil {

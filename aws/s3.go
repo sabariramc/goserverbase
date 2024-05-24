@@ -14,6 +14,7 @@ import (
 	"github.com/sabariramc/goserverbase/v6/log"
 )
 
+// S3 provides an interface for interacting with AWS Simple Storage Service (S3).
 type S3 struct {
 	_ struct{}
 	*s3.Client
@@ -23,10 +24,12 @@ type S3 struct {
 
 var defaultS3Client *s3.Client
 
+// NewS3ClientWithConfig creates a new S3 client with the provided AWS configuration.
 func NewS3ClientWithConfig(awsConfig aws.Config) *s3.Client {
 	return s3.NewFromConfig(awsConfig)
 }
 
+// GetDefaultS3Client retrieves the default S3 client using the provided logger.
 func GetDefaultS3Client(logger log.Log) *S3 {
 	if defaultS3Client == nil {
 		defaultS3Client = NewS3ClientWithConfig(*defaultAWSConfig)
@@ -34,10 +37,12 @@ func GetDefaultS3Client(logger log.Log) *S3 {
 	return NewS3Client(defaultS3Client, logger)
 }
 
+// NewS3Client creates a new S3 client with the provided client and logger.
 func NewS3Client(client *s3.Client, logger log.Log) *S3 {
 	return &S3{Client: client, log: logger.NewResourceLogger("S3"), PresignClient: s3.NewPresignClient(client)}
 }
 
+// PutObject uploads an object to S3 and returns the response.
 func (s *S3) PutObject(ctx context.Context, s3Bucket, s3Key string, body io.Reader, mimeType string, metadata map[string]string) (*s3.PutObjectOutput, error) {
 	req := &s3.PutObjectInput{Bucket: &s3Bucket, Key: &s3Key, Body: body, ContentType: &mimeType, Metadata: metadata}
 	res, err := s.Client.PutObject(ctx, req)
@@ -48,14 +53,15 @@ func (s *S3) PutObject(ctx context.Context, s3Bucket, s3Key string, body io.Read
 	return res, nil
 }
 
-func (s *S3) PutFile(ctx context.Context, s3Bucket, s3Key, localFilPath string) (*s3.PutObjectOutput, error) {
-	fp, err := os.Open(localFilPath)
+// PutFile uploads a file to S3 using the provided local file path and returns the response.
+func (s *S3) PutFile(ctx context.Context, s3Bucket, s3Key, localFilePath string) (*s3.PutObjectOutput, error) {
+	fp, err := os.Open(localFilePath)
 	if err != nil {
-		s.log.Error(ctx, "Error opening file", localFilPath)
+		s.log.Error(ctx, "Error opening file", localFilePath)
 		return nil, fmt.Errorf("S3.PutFile: error opening file: %w", err)
 	}
 	defer fp.Close()
-	mime, err := mimetype.DetectFile(localFilPath)
+	mime, err := mimetype.DetectFile(localFilePath)
 	if err != nil {
 		s.log.Notice(ctx, "Failed detecting mime type", err)
 	}
@@ -63,6 +69,7 @@ func (s *S3) PutFile(ctx context.Context, s3Bucket, s3Key, localFilPath string) 
 	return s.PutObject(ctx, s3Bucket, s3Key, fp, mime.String(), nil)
 }
 
+// GetObject retrieves an object from S3 and returns the response.
 func (s *S3) GetObject(ctx context.Context, s3Bucket, s3Key string) (*s3.GetObjectOutput, error) {
 	req := &s3.GetObjectInput{Bucket: &s3Bucket, Key: &s3Key}
 	res, err := s.Client.GetObject(ctx, req)
@@ -73,6 +80,7 @@ func (s *S3) GetObject(ctx context.Context, s3Bucket, s3Key string) (*s3.GetObje
 	return res, nil
 }
 
+// GetFile downloads an object from S3 to the specified local file path.
 func (s *S3) GetFile(ctx context.Context, s3Bucket, s3Key, localFilePath string) error {
 	res, err := s.GetObject(ctx, s3Bucket, s3Key)
 	if err != nil {
@@ -101,6 +109,7 @@ func (s *S3) GetFile(ctx context.Context, s3Bucket, s3Key, localFilePath string)
 	return nil
 }
 
+// PresignGetObject creates a presigned URL for downloading an object from S3.
 func (s *S3) PresignGetObject(ctx context.Context, s3Bucket, s3Key string, expireTimeInSeconds int64) (*v4.PresignedHTTPRequest, error) {
 	request, err := s.PresignClient.PresignGetObject(ctx, &s3.GetObjectInput{
 		Bucket: aws.String(s3Bucket),
@@ -115,6 +124,7 @@ func (s *S3) PresignGetObject(ctx context.Context, s3Bucket, s3Key string, expir
 	return request, nil
 }
 
+// PresignPutObject creates a presigned URL for uploading an object to S3.
 func (s *S3) PresignPutObject(ctx context.Context, s3Bucket, s3Key string, expireTimeInSeconds int64) (*v4.PresignedHTTPRequest, error) {
 	request, err := s.PresignClient.PresignPutObject(ctx, &s3.PutObjectInput{
 		Bucket: aws.String(s3Bucket),

@@ -20,14 +20,17 @@ import (
 )
 
 const (
-	MetadataKMSARN              = "x-kms-arn"
+	// MetadataKMSARN represents the key for KMS ARN metadata.
+	MetadataKMSARN = "x-kms-arn"
+	// MetadataEncryptionAlgorithm represents the key for encryption algorithm metadata.
 	MetadataEncryptionAlgorithm = "x-encryption-algorithm"
-	MetadataContentKey          = "x-content-key"
-	EncryptionAlgorithmAESGCM   = "AES-GCM-256"
+	// MetadataContentKey represents the key for content key metadata.
+	MetadataContentKey = "x-content-key"
+	// EncryptionAlgorithmAESGCM represents the AES GCM encryption algorithm.
+	EncryptionAlgorithmAESGCM = "AES-GCM-256"
 )
 
-// S3Crypto extends S3 with client side object encryption, all the objects that are created will be encrypted.
-// The objects is encrypted with content key unique to that object and the content key is encrypted with master key and stored in the metadata of the object
+// S3Crypto extends S3 with client-side object encryption.
 type S3Crypto struct {
 	_ struct{}
 	*S3
@@ -35,6 +38,7 @@ type S3Crypto struct {
 	log log.Log
 }
 
+// urlCache holds temporary file URL cache information.
 type urlCache struct {
 	key         string
 	expireTime  time.Time
@@ -43,14 +47,17 @@ type urlCache struct {
 
 var piiFileCache = make(map[string]*urlCache)
 
+// GetDefaultS3CryptoClient retrieves the default S3 Crypto client using the provided logger and KMS key ARN.
 func GetDefaultS3CryptoClient(logger log.Log, keyArn string) *S3Crypto {
 	return NewS3CryptoClient(GetDefaultS3Client(logger), GetDefaultKMSClient(logger, keyArn), logger)
 }
 
+// NewS3CryptoClient creates a new S3 Crypto client with the provided S3 client, KMS client, and logger.
 func NewS3CryptoClient(s3Client *S3, kms *KMS, logger log.Log) *S3Crypto {
 	return &S3Crypto{kms: kms, log: logger.NewResourceLogger("S3Crypto"), S3: s3Client}
 }
 
+// encrypt encrypts the object content and returns the encrypted content along with metadata.
 func (s *S3Crypto) encrypt(ctx context.Context, body io.Reader) (io.Reader, map[string]string, error) {
 	key := randomstring.Generate(32)
 	encryptedKey, err := s.kms.Encrypt(ctx, []byte(key))
@@ -80,6 +87,7 @@ func (s *S3Crypto) encrypt(ctx context.Context, body io.Reader) (io.Reader, map[
 	}, nil
 }
 
+// PutObject uploads an encrypted object to S3.
 func (s *S3Crypto) PutObject(ctx context.Context, s3Bucket, s3Key string, body io.Reader, mimeType string) error {
 	body, metadata, err := s.encrypt(ctx, body)
 	if err != nil {
@@ -94,13 +102,14 @@ func (s *S3Crypto) PutObject(ctx context.Context, s3Bucket, s3Key string, body i
 	return nil
 }
 
-func (s *S3Crypto) PutFile(ctx context.Context, s3Bucket, s3Key, localFilPath string) error {
-	fp, err := os.Open(localFilPath)
+// PutFile uploads an encrypted file to S3.
+func (s *S3Crypto) PutFile(ctx context.Context, s3Bucket, s3Key, localFilePath string) error {
+	fp, err := os.Open(localFilePath)
 	if err != nil {
-		s.log.Error(ctx, "error opening file", localFilPath)
+		s.log.Error(ctx, "error opening file", localFilePath)
 		return fmt.Errorf("S3Crypto.PutFile: error opening file: %w", err)
 	}
-	mime, err := mimetype.DetectFile(localFilPath)
+	mime, err := mimetype.DetectFile(localFilePath)
 	if err != nil {
 		s.log.Notice(ctx, "Failed detecting mime type", err)
 	}
@@ -109,6 +118,7 @@ func (s *S3Crypto) PutFile(ctx context.Context, s3Bucket, s3Key, localFilPath st
 	return s.PutObject(ctx, s3Bucket, s3Key, fp, mime.String())
 }
 
+// decrypt decrypts the object content and returns the decrypted content.
 func (s *S3Crypto) decrypt(ctx context.Context, res *s3.GetObjectOutput) ([]byte, error) {
 	for _, key := range []string{MetadataKMSARN, MetadataContentKey, MetadataEncryptionAlgorithm} {
 		if _, ok := res.Metadata[key]; !ok {
@@ -149,15 +159,23 @@ func (s *S3Crypto) decrypt(ctx context.Context, res *s3.GetObjectOutput) ([]byte
 	return data, nil
 }
 
+// GetObject retrieves an encrypted object from S3 and decrypts its content.
+// It takes a context, S3 bucket name, and S3 object key as input and returns
+// the decrypted content of the object as a byte slice.
+// If an error occurs during retrieval or decryption, it returns an error.
 func (s *S3Crypto) GetObject(ctx context.Context, s3Bucket, s3Key string) ([]byte, error) {
 	res, err := s.S3.GetObject(ctx, s3Bucket, s3Key)
 	if err != nil {
 		s.log.Error(ctx, "error decrypting content", err)
-		return nil, fmt.Errorf("S3Crypto.GetObject: error get object: %w", err)
+		return nil, fmt.Errorf("S3Crypto.GetObject: error getting object: %w", err)
 	}
 	return s.decrypt(ctx, res)
 }
 
+// GetFile retrieves an encrypted file from S3, decrypts its content, and writes
+// it to a local file specified by the localFilePath argument.
+// It takes a context, S3 bucket name, S3 object key, and local file path as input.
+// If an error occurs during retrieval, decryption, or file writing, it returns an error.
 func (s *S3Crypto) GetFile(ctx context.Context, s3Bucket, s3Key, localFilePath string) error {
 	blob, err := s.GetObject(ctx, s3Bucket, s3Key)
 	if err != nil {
@@ -176,18 +194,24 @@ func (s *S3Crypto) GetFile(ctx context.Context, s3Bucket, s3Key, localFilePath s
 	}
 	if n != len(blob) {
 		err := fmt.Errorf("total bytes %v, written bytes %v", len(blob), n)
-		s.log.Error(ctx, "S3crypto get file - file writing error", err)
+		s.log.Error(ctx, "S3Crypto.GetFile - file writing error", err)
 		return fmt.Errorf("S3Crypto.GetFile: %w", err)
 	}
 	return nil
 }
 
+// PIITempFile contains information about a temporary presigned URL for a file.
 type PIITempFile struct {
 	Request     *v4.PresignedHTTPRequest `json:"req"`
 	ExpiresAt   time.Time                `json:"expiresAt"`
 	ContentType *string                  `json:"contentType"`
 }
 
+// GetFileCache retrieves an encrypted file from S3, creates a temporary presigned URL for it,
+// and caches the URL for future use. It returns a PIITempFile object containing the presigned URL
+// information and other metadata. It takes a context, S3 bucket name, S3 object key, and a string
+// for generating a unique part of the temporary path as input. If an error occurs during retrieval
+// or URL generation, it returns an error.
 func (s *S3Crypto) GetFileCache(ctx context.Context, s3Bucket, s3Key, tempPathPart string) (*PIITempFile, error) {
 	fullPath := s3Bucket + "/" + s3Key
 	fileCache, ok := piiFileCache[fullPath]

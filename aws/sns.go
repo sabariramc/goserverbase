@@ -8,19 +8,22 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sns/types"
-	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/correlation"
+	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/utils"
 )
 
+// SNS provides methods to interact with AWS Simple Notification Service (SNS).
 type SNS struct {
 	_ struct{}
 	*sns.Client
 	log log.Log
 }
 
+// defaultSNSClient is the default AWS SNS client.
 var defaultSNSClient *sns.Client
 
+// GetDefaultSNSClient returns the default SNS client using the provided logger.
 func GetDefaultSNSClient(logger log.Log) *SNS {
 	if defaultSNSClient == nil {
 		defaultSNSClient = NewSNSClientWithConfig(defaultAWSConfig)
@@ -28,16 +31,20 @@ func GetDefaultSNSClient(logger log.Log) *SNS {
 	return NewSNSClient(logger, defaultSNSClient)
 }
 
+// NewSNSClientWithConfig creates a new SNS client with the provided AWS configuration.
 func NewSNSClientWithConfig(awsConfig *aws.Config) *sns.Client {
 	client := sns.NewFromConfig(*awsConfig)
 	return client
 }
 
+// NewSNSClient creates a new SNS instance with the provided logger and SNS client.
 func NewSNSClient(logger log.Log, client *sns.Client) *SNS {
 	return &SNS{Client: client, log: logger.NewResourceLogger("SNS")}
 }
 
-func (s *SNS) Publish(ctx context.Context, topicArn, subject *string, payload *utils.Message, attributes map[string]any) (*sns.PublishOutput, error) {
+// Publish publishes a message to the specified SNS topic.
+// It returns the publish output and an error if the operation fails.
+func (s *SNS) Publish(ctx context.Context, topicArn, subject *string, payload *utils.Message, attributes map[string]interface{}) (*sns.PublishOutput, error) {
 	blob, _ := json.Marshal(payload)
 	message := string(blob)
 	req := &sns.PublishInput{
@@ -54,9 +61,11 @@ func (s *SNS) Publish(ctx context.Context, topicArn, subject *string, payload *u
 	return res, nil
 }
 
-func (s *SNS) GenerateAttribute(ctx context.Context, attribute map[string]any) map[string]types.MessageAttributeValue {
+// GenerateAttribute generates SNS message attributes based on the provided map.
+// It extracts correlation parameters from the context and includes them in the message attributes.
+func (s *SNS) GenerateAttribute(ctx context.Context, attribute map[string]interface{}) map[string]types.MessageAttributeValue {
 	if attribute == nil {
-		attribute = map[string]any{}
+		attribute = make(map[string]interface{})
 	}
 	correlation := correlation.ExtractCorrelationParam(ctx)
 	if correlation != nil {

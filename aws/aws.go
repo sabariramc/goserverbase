@@ -1,4 +1,4 @@
-// Package aws provides simplified interface for different AWS services
+// Package aws provides a simplified interface for various AWS services.
 package aws
 
 import (
@@ -7,10 +7,12 @@ import (
 
 var defaultAWSConfig *aws.Config
 
+// Tracer is an interface for tracing AWS configurations.
 type Tracer interface {
 	AWS(*aws.Config)
 }
 
+// SetDefaultAWSConfig sets the default AWS configuration and applies tracing if provided.
 func SetDefaultAWSConfig(defaultConfig aws.Config, t Tracer) {
 	if t != nil {
 		t.AWS(&defaultConfig)
@@ -18,6 +20,7 @@ func SetDefaultAWSConfig(defaultConfig aws.Config, t Tracer) {
 	defaultAWSConfig = &defaultConfig
 }
 
+// GetDefaultAWSConfig retrieves the default AWS configuration.
 func GetDefaultAWSConfig() *aws.Config {
 	return defaultAWSConfig
 }
