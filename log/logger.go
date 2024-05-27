@@ -8,6 +8,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/sabariramc/goserverbase/v6/log/logwriter"
 	m "github.com/sabariramc/goserverbase/v6/log/message"
 )
 
@@ -50,7 +51,7 @@ func (l *Logger) NewResourceLogger(resourceName string) Log {
 }
 
 // AddLogWriter adds a log writer to the logger.
-func (l *Logger) AddLogWriter(ctx context.Context, w LogWriter) {
+func (l *Logger) AddLogWriter(ctx context.Context, w logwriter.LogWriter) {
 	l.mux.AddLogWriter(ctx, w)
 }
 

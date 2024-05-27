@@ -3,6 +3,7 @@ package log
 import (
 	"context"
 
+	"github.com/sabariramc/goserverbase/v6/log/logwriter"
 	"github.com/sabariramc/goserverbase/v6/log/message"
 )
 
@@ -42,5 +43,5 @@ type Log interface {
 	GetLogLevel() message.LogLevel
 
 	// AddLogWriter adds a new log writer to the logger.
-	AddLogWriter(context.Context, LogWriter)
+	AddLogWriter(context.Context, logwriter.LogWriter)
 }

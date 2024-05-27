@@ -3,31 +3,22 @@ package log
 import (
 	"context"
 
+	"github.com/sabariramc/goserverbase/v6/log/logwriter"
 	m "github.com/sabariramc/goserverbase/v6/log/message"
 )
-
-type ChanneledLogWriter interface {
-	Start(chan m.MuxLogMessage)
-	WriteMessage(context.Context, *m.LogMessage) error
-	GetBufferSize() int
-}
-
-type LogWriter interface {
-	WriteMessage(context.Context, *m.LogMessage) error
-}
 
 // Mux interface abstracts how the logger interacts with the the log handlers
 type Mux interface {
 	Print(context.Context, *m.LogMessage)
-	AddLogWriter(context.Context, LogWriter)
+	AddLogWriter(context.Context, logwriter.LogWriter)
 }
 
 // DefaultLogMux is a implementation of LogMux and calls the associated log handlers sequentially over a for loop
 type DefaultLogMux struct {
-	writer []LogWriter
+	writer []logwriter.LogWriter
 }
 
-func NewDefaultLogMux(logWriterList ...LogWriter) *DefaultLogMux {
+func NewDefaultLogMux(logWriterList ...logwriter.LogWriter) *DefaultLogMux {
 	ls := &DefaultLogMux{writer: logWriterList}
 	return ls
 }
@@ -38,7 +29,7 @@ func (ls *DefaultLogMux) Print(ctx context.Context, msg *m.LogMessage) {
 	}
 }
 
-func (ls *DefaultLogMux) AddLogWriter(ctx context.Context, writer LogWriter) {
+func (ls *DefaultLogMux) AddLogWriter(ctx context.Context, writer logwriter.LogWriter) {
 	ls.writer = append(ls.writer, writer)
 }
 
@@ -47,7 +38,7 @@ type ChanneledLogMux struct {
 	outChannel []chan m.MuxLogMessage
 }
 
-func NewChanneledLogMux(bufferSize uint8, logWriterList ...ChanneledLogWriter) *ChanneledLogMux {
+func NewChanneledLogMux(bufferSize uint8, logWriterList ...logwriter.ChanneledLogWriter) *ChanneledLogMux {
 	outChannelList := make([]chan m.MuxLogMessage, len(logWriterList))
 	for i, logWriter := range logWriterList {
 		lBufferSize := logWriter.GetBufferSize()

@@ -30,14 +30,25 @@ type Config struct {
 		- ERROR
 		- CRITICAL
 		- EMERGENCY
+	- LOG__FILE_TRACE: Sets [FileTrace]
+	- LOG__WRITER: Sets the log writer for [Mux], supports following values by default, can be extended
+		- CONSOLE
+		- JSONL
+
+For custom [LOG__WRITER] use [logwriter.AddLogWriter] before the package initialization
 */
 func GetDefaultConfig() Config {
+	writer := utils.GetEnv(envvariables.LogWriter, "CONSOLE")
+	w := logwriter.GetLogWriter(writer)
+	if w == nil {
+		w = logwriter.NewConsoleWriter()
+	}
 	return Config{
 		ServiceName: utils.GetEnv(envvariables.ServiceName, "default"),
 		ModuleName:  "log",
 		LogLevel:    message.GetLogLevelWithName(utils.GetEnv(envvariables.LogLevel, "ERROR")),
-		FileTrace:   false,
-		Mux:         NewDefaultLogMux(logwriter.NewConsoleWriter()),
+		FileTrace:   utils.GetEnvBool(envvariables.LogFileTrace, false),
+		Mux:         NewDefaultLogMux(w),
 		Audit:       nil,
 	}
 }

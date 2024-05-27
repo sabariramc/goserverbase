@@ -42,3 +42,5 @@ func (c *ConsoleLogWriter) WriteMessage(ctx context.Context, l *message.LogMessa
 	}
 	return nil
 }
+
+
