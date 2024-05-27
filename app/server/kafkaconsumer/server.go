@@ -44,7 +44,7 @@ func New(option ...Options) *KafkaConsumerServer {
 		fn(&config)
 	}
 	os.WriteFile(config.healthFilePath, []byte("Hello"), fs.ModeAppend)
-	b := baseapp.New(config.ServerConfig, config.log, config.notifier)
+	b := baseapp.New(config.Config, config.log, config.notifier)
 	h := &KafkaConsumerServer{
 		BaseApp: b,
 		log:     config.log.NewResourceLogger("KafkaConsumerServer"),

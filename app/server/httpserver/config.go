@@ -17,7 +17,7 @@ type HTTP2Config struct {
 }
 
 type HTTPServerConfig struct {
-	baseapp.ServerConfig
+	baseapp.Config
 	DocumentationConfig
 	*HTTP2Config
 	Host string

@@ -13,7 +13,7 @@ func (k *KafkaConsumerServer) GetCorrelationParams(headers map[string]string) *c
 	cr := &correlation.CorrelationParam{}
 	cr.LoadFromHeader(headers)
 	if cr.CorrelationID == "" {
-		return correlation.NewCorrelationParam(k.c.ServerConfig.ServiceName)
+		return correlation.NewCorrelationParam(k.c.Config.ServiceName)
 	}
 	return cr
 }

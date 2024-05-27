@@ -10,7 +10,7 @@ import (
 var defaultConfig = Config{
 	healthCheckInSec: 30,
 	healthFilePath:   "/tmp/healthCheck",
-	ServerConfig: baseapp.ServerConfig{
+	Config: baseapp.Config{
 		ServiceName: "KafkaConsumer",
 	},
 	log: log.New(log.WithModuleName("KafkaConsumer")),
@@ -43,9 +43,9 @@ func WithNotifier(notifier notifier.Notifier) Options {
 }
 
 // WithServerConfig sets the server configuration for KafkaConsumerServer.
-func WithServerConfig(config baseapp.ServerConfig) Options {
+func WithServerConfig(config baseapp.Config) Options {
 	return func(c *Config) {
-		c.ServerConfig = config
+		c.Config = config
 	}
 }
 

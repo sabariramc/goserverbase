@@ -6,12 +6,17 @@ import (
 	"time"
 )
 
-// RegisterHealthCheckHook registers a health check hook to be executed during health check.
+// RegisterHealthCheckHook registers a health check hook to be executed during the health check.
+//
+// This function appends the provided health check handler to the list of health check hooks in the BaseApp.
 func (b *BaseApp) RegisterHealthCheckHook(handler HealthCheckHook) {
 	b.healthHooks = append(b.healthHooks, handler)
 }
 
 // RunHealthCheck runs the registered health check hooks and returns an error if any health check fails.
+//
+// This function iterates through all registered health check hooks, executing each one within a specified timeout context.
+// If any health check fails, it logs the failure and returns an error indicating which hook failed.
 func (b *BaseApp) RunHealthCheck(ctx context.Context) error {
 	b.log.Debug(ctx, "Starting health check", nil)
 	n := len(b.healthHooks)
@@ -39,12 +44,17 @@ func (b *BaseApp) RunHealthCheck(ctx context.Context) error {
 	return nil
 }
 
-// RegisterStatusCheckHook registers a status check hook to be executed during status check.
+// RegisterStatusCheckHook registers a status check hook to be executed during the status check.
+//
+// This function appends the provided status check handler to the list of status check hooks in the BaseApp.
 func (b *BaseApp) RegisterStatusCheckHook(handler StatusCheckHook) {
 	b.statusHooks = append(b.statusHooks, handler)
 }
 
 // RunStatusCheck runs the registered status check hooks and returns a map of their statuses.
+//
+// This function iterates through all registered status check hooks, executing each one within a specified timeout context.
+// It collects the statuses of all hooks in a map, logging each status check's outcome and including it in the result map.
 func (b *BaseApp) RunStatusCheck(ctx context.Context) map[string]any {
 	b.log.Debug(ctx, "Starting status check", nil)
 	n := len(b.statusHooks)

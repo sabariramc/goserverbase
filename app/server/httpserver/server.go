@@ -34,7 +34,7 @@ type HTTPServer struct {
 
 // New creates a new instance of HTTPServer.
 func New(appConfig HTTPServerConfig, logger log.Log, tr Tracer, errorNotifier notifier.Notifier) *HTTPServer {
-	b := baseapp.New(appConfig.ServerConfig, logger, errorNotifier)
+	b := baseapp.New(appConfig.Config, logger, errorNotifier)
 	h := &HTTPServer{
 		BaseApp: b,
 		handler: gin.New(),

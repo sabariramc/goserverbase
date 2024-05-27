@@ -11,6 +11,9 @@ import (
 )
 
 // PanicRecovery recovers from panics, logs the panic details, and returns the stack trace and error.
+//
+// This function should be used within a defer statement to capture any panics that occur during execution.
+// It logs the panic details, captures the stack trace, and converts the panic to an error if it is not already one.
 func (b *BaseApp) PanicRecovery(ctx context.Context, rec any) (string, error) {
 	stackTrace := string(debug.Stack())
 	err, ok := rec.(error)
@@ -24,6 +27,10 @@ func (b *BaseApp) PanicRecovery(ctx context.Context, rec any) (string, error) {
 }
 
 // ProcessError processes an error, logs it, and returns the HTTP status code and error response body.
+//
+// This function determines the type of the provided error, logs the appropriate details, and constructs an HTTP response.
+// It handles custom errors, HTTP errors, and general errors, providing the necessary error response and logging stack traces if available.
+// Notifications are sent if configured, based on the error type and status code.
 func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error) (int, []byte) {
 	var statusCode int
 	var body []byte

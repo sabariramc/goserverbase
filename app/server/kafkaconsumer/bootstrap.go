@@ -13,7 +13,7 @@ import (
 
 // StartConsumer starts the Kafka consumer server. And starts background process for message poll, signal monitoring and set up cleanup steps when the server shutdowns
 func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
-	corr := &correlation.CorrelationParam{CorrelationID: fmt.Sprintf("%v:KafkaConsumerServer", k.c.ServerConfig.ServiceName)}
+	corr := &correlation.CorrelationParam{CorrelationID: fmt.Sprintf("%v:KafkaConsumerServer", k.c.Config.ServiceName)}
 	ctx, k.shutdown = context.WithCancel(correlation.GetContextWithCorrelationParam(ctx, corr))
 	defer k.WaitForCompleteShutDown()
 	k.shutdownWG.Add(1)

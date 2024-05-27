@@ -8,6 +8,16 @@ import (
 )
 
 // Config represents the configuration options for the logger.
+type Config struct {
+	ServiceName string           // ServiceName represents the name of the service.
+	ModuleName  string           // ModuleName represents the name of the module.
+	LogLevel    message.LogLevel // LogLevel represents the log level.
+	Mux         Mux              // Mux represents the multiplexer for handling log messages.
+	FileTrace   bool             // FileTrace indicates whether file tracing is enabled.
+	Audit       AuditLogWriter   // Audit represents the audit log writer.
+}
+
+// GetDefaultConfig returns the new Config with values from environment variables or default values.
 /*
 	Environment Variables
 	- SERVICE_NAME: Sets [ServiceName]
@@ -21,16 +31,6 @@ import (
 		- CRITICAL
 		- EMERGENCY
 */
-type Config struct {
-	ServiceName string           // ServiceName represents the name of the service.
-	ModuleName  string           // ModuleName represents the name of the module.
-	LogLevel    message.LogLevel // LogLevel represents the log level.
-	Mux         Mux              // Mux represents the multiplexer for handling log messages.
-	FileTrace   bool             // FileTrace indicates whether file tracing is enabled.
-	Audit       AuditLogWriter   // Audit represents the audit log writer.
-}
-
-// GetDefaultConfig returns the default configuration for the logger.
 func GetDefaultConfig() Config {
 	return Config{
 		ServiceName: utils.GetEnv(envvariables.ServiceName, "default"),

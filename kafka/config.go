@@ -36,14 +36,6 @@ func GetDefaultCredConfig() *CredConfig {
 }
 
 // ProducerConfig holds the configuration for a Kafka producer.
-/*
-	Environment Variables
-	- KAFKA__PRODUCER__ACKNOWLEDGE: Sets [RequiredAcks]
-	- KAFKA__PRODUCER__MAX_BUFFER: Sets [MaxBuffer]
-	- KAFKA__PRODUCER__AUTO_FLUSH_INTERVAL: Sets [AutoFlushInterval]
-	- KAFKA__PRODUCER__ASYNC: Sets [Async]
-	- KAFKA__PRODUCER__BATCH: Sets [Batch]
-*/
 type ProducerConfig struct {
 	*CredConfig                     // Embeds CredConfig for credential and connection details.
 	RequiredAcks      int           // Number of acknowledgments required from Kafka.
@@ -76,7 +68,15 @@ func ValidateProducerConfig(config *ProducerConfig) error {
 	return nil
 }
 
-// GetDefaultProducerConfig creates a new ProducerConfig with the provided options applied.
+// GetDefaultProducerConfig creates a new ProducerConfig with values from environment variables or default values.
+/*
+	Environment Variables
+	- KAFKA__PRODUCER__ACKNOWLEDGE: Sets [RequiredAcks]
+	- KAFKA__PRODUCER__MAX_BUFFER: Sets [MaxBuffer]
+	- KAFKA__PRODUCER__AUTO_FLUSH_INTERVAL: Sets [AutoFlushInterval]
+	- KAFKA__PRODUCER__ASYNC: Sets [Async]
+	- KAFKA__PRODUCER__BATCH: Sets [Batch]
+*/
 func GetDefaultProducerConfig() *ProducerConfig {
 	config := &ProducerConfig{
 		CredConfig:        GetDefaultCredConfig(),
@@ -172,15 +172,6 @@ func WithWriter(writer *kafka.Writer) ProducerOption {
 }
 
 // ConsumerConfig represents the configuration for a Kafka consumer.
-/*
-	Environment Variables
-	- SERVICE_NAME: Sets [ServiceName]
-	- KAFKA__CONSUMER__GROUP_ID: Sets [GroupID]
-	- KAFKA__CONSUMER__TOPICS: Sets [Topics]
-	- KAFKA__CONSUMER__AUTO_COMMIT: Sets [AutoCommit]
-	- KAFKA__CONSUMER__MAX_BUFFER: Sets [MaxBuffer]
-	- KAFKA__CONSUMER__AUTO_COMMIT_INTERVAL: Sets [AutoCommitInterval]
-*/
 type ConsumerConfig struct {
 	*CredConfig                       // Embeds CredConfig for credential and connection details.
 	GroupID            string         // Consumer group id
@@ -205,7 +196,16 @@ func ValidateConsumerConfig(config *ConsumerConfig) error {
 	return nil
 }
 
-// GetDefaultConsumerConfig creates a new ConsumerConfig with the provided options.
+// GetDefaultConsumerConfig creates a new ConsumerConfig with values from environment variables or default values.
+/*
+	Environment Variables
+	- SERVICE_NAME: Sets [ServiceName]
+	- KAFKA__CONSUMER__GROUP_ID: Sets [GroupID]
+	- KAFKA__CONSUMER__TOPICS: Sets [Topics]
+	- KAFKA__CONSUMER__AUTO_COMMIT: Sets [AutoCommit]
+	- KAFKA__CONSUMER__MAX_BUFFER: Sets [MaxBuffer]
+	- KAFKA__CONSUMER__AUTO_COMMIT_INTERVAL: Sets [AutoCommitInterval]
+*/
 func GetDefaultConsumerConfig() *ConsumerConfig {
 	// Default configuration
 	config := &ConsumerConfig{

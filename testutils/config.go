@@ -18,7 +18,7 @@ type AWSResources struct {
 }
 
 type TestConfig struct {
-	App             *baseapp.ServerConfig
+	App             *baseapp.Config
 	HTTP            *httpserver.HTTPServerConfig
 	Kafka           *kafkaconsumer.Config
 	CSFLE           *csfle.Config
@@ -31,16 +31,16 @@ type TestConfig struct {
 
 func NewConfig() *TestConfig {
 	serviceName := utils.GetEnv("SERVICE_NAME", "go-base")
-	appConfig := &baseapp.ServerConfig{
+	appConfig := &baseapp.Config{
 		ServiceName: serviceName,
 	}
 	return &TestConfig{
 		App: appConfig,
 		HTTP: &httpserver.HTTPServerConfig{
-			ServerConfig: *appConfig,
-			Log:          &httpserver.LogConfig{AuthHeaderKeyList: utils.GetEnvAsSlice("AUTH_HEADER_LIST", []string{}, ";")},
-			Host:         "0.0.0.0",
-			Port:         utils.GetEnv("APP_PORT", "8080"),
+			Config: *appConfig,
+			Log:    &httpserver.LogConfig{AuthHeaderKeyList: utils.GetEnvAsSlice("AUTH_HEADER_LIST", []string{}, ";")},
+			Host:   "0.0.0.0",
+			Port:   utils.GetEnv("APP_PORT", "8080"),
 			DocumentationConfig: httpserver.DocumentationConfig{
 				DocHost:           utils.GetEnv("DOC_HOST", "localhost:8080"),
 				SwaggerRootFolder: utils.GetEnv("DOC_ROOT_FOLDER", ""),
@@ -51,7 +51,7 @@ func NewConfig() *TestConfig {
 			},
 		},
 		Kafka: &kafkaconsumer.Config{
-			ServerConfig: *appConfig,
+			Config: *appConfig,
 		},
 		CSFLE: &csfle.Config{
 			CryptSharedLibPath: utils.GetEnv("CSFLE_CRYPT_SHARED_LIB_PATH", ""),
