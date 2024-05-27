@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/sabariramc/goserverbase/v6/correlation"
-	"github.com/sabariramc/goserverbase/v6/envvariables"
+	"github.com/sabariramc/goserverbase/v6/env"
 	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/utils"
 
@@ -37,8 +37,8 @@ type Tracer interface {
 // application name, pool size, compression, read preference, write concern, logging, and monitoring.
 func GetDefaultConfig(moduleName string, t Tracer, logger log.Log) *options.ClientOptions {
 	connectionOptions := options.Client()
-	connectionOptions.ApplyURI(utils.GetEnv(envvariables.MongoConnectionString, "mongodb://localhost:27017"))
-	connectionOptions.SetAppName(utils.GetEnv(envvariables.ServiceName, "default"))
+	connectionOptions.ApplyURI(utils.GetEnv(env.MongoConnectionString, "mongodb://localhost:27017"))
+	connectionOptions.SetAppName(utils.GetEnv(env.ServiceName, "default"))
 	connectionOptions.SetConnectTimeout(time.Minute)
 	connectionOptions.SetMinPoolSize(5)
 	connectionOptions.SetMaxPoolSize(10)

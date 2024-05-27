@@ -10,6 +10,7 @@ import (
 	"github.com/sabariramc/goserverbase/v6/correlation"
 )
 
+// extractKeyValue extracts the values of specified keys from the request headers.
 func extractKeyValue(r *http.Request, keyList []string) map[string]string {
 	res := make(map[string]string, len(keyList))
 	for _, key := range keyList {
@@ -21,6 +22,8 @@ func extractKeyValue(r *http.Request, keyList []string) map[string]string {
 	return res
 }
 
+// GetCorrelationParams extracts correlation parameters from the request headers.
+// If the correlation ID is missing, it generates a new one using the service name.
 func (h *HTTPServer) GetCorrelationParams(r *http.Request) *correlation.CorrelationParam {
 	keyList := []string{"x-correlation-id", "x-scenario-id", "x-scenario-name", "x-session-id"}
 	headers := extractKeyValue(r, keyList)
@@ -32,6 +35,7 @@ func (h *HTTPServer) GetCorrelationParams(r *http.Request) *correlation.Correlat
 	return cr
 }
 
+// GetCustomerID extracts user identifiers from the request headers.
 func (h *HTTPServer) GetCustomerID(r *http.Request) *correlation.UserIdentifier {
 	keyList := []string{"x-user-id", "x-user-client-id", "x-entity-id"}
 	headers := extractKeyValue(r, keyList)
@@ -40,10 +44,11 @@ func (h *HTTPServer) GetCustomerID(r *http.Request) *correlation.UserIdentifier 
 	return id
 }
 
+// GetMaskedRequestMeta extracts request metadata and masks sensitive headers specified in the configuration.
 func (h *HTTPServer) GetMaskedRequestMeta(r *http.Request) map[string]any {
 	header := r.Header
 	popList := make(map[string][]string)
-	for _, key := range h.c.Log.AuthHeaderKeyList {
+	for _, key := range h.c.Mask.HeaderKeyList {
 		val := header.Values(key)
 		if len(val) != 0 {
 			popList[key] = val
@@ -60,6 +65,7 @@ func (h *HTTPServer) GetMaskedRequestMeta(r *http.Request) map[string]any {
 	return req
 }
 
+// CopyRequestBody copies the request body and returns it as a byte slice.
 func (h *HTTPServer) CopyRequestBody(r *http.Request) ([]byte, error) {
 	blobBody, err := h.GetRequestBody(r)
 	if err != nil {
@@ -69,8 +75,9 @@ func (h *HTTPServer) CopyRequestBody(r *http.Request) ([]byte, error) {
 	return blobBody, nil
 }
 
+// ExtractRequestMetadata extracts metadata from the HTTP request.
 func (h *HTTPServer) ExtractRequestMetadata(r *http.Request) map[string]any {
-	res := map[string]interface{}{
+	res := map[string]any{
 		"Method":        r.Method,
 		"Header":        r.Header,
 		"URL":           r.URL,
@@ -83,6 +90,7 @@ func (h *HTTPServer) ExtractRequestMetadata(r *http.Request) map[string]any {
 	return res
 }
 
+// GetRequestBody reads and returns the request body as a byte slice.
 func (h *HTTPServer) GetRequestBody(r *http.Request) ([]byte, error) {
 	if r.ContentLength <= 0 {
 		return nil, nil
@@ -96,6 +104,7 @@ func (h *HTTPServer) GetRequestBody(r *http.Request) ([]byte, error) {
 	return blobBody, err
 }
 
+// LoadRequestJSONBody reads the request body and unmarshals it into the provided interface.
 func (h *HTTPServer) LoadRequestJSONBody(r *http.Request, body any) error {
 	blobBody, err := h.GetRequestBody(r)
 	if err != nil {

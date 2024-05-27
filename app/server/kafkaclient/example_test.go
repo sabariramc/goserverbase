@@ -1,16 +1,16 @@
-package kafkaconsumer_test
+package kafkaclient_test
 
 import (
 	"context"
 	"testing"
 
-	"github.com/sabariramc/goserverbase/v6/app/server/kafkaconsumer"
+	"github.com/sabariramc/goserverbase/v6/app/server/kafkaclient"
 	"github.com/sabariramc/goserverbase/v6/errors"
 	"github.com/sabariramc/goserverbase/v6/kafka"
 )
 
 func Example() {
-	srv := kafkaconsumer.New()
+	srv := kafkaclient.New()
 	srv.AddHandler(context.Background(), "gobase.test.topic1", func(ctx context.Context, m *kafka.Message) error {
 		return nil
 	})
@@ -21,7 +21,7 @@ func Example() {
 }
 
 func TestDefaultKafkaServer(t *testing.T) {
-	srv := kafkaconsumer.New()
+	srv := kafkaclient.New()
 	srv.AddHandler(context.Background(), "gobase.test.topic1", func(ctx context.Context, m *kafka.Message) error {
 		return nil
 	})

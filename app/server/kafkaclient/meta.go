@@ -1,4 +1,4 @@
-package kafkaconsumer
+package kafkaclient
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 
 // HealthCheckMonitor starts a health check monitor that periodically runs health checks.
 func (k *KafkaConsumerServer) HealthCheckMonitor(ctx context.Context) {
-	timeoutContext, _ := context.WithTimeout(ctx, time.Second*time.Duration(k.c.healthCheckInSec))
+	timeoutContext, _ := context.WithTimeout(ctx, time.Second*time.Duration(k.c.HealthCheckInterval))
 	defer k.log.Warning(ctx, "Health check monitor stopped", nil)
 	for {
 		select {
@@ -17,13 +17,13 @@ func (k *KafkaConsumerServer) HealthCheckMonitor(ctx context.Context) {
 		case <-timeoutContext.Done():
 			err := k.RunHealthCheck(ctx)
 			if err != nil {
-				deleteErr := os.Remove(k.c.healthFilePath)
+				deleteErr := os.Remove(k.c.HealthCheckResultPath)
 				if deleteErr != nil {
 					k.log.Error(ctx, "error deleting health file", deleteErr)
 				}
 				k.log.Emergency(ctx, "health check failed", err, nil)
 			}
-			timeoutContext, _ = context.WithTimeout(ctx, time.Second*time.Duration(k.c.healthCheckInSec))
+			timeoutContext, _ = context.WithTimeout(ctx, time.Second*time.Duration(k.c.HealthCheckInterval))
 		}
 	}
 }

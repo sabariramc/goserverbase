@@ -1,7 +1,7 @@
 package kafka
 
 import (
-	"github.com/sabariramc/goserverbase/v6/envvariables"
+	"github.com/sabariramc/goserverbase/v6/env"
 	"github.com/sabariramc/goserverbase/v6/kafka"
 	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/utils"
@@ -17,9 +17,9 @@ type Config struct {
 // GetDefaultConfig returns the default configuration for the Notifier.
 func GetDefaultConfig() Config {
 	return Config{
-		ServiceName: utils.GetEnv(envvariables.ServiceName, "default"),
+		ServiceName: utils.GetEnv(env.ServiceName, "default"),
 		Log:         log.New().NewResourceLogger("Notifier"),
-		Topic:       utils.GetEnv(envvariables.NotifierTopic, ""),
+		Topic:       utils.GetEnv(env.NotifierTopic, ""),
 	}
 }
 

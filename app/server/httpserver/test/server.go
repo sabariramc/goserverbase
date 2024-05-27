@@ -166,7 +166,7 @@ func NewServer(t instrumentation.Tracer) *server {
 		ServerTestLogger.Emergency(ctx, "error creating mongo connection", err, nil)
 	}
 	srv := &server{
-		HTTPServer: httpserver.New(*ServerTestConfig.HTTP, ServerTestLogger, t, nil), log: ServerTestLogger,
+		HTTPServer: httpserver.New(httpserver.WithTracer(t)), log: ServerTestLogger,
 		pr:         pr,
 		sns:        aws.GetDefaultSNSClient(ServerTestLogger),
 		httpClient: retryhttp.New(retryhttp.WithTracer(t)),

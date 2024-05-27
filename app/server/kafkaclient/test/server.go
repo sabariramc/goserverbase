@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
-	"github.com/sabariramc/goserverbase/v6/app/server/kafkaconsumer"
+	"github.com/sabariramc/goserverbase/v6/app/server/kafkaclient"
 	"github.com/sabariramc/goserverbase/v6/aws"
 	"github.com/sabariramc/goserverbase/v6/correlation"
 	"github.com/sabariramc/goserverbase/v6/db/mongo"
@@ -23,7 +23,7 @@ var ServerTestConfig *testutils.TestConfig
 var ServerTestLogger log.Log
 var ServerTestLMux log.Mux
 
-const ServiceName = "BaseTest"
+const ServiceName = "KafkaClientTest"
 
 func init() {
 	testutils.LoadEnv("../../../.env")
@@ -38,7 +38,7 @@ func GetCorrelationContext() context.Context {
 }
 
 type server struct {
-	*kafkaconsumer.KafkaConsumerServer
+	*kafkaclient.KafkaConsumerServer
 	log        log.Log
 	pr         *kafka.Producer
 	conn       *mongo.Mongo
@@ -93,7 +93,7 @@ func NewServer(t instrumentation.Tracer) *server {
 		ServerTestLogger.Emergency(ctx, "error creating mongo connection", err, nil)
 	}
 	srv := &server{
-		KafkaConsumerServer: kafkaconsumer.New(kafkaconsumer.WithKafkaConsumerConfig(ServerTestConfig.Kafka.ConsumerConfig), kafkaconsumer.WithLog(ServerTestLogger), kafkaconsumer.WithTracer(t), nil),
+		KafkaConsumerServer: kafkaclient.New(kafkaclient.WithLog(ServerTestLogger), kafkaclient.WithTracer(t), nil),
 		pr:                  pr,
 		sns:                 aws.GetDefaultSNSClient(ServerTestLogger),
 		httpClient:          retryhttp.New(retryhttp.WithTracer(t)),

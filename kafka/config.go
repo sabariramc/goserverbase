@@ -4,7 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 
-	"github.com/sabariramc/goserverbase/v6/envvariables"
+	"github.com/sabariramc/goserverbase/v6/env"
 	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/utils"
 	"github.com/segmentio/kafka-go"
@@ -31,7 +31,7 @@ type CredConfig struct {
 // GetDefaultCredConfig returns a default CredConfig with values from environment variables or default values.
 func GetDefaultCredConfig() *CredConfig {
 	return &CredConfig{
-		Brokers: utils.GetEnvAsSlice(envvariables.KafkaBroker, []string{"0.0.0.0:9092"}, ","),
+		Brokers: utils.GetEnvAsSlice(env.KafkaBroker, []string{"0.0.0.0:9092"}, ","),
 	}
 }
 
@@ -80,11 +80,11 @@ func ValidateProducerConfig(config *ProducerConfig) error {
 func GetDefaultProducerConfig() *ProducerConfig {
 	config := &ProducerConfig{
 		CredConfig:        GetDefaultCredConfig(),
-		RequiredAcks:      utils.GetEnvInt(envvariables.KafkaProducerAcknowledge, 1),
-		MaxBuffer:         utils.GetEnvInt(envvariables.KafkaProducerMaxBuffer, 0),
-		AutoFlushInterval: uint64(utils.GetEnvInt(envvariables.KafkaProducerAutoFlushInterval, 1000)),
-		Async:             utils.GetEnvBool(envvariables.KafkaProducerAsync, true),
-		Batch:             utils.GetEnvBool(envvariables.KafkaProducerBatch, false),
+		RequiredAcks:      utils.GetEnvInt(env.KafkaProducerAcknowledge, 1),
+		MaxBuffer:         utils.GetEnvInt(env.KafkaProducerMaxBuffer, 0),
+		AutoFlushInterval: uint64(utils.GetEnvInt(env.KafkaProducerAutoFlushInterval, 1000)),
+		Async:             utils.GetEnvBool(env.KafkaProducerAsync, true),
+		Batch:             utils.GetEnvBool(env.KafkaProducerBatch, false),
 		Log:               log.New(log.WithModuleName(ModuleProducer)),
 		ModuleName:        ModuleProducer,
 	}
@@ -183,7 +183,7 @@ type ConsumerConfig struct {
 	Reader             *kafka.Reader  // Reader for consuming messages
 	Topics             []string       // Topics to consume
 	ModuleName         string         // Name of the module for logging.
-	ServiceName        string         // Name of the service for client id
+	ClientId           string         // Name of the service for client id
 }
 
 func ValidateConsumerConfig(config *ConsumerConfig) error {
@@ -199,7 +199,7 @@ func ValidateConsumerConfig(config *ConsumerConfig) error {
 // GetDefaultConsumerConfig creates a new ConsumerConfig with values from environment variables or default values.
 /*
 	Environment Variables
-	- SERVICE_NAME: Sets [ServiceName]
+	- SERVICE_NAME: Sets [ClientId]
 	- KAFKA__CONSUMER__GROUP_ID: Sets [GroupID]
 	- KAFKA__CONSUMER__TOPICS: Sets [Topics]
 	- KAFKA__CONSUMER__AUTO_COMMIT: Sets [AutoCommit]
@@ -210,14 +210,14 @@ func GetDefaultConsumerConfig() *ConsumerConfig {
 	// Default configuration
 	config := &ConsumerConfig{
 		CredConfig:         GetDefaultCredConfig(),
-		GroupID:            utils.GetEnv(envvariables.KafkaConsumerGroupID, "cg-kafka-consumer"),
-		AutoCommit:         utils.GetEnvBool(envvariables.KafkaConsumerAutoCommit, true),
-		MaxBuffer:          uint(utils.GetEnvInt(envvariables.KafkaConsumerMaxBuffer, 100)),
-		AutoCommitInterval: uint64(utils.GetEnvInt(envvariables.KafkaConsumerAutoCommitInterval, 1000)),
+		GroupID:            utils.GetEnv(env.KafkaConsumerGroupID, "cg-kafka-consumer"),
+		AutoCommit:         utils.GetEnvBool(env.KafkaConsumerAutoCommit, true),
+		MaxBuffer:          uint(utils.GetEnvInt(env.KafkaConsumerMaxBuffer, 100)),
+		AutoCommitInterval: uint64(utils.GetEnvInt(env.KafkaConsumerAutoCommitInterval, 1000)),
 		Log:                log.New(log.WithModuleName(ModuleConsumer)),
-		Topics:             utils.GetEnvAsSlice(envvariables.KafkaConsumerTopics, []string{}, ","),
+		Topics:             utils.GetEnvAsSlice(env.KafkaConsumerTopics, []string{}, ","),
 		ModuleName:         ModuleProducer,
-		ServiceName:        utils.GetEnv(envvariables.ServiceName, "default"),
+		ClientId:           utils.GetEnv(env.ServiceName, "default"),
 	}
 
 	return config
@@ -299,6 +299,6 @@ func WithConsumerModuleName(name string) ConsumerOption {
 // WithConsumerServiceName sets the service name for kafka consumer.
 func WithConsumerServiceName(name string) ConsumerOption {
 	return func(c *ConsumerConfig) {
-		c.ServiceName = name
+		c.ClientId = name
 	}
 }

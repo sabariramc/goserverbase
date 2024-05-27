@@ -1,7 +1,7 @@
 package baseapp
 
 import (
-	"github.com/sabariramc/goserverbase/v6/envvariables"
+	"github.com/sabariramc/goserverbase/v6/env"
 	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/notifier"
 	"github.com/sabariramc/goserverbase/v6/utils"
@@ -18,9 +18,14 @@ type Config struct {
 type Option func(*Config)
 
 // GetDefaultConfig creates a new default Config with values from environment variables or default values.
+/*
+	Environment Variables
+	- SERVICE_NAME: Sets [ServiceName]
+	- KAFKACS__HEALTH_CHECK_RESULT_PATH: Sets [HealthCheckResultPath]
+*/
 func GetDefaultConfig() *Config {
 	return &Config{
-		ServiceName: utils.GetEnv(envvariables.ServiceName, "default"),
+		ServiceName: utils.GetEnv(env.ServiceName, "default"),
 		Log:         log.New(log.WithModuleName("BaseApp")),
 	}
 }

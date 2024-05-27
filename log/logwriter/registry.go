@@ -5,7 +5,7 @@ import (
 )
 
 // registry stores registered log writers.
-var registry map[string]LogWriter
+var registry map[string]LogWriter = map[string]LogWriter{}
 
 // GetLogWriter retrieves a log writer by its name from the registry.
 //

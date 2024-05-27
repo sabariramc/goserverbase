@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	server "github.com/sabariramc/goserverbase/v6/app/server/kafkaconsumer/test"
+	server "github.com/sabariramc/goserverbase/v6/app/server/kafkaclient/test"
 	"github.com/sabariramc/goserverbase/v6/instrumentation/contrib/ddtrace"
 )
 

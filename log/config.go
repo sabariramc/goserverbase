@@ -1,7 +1,7 @@
 package log
 
 import (
-	"github.com/sabariramc/goserverbase/v6/envvariables"
+	"github.com/sabariramc/goserverbase/v6/env"
 	"github.com/sabariramc/goserverbase/v6/log/logwriter"
 	"github.com/sabariramc/goserverbase/v6/log/message"
 	"github.com/sabariramc/goserverbase/v6/utils"
@@ -38,16 +38,16 @@ type Config struct {
 For custom [LOG__WRITER] use [logwriter.AddLogWriter] before the package initialization
 */
 func GetDefaultConfig() Config {
-	writer := utils.GetEnv(envvariables.LogWriter, "CONSOLE")
+	writer := utils.GetEnv(env.LogWriter, "CONSOLE")
 	w := logwriter.GetLogWriter(writer)
 	if w == nil {
 		w = logwriter.NewConsoleWriter()
 	}
 	return Config{
-		ServiceName: utils.GetEnv(envvariables.ServiceName, "default"),
+		ServiceName: utils.GetEnv(env.ServiceName, "default"),
 		ModuleName:  "log",
-		LogLevel:    message.GetLogLevelWithName(utils.GetEnv(envvariables.LogLevel, "ERROR")),
-		FileTrace:   utils.GetEnvBool(envvariables.LogFileTrace, false),
+		LogLevel:    message.GetLogLevelWithName(utils.GetEnv(env.LogLevel, "ERROR")),
+		FileTrace:   utils.GetEnvBool(env.LogFileTrace, false),
 		Mux:         NewDefaultLogMux(w),
 		Audit:       nil,
 	}

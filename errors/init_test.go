@@ -8,17 +8,17 @@ import (
 	"github.com/sabariramc/goserverbase/v6/testutils"
 )
 
-var TestConfig *testutils.TestConfig
 var TestLogger log.Log
+
+const ServiceName = "ErrorTest"
 
 func init() {
 	testutils.Initialize()
 	testutils.LoadEnv("../.env")
-	TestConfig = testutils.NewConfig()
-	TestLogger = log.New(log.WithServiceName("ErrorTest"))
+	TestLogger = log.New(log.WithServiceName(ServiceName))
 }
 
 func GetCorrelationContext() context.Context {
-	ctx := context.WithValue(context.Background(), correlation.ContextKeyCorrelation, correlation.NewCorrelationParam(TestConfig.App.ServiceName))
+	ctx := context.WithValue(context.Background(), correlation.ContextKeyCorrelation, correlation.NewCorrelationParam(ServiceName))
 	return ctx
 }

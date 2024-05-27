@@ -46,7 +46,7 @@ func (h *HTTPServer) SetupRouter(ctx context.Context) {
 	if h.tracer != nil {
 		h.handler.Use(h.tracer.GetGinMiddleware(h.c.ServiceName))
 	}
-	h.handler.Use(h.SetContextMiddleware(), h.RequestTimerMiddleware(), h.LogRequestResponseMiddleware(), h.PanicHandleMiddleware())
+	h.handler.Use(h.SetCorrelationMiddleware(), h.RequestTimerMiddleware(), h.LogRequestResponseMiddleware(), h.PanicHandleMiddleware())
 }
 
 // SetupDocumentation configures routes for serving OpenAPI documentation.
@@ -58,7 +58,7 @@ func (h *HTTPServer) SetupDocumentation(ctx context.Context) {
 		ginSwagger.DefaultModelsExpandDepth(-1), func(c *ginSwagger.Config) {
 			c.Title = h.c.ServiceName
 		}))
-	h.handler.StaticFS("/meta/static", http.Dir(h.c.SwaggerRootFolder))
+	h.handler.StaticFS("/meta/static", http.Dir(h.c.RootFolder))
 }
 
 // AddMiddleware adds custom middleware to the HTTPServer.

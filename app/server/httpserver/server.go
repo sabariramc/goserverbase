@@ -11,7 +11,6 @@ import (
 	"github.com/sabariramc/goserverbase/v6/correlation"
 	"github.com/sabariramc/goserverbase/v6/instrumentation/span"
 	"github.com/sabariramc/goserverbase/v6/log"
-	"github.com/sabariramc/goserverbase/v6/notifier"
 )
 
 // Tracer defines the interface for tracing functionality.
@@ -26,23 +25,23 @@ type HTTPServer struct {
 	*baseapp.BaseApp
 	handler         *gin.Engine
 	log             log.Log
-	c               *HTTPServerConfig
+	c               *Config
 	server          *http.Server
 	tracer          Tracer
 	connectionCount int64
 }
 
 // New creates a new instance of HTTPServer.
-func New(appConfig HTTPServerConfig, logger log.Log, tr Tracer, errorNotifier notifier.Notifier) *HTTPServer {
-	b := baseapp.New(appConfig.Config, logger, errorNotifier)
+func New(option ...Option) *HTTPServer {
+	config := GetDefaultConfig()
 	h := &HTTPServer{
-		BaseApp: b,
+		BaseApp: baseapp.NewWithConfig(config.Config),
 		handler: gin.New(),
-		log:     b.GetLogger().NewResourceLogger("HTTPServer"),
-		c:       &appConfig,
-		tracer:  tr,
+		log:     config.Log,
+		c:       config,
+		tracer:  config.Tracer,
 	}
-	ctx := correlation.GetContextWithCorrelationParam(context.Background(), correlation.NewCorrelationParam(appConfig.ServiceName))
+	ctx := correlation.GetContextWithCorrelationParam(context.Background(), correlation.NewCorrelationParam(config.ServiceName))
 	h.SetupRouter(ctx)
 	h.RegisterOnShutdownHook(h)
 	h.RegisterStatusCheckHook(h)

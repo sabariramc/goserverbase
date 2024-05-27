@@ -78,7 +78,7 @@ func NewPoller(options ...ConsumerOption) (*Poller, error) {
 				DualStack:     true,
 				SASLMechanism: config.SASLMechanism,
 				TLS:           config.TLSConfig,
-				ClientID:      fmt.Sprintf("%v-%v", config.ServiceName, uuid.NewString()),
+				ClientID:      fmt.Sprintf("%v-%v", config.ClientId, uuid.NewString()),
 			},
 			Logger: &kafkaLogger{
 				Log:     logger.NewResourceLogger(config.ModuleName + ":InfoLog"),

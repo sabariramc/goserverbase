@@ -1,5 +1,5 @@
 // Package kafkaconsumer extends the BaseApp with a kafka consumer server
-package kafkaconsumer
+package kafkaclient
 
 import (
 	"context"
@@ -39,18 +39,17 @@ type KafkaConsumerServer struct {
 
 // New creates a new instance of KafkaConsumerServer.
 func New(option ...Options) *KafkaConsumerServer {
-	config := defaultConfig
-	for _, fn := range option {
-		fn(&config)
+	config := GetDefaultConfig()
+	for _, opt := range option {
+		opt(config)
 	}
-	os.WriteFile(config.healthFilePath, []byte("Hello"), fs.ModeAppend)
-	b := baseapp.New(config.Config, config.log, config.notifier)
+	os.WriteFile(config.HealthCheckResultPath, []byte("Hello"), fs.ModeAppend)
 	h := &KafkaConsumerServer{
-		BaseApp: b,
-		log:     config.log.NewResourceLogger("KafkaConsumerServer"),
-		c:       &config,
+		BaseApp: baseapp.NewWithConfig(config.Config),
+		log:     config.Log,
+		c:       config,
 		handler: make(map[string]KafkaEventProcessor),
-		tracer:  config.t,
+		tracer:  config.Tracer,
 	}
 	h.RegisterHealthCheckHook(h)
 	h.RegisterOnShutdownHook(h)

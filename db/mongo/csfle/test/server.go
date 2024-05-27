@@ -68,7 +68,7 @@ func (s *server) Get(c *gin.Context) {
 }
 
 func (s *server) Name(ctx context.Context) string {
-	return s.c.HTTP.ServiceName
+	return ""
 }
 
 func (s *server) Shutdown(ctx context.Context) error {
@@ -110,7 +110,7 @@ func NewServer(t instrumentation.Tracer) *server {
 		ServerTestLogger.Emergency(ctx, "error creating mongo connection", err, nil)
 	}
 	srv := &server{
-		HTTPServer: httpserver.New(*ServerTestConfig.HTTP, ServerTestLogger, t, nil), log: ServerTestLogger,
+		HTTPServer: httpserver.New(httpserver.WithTracer(t)), log: ServerTestLogger,
 		conn: conn,
 		coll: conn.Database(dbName).Collection(collName),
 		c:    ServerTestConfig,

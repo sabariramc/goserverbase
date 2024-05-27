@@ -6,11 +6,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/sabariramc/goserverbase/v6/instrumentation/span"
 	"github.com/sabariramc/goserverbase/v6/correlation"
+	"github.com/sabariramc/goserverbase/v6/instrumentation/span"
 )
 
-func (h *HTTPServer) SetContextMiddleware() gin.HandlerFunc {
+// SetCorrelationMiddleware returns a middleware that sets the correlation parameters and user identifier in the request context.
+func (h *HTTPServer) SetCorrelationMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		r := c.Request
 		corr := h.GetCorrelationParams(r)
@@ -35,6 +36,7 @@ func (h *HTTPServer) SetContextMiddleware() gin.HandlerFunc {
 	}
 }
 
+// RequestTimerMiddleware returns a middleware that logs the request processing time.
 func (h *HTTPServer) RequestTimerMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		r := c.Request
@@ -44,6 +46,7 @@ func (h *HTTPServer) RequestTimerMiddleware() gin.HandlerFunc {
 	}
 }
 
+// LogRequestResponseMiddleware returns a middleware that logs the request and response.
 func (h *HTTPServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		w, r := c.Writer, c.Request
@@ -71,6 +74,7 @@ func (h *HTTPServer) LogRequestResponseMiddleware() gin.HandlerFunc {
 	}
 }
 
+// PanicHandleMiddleware returns a middleware that recovers from panics and logs the error and stack trace.
 func (h *HTTPServer) PanicHandleMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		w, r := c.Writer, c.Request

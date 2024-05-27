@@ -31,6 +31,10 @@ func New(option ...Option) *BaseApp {
 	for _, opt := range option {
 		opt(config)
 	}
+	return NewWithConfig(config)
+}
+
+func NewWithConfig(config *Config) *BaseApp {
 	b := &BaseApp{
 		c:             config,
 		notifier:      config.Notifier,
