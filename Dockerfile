@@ -1,18 +1,22 @@
-FROM golang:1.21-alpine AS builder
+FROM golang:1.22-alpine AS builder
 RUN apk update && apk add --no-cache git
 RUN apk add build-base
 WORKDIR /myapp
 COPY ./app ./app
 COPY ./aws ./aws
+COPY ./correlation ./correlation
 COPY ./crypto ./crypto
 COPY ./db ./db
+COPY ./docs ./docs
+COPY ./env ./env
 COPY ./errors ./errors
+COPY ./instrumentation ./instrumentation
 COPY ./kafka ./kafka
 COPY ./log ./log
-COPY ./utils ./utils
+COPY ./notifier ./notifier
 COPY ./testutils ./testutils
+COPY ./utils ./utils
 COPY ./go.mod ./go.mod
-COPY ./instrumentation ./instrumentation
 
 RUN go mod tidy
 
@@ -36,7 +40,7 @@ RUN go build -tags musl -o /app -ldflags '-linkmode external -w -extldflags "-st
 
 
 FROM builder AS kafkabuilder
-WORKDIR /myapp/app/server/kafkaconsumer/test/consumer
+WORKDIR /myapp/app/server/kafkaclient/test/consumer
 RUN go build -tags musl -o /app -ldflags '-linkmode external -w -extldflags "-static"'
 
 
@@ -69,15 +73,35 @@ COPY --from=kafkabuilder /app /service/app
 ENTRYPOINT ["/service/app"]
 
 
-
-FROM builder AS csflebuilder
+FROM golang:1.22-bullseye AS bullseyebuilder
+RUN apt-get update && apt-get install tzdata
+WORKDIR /myapp
 COPY ./pkg/mongo/debian/bullseye ./pkg
+COPY ./app ./app
+COPY ./aws ./aws
+COPY ./crypto ./crypto
+COPY ./correlation ./correlation
+COPY ./db ./db
+COPY ./docs ./docs
+COPY ./env ./env
+COPY ./errors ./errors
+COPY ./instrumentation ./instrumentation
+COPY ./kafka ./kafka
+COPY ./log ./log
+COPY ./notifier ./notifier
+COPY ./testutils ./testutils
+COPY ./utils ./utils
+COPY ./go.mod ./go.mod
+RUN apt-get install ./pkg/libmongocrypt-dev_1.8.4-0_amd64.deb ./pkg/libmongocrypt0_1.8.4-0_amd64.deb
+RUN go mod tidy
+
 
 FROM debian:bullseye-slim AS csflerunner
 RUN apt-get install tzdata
 WORKDIR /service
 COPY ./pkg/mongo/debian/bullseye ./pkg
 COPY ./db/mongo/csfle/sample/piischeme.json ./piischeme.json
+RUN apt-get install /service/pkg/libmongocrypt-dev_1.8.4-0_amd64.deb /service/pkg/libmongocrypt0_1.8.4-0_amd64.deb
 ENV CSFLE_CRYPT_SHARED_LIB_PATH=/service/pkg/mongo_crypt_shared_v1-7.0.5/lib/mongo_crypt_v1.so
 ENV SCHEME_LOCATION=/service/piischeme.json
 

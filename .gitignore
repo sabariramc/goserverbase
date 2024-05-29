@@ -48,7 +48,6 @@ Thumbs.db
 *.mov
 *.wmv
 
-.env
 bin/
 testdata/*
 *.pdf

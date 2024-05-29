@@ -17,12 +17,12 @@ services:
       KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
       KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
       TEST_URL_1: "http://echo-nginx-1"
-      TEST_URL_2: "http://gobase_http:8080/service/echo"
+      TEST_URL_2: "https://gobase_http2:8080/service/echo"
     ports:
       - 60005:8080
     networks:
       - mongo_mongodb
-      - kafka_default
+      - kafka_kafka
       - common
       - localstack_localstack
   http2:
@@ -39,17 +39,15 @@ services:
       DD_AGENT_HOST: datadog
       AWS_ENDPOINT: http://localstack-main:4566
       DOC_HOST: https://localhost:60006
-      HTTP2_PUBLIC_KEY: /service/server.crt
-      HTTP2_PRIVATE_KEY: /service/server.key
-      KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
-      KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
+      HTTP_SERVER__TLS_PUBLIC_KEY: /service/server.crt
+      HTTP_SERVER__TLS_PRIVATE_KEY: /service/server.key
       TEST_URL_1: "http://echo-nginx-1"
       TEST_URL_2: "http://gobase_http:8080/service/echo"
     ports:
       - 60006:8080
     networks:
       - mongo_mongodb
-      - kafka_default
+      - kafka_kafka
       - common
       - localstack_localstack
   h2c:
@@ -74,7 +72,7 @@ services:
       - 60007:8080
     networks:
       - mongo_mongodb
-      - kafka_default
+      - kafka_kafka
       - common
       - localstack_localstack
   kafka:
@@ -99,7 +97,7 @@ services:
       TEST_URL_2: "http://gobase_http:8080/service/echo"
     networks:
       - mongo_mongodb
-      - kafka_default
+      - kafka_kafka
       - common
       - localstack_localstack
   csfle:
@@ -125,13 +123,13 @@ services:
       - 60008:8080
     networks:
       - mongo_mongodb
-      - kafka_default
+      - kafka_kafka
       - common
       - localstack_localstack
 networks:
   mongo_mongodb:
     external: true
-  kafka_default:
+  kafka_kafka:
     external: true
   common:
     external: true

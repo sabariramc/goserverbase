@@ -48,11 +48,11 @@
             "envFile": "${workspaceFolder}/.env"
         },
         {
-            "name": "Kafka Consumer",
+            "name": "Kafka Client",
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "program": "${workspaceFolder}/app/server/kafkaconsumer/test/consumer/main.go",
+            "program": "${workspaceFolder}/app/server/kafkaclient/test/consumer/main.go",
             "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env",
             "console": "integratedTerminal"
@@ -62,7 +62,7 @@
             "type": "go",
             "request": "launch",
             "mode": "debug",
-            "program": "${workspaceFolder}/app/server/kafkaconsumer/test/consumer/otel/main.go",
+            "program": "${workspaceFolder}/app/server/kafkaclient/test/consumer/otel/main.go",
             "cwd": "${workspaceFolder}",
             "envFile": "${workspaceFolder}/.env",
         },

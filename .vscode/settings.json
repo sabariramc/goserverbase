@@ -14,5 +14,5 @@
     ],
     "gopls": {
         "ui.semanticTokens": true
-    }
+    },
 }
