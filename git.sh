@@ -6,5 +6,5 @@ git commit -m "$message"
 git tag $version
 git push origin $version
 git push origin $branch
-git push bitbucket $version
-git push bitbucket $branch
+git push github $version
+git push github $branch

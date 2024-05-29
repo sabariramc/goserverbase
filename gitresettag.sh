@@ -1,4 +1,4 @@
-export tagname="v5.0.3"
+export tagname="v6.0.0"
 git push origin :$tagname
-git push bitbucket :$tagname
+git push github :$tagname
 git tag --delete $tagname
