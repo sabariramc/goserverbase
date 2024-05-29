@@ -13,6 +13,6 @@ func main() {
 		log.Fatal("tracer failed", err)
 	}
 	defer ddtrace.ShutDown()
-	s := server.NewServer(tr)
+	s := server.New(tr)
 	s.StartServer()
 }

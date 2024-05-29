@@ -36,7 +36,7 @@ func (b *BaseApp) Shutdown(ctx context.Context) {
 	hooksCount := len(b.shutdownHooks)
 	for i, hook := range b.shutdownHooks {
 		shutdownCtx, _ := context.WithTimeout(ctx, time.Second*2)
-		b.log.Notice(ctx, fmt.Sprintf("starting step %v of %v", i+1, hooksCount), nil)
+		b.log.Notice(ctx, fmt.Sprintf("starting step %v of %v - %v", i+1, hooksCount, hook.Name(ctx)), nil)
 		b.processShutdownHook(shutdownCtx, hook)
 		b.log.Notice(ctx, fmt.Sprintf("completed step %v of %v", i+1, hooksCount), nil)
 	}
@@ -59,7 +59,6 @@ func (b *BaseApp) processShutdownHook(ctx context.Context, handler ShutdownHook)
 		b.log.Error(ctx, "error shutting down: "+handler.Name(ctx), err)
 		return
 	}
-	b.log.Notice(ctx, "shutdown completed for: "+handler.Name(ctx), nil)
 }
 
 // monitorSignals monitors OS signals and initiates server shutdown upon receiving them.

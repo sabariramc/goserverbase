@@ -13,6 +13,6 @@ func main() {
 		log.Fatal("tracer failed", err)
 	}
 	defer otel.ShutDown()
-	s := server.NewServer(tr)
+	s := server.New(tr)
 	s.StartTLSServer()
 }

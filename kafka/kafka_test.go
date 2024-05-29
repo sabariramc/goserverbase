@@ -74,6 +74,22 @@ func Example_confluentKafka() {
 	defer pr.Close(ctx)
 }
 
+func TestKafkaProducerSync(t *testing.T) {
+	ctx := GetCorrelationContext()
+	uuidVal := uuid.NewString()
+	totalNoOfMessage := 1
+	pr, err := kafka.NewProducer(kafka.WithProducerTopic(KafkaTestConfig.KafkaTestTopic2))
+	assert.NilError(t, err)
+	defer pr.Close(ctx)
+	for i := 0; i < totalNoOfMessage; i++ {
+		ctx := GetCorrelationContext()
+		err = pr.ProduceMessage(ctx, strconv.Itoa(i), &utils.Message{
+			Event: "TestKafkaProducer-" + uuidVal,
+		}, nil)
+		assert.NilError(t, err)
+	}
+}
+
 func TestKafkaProducer(t *testing.T) {
 	ctx := GetCorrelationContext()
 	uuidVal := uuid.NewString()
@@ -103,7 +119,7 @@ func TestKafkaProducer(t *testing.T) {
 
 func TestKafkaPoller(t *testing.T) {
 	ctx := GetCorrelationContext()
-	co, err := kafka.NewPoller(kafka.WithAutoCommit(false), kafka.WithConsumerTopic([]string{KafkaTestConfig.KafkaTestTopic}))
+	co, err := kafka.NewPoller(kafka.WithAutoCommit(false), kafka.WithConsumerTopic([]string{KafkaTestConfig.KafkaTestTopic, KafkaTestConfig.KafkaTestTopic2}))
 	assert.NilError(t, err)
 	defer co.Close(ctx)
 	ch := make(chan *cKafka.Message, 100)

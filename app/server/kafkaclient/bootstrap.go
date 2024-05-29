@@ -11,9 +11,9 @@ import (
 	"github.com/sabariramc/goserverbase/v6/kafka"
 )
 
-// StartConsumer starts the Kafka consumer server. And starts background process for message poll, signal monitoring and set up cleanup steps when the server shutdowns
-func (k *KafkaClient) StartConsumer() {
-	var ctx context.Context
+// StartClient starts the Kafka client. And starts background process for message poll, signal monitoring and set up cleanup steps when the server shutdowns
+func (k *KafkaClient) StartClient() {
+	ctx := context.Background()
 	corr := &correlation.CorrelationParam{CorrelationID: fmt.Sprintf("%v:KafkaClient", k.c.Config.ServiceName)}
 	ctx, k.shutdown = context.WithCancel(correlation.GetContextWithCorrelationParam(ctx, corr))
 	defer k.WaitForCompleteShutDown()

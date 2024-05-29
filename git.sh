@@ -1,5 +1,5 @@
-export message="Rafactored package"
-export version="v6.0.0"
+export message="Renamed function"
+export version="v6.0.1"
 export branch="master"
 git add .
 git commit -m "$message"

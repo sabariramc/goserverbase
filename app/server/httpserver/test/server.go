@@ -154,7 +154,7 @@ func (s *server) printHttpVersion() gin.HandlerFunc {
 	}
 }
 
-func NewServer(t instrumentation.Tracer) *server {
+func New(t instrumentation.Tracer) *server {
 	testutils.SetAWSConfig(t)
 	ctx := GetCorrelationContext()
 	pr, err := kafka.NewProducer(kafka.WithProducerTracer(t))

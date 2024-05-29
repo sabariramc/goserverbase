@@ -15,7 +15,7 @@ import (
 )
 
 func TestRouter(t *testing.T) {
-	srv := server.NewServer(nil)
+	srv := server.New(nil)
 	req := httptest.NewRequest(http.MethodGet, "/service/echo", nil)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
@@ -49,7 +49,7 @@ func TestRouter(t *testing.T) {
 }
 
 func TestRouterCustomError(t *testing.T) {
-	srv := server.NewServer(nil)
+	srv := server.New(nil)
 	req := httptest.NewRequest(http.MethodGet, "/service/error/error500", nil)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
@@ -63,7 +63,7 @@ func TestRouterCustomError(t *testing.T) {
 }
 
 func TestRouterPanic(t *testing.T) {
-	srv := server.NewServer(nil)
+	srv := server.New(nil)
 	req := httptest.NewRequest(http.MethodGet, "/service/error/errorWithPanic", nil)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
@@ -76,7 +76,7 @@ func TestRouterPanic(t *testing.T) {
 }
 
 func TestRouterPanic2(t *testing.T) {
-	srv := server.NewServer(nil)
+	srv := server.New(nil)
 	req := httptest.NewRequest(http.MethodGet, "/service/error/panic", nil)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
@@ -89,7 +89,7 @@ func TestRouterPanic2(t *testing.T) {
 }
 
 func TestRouterClientError(t *testing.T) {
-	srv := server.NewServer(nil)
+	srv := server.New(nil)
 	req := httptest.NewRequest(http.MethodGet, "/service/error/errorUnauthorized", nil)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
@@ -103,7 +103,7 @@ func TestRouterClientError(t *testing.T) {
 }
 
 func TestRouterHealthCheck(t *testing.T) {
-	srv := server.NewServer(nil)
+	srv := server.New(nil)
 	req := httptest.NewRequest(http.MethodGet, "/meta/health", nil)
 	w := httptest.NewRecorder()
 	srv.ServeHTTP(w, req)
@@ -111,7 +111,7 @@ func TestRouterHealthCheck(t *testing.T) {
 }
 
 func TestPost(t *testing.T) {
-	srv := server.NewServer(nil)
+	srv := server.New(nil)
 	payload, _ := json.Marshal(map[string]string{"fasdfas": "FASDFASf"})
 	buff := bytes.NewBuffer(payload)
 	req := httptest.NewRequest(http.MethodPost, "/service/echo", buff)
@@ -131,7 +131,7 @@ func TestPost(t *testing.T) {
 }
 
 func TestIntegration(t *testing.T) {
-	srv := server.NewServer(nil)
+	srv := server.New(nil)
 	payload, _ := json.Marshal(map[string]string{"fasdfas": "FASDFASf"})
 	buff := bytes.NewBuffer(payload)
 	req := httptest.NewRequest(http.MethodPost, "/service/test/all", buff)
@@ -149,7 +149,7 @@ const (
 var goprocs = runtime.GOMAXPROCS(0) // 8
 
 func TestBencRoute(t *testing.T) {
-	srv := server.NewServer(nil)
+	srv := server.New(nil)
 	payload, _ := json.Marshal(map[string]string{"fasdfas": "FASDFASf"})
 	buff := bytes.NewBuffer(payload)
 	req := httptest.NewRequest(http.MethodGet, "/meta/bench", buff)
@@ -159,7 +159,7 @@ func TestBencRoute(t *testing.T) {
 }
 
 func BenchmarkRoutes(b *testing.B) {
-	srv := server.NewServer(nil)
+	srv := server.New(nil)
 	payload, _ := json.Marshal(map[string]string{"fasdfas": "FASDFASf"})
 	buff := bytes.NewBuffer(payload)
 	for i := start; i < end; i += step {

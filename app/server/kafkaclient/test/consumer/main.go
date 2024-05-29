@@ -5,6 +5,6 @@ import (
 )
 
 func main() {
-	s := server.NewServer(nil)
-	s.StartConsumer()
+	s := server.New(nil)
+	s.StartClient()
 }

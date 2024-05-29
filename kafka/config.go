@@ -216,7 +216,7 @@ func GetDefaultConsumerConfig() *ConsumerConfig {
 		AutoCommitInterval: uint64(utils.GetEnvInt(env.KafkaConsumerAutoCommitInterval, 1000)),
 		Log:                log.New(log.WithModuleName(ModuleConsumer)),
 		Topics:             utils.GetEnvAsSlice(env.KafkaConsumerTopics, []string{}, ","),
-		ModuleName:         ModuleProducer,
+		ModuleName:         ModuleConsumer,
 		ClientId:           utils.GetEnv(env.ServiceName, "default"),
 	}
 

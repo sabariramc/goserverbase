@@ -81,7 +81,7 @@ func (s *server) Name(ctx context.Context) string {
 	return ""
 }
 
-func NewServer(t instrumentation.Tracer) *server {
+func New(t instrumentation.Tracer) *server {
 	testutils.SetAWSConfig(t)
 	ctx := GetCorrelationContext()
 	pr, err := kafka.NewProducer(kafka.WithProducerTracer(t))

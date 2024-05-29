@@ -5,6 +5,6 @@ import (
 )
 
 func main() {
-	s := server.NewServer(nil)
+	s := server.New(nil)
 	s.StartTLSServer()
 }
