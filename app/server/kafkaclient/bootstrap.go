@@ -12,8 +12,9 @@ import (
 )
 
 // StartConsumer starts the Kafka consumer server. And starts background process for message poll, signal monitoring and set up cleanup steps when the server shutdowns
-func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
-	corr := &correlation.CorrelationParam{CorrelationID: fmt.Sprintf("%v:KafkaConsumerServer", k.c.Config.ServiceName)}
+func (k *KafkaClient) StartConsumer() {
+	var ctx context.Context
+	corr := &correlation.CorrelationParam{CorrelationID: fmt.Sprintf("%v:KafkaClient", k.c.Config.ServiceName)}
 	ctx, k.shutdown = context.WithCancel(correlation.GetContextWithCorrelationParam(ctx, corr))
 	defer k.WaitForCompleteShutDown()
 	k.shutdownWG.Add(1)
@@ -39,7 +40,7 @@ func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 		defer pollWg.Done()
 		err := k.client.Poll(pollCtx, k.ch)
 		if err != nil && !e.Is(err, context.Canceled) {
-			k.log.Emergency(ctx, "Kafka consumer exited", err, fmt.Errorf("KafkaConsumerServer.StartConsumer: process exit: %w", err))
+			k.log.Emergency(ctx, "Kafka consumer exited", err, fmt.Errorf("KafkaClient.StartConsumer: process exit: %w", err))
 		}
 	}()
 	k.log.Notice(ctx, "Kafka consumer started", nil)
@@ -56,7 +57,7 @@ func (k *KafkaConsumerServer) StartConsumer(ctx context.Context) {
 			topicName := (*msg).Topic
 			handler := k.handler[topicName]
 			if handler == nil {
-				k.log.Emergency(ctx, "missing handler for topic - "+topicName, nil, fmt.Errorf("KafkaConsumerServer.StartConsumer: missing handler for topic: %v", topicName))
+				k.log.Emergency(ctx, "missing handler for topic - "+topicName, nil, fmt.Errorf("KafkaClient.StartConsumer: missing handler for topic: %v", topicName))
 			}
 			emMsg := &kafka.Message{Message: msg}
 			msgCtx := k.GetMessageContext(emMsg)

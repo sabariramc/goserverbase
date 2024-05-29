@@ -9,7 +9,7 @@ import (
 )
 
 // GetCorrelationParams extracts correlation parameters from the given headers and returns a CorrelationParam instance.
-func (k *KafkaConsumerServer) GetCorrelationParams(headers map[string]string) *correlation.CorrelationParam {
+func (k *KafkaClient) GetCorrelationParams(headers map[string]string) *correlation.CorrelationParam {
 	cr := &correlation.CorrelationParam{}
 	cr.LoadFromHeader(headers)
 	if cr.CorrelationID == "" {
@@ -19,7 +19,7 @@ func (k *KafkaConsumerServer) GetCorrelationParams(headers map[string]string) *c
 }
 
 // GetUserIdentifier extracts user identifier from the given headers and returns a UserIdentifier instance.
-func (k *KafkaConsumerServer) GetUserIdentifier(headers map[string]string) *correlation.UserIdentifier {
+func (k *KafkaClient) GetUserIdentifier(headers map[string]string) *correlation.UserIdentifier {
 	id := &correlation.UserIdentifier{}
 	id.LoadFromHeader(headers)
 	return id
@@ -27,7 +27,7 @@ func (k *KafkaConsumerServer) GetUserIdentifier(headers map[string]string) *corr
 
 // GetMessageContext creates a context for processing a Kafka message with correlation parameters and user identifier.
 // If a tracer was passed during the server initiation, create a new span for every message and updates attribute
-func (k *KafkaConsumerServer) GetMessageContext(msg *kafka.Message) context.Context {
+func (k *KafkaClient) GetMessageContext(msg *kafka.Message) context.Context {
 	msgCtx := context.Background()
 	corr := k.GetCorrelationParams(msg.GetHeaders())
 	identity := k.GetUserIdentifier(msg.GetHeaders())

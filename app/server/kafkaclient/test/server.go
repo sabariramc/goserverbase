@@ -38,7 +38,7 @@ func GetCorrelationContext() context.Context {
 }
 
 type server struct {
-	*kafkaclient.KafkaConsumerServer
+	*kafkaclient.KafkaClient
 	log        log.Log
 	pr         *kafka.Producer
 	conn       *mongo.Mongo
@@ -93,12 +93,12 @@ func NewServer(t instrumentation.Tracer) *server {
 		ServerTestLogger.Emergency(ctx, "error creating mongo connection", err, nil)
 	}
 	srv := &server{
-		KafkaConsumerServer: kafkaclient.New(kafkaclient.WithLog(ServerTestLogger), kafkaclient.WithTracer(t)),
-		pr:                  pr,
-		sns:                 aws.GetDefaultSNSClient(ServerTestLogger),
-		httpClient:          retryhttp.New(retryhttp.WithTracer(t)),
-		conn:                conn,
-		coll:                conn.Database("GOBaseTest").Collection("TestColl"),
+		KafkaClient: kafkaclient.New(kafkaclient.WithLog(ServerTestLogger), kafkaclient.WithTracer(t)),
+		pr:          pr,
+		sns:         aws.GetDefaultSNSClient(ServerTestLogger),
+		httpClient:  retryhttp.New(retryhttp.WithTracer(t)),
+		conn:        conn,
+		coll:        conn.Database("GOBaseTest").Collection("TestColl"),
 	}
 	srv.RegisterHooks(conn)
 	srv.RegisterHooks(pr)

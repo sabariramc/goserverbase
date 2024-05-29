@@ -1,4 +1,4 @@
-// Package httpserver contains basic HTTPServer
+// Package httpserver contains basic HTTPServer based on [gin.Engine]
 package httpserver
 
 import (

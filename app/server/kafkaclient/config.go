@@ -30,43 +30,43 @@ func GetDefaultConfig() *Config {
 		HealthCheckInterval:   uint(utils.GetEnvInt(env.KafkaClientHealthCheckInterval, 30)),
 		HealthCheckResultPath: utils.GetEnv(env.KafkaClientHealthCheckResultPath, "/tmp/healthCheck"),
 		Config:                baseapp.GetDefaultConfig(),
-		Log:                   log.New(log.WithModuleName("KafkaConsumerServer")),
+		Log:                   log.New(log.WithModuleName("KafkaClient")),
 		ConsumerConfig:        kafka.GetDefaultConsumerConfig(),
 	}
 }
 
-// Options represents options for configuring a KafkaConsumerServer instance.
+// Options represents options for configuring a KafkaClient instance.
 type Options func(*Config)
 
-// WithLog sets the log instance for KafkaConsumerServer.
+// WithLog sets the log instance for KafkaClient.
 func WithLog(log log.Log) Options {
 	return func(c *Config) {
 		c.Log = log
 	}
 }
 
-// WithNotifier sets the notifier instance for KafkaConsumerServer.
+// WithNotifier sets the notifier instance for KafkaClient.
 func WithNotifier(notifier notifier.Notifier) Options {
 	return func(c *Config) {
 		c.Notifier = notifier
 	}
 }
 
-// WithServerConfig sets the server configuration for KafkaConsumerServer.
+// WithServerConfig sets the server configuration for KafkaClient.
 func WithServerConfig(config *baseapp.Config) Options {
 	return func(c *Config) {
 		c.Config = config
 	}
 }
 
-// WithKafkaConsumerConfig sets the Kafka consumer configuration for KafkaConsumerServer.
+// WithKafkaConsumerConfig sets the Kafka consumer configuration for KafkaClient.
 func WithKafkaConsumerConfig(config *kafka.ConsumerConfig) Options {
 	return func(c *Config) {
 		c.ConsumerConfig = config
 	}
 }
 
-// WithTracer sets the tracer instance for KafkaConsumerServer.
+// WithTracer sets the tracer instance for KafkaClient.
 func WithTracer(t Tracer) Options {
 	return func(c *Config) {
 		c.Tracer = t

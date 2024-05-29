@@ -11,18 +11,18 @@ import (
 )
 
 // AddHandler adds a handler for processing Kafka events for the specified topic.
-func (k *KafkaConsumerServer) AddHandler(ctx context.Context, topicName string, handler KafkaEventProcessor) {
+func (k *KafkaClient) AddHandler(ctx context.Context, topicName string, handler KafkaEventProcessor) {
 	if handler == nil {
-		k.log.Emergency(ctx, "missing handler for topic - "+topicName, nil, fmt.Errorf("KafkaConsumerServer.AddHandler: handler parameter cannot be nil"))
+		k.log.Emergency(ctx, "missing handler for topic - "+topicName, nil, fmt.Errorf("KafkaClient.AddHandler: handler parameter cannot be nil"))
 	}
 	if _, ok := k.handler[topicName]; ok {
-		k.log.Emergency(ctx, "duplicate handler for topic - "+topicName, nil, fmt.Errorf("KafkaConsumerServer.AddHandler: handler for topic exist"))
+		k.log.Emergency(ctx, "duplicate handler for topic - "+topicName, nil, fmt.Errorf("KafkaClient.AddHandler: handler for topic exist"))
 	}
 	k.handler[topicName] = handler
 }
 
 // ProcessEvent processes a Kafka message using the specified handler.
-func (k *KafkaConsumerServer) ProcessEvent(ctx context.Context, msg *kafka.Message, handler KafkaEventProcessor) {
+func (k *KafkaClient) ProcessEvent(ctx context.Context, msg *kafka.Message, handler KafkaEventProcessor) {
 	span, spanOk := k.GetSpanFromContext(ctx)
 	defer func() {
 		if spanOk {
@@ -54,17 +54,17 @@ func (k *KafkaConsumerServer) ProcessEvent(ctx context.Context, msg *kafka.Messa
 }
 
 // Commit commits the current offset of the Kafka consumer.
-func (k *KafkaConsumerServer) Commit(ctx context.Context) error {
+func (k *KafkaClient) Commit(ctx context.Context) error {
 	return k.client.Commit(ctx)
 }
 
 // StoreMessage stores the given Kafka message.
-func (k *KafkaConsumerServer) StoreMessage(ctx context.Context, msg *kafka.Message) error {
+func (k *KafkaClient) StoreMessage(ctx context.Context, msg *kafka.Message) error {
 	return k.client.StoreMessage(ctx, msg.Message)
 }
 
 // Subscribe subscribes to Kafka topics and starts consuming messages.
-func (k *KafkaConsumerServer) Subscribe(ctx context.Context) {
+func (k *KafkaClient) Subscribe(ctx context.Context) {
 	topicList := make([]string, 0, len(k.handler))
 	for h := range k.handler {
 		topicList = append(topicList, h)
@@ -73,7 +73,7 @@ func (k *KafkaConsumerServer) Subscribe(ctx context.Context) {
 	k.ch = ch
 	client, err := kafka.NewPoller(kafka.WithConsumerTracer(k.tracer), kafka.WithConsumerTopic(topicList))
 	if err != nil {
-		k.log.Emergency(ctx, "Error occurred during client creation", fmt.Errorf("KafkaConsumerServer.Subscribe: error creating kafka consumer: %w", err), map[string]any{
+		k.log.Emergency(ctx, "Error occurred during client creation", fmt.Errorf("KafkaClient.Subscribe: error creating kafka consumer: %w", err), map[string]any{
 			"topicList": topicList,
 			"config":    k.c.ConsumerConfig,
 		})
@@ -82,7 +82,7 @@ func (k *KafkaConsumerServer) Subscribe(ctx context.Context) {
 }
 
 // GetSpanFromContext retrieves the OpenTelemetry span from the given context.
-func (k *KafkaConsumerServer) GetSpanFromContext(ctx context.Context) (span.Span, bool) {
+func (k *KafkaClient) GetSpanFromContext(ctx context.Context) (span.Span, bool) {
 	if k.tracer != nil {
 		return k.tracer.GetSpanFromContext(ctx)
 	}

@@ -7,7 +7,7 @@ import (
 )
 
 // HealthCheckMonitor starts a health check monitor that periodically runs health checks.
-func (k *KafkaConsumerServer) HealthCheckMonitor(ctx context.Context) {
+func (k *KafkaClient) HealthCheckMonitor(ctx context.Context) {
 	timeoutContext, _ := context.WithTimeout(ctx, time.Second*time.Duration(k.c.HealthCheckInterval))
 	defer k.log.Warning(ctx, "Health check monitor stopped", nil)
 	for {
@@ -29,12 +29,12 @@ func (k *KafkaConsumerServer) HealthCheckMonitor(ctx context.Context) {
 }
 
 // HealthCheck runs a health check on the Kafka consumer server.
-func (k *KafkaConsumerServer) HealthCheck(ctx context.Context) error {
+func (k *KafkaClient) HealthCheck(ctx context.Context) error {
 	k.client.Stats()
 	return nil
 }
 
 // StatusCheck runs a status check on the Kafka consumer server.
-func (k *KafkaConsumerServer) StatusCheck(ctx context.Context) (any, error) {
+func (k *KafkaClient) StatusCheck(ctx context.Context) (any, error) {
 	return k.client.Stats(), nil
 }

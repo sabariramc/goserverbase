@@ -23,9 +23,9 @@ type Tracer interface {
 	span.SpanOp
 }
 
-// KafkaConsumerServer represents a Kafka consumer server.
+// KafkaClient represents a Kafka consumer server.
 // Implements ShutdownHook, HealthCheckHook and StatusCheckHook
-type KafkaConsumerServer struct {
+type KafkaClient struct {
 	*baseapp.BaseApp
 	client                 *kafka.Poller
 	handler                map[string]KafkaEventProcessor
@@ -37,14 +37,14 @@ type KafkaConsumerServer struct {
 	tracer                 Tracer
 }
 
-// New creates a new instance of KafkaConsumerServer.
-func New(option ...Options) *KafkaConsumerServer {
+// New creates a new instance of KafkaClient.
+func New(option ...Options) *KafkaClient {
 	config := GetDefaultConfig()
 	for _, opt := range option {
 		opt(config)
 	}
 	os.WriteFile(config.HealthCheckResultPath, []byte("Hello"), fs.ModeAppend)
-	h := &KafkaConsumerServer{
+	h := &KafkaClient{
 		BaseApp: baseapp.NewWithConfig(config.Config),
 		log:     config.Log,
 		c:       config,
@@ -57,15 +57,15 @@ func New(option ...Options) *KafkaConsumerServer {
 	return h
 }
 
-// Name returns the name of the KafkaConsumerServer.
+// Name returns the name of the KafkaClient.
 // Implementation of the hook interface defined in the BaseApp
-func (k *KafkaConsumerServer) Name(ctx context.Context) string {
-	return "KafkaConsumerServer"
+func (k *KafkaClient) Name(ctx context.Context) string {
+	return "KafkaClient"
 }
 
 // Shutdown gracefully shuts down the Kafka consumer server.
 // Implementation for shutdown hook
-func (k *KafkaConsumerServer) Shutdown(ctx context.Context) error {
+func (k *KafkaClient) Shutdown(ctx context.Context) error {
 	defer k.shutdownWG.Done()
 	k.shutdownPoll()
 	k.requestWG.Wait()

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"log"
 
 	server "github.com/sabariramc/goserverbase/v6/app/server/kafkaclient/test"
@@ -15,5 +14,5 @@ func main() {
 	}
 	defer otel.ShutDown()
 	s := server.NewServer(tr)
-	s.StartConsumer(context.Background())
+	s.StartConsumer()
 }
