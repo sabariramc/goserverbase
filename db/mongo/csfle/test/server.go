@@ -68,7 +68,7 @@ func (s *server) Get(c *gin.Context) {
 }
 
 func (s *server) Name(ctx context.Context) string {
-	return ""
+	return "CSFLE"
 }
 
 func (s *server) Shutdown(ctx context.Context) error {
