@@ -40,7 +40,7 @@ func (k *KafkaClient) StartClient() {
 		defer pollWg.Done()
 		err := k.client.Poll(pollCtx, k.ch)
 		if err != nil && !e.Is(err, context.Canceled) {
-			k.log.Emergency(ctx, "Kafka consumer exited", err, fmt.Errorf("KafkaClient.StartConsumer: process exit: %w", err))
+			k.log.Emergency(ctx, "Kafka consumer exited", err, fmt.Errorf("KafkaClient.StartClient: process exit: %w", err))
 		}
 	}()
 	k.log.Notice(ctx, "Kafka consumer started", nil)
@@ -57,7 +57,7 @@ func (k *KafkaClient) StartClient() {
 			topicName := (*msg).Topic
 			handler := k.handler[topicName]
 			if handler == nil {
-				k.log.Emergency(ctx, "missing handler for topic - "+topicName, nil, fmt.Errorf("KafkaClient.StartConsumer: missing handler for topic: %v", topicName))
+				k.log.Emergency(ctx, "missing handler for topic - "+topicName, nil, fmt.Errorf("KafkaClient.StartClient: missing handler for topic: %v", topicName))
 			}
 			emMsg := &kafka.Message{Message: msg}
 			msgCtx := k.GetMessageContext(emMsg)

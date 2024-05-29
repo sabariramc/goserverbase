@@ -1,5 +1,5 @@
-export message="Renamed function"
-export version="v6.0.1"
+export message="documentation update"
+export version="v6.0.2"
 export branch="master"
 git add .
 git commit -m "$message"

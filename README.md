@@ -140,7 +140,7 @@ srv.AddHandler(context.Background(), "gobase.test.topic1", func(ctx context.Cont
 srv.AddHandler(context.Background(), "gobase.test.topic2", func(ctx context.Context, m *kafka.Message) error {
     return &errors.CustomError{ErrorCode: "gobase.test.error", ErrorMessage: "error sample"}
 })
-srv.StartConsumer()
+srv.StartClient()
 ```
 
 This client subscribes to the following topics `gobase.test.topic1` and `gobase.test.topic2`, passes the messages to the handler function
@@ -206,7 +206,7 @@ import (
 
 func main() {
 	s := server.NewServer(nil)
-	s.StartConsumer()
+	s.StartClient()
 }
 ```
 
@@ -227,7 +227,7 @@ func main() {
 	}
 	defer ddtrace.ShutDown()
 	s := server.NewServer(tr)
-	s.StartConsumer()
+	s.StartClient()
 }
 ```
 
