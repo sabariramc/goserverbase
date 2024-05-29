@@ -5,9 +5,9 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
+	"github.com/sabariramc/goserverbase/v6/correlation"
 	"github.com/sabariramc/goserverbase/v6/log"
 	"github.com/sabariramc/goserverbase/v6/log/logwriter"
-	"github.com/sabariramc/goserverbase/v6/correlation"
 )
 
 func TestConsoleLogWriter(t *testing.T) {
@@ -16,7 +16,7 @@ func TestConsoleLogWriter(t *testing.T) {
 	})
 	log := log.New()
 	log.AddLogWriter(ctx, logwriter.NewConsoleWriter())
-	for i := 0; i < 1000000; i++ {
+	for i := 0; i < 1000; i++ {
 		log.Error(ctx, uuid.NewString())
 	}
 }

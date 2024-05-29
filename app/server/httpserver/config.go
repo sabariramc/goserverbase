@@ -38,8 +38,8 @@ type DocumentationConfig struct {
 */
 func GetDocumentationConfig() *DocumentationConfig {
 	return &DocumentationConfig{
-		DocHost:    utils.GetEnv(env.HTTPServerDocHost, "localhost"),
-		RootFolder: utils.GetEnv(env.HTTPServerDocRootFolder, "/docs"),
+		DocHost:    utils.GetEnv(env.HTTPServerDocHost, "http://localhost:3000"),
+		RootFolder: utils.GetEnv(env.HTTPServerDocRootFolder, "./docs"),
 	}
 }
 

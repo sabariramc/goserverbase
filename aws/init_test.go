@@ -14,7 +14,8 @@ var AWSTestLogger log.Log
 const ServiceName = "AWSTest"
 
 func init() {
-	testutils.LoadEnv("../../../.env")
+	testutils.LoadEnv("../.env")
+	testutils.Initialize()
 	AWSTestConfig = testutils.NewConfig()
 	AWSTestLogger = log.New(log.WithServiceName(ServiceName))
 }

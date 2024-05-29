@@ -8,6 +8,8 @@ import (
 	"github.com/sabariramc/goserverbase/v6/db/mongo"
 	"github.com/sabariramc/randomstring"
 	"github.com/shopspring/decimal"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 	"gotest.tools/assert"
 )
 
@@ -62,7 +64,7 @@ func TestMongoCollectionInsertOne(t *testing.T) {
 
 func TestMongoCollection(t *testing.T) {
 	ctx := GetCorrelationContext()
-	client, err := mongo.NewWithDefaultOptions(MongoTestLogger, nil)
+	client, err := mongo.NewWithDefaultOptions(MongoTestLogger, nil, options.Client().SetWriteConcern(writeconcern.Majority()))
 	assert.NilError(t, err)
 	coll := client.Database("GOTEST").Collection("Plain")
 	input := GetSampleData()

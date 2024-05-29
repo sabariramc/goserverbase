@@ -49,16 +49,17 @@ func NewSecretManagerClient(logger log.Log, client *secretsmanager.Client) *Secr
 	return &SecretManager{Client: client, log: logger.NewResourceLogger("SecretManager")}
 }
 
-// GetSecret retrieves the secret value associated with the provided secret ARN.
-// It returns the secret data as a map[string]interface{}.
-// If an error occurs during retrieval or unmarshalling, it returns an error.
-func (s *SecretManager) GetSecret(ctx context.Context, secretArn string) (map[string]interface{}, error) {
+// GetSecretString retrieves the secret value associated with the provided secret ARN.
+// If the secret is cached and the cache is not expired, it returns the cached secret.
+// Otherwise, it fetches the secret from AWS Secrets Manager and caches it.
+// It returns the secret value as a string or an error if the retrieval fails.
+func (s *SecretManager) GetSecretString(ctx context.Context, secretArn string) (*string, error) {
 	secretCacheData, ok := secretCache[secretArn]
 	if ok && time.Now().Before(secretCacheData.expireTime) {
 		s.log.Notice(ctx, "Secret fetched from cache", nil)
 	} else {
 		req := &secretsmanager.GetSecretValueInput{SecretId: &secretArn}
-		res, err := s.Client.GetSecretValue(ctx, req)
+		res, err := s.GetSecretValue(ctx, req)
 		if err != nil {
 			s.log.Error(ctx, "error fetching secret", err)
 			return nil, fmt.Errorf("SecretManager.GetSecret: error fetching secret: %w", err)
@@ -66,11 +67,22 @@ func (s *SecretManager) GetSecret(ctx context.Context, secretArn string) (map[st
 		secretCacheData = secretManagerCache{expireTime: time.Now().Add(time.Minute * 15), data: *res}
 		secretCache[secretArn] = secretCacheData
 	}
+	return secretCacheData.data.SecretString, nil
+}
+
+// GetSecretMap retrieves the secret value associated with the provided secret ARN as a map[string]interface{}.
+// It unmarshals the secret value JSON string into a map.
+// It returns the secret data as a map or an error if the retrieval or unmarshalling fails.
+func (s *SecretManager) GetSecretMap(ctx context.Context, secretArn string) (map[string]interface{}, error) {
+	secretString, err := s.GetSecretString(ctx, secretArn)
+	if err != nil {
+		return nil, fmt.Errorf("SecretManager.GetSecretMap: %w", err)
+	}
 	data := make(map[string]interface{})
-	err := json.Unmarshal([]byte(*secretCacheData.data.SecretString), &data)
+	err = json.Unmarshal([]byte(*secretString), &data)
 	if err != nil {
 		s.log.Error(ctx, "Secret un-marshall error", err)
-		return nil, fmt.Errorf("SecretManager.GetSecret: error un-marshalling secret data: %w", err)
+		return nil, fmt.Errorf("SecretManager.GetSecretMap: error un-marshalling secret data: %w", err)
 	}
 	return data, nil
 }

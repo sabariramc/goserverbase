@@ -39,25 +39,33 @@ func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error
 	statusCode = http.StatusInternalServerError
 	notify := true
 	var parseErr error
-	var customError *errors.CustomError
-	var httpErr *errors.HTTPError
-	if e.As(err, &httpErr) {
-		statusCode = httpErr.StatusCode
-		notify = httpErr.Notify
-		body, parseErr = httpErr.GetErrorResponse()
-		errorCode = httpErr.ErrorCode
-		errorData = httpErr.ErrorData
-	} else if e.As(err, &customError) {
+	var customErrorPtr *errors.CustomError
+	var httpErrPtr *errors.HTTPError
+	var customError errors.CustomError
+	var httpErr errors.HTTPError
+	if e.As(err, &httpErrPtr) || e.As(err, &httpErr) {
+		if httpErrPtr == nil {
+			httpErrPtr = &httpErr
+		}
+		statusCode = httpErrPtr.StatusCode
+		notify = httpErrPtr.Notify
+		body, parseErr = httpErrPtr.GetErrorResponse()
+		errorCode = httpErrPtr.ErrorCode
+		errorData = httpErrPtr.ErrorData
+	} else if e.As(err, &customErrorPtr) || e.As(err, &customError) {
+		if customErrorPtr == nil {
+			customErrorPtr = &customError
+		}
 		statusCode = http.StatusInternalServerError
-		notify = customError.Notify
-		body, parseErr = customError.GetErrorResponse()
-		errorData = customError.ErrorData
-		errorCode = customError.ErrorCode
+		notify = customErrorPtr.Notify
+		body, parseErr = customErrorPtr.GetErrorResponse()
+		errorData = customErrorPtr.ErrorData
+		errorCode = customErrorPtr.ErrorCode
 	} else {
 		statusCode = http.StatusInternalServerError
-		customError = &errors.CustomError{ErrorCode: "com.base.internalServerError", ErrorMessage: "Unknown error", ErrorDescription: map[string]string{"error": "Internal error occurred, if persist contact technical team"}, Notify: true}
-		body, parseErr = customError.GetErrorResponse()
-		err = customError
+		customErrorPtr = &errors.CustomError{ErrorCode: "com.base.internalServerError", ErrorMessage: "Unknown error", ErrorDescription: map[string]string{"error": "Internal error occurred, if persist contact technical team"}, Notify: true}
+		body, parseErr = customErrorPtr.GetErrorResponse()
+		err = customErrorPtr
 	}
 	if parseErr != nil {
 		b.log.Error(ctx, "Error occurred during marshal of errors", parseErr)

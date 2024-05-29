@@ -129,12 +129,12 @@ func (s *server) testKafka(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(204)
 }
 
-func (s *server) internalServerError(w http.ResponseWriter, r *http.Request) {
+func (s *server) error500(w http.ResponseWriter, r *http.Request) {
 	s.WriteErrorResponse(r.Context(), w, &errors.CustomError{ErrorCode: "hello.new.custom.error", ErrorMessage: "display this", ErrorData: map[string]any{"one": "two"}, Notify: true}, "")
 
 }
 
-func (s *server) panicUsingLog(w http.ResponseWriter, r *http.Request) {
+func (s *server) errorWithPanic(w http.ResponseWriter, r *http.Request) {
 	s.log.Emergency(r.Context(), "random panic at Func4", errors.HTTPError{StatusCode: 503, CustomError: &errors.CustomError{ErrorCode: "hello.new.custom.error", ErrorMessage: "display this", ErrorData: map[string]any{"one": "two"}}})
 }
 
@@ -142,7 +142,7 @@ func (s *server) panic(w http.ResponseWriter, r *http.Request) {
 	panic("fasdfasfsadf")
 }
 
-func (s *server) unauthorizedAccess(w http.ResponseWriter, r *http.Request) {
+func (s *server) errorUnauthorized(w http.ResponseWriter, r *http.Request) {
 	s.WriteErrorResponse(r.Context(), w, errors.HTTPError{StatusCode: 403, CustomError: &errors.CustomError{ErrorCode: "hello.new.custom.error", ErrorMessage: "display this", ErrorData: map[string]any{"one": "two"}}}, "")
 }
 
@@ -186,9 +186,9 @@ func NewServer(t instrumentation.Tracer) *server {
 	integrationTest.POST("/all", gin.WrapF(srv.testAll))
 	integrationTest.POST("/kafka", gin.WrapF(srv.testKafka))
 	errorRoute := service.Group("/error")
-	errorRoute.GET("/error500", gin.WrapF(srv.internalServerError))
-	errorRoute.GET("/errorWithPanic", gin.WrapF(srv.panicUsingLog))
-	errorRoute.GET("/errorUnauthorized", gin.WrapF(srv.unauthorizedAccess))
+	errorRoute.GET("/error500", gin.WrapF(srv.error500))
+	errorRoute.GET("/errorWithPanic", gin.WrapF(srv.errorWithPanic))
+	errorRoute.GET("/errorUnauthorized", gin.WrapF(srv.errorUnauthorized))
 	errorRoute.GET("/panic", gin.WrapF(srv.panic))
 	return srv
 }

@@ -14,7 +14,7 @@ type CustomError struct {
 }
 
 // Error returns the JSON representation of the custom error.
-func (e *CustomError) Error() string {
+func (e CustomError) Error() string {
 	blob, err := json.MarshalIndent(e, "", "    ")
 	if err != nil {
 		e.ErrorData = ErrParse
@@ -25,7 +25,7 @@ func (e *CustomError) Error() string {
 }
 
 // GetErrorResponse returns the JSON representation of the error response.
-func (e *CustomError) GetErrorResponse() ([]byte, error) {
+func (e CustomError) GetErrorResponse() ([]byte, error) {
 	data := map[string]interface{}{
 		"errorCode":        e.ErrorCode,
 		"errorMessage":     e.ErrorMessage,
