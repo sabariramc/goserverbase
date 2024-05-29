@@ -10,12 +10,10 @@ services:
     environment:
       SERVICE_NAME: gobase_http
       DD_SERVICE: gobase_http
-      KAFKA_BROKER: broker:29092
+      KAFAK__BROKER: kafka:9092
       DD_AGENT_HOST: datadog
       AWS_ENDPOINT: http://localstack-main:4566
-      DOC_HOST: http://localhost:60005
-      KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
-      KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
+      HTTP_SERVER__DOC_HOST: http://localhost:60005
       TEST_URL_1: "http://echo-nginx-1"
       TEST_URL_2: "https://gobase_http2:8080/service/echo"
     ports:
@@ -35,10 +33,10 @@ services:
     environment:
       SERVICE_NAME: gobase_http2
       DD_SERVICE: gobase_http2
-      KAFKA_BROKER: broker:29092
+      KAFAK__BROKER: kafka:9092
       DD_AGENT_HOST: datadog
       AWS_ENDPOINT: http://localstack-main:4566
-      DOC_HOST: https://localhost:60006
+      HTTP_SERVER__DOC_HOST: https://localhost:60006
       HTTP_SERVER__TLS_PUBLIC_KEY: /service/server.crt
       HTTP_SERVER__TLS_PRIVATE_KEY: /service/server.key
       TEST_URL_1: "http://echo-nginx-1"
@@ -60,12 +58,10 @@ services:
     environment:
       SERVICE_NAME: gobase_h2c
       DD_SERVICE: gobase_h2c
-      KAFKA_BROKER: broker:29092
+      KAFAK__BROKER: kafka:9092
       DD_AGENT_HOST: datadog
       AWS_ENDPOINT: http://localstack-main:4566
-      DOC_HOST: http://localhost:60007
-      KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
-      KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
+      HTTP_SERVER__DOC_HOST: http://localhost:60007
       TEST_URL_1: "http://echo-nginx-1"
       TEST_URL_2: "http://gobase_http:8080/service/echo"
     ports:
@@ -75,7 +71,7 @@ services:
       - kafka_kafka
       - common
       - localstack_localstack
-  kafka:
+  kafka-client:
     build:
       context: .
       target: kafka
@@ -87,12 +83,9 @@ services:
     environment:
       SERVICE_NAME: gobase_kafka
       DD_SERVICE: gobase_kafka
-      KAFKA_BROKER: broker:29092
+      KAFAK__BROKER: kafka:9092
       DD_AGENT_HOST: datadog
       AWS_ENDPOINT: http://localstack-main:4566
-      KAFKA_CONSUMER_ID: gobase-test-docker-consumer
-      KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
-      KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
       TEST_URL_1: "http://echo-nginx-1"
       TEST_URL_2: "http://gobase_http:8080/service/echo"
     networks:
@@ -110,12 +103,9 @@ services:
       KMS_PROVIDER: local
       SERVICE_NAME: gobase_csfle
       DD_SERVICE: gobase_csfle
-      KAFKA_BROKER: broker:29092
+      KAFAK__BROKER: kafka:9092
       DD_AGENT_HOST: datadog
       AWS_ENDPOINT: http://localstack-main:4566
-      KAFKA_CONSUMER_ID: gobase-test-docker-consumer
-      KAFKA_TEST_TOPIC: com.sabari.gobasetest.topic.1
-      KAFKA_TEST_TOPIC_2: com.sabari.gobasetest.topic.2
       TEST_URL_1: "http://echo-nginx-1"
       TEST_URL_2: "http://gobase_http:8080/service/echo"
       CSFLE_CRYPT_SHARED_LIB_PATH: /service/pkg/mongo_crypt_shared_v1-7.0.5/lib/mongo_crypt_v1.so

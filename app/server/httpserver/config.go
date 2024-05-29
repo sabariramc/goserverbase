@@ -38,7 +38,7 @@ type DocumentationConfig struct {
 */
 func GetDocumentationConfig() *DocumentationConfig {
 	return &DocumentationConfig{
-		DocHost:    utils.GetEnv(env.HTTPServerDocHost, "http://localhost:3000"),
+		DocHost:    utils.GetEnv(env.HTTPServerDocHost, "http://localhost:8080"),
 		RootFolder: utils.GetEnv(env.HTTPServerDocRootFolder, "./docs"),
 	}
 }
@@ -88,7 +88,7 @@ func GetDefaultConfig() *Config {
 		Mask:                GetDefaultMaskConfig(),
 		Log:                 log.New(log.WithModuleName("HTTPServer")),
 		Host:                utils.GetEnv(env.HTTPServerHost, "0.0.0.0"),
-		Port:                utils.GetEnv(env.HTTPServerPort, "3000"),
+		Port:                utils.GetEnv(env.HTTPServerPort, "8080"),
 	}
 }
 

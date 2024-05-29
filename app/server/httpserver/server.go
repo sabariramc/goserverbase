@@ -32,8 +32,11 @@ type HTTPServer struct {
 }
 
 // New creates a new instance of HTTPServer.
-func New(option ...Option) *HTTPServer {
+func New(options ...Option) *HTTPServer {
 	config := GetDefaultConfig()
+	for _, opt := range options {
+		opt(config)
+	}
 	h := &HTTPServer{
 		BaseApp: baseapp.NewWithConfig(config.Config),
 		handler: gin.New(),

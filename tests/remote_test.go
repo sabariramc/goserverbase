@@ -6,7 +6,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"sync"
 	"testing"
@@ -34,12 +33,9 @@ func TestRoutes(t *testing.T) {
 			case <-ctx.Done():
 				return
 			default:
-				res, err := http.Get("http://localhost:60005/meta/status")
+				_, err := http.Get("http://localhost:60005/meta/status")
 				if err != nil {
 					fmt.Printf("status call error: %v\n", err)
-				} else {
-					blob, _ := io.ReadAll(res.Body)
-					fmt.Printf("status: %v\n", string(blob))
 				}
 			}
 		}
