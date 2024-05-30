@@ -1,5 +1,5 @@
-export message="documentation update"
-export version="v6.0.2"
+export message="dependency update"
+export version="v6.0.3"
 export branch="master"
 git add .
 git commit -m "$message"
