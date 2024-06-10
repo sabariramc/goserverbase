@@ -62,6 +62,7 @@ func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error
 		errorData = customErrorPtr.ErrorData
 		errorCode = customErrorPtr.ErrorCode
 	} else {
+		b.log.Error(ctx, "Error", err)
 		statusCode = http.StatusInternalServerError
 		customErrorPtr = &errors.CustomError{ErrorCode: "com.base.internalServerError", ErrorMessage: "Unknown error", ErrorDescription: map[string]string{"error": "Internal error occurred, if persist contact technical team"}, Notify: true}
 		body, parseErr = customErrorPtr.GetErrorResponse()
@@ -70,7 +71,7 @@ func (b *BaseApp) ProcessError(ctx context.Context, stackTrace string, err error
 	if parseErr != nil {
 		b.log.Error(ctx, "Error occurred during marshal of errors", parseErr)
 	}
-	b.log.Error(ctx, "Error", err)
+	b.log.Error(ctx, "Response Error", err)
 	if stackTrace != "" {
 		b.log.Error(ctx, "Stack trace", stackTrace)
 	}
