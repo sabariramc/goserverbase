@@ -49,6 +49,7 @@ If Reader is not set in [ConsumerConfig] then creates a new [kafka.Reader] with 
 */
 type Poller struct {
 	*Reader
+	consumerCount    uint // Number of consumers in the group
 	config           *ConsumerConfig
 	log              log.Log
 	topics           []string
@@ -94,10 +95,11 @@ func NewPoller(options ...ConsumerOption) (*Poller, error) {
 		config.Reader = kafka.NewReader(readerConfig)
 	}
 	k := &Poller{
-		log:    config.Log,
-		config: config,
-		Reader: NewReader(ctx, logger, config.Reader, config.MaxBuffer, config.Trace),
-		topics: config.Topics,
+		log:           config.Log,
+		consumerCount: 0,
+		config:        config,
+		Reader:        NewReader(ctx, logger, config.Reader, config.Trace),
+		topics:        config.Topics,
 	}
 	if k.config.AutoCommit {
 		commitCtx, cancel := context.WithCancel(ctx)
@@ -135,10 +137,9 @@ outer:
 				break outer
 			}
 			ch <- &msg
-			commitErr = k.storeMessage(ctx, &msg)
-			if commitErr != nil {
-				break outer
-			}
+			k.consumerCount++
+			k.StoreOffset(ctx, &msg)
+			k.commit(ctx)
 		}
 	}
 	if commitErr != nil || pollErr != nil {
@@ -153,31 +154,14 @@ outer:
 	return pollErr
 }
 
-// storeMessage stores the given message and commits if necessary.
-func (k *Poller) storeMessage(ctx context.Context, msg *kafka.Message) error {
-	if k.config.AutoCommit {
-		err := k.StoreMessage(ctx, msg)
-		if err == ErrReaderBufferFull {
-			err = k.Commit(ctx)
-			if err != nil {
-				return err
-			}
-			err = k.StoreMessage(ctx, msg)
-			if err != nil {
-				return err
-			}
-		} else if err != nil {
-			return err
-		}
-		return nil
-	}
-	return nil
-}
-
 // commit commits the current state if auto-commit is enabled.
 func (k *Poller) commit(ctx context.Context) error {
-	if k.config.AutoCommit {
-		return k.Commit(ctx)
+	if k.config.AutoCommit && k.consumerCount >= k.config.MaxBuffer {
+		_, err := k.Commit(ctx)
+		if err != nil {
+			return fmt.Errorf("Poller.commit: error committing message: %w", err)
+		}
+		k.consumerCount = 0
 	}
 	return nil
 }

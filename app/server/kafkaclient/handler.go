@@ -54,13 +54,8 @@ func (k *KafkaClient) ProcessEvent(ctx context.Context, msg *kafka.Message, hand
 }
 
 // Commit commits the current offset of the Kafka consumer.
-func (k *KafkaClient) Commit(ctx context.Context) error {
+func (k *KafkaClient) Commit(ctx context.Context) (kafka.OffsetMap, error) {
 	return k.client.Commit(ctx)
-}
-
-// StoreMessage stores the given Kafka message.
-func (k *KafkaClient) StoreMessage(ctx context.Context, msg *kafka.Message) error {
-	return k.client.StoreMessage(ctx, msg.Message)
 }
 
 // Subscribe subscribes to Kafka topics and starts consuming messages.

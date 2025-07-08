@@ -133,12 +133,7 @@ func TestKafkaPoller(t *testing.T) {
 	i := 0
 	for msg := range ch {
 		i++
-		err := co.StoreMessage(ctx, msg)
-		if err != nil {
-			co.Commit(ctx)
-			err = co.StoreMessage(ctx, msg)
-			assert.NilError(t, err)
-		}
+		co.StoreOffset(ctx, msg)
 		kMsg := kafka.Message{
 			Message: msg,
 		}
